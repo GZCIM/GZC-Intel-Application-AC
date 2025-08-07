@@ -2,27 +2,26 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '../contexts/ThemeContext'
 import { useTabLayout } from '../core/tabs/TabLayoutManager'
-import { ComponentPortalModal } from './ComponentPortalModal'
-import { ComponentMeta, componentInventory } from '../core/components/ComponentInventory'
 
 interface TabContextMenuProps {
   tabId: string
   isOpen: boolean
   position: { x: number; y: number }
   onClose: () => void
+  onRequestAddComponent?: () => void
 }
 
 export const TabContextMenu: React.FC<TabContextMenuProps> = ({
   tabId,
   isOpen,
   position,
-  onClose
+  onClose,
+  onRequestAddComponent
 }) => {
   const { currentTheme } = useTheme()
   const { currentLayout, removeTab, updateTab } = useTabLayout()
   const [showRenameModal, setShowRenameModal] = useState(false)
   const [newName, setNewName] = useState('')
-  const [showComponentPortal, setShowComponentPortal] = useState(false)
 
   const tab = currentLayout?.tabs.find(t => t.id === tabId)
   const isEditMode = tab?.editMode || false
@@ -81,41 +80,13 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
   }
 
   const handleAddComponent = () => {
-    setShowComponentPortal(true)
-    onClose()
+    console.log('TabContextMenu: handleAddComponent called')
+    onClose() // Close the menu first
+    if (onRequestAddComponent) {
+      onRequestAddComponent() // Call parent's handler to show modal
+    }
   }
 
-  const handleComponentSelected = (componentMeta: ComponentMeta) => {
-    const currentComponents = tab.components || []
-    
-    // Find next available position
-    const existingPositions = currentComponents.map(c => ({ x: c.position.x, y: c.position.y }))
-    let x = 0, y = 0
-    while (existingPositions.some(pos => pos.x === x && pos.y === y)) {
-      x += 2
-      if (x > 10) {
-        x = 0
-        y += 2
-      }
-    }
-
-    const newComponent = {
-      id: `${componentMeta.id}-${Date.now()}`,
-      type: componentMeta.id,  // Changed from componentId to type
-      position: {  // Wrapped coordinates in position object
-        x,
-        y,
-        w: componentMeta.defaultSize?.w || 4,
-        h: componentMeta.defaultSize?.h || 4
-      },
-      props: componentMeta.defaultProps || {}
-    }
-
-    updateTab(tabId, {
-      components: [...currentComponents, newComponent]
-    })
-    setShowComponentPortal(false)
-  }
 
   // Early return check after all hooks
   if (!tab || !tab.closable) return null
@@ -337,19 +308,6 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Component Portal Modal */}
-      {showComponentPortal && (
-        <ComponentPortalModal
-          isOpen={showComponentPortal}
-          onClose={() => setShowComponentPortal(false)}
-          onComponentSelect={(componentId) => {
-            const componentMeta = componentInventory.getComponent(componentId)
-            if (componentMeta) {
-              handleComponentSelected(componentMeta)
-            }
-          }}
-        />
-      )}
     </>
   )
 }

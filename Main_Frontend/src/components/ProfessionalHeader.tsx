@@ -5,6 +5,8 @@ import { useTheme } from '../contexts/ThemeContext'
 import { ThemeSelector } from './ThemeSelector'
 import { GZCLogo } from './GZCLogo'
 import { TabContextMenu } from './TabContextMenu'
+import { ComponentPortalModal } from './ComponentPortalModal'
+import { ComponentMeta } from '../core/components/ComponentInventory'
 import { UserProfile } from './UserProfile'
 import { ToolsMenu } from './ToolsMenu'
 import { DraggableWindow } from './DraggableWindow'
@@ -21,7 +23,8 @@ export const ProfessionalHeader = () => {
     currentLayout,
     activeTabId,
     setActiveTab,
-    createTabWithPrompt
+    createTabWithPrompt,
+    updateTab
   } = useTabLayout()
   
   const { currentTheme: theme } = useTheme()
@@ -30,14 +33,14 @@ export const ProfessionalHeader = () => {
   const [activeTab, setActiveTabLocal] = useState('')
   const [draggedTab, setDraggedTab] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
-  const [portfolioValue, setPortfolioValue] = useState(84923.45)
-  const [dailyPnL, setDailyPnL] = useState(12497.97)
   const [contextMenu, setContextMenu] = useState<{
     isOpen: boolean
     tabId: string
     position: { x: number; y: number }
   }>({ isOpen: false, tabId: '', position: { x: 0, y: 0 } })
   const [showAuthDebugger, setShowAuthDebugger] = useState(false)
+  const [showComponentPortal, setShowComponentPortal] = useState(false)
+  const [componentPortalTabId, setComponentPortalTabId] = useState<string>('')
 
   useEffect(() => {
     if (currentLayout) {
@@ -106,15 +109,52 @@ export const ProfessionalHeader = () => {
     setContextMenu({ isOpen: false, tabId: '', position: { x: 0, y: 0 } })
   }
 
+  const handleRequestAddComponent = () => {
+    console.log('ProfessionalHeader: handleRequestAddComponent called for tab:', contextMenu.tabId)
+    setComponentPortalTabId(contextMenu.tabId)
+    setShowComponentPortal(true)
+  }
 
-  // Simulate portfolio updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPortfolioValue(prev => prev + (Math.random() - 0.3) * 1000)
-      setDailyPnL(prev => prev + (Math.random() - 0.3) * 500)
-    }, 30000)
-    return () => clearInterval(interval)
-  }, [])
+  const handleComponentSelected = (componentMeta: ComponentMeta) => {
+    console.log('ProfessionalHeader: Component selected:', componentMeta)
+    const tab = currentLayout?.tabs.find(t => t.id === componentPortalTabId)
+    if (!tab) return
+
+    const currentComponents = tab.components || []
+    
+    // Find next available position
+    const existingPositions = currentComponents.map(c => ({ x: c.position.x, y: c.position.y }))
+    let x = 0, y = 0
+    while (existingPositions.some(pos => pos.x === x && pos.y === y)) {
+      x += 2
+      if (x > 10) {
+        x = 0
+        y += 2
+      }
+    }
+
+    const newComponent = {
+      id: `${componentMeta.id}-${Date.now()}`,
+      type: componentMeta.id,
+      position: {
+        x,
+        y,
+        w: componentMeta.defaultSize?.w || 4,
+        h: componentMeta.defaultSize?.h || 4
+      },
+      props: componentMeta.defaultProps || {}
+    }
+
+    // Update tab with new component
+    updateTab(componentPortalTabId, {
+      components: [...currentComponents, newComponent]
+    })
+    
+    setShowComponentPortal(false)
+    setComponentPortalTabId('')
+  }
+
+
 
   return (
     <motion.div
@@ -270,22 +310,6 @@ export const ProfessionalHeader = () => {
       </div>
       
       <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: "13px" }}>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          style={{ display: "flex", alignItems: "center", gap: "16px" }}
-        >
-          <span style={{ fontSize: "10px", color: theme.textSecondary }}>Month to Date P&L:</span>
-          <span style={{ fontSize: "11px", fontWeight: "500", color: portfolioValue > 0 ? theme.success : theme.danger }}>
-            {portfolioValue > 0 ? "+" : ""}${Math.abs(portfolioValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
-          <span style={{ color: theme.textSecondary, opacity: 0.5 }}>|</span>
-          <span style={{ fontSize: "10px", color: theme.textSecondary }}>Daily P&L:</span>
-          <span style={{ fontSize: "11px", fontWeight: "400", color: theme.text }}>
-            {dailyPnL > 0 ? "+" : ""}${Math.abs(dailyPnL).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
-        </motion.div>
-        
         {/* Tools Menu */}
         <ToolsMenu onOpenAuthDebugger={() => setShowAuthDebugger(true)} />
         
@@ -327,7 +351,20 @@ export const ProfessionalHeader = () => {
         isOpen={contextMenu.isOpen}
         position={contextMenu.position}
         onClose={handleCloseContextMenu}
+        onRequestAddComponent={handleRequestAddComponent}
       />
+
+      {/* Component Portal Modal */}
+      {showComponentPortal && (
+        <ComponentPortalModal
+          isOpen={showComponentPortal}
+          onClose={() => {
+            setShowComponentPortal(false)
+            setComponentPortalTabId('')
+          }}
+          onComponentSelected={handleComponentSelected}
+        />
+      )}
 
       {/* Authorization Debug Window */}
       <DraggableWindow
