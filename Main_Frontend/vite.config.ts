@@ -19,7 +19,7 @@ export default defineConfig({
     })
   ],
   server: {
-    port: 3500,
+    port: parseInt(process.env.VITE_PORT || '9000'),
     host: true,
     open: false, // Don't auto-open browser
     strictPort: true, // Don't try other ports
@@ -27,7 +27,7 @@ export default defineConfig({
     hmr: {
       overlay: false, // Disable error overlay to prevent crashes
       timeout: 60000,  // Increase HMR timeout
-      port: 3501, // Use a different port for HMR to avoid conflicts
+      port: parseInt(process.env.VITE_HMR_PORT || '9001'), // Use a different port for HMR to avoid conflicts
       protocol: 'ws', // Use WebSocket protocol
       host: 'localhost'
     },

@@ -225,6 +225,31 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         position: 'relative'
       }}
     >
+      {/* Floating Add Component Button - Always visible in edit mode */}
+      {isEditMode && components.length > 0 && (
+        <button
+          onClick={() => setShowComponentPortal(true)}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            zIndex: 1000,
+            padding: '10px 20px',
+            backgroundColor: currentTheme.primary,
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            fontSize: '13px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+          }}
+        >
+          <span>➕</span> Add Component
+        </button>
+      )}
 
       {/* Canvas Area */}
       <div style={{

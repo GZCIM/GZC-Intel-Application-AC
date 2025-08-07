@@ -287,14 +287,23 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({
                         );
                     }
                 } catch (error) {
-                    console.error(
-                        `[QuoteContext:${streamType}] Failed to parse quote message:`,
-                        error
-                    );
-                    console.error(
-                        `[QuoteContext:${streamType}] Raw message:`,
-                        event.data
-                    );
+                    // Check if this is just an informational message, not an error
+                    if (typeof event.data === 'string' && (
+                        event.data.includes('WebSocket connected') ||
+                        event.data.includes('Connected to') ||
+                        event.data.includes('FIX gateway not available')
+                    )) {
+                        console.log(`[QuoteContext:${streamType}] Info:`, event.data);
+                    } else {
+                        console.error(
+                            `[QuoteContext:${streamType}] Failed to parse quote message:`,
+                            error
+                        );
+                        console.error(
+                            `[QuoteContext:${streamType}] Raw message:`,
+                            event.data
+                        );
+                    }
                 }
             };
 

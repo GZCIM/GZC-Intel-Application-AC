@@ -35,7 +35,7 @@ export function VolatilityAnalysis({
   theme,
   apiEndpoint = process.env.NODE_ENV === 'development' 
     ? 'http://localhost:8080' 
-    : 'http://bloomberg-gateway.bloomberg-gateway'
+    : 'http://20.172.249.92:8080'
 }: VolatilityAnalysisProps = {}) {
   const { currentTheme } = useTheme()
   const [loading, setLoading] = useState(false)

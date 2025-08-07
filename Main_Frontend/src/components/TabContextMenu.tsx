@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '../contexts/ThemeContext'
 import { useTabLayout } from '../core/tabs/TabLayoutManager'
 import { ComponentPortalModal } from './ComponentPortalModal'
-import { ComponentMeta } from '../core/components/ComponentInventory'
+import { ComponentMeta, componentInventory } from '../core/components/ComponentInventory'
 
 interface TabContextMenuProps {
   tabId: string
@@ -86,10 +86,10 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
   }
 
   const handleComponentSelected = (componentMeta: ComponentMeta) => {
-    if (!tab.components) return
+    const currentComponents = tab.components || []
     
     // Find next available position
-    const existingPositions = tab.components.map(c => ({ x: c.x, y: c.y }))
+    const existingPositions = currentComponents.map(c => ({ x: c.position.x, y: c.position.y }))
     let x = 0, y = 0
     while (existingPositions.some(pos => pos.x === x && pos.y === y)) {
       x += 2
@@ -101,16 +101,18 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
 
     const newComponent = {
       id: `${componentMeta.id}-${Date.now()}`,
-      componentId: componentMeta.id,
-      x,
-      y,
-      w: componentMeta.defaultSize?.w || 4,
-      h: componentMeta.defaultSize?.h || 4,
+      type: componentMeta.id,  // Changed from componentId to type
+      position: {  // Wrapped coordinates in position object
+        x,
+        y,
+        w: componentMeta.defaultSize?.w || 4,
+        h: componentMeta.defaultSize?.h || 4
+      },
       props: componentMeta.defaultProps || {}
     }
 
     updateTab(tabId, {
-      components: [...tab.components, newComponent]
+      components: [...currentComponents, newComponent]
     })
     setShowComponentPortal(false)
   }
@@ -319,7 +321,12 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
         <ComponentPortalModal
           isOpen={showComponentPortal}
           onClose={() => setShowComponentPortal(false)}
-          onComponentSelected={handleComponentSelected}
+          onComponentSelect={(componentId) => {
+            const componentMeta = componentInventory.getComponent(componentId)
+            if (componentMeta) {
+              handleComponentSelected(componentMeta)
+            }
+          }}
         />
       )}
     </>
