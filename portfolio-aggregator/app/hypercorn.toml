@@ -1,0 +1,5 @@
+bind = ["0.0.0.0:5000"]
+workers = 1
+keep_alive_timeout = 10
+loglevel = "info"
+use_reloader = true

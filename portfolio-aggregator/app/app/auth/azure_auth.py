@@ -1,0 +1,137 @@
+"""
+Azure AD Authentication Middleware for FastAPI's JWT tokens.
+This module provides functions to validate JWT tokens issued by Azure AD.
+It supports both HTTP and WebSocket connections.
+"""
+
+from functools import lru_cache
+
+import os
+from fastapi import WebSocket
+from jose import jwt
+from jose.exceptions import JWTError
+from fastapi import HTTPException, Depends, WebSocketException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from dotenv import load_dotenv
+import requests
+from app.util.logger import get_logger
+
+logger = get_logger(__name__)
+# Load environment variables
+load_dotenv()
+
+# Azure AD configuration
+MOCK_TOKEN = os.getenv("MOCK_AUTH_TOKEN") or "abc123"
+BYPASS_AUTH = os.getenv("BYPASS_AUTH_FOR_PORTFOLIO") == "1"
+TENANT_ID = os.getenv("AZURE_AD_TENANT_ID")
+CLIENT_ID = os.getenv("AZURE_AD_CLIENT_ID")
+ISSUER = f"https://login.microsoftonline.com/{TENANT_ID}/v2.0"
+JWKS_URI = f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys"
+
+security = HTTPBearer()
+
+
+@lru_cache()
+def get_jwks():
+    """
+    Fetch the JSON Web Key Set (JWKS) from Azure AD.
+    This is used to validate the JWT signature.
+    """
+    logger.info("Fetching JWKS from Azure AD")
+    response = requests.get(JWKS_URI)
+    response.raise_for_status()
+    return response.json()["keys"]
+
+
+def get_signing_key(token):
+    """
+    Extract the signing key from the JWT token.
+    This is used to verify the token's signature.
+    """
+    logger.info("Extracting signing key from token")
+    unverified_header = jwt.get_unverified_header(token)
+    kid = unverified_header["kid"]
+    for key in get_jwks():
+        if key["kid"] == kid:
+            return key
+    raise HTTPException(status_code=401, detail="Unable to find matching key")
+
+
+async def validate_token(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
+    """
+    Validate the JWT token from the request header.
+    The token should be passed as a Bearer token in the Authorization header.
+    """
+    token = credentials.credentials
+    if BYPASS_AUTH and token == MOCK_TOKEN:
+        logger.warning("Bypassing auth: MOCK token accepted")
+        return {"sub": "mock-user", "roles": ["mock"], "aud": CLIENT_ID}
+    try:
+        signing_key = get_signing_key(token)
+        payload = jwt.decode(
+            token,
+            key=signing_key,
+            algorithms=["RS256"],
+            audience=CLIENT_ID,
+            issuer=ISSUER,
+        )
+        logger.info(f"Token Successfully Verified: {payload}")
+        return payload
+    except JWTError as e:
+        logger.error(f"Token validation failed: {e}")
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+async def validate_token_ws(websocket: WebSocket):
+    """
+    Extract and validate token from WebSocket connection.
+    Token should be passed as query param ?token=... or via headers.
+    """
+    token = None
+
+    # Try to extract from query parameters
+    token = websocket.query_params.get("access_token")
+
+    # Optionally support header-based tokens (e.g., for JS clients)
+    if not token:
+        auth_header = websocket.headers.get("Authorization")
+        if auth_header and auth_header.lower().startswith("bearer "):
+            token = auth_header[7:]
+
+    if not token:
+        if BYPASS_AUTH:
+            logger.warning("Bypassing WS auth: No token provided")
+            return {
+                "sub": "mock-user",
+                "roles": ["mock"],
+                "aud": CLIENT_ID,
+                "preferred_username": "mock-user",
+            }
+        logger.error("No token provided for WebSocket connection")
+        raise WebSocketException(code=1008, reason="Unauthorized: No token")
+
+    if BYPASS_AUTH and token == MOCK_TOKEN:
+        logger.warning("Bypassing WS auth: MOCK token accepted")
+        return {
+            "sub": "mock-user",
+            "roles": ["mock"],
+            "aud": CLIENT_ID,
+            "preferred_username": "mock-user",
+        }
+
+    try:
+        signing_key = get_signing_key(token)
+        payload = jwt.decode(
+            token,
+            key=signing_key,
+            algorithms=["RS256"],
+            audience=CLIENT_ID,
+            issuer=ISSUER,
+        )
+        logger.info(f"WS Token Successfully Verified: {payload}")
+        return payload
+    except JWTError as e:
+        logger.error(f"WebSocket token validation failed: {e}")
+        raise WebSocketException(code=1008, reason="Unauthorized: Invalid token")
