@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GZC Intel - Test Panel</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #95BD78;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-section h2 {
+            color: #95BD78;
+            margin-top: 0;
+            font-size: 18px;
+        }
+        button {
+            background: #95BD78;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        button:hover {
+            background: #7fa065;
+        }
+        button.secondary {
+            background: #333;
+            color: #fff;
+        }
+        button.secondary:hover {
+            background: #444;
+        }
+        .output {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .status.success { background: #10B981; color: #000; }
+        .status.error { background: #EF4444; color: #fff; }
+        .status.info { background: #3B82F6; color: #fff; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 GZC Intel App - Test Panel</h1>
+        
+        <div class="grid">
+            <!-- Quick Actions -->
+            <div class="test-section">
+                <h2>🚀 Quick Actions</h2>
+                <button onclick="openApp()">Open App in New Tab</button>
+                <button onclick="clearAllData()" class="secondary">Clear All Data</button>
+                <button onclick="runAutomatedTests()">Run Automated Tests</button>
+                <div id="quick-output" class="output" style="display:none;"></div>
+            </div>
+
+            <!-- User Management -->
+            <div class="test-section">
+                <h2>👤 User Management</h2>
+                <button onclick="switchUser('mikael')">Switch to Mikaël</button>
+                <button onclick="switchUser('alex')">Switch to Alex</button>
+                <button onclick="switchUser('edward')">Switch to Edward</button>
+                <button onclick="switchUser('levent')">Switch to Levent</button>
+                <button onclick="showCurrentUser()">Show Current User</button>
+                <div id="user-output" class="output" style="display:none;"></div>
+            </div>
+
+            <!-- Tab Testing -->
+            <div class="test-section">
+                <h2>📑 Tab Testing</h2>
+                <button onclick="showUserTabs()">Show Current User's Tabs</button>
+                <button onclick="showAllUsersTabs()">Show All Users' Tabs</button>
+                <button onclick="createTestTab()">Create Test Tab</button>
+                <button onclick="clearUserTabs()">Clear Current User's Tabs</button>
+                <div id="tab-output" class="output" style="display:none;"></div>
+            </div>
+
+            <!-- Theme Testing -->
+            <div class="test-section">
+                <h2>🎨 Theme Testing</h2>
+                <button onclick="cycleThemes()">Cycle Through All Themes</button>
+                <button onclick="showCurrentTheme()">Show Current Theme</button>
+                <button onclick="setTheme('gzc-dark')">Set GZC Dark</button>
+                <button onclick="setTheme('institutional')">Set Institutional</button>
+                <div id="theme-output" class="output" style="display:none;"></div>
+            </div>
+
+            <!-- Storage Inspection -->
+            <div class="test-section">
+                <h2>💾 Storage Inspection</h2>
+                <button onclick="inspectLocalStorage()">Inspect LocalStorage</button>
+                <button onclick="inspectSessionStorage()">Inspect SessionStorage</button>
+                <button onclick="exportData()">Export All Data</button>
+                <button onclick="importData()">Import Data</button>
+                <div id="storage-output" class="output" style="display:none;"></div>
+            </div>
+
+            <!-- Debug Console -->
+            <div class="test-section">
+                <h2>🐛 Debug Console</h2>
+                <button onclick="loadDebugScript()">Load Debug Script</button>
+                <button onclick="showDebugCommands()">Show Debug Commands</button>
+                <div id="debug-output" class="output" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper functions
+        function showOutput(id, content, status = 'info') {
+            const output = document.getElementById(id);
+            output.style.display = 'block';
+            output.innerHTML = `<span class="status ${status}">${status.toUpperCase()}</span><br><br>${content}`;
+        }
+
+        function formatJSON(obj) {
+            return JSON.stringify(obj, null, 2).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // Quick Actions
+        function openApp() {
+            window.open('http://localhost:3500', '_blank');
+            showOutput('quick-output', 'App opened in new tab', 'success');
+        }
+
+        function clearAllData() {
+            if (confirm('This will clear ALL data including users, tabs, and themes. Continue?')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                showOutput('quick-output', 'All data cleared! Refresh the app to see defaults.', 'success');
+            }
+        }
+
+        function runAutomatedTests() {
+            const script = document.createElement('script');
+            script.src = '/automated-test.js';
+            script.onload = () => showOutput('quick-output', 'Automated tests loaded! Check browser console.', 'success');
+            script.onerror = () => showOutput('quick-output', 'Failed to load tests. Make sure the dev server is running.', 'error');
+            document.head.appendChild(script);
+        }
+
+        // User Management
+        function switchUser(userName) {
+            const users = {
+                'mikael': { id: 'user-mt', email: 'mikael.thomas@gzc-intel.com', name: 'Mikaël Thomas' },
+                'alex': { id: 'user-ae', email: 'alex.eygenson@gzc-intel.com', name: 'Alex Eygenson' },
+                'edward': { id: 'user-ef', email: 'edward.filippi@gzc-intel.com', name: 'Edward Filippi' },
+                'levent': { id: 'user-ls', email: 'levent.sendur@gzc-intel.com', name: 'Levent Sendur' }
+            };
+            
+            const user = users[userName];
+            if (user) {
+                localStorage.setItem('gzc-intel-user', JSON.stringify(user));
+                showOutput('user-output', `Switched to ${user.name}. Refresh the app to load their tabs.`, 'success');
+            }
+        }
+
+        function showCurrentUser() {
+            const user = localStorage.getItem('gzc-intel-user');
+            if (user) {
+                showOutput('user-output', `Current User:<br><pre>${formatJSON(JSON.parse(user))}</pre>`, 'info');
+            } else {
+                showOutput('user-output', 'No user logged in', 'error');
+            }
+        }
+
+        // Tab Testing
+        function showUserTabs() {
+            const user = JSON.parse(localStorage.getItem('gzc-intel-user') || '{}');
+            if (!user.id) {
+                showOutput('tab-output', 'No user logged in', 'error');
+                return;
+            }
+            
+            const currentLayout = localStorage.getItem(`gzc-intel-current-layout-${user.id}`);
+            if (currentLayout) {
+                const layout = JSON.parse(currentLayout);
+                const tabInfo = layout.tabs.map(t => `• ${t.name} (${t.type})`).join('<br>');
+                showOutput('tab-output', `${user.name}'s Tabs (${layout.tabs.length}):<br><br>${tabInfo}`, 'info');
+            } else {
+                showOutput('tab-output', `${user.name} has no saved tabs (using defaults)`, 'info');
+            }
+        }
+
+        function showAllUsersTabs() {
+            const userIds = ['user-mt', 'user-ae', 'user-ef', 'user-ls'];
+            const userNames = {
+                'user-mt': 'Mikaël Thomas',
+                'user-ae': 'Alex Eygenson',
+                'user-ef': 'Edward Filippi',
+                'user-ls': 'Levent Sendur'
+            };
+            
+            let output = '<strong>All Users\' Tabs:</strong><br><br>';
+            
+            userIds.forEach(userId => {
+                const currentLayout = localStorage.getItem(`gzc-intel-current-layout-${userId}`);
+                output += `<strong>${userNames[userId]}:</strong><br>`;
+                
+                if (currentLayout) {
+                    const layout = JSON.parse(currentLayout);
+                    layout.tabs.forEach(tab => {
+                        output += `  • ${tab.name} (${tab.type})<br>`;
+                    });
+                } else {
+                    output += '  • No saved tabs<br>';
+                }
+                output += '<br>';
+            });
+            
+            showOutput('tab-output', output, 'info');
+        }
+
+        function createTestTab() {
+            showOutput('tab-output', 'To create a test tab:<br>1. Open the app<br>2. Click the + button<br>3. Enter a name like "Test Tab"<br>4. Select Dynamic or Static<br>5. Click Create', 'info');
+        }
+
+        function clearUserTabs() {
+            const user = JSON.parse(localStorage.getItem('gzc-intel-user') || '{}');
+            if (!user.id) {
+                showOutput('tab-output', 'No user logged in', 'error');
+                return;
+            }
+            
+            if (confirm(`Clear all tabs for ${user.name}?`)) {
+                const keys = [
+                    `gzc-intel-layouts-${user.id}`,
+                    `gzc-intel-current-layout-${user.id}`,
+                    `gzc-intel-active-layout-${user.id}`,
+                    `gzc-intel-active-tab-${user.id}`
+                ];
+                
+                keys.forEach(key => localStorage.removeItem(key));
+                sessionStorage.removeItem(`gzc-intel-active-tab-${user.id}`);
+                
+                showOutput('tab-output', `Cleared all tabs for ${user.name}. Refresh the app to see defaults.`, 'success');
+            }
+        }
+
+        // Theme Testing
+        const themes = ['gzc-dark', 'gzc-light', 'institutional', 'arctic', 'parchment', 'pearl', 'dark-mode', 'midnight', 'forest', 'ocean', 'sunset', 'professional'];
+        let themeIndex = 0;
+
+        function cycleThemes() {
+            const theme = themes[themeIndex % themes.length];
+            setTheme(theme);
+            themeIndex++;
+            showOutput('theme-output', `Set theme to: ${theme}<br><br>Click again to cycle to next theme.`, 'success');
+        }
+
+        function showCurrentTheme() {
+            const theme = localStorage.getItem('gzc-intel-theme') || 'gzc-dark';
+            showOutput('theme-output', `Current theme: ${theme}`, 'info');
+        }
+
+        function setTheme(theme) {
+            localStorage.setItem('gzc-intel-theme', theme);
+            showOutput('theme-output', `Theme set to: ${theme}. Refresh the app to see changes.`, 'success');
+        }
+
+        // Storage Inspection
+        function inspectLocalStorage() {
+            const keys = Object.keys(localStorage).filter(k => k.includes('gzc-intel'));
+            let output = '<strong>GZC Intel LocalStorage Keys:</strong><br><br>';
+            
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                let preview = value.substring(0, 100);
+                if (value.length > 100) preview += '...';
+                output += `<strong>${key}:</strong><br>${preview}<br><br>`;
+            });
+            
+            showOutput('storage-output', output || 'No GZC Intel data found', 'info');
+        }
+
+        function inspectSessionStorage() {
+            const keys = Object.keys(sessionStorage).filter(k => k.includes('gzc-intel'));
+            let output = '<strong>GZC Intel SessionStorage Keys:</strong><br><br>';
+            
+            keys.forEach(key => {
+                const value = sessionStorage.getItem(key);
+                output += `<strong>${key}:</strong> ${value}<br>`;
+            });
+            
+            showOutput('storage-output', output || 'No GZC Intel session data found', 'info');
+        }
+
+        function exportData() {
+            const data = {};
+            Object.keys(localStorage).forEach(key => {
+                if (key.includes('gzc-intel')) {
+                    data[key] = localStorage.getItem(key);
+                }
+            });
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gzc-intel-backup-${Date.now()}.json`;
+            a.click();
+            
+            showOutput('storage-output', 'Data exported successfully!', 'success');
+        }
+
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        Object.keys(data).forEach(key => {
+                            localStorage.setItem(key, data[key]);
+                        });
+                        showOutput('storage-output', 'Data imported successfully! Refresh the app.', 'success');
+                    } catch (err) {
+                        showOutput('storage-output', 'Invalid JSON file', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // Debug Console
+        function loadDebugScript() {
+            const script = document.createElement('script');
+            script.src = '/debug-user-tabs.js';
+            script.onload = () => {
+                showOutput('debug-output', 'Debug script loaded! Commands available:<br><br>• checkUserStorage()<br>• debugAllUserTabs()<br>• debugClearUserTabs()<br>• debugSwitchUser("alex")', 'success');
+            };
+            script.onerror = () => showOutput('debug-output', 'Failed to load debug script. Make sure the dev server is running.', 'error');
+            document.head.appendChild(script);
+        }
+
+        function showDebugCommands() {
+            const commands = `
+<strong>Browser Console Commands:</strong><br><br>
+<strong>Tab Management:</strong><br>
+• TabManager.createTab("My Tab", "dynamic")<br>
+• TabManager.listTabs()<br><br>
+<strong>Storage Inspection:</strong><br>
+• localStorage.getItem('gzc-intel-user')<br>
+• Object.keys(localStorage).filter(k => k.includes('gzc-intel'))<br><br>
+<strong>Quick Tests:</strong><br>
+• console.log(window.location.href)<br>
+• document.querySelector('[title="Add Tab"]').click()
+            `;
+            showOutput('debug-output', commands, 'info');
+        }
+    </script>
+</body>
+</html>

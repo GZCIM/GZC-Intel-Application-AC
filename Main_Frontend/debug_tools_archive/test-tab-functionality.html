@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tab Functionality Test</title>
+    <style>
+        body { font-family: Inter, sans-serif; margin: 20px; background: #0a0a0a; color: #fff; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #333; border-radius: 8px; }
+        .success { color: #ABD38F; }
+        .error { color: #DD8B8B; }
+        .info { color: #64b5f6; }
+        button { padding: 10px 20px; margin: 5px; background: #95BD78; border: none; border-radius: 4px; color: #000; cursor: pointer; }
+        button:hover { background: #ABD38F; }
+        .status { margin: 10px 0; padding: 10px; background: #1a1a1a; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 GZC Intel Tab System Test</h1>
+    
+    <div class="test-section">
+        <h2>📋 Test Checklist</h2>
+        <div id="test-results">
+            <div class="status info">Ready to test tab functionality...</div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Manual Test Instructions</h2>
+        <ol>
+            <li><strong>Open Main App:</strong> Go to <a href="http://localhost:3500" target="_blank" style="color: #95BD78;">http://localhost:3500</a></li>
+            <li><strong>Check Default Tabs:</strong> Verify Analytics (green dot) and Documentation (blue dot) tabs are visible</li>
+            <li><strong>Test Add Tab:</strong> Click the "+" button next to tabs</li>
+            <li><strong>Test Prompt:</strong> Enter a tab title (e.g., "Test Tab")</li>
+            <li><strong>Test Type Selection:</strong> Choose a tab type (1-4)</li>
+            <li><strong>Verify Creation:</strong> New tab should appear with correct color indicator</li>
+            <li><strong>Test Close:</strong> Click X button on closable tabs</li>
+            <li><strong>Test Persistence:</strong> Refresh page and verify tabs persist</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Tab Type Indicators</h2>
+        <ul>
+            <li><span style="color: #95BD78;">●</span> <strong>Dynamic</strong> - Full drag & drop functionality</li>
+            <li><span style="color: #64b5f6;">●</span> <strong>Static</strong> - Fixed layout components</li>
+            <li><span style="color: #DD8B8B;">●</span> <strong>Edit Mode</strong> - Controlled customization</li>
+            <li><span style="color: #ABD38F;">●</span> <strong>IT Managed</strong> - Enterprise features</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🛠️ Developer Console Tests</h2>
+        <button onclick="testTabManager()">Test Tab Manager</button>
+        <button onclick="testLocalStorage()">Check LocalStorage</button>
+        <button onclick="testViewMemory()">Test View Memory</button>
+        <div id="console-output" class="status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>✅ Expected Results</h2>
+        <ul>
+            <li>Add tab button creates new tabs with proper prompts</li>
+            <li>Tab type selection (1-4) creates correct tab type</li>
+            <li>Color indicators match tab types</li>
+            <li>Close buttons work on user-created tabs</li>
+            <li>Default tabs (Analytics/Documentation) cannot be closed</li>
+            <li>Tab persistence survives page refresh</li>
+            <li>View memory integration saves tab configurations</li>
+        </ul>
+    </div>
+
+    <script>
+        function testTabManager() {
+            const output = document.getElementById('console-output');
+            try {
+                // Test localStorage for tab data
+                const layouts = localStorage.getItem('gzc-intel-layouts');
+                const activeLayout = localStorage.getItem('gzc-intel-active-layout');
+                const viewMemory = localStorage.getItem('gzc-platform-view-memory');
+                
+                output.innerHTML = `
+                    <div class="success">✅ LocalStorage Access Working</div>
+                    <div>Layouts: ${layouts ? 'Found' : 'Empty'}</div>
+                    <div>Active Layout: ${activeLayout || 'default'}</div>
+                    <div>View Memory: ${viewMemory ? 'Found' : 'Empty'}</div>
+                `;
+            } catch (error) {
+                output.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testLocalStorage() {
+            const output = document.getElementById('console-output');
+            try {
+                // Test localStorage access
+                localStorage.setItem('test-key', 'test-value');
+                const testValue = localStorage.getItem('test-key');
+                localStorage.removeItem('test-key');
+                
+                if (testValue === 'test-value') {
+                    output.innerHTML = '<div class="success">✅ LocalStorage Working Correctly</div>';
+                } else {
+                    output.innerHTML = '<div class="error">❌ LocalStorage Access Issue</div>';
+                }
+            } catch (error) {
+                output.innerHTML = `<div class="error">❌ LocalStorage Error: ${error.message}</div>`;
+            }
+        }
+
+        function testViewMemory() {
+            const output = document.getElementById('console-output');
+            try {
+                const viewMemory = localStorage.getItem('gzc-platform-view-memory');
+                if (viewMemory) {
+                    const parsed = JSON.parse(viewMemory);
+                    output.innerHTML = `
+                        <div class="success">✅ View Memory Found</div>
+                        <div>Layouts: ${Object.keys(parsed.layouts || {}).length}</div>
+                        <div>Theme: ${parsed.theme?.currentTheme || 'Not set'}</div>
+                        <div>Filter Presets: ${(parsed.filterPresets || []).length}</div>
+                    `;
+                } else {
+                    output.innerHTML = '<div class="info">ℹ️ No View Memory Found (Normal on first run)</div>';
+                }
+            } catch (error) {
+                output.innerHTML = `<div class="error">❌ View Memory Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run basic tests on page load
+        window.onload = function() {
+            setTimeout(() => {
+                testLocalStorage();
+            }, 500);
+        };
+    </script>
+</body>
+</html>

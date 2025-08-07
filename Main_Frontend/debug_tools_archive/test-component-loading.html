@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Component Loading Test</title>
+</head>
+<body>
+    <h1>Testing Component Loading</h1>
+    <div id="results"></div>
+    
+    <script>
+        // Test component loading
+        async function testComponentLoading() {
+            const results = document.getElementById('results');
+            
+            try {
+                // Open the app
+                const response = await fetch('http://localhost:3500/');
+                if (response.ok) {
+                    results.innerHTML += '<p style="color: green;">✓ Server is running</p>';
+                    
+                    // Check for console errors
+                    results.innerHTML += '<p>Open browser console to check for errors...</p>';
+                    results.innerHTML += '<p>Look for "Failed to load component" messages</p>';
+                    
+                    // Open the app in a new window
+                    window.open('http://localhost:3500/', '_blank');
+                } else {
+                    results.innerHTML += '<p style="color: red;">✗ Server not responding</p>';
+                }
+            } catch (error) {
+                results.innerHTML += `<p style="color: red;">✗ Error: ${error.message}</p>`;
+            }
+        }
+        
+        testComponentLoading();
+    </script>
+</body>
+</html>

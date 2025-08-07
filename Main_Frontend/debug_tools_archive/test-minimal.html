@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal Test</title>
+</head>
+<body>
+    <h1>Testing Component System</h1>
+    <button onclick="testCreateTab()">Create Test Tab</button>
+    <div id="result"></div>
+    
+    <script>
+        function testCreateTab() {
+            // This will test if the tab system is working
+            console.log('Testing tab creation...');
+            
+            // Open the app and check console
+            window.open('http://localhost:3500/', '_blank');
+            
+            document.getElementById('result').innerHTML = `
+                <h2>Instructions:</h2>
+                <ol>
+                    <li>Open browser console (F12)</li>
+                    <li>Look for any red error messages</li>
+                    <li>Try creating a new tab using the + button</li>
+                    <li>Check if "Failed to load component: UserTabContainer" appears</li>
+                </ol>
+                <h3>If you see the error:</h3>
+                <p>Run this in the console: <code>localStorage.clear(); location.reload()</code></p>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Component Test</title>
+</head>
+<body>
+    <h1>Portfolio Component Test</h1>
+    <p>Open the browser console and run these commands to test:</p>
+    
+    <pre>
+// 1. Check if portfolio exists in inventory
+componentInventory.getComponent('portfolio')
+
+// 2. Check all components
+componentInventory.searchComponents('').map(c => ({ id: c.id, name: c.displayName }))
+
+// 3. Check financial category
+componentInventory.getComponentsByCategory('financial')
+
+// 4. Search for portfolio
+componentInventory.searchComponents('portfolio')
+
+// 5. Force re-add portfolio if needed
+if (!componentInventory.getComponent('portfolio')) {
+  componentInventory.addComponent({
+    id: 'portfolio',
+    name: 'Portfolio',
+    displayName: 'Portfolio Dashboard',
+    category: 'financial',
+    subcategory: 'portfolio',
+    description: 'Comprehensive portfolio management with real-time P&L, positions table, metrics, and charts',
+    defaultSize: { w: 8, h: 6 },
+    minSize: { w: 6, h: 4 },
+    maxSize: { w: 12, h: 10 },
+    tags: ['portfolio', 'trading', 'pnl', 'positions', 'financial', 'real-time', 'dashboard'],
+    complexity: 'complex',
+    quality: 'enhanced',
+    source: 'internal'
+  })
+  componentInventory.rebuildSearchIndex()
+  console.log('Portfolio added!')
+}
+    </pre>
+
+    <div style="margin-top: 40px; padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
+        <h2>Step-by-Step Guide:</h2>
+        <ol>
+            <li><strong>Create Dynamic Tab:</strong>
+                <ul>
+                    <li>Click the + button in header</li>
+                    <li>Name it "Portfolio Test"</li>
+                    <li>Select "Dynamic" type</li>
+                </ul>
+            </li>
+            <li><strong>Enter Edit Mode:</strong>
+                <ul>
+                    <li>Click "Edit" button (top-right of tab)</li>
+                    <li>Button should change to "Save"</li>
+                </ul>
+            </li>
+            <li><strong>Add Component:</strong>
+                <ul>
+                    <li>Click "➕ Add Component" button</li>
+                    <li>Modal should open with component list</li>
+                </ul>
+            </li>
+            <li><strong>Find Portfolio:</strong>
+                <ul>
+                    <li>Look for "Portfolio Dashboard"</li>
+                    <li>Should be in the "Local Components" tab</li>
+                    <li>Category: financial</li>
+                </ul>
+            </li>
+            <li><strong>Select and Position:</strong>
+                <ul>
+                    <li>Click on Portfolio Dashboard</li>
+                    <li>It will appear in the canvas</li>
+                    <li>Drag to position</li>
+                    <li>Resize by dragging edges</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div style="margin-top: 20px; padding: 20px; background-color: #f0f0f0; border-radius: 8px;">
+        <h3>Troubleshooting:</h3>
+        <p>If Portfolio doesn't appear in the list:</p>
+        <ol>
+            <li>Check browser console for errors</li>
+            <li>Run the force re-add command above</li>
+            <li>Refresh the page</li>
+            <li>Check the InventoryDebugger (bottom-right)</li>
+        </ol>
+    </div>
+</body>
+</html>

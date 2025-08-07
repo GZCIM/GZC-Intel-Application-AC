@@ -1,9 +1,0 @@
-Flask==3.1.0
-flask_cors==5.0.1
-flask_sock==0.7.0
-pandas==2.2.3
-python-dotenv==1.0.1
-redis==5.2.1
-simplefix==1.0.17
-SQLAlchemy==2.0.27
-pyodbc==5.1.0

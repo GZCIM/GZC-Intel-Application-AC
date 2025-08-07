@@ -1,0 +1,153 @@
+# Multi-stage build - Frontend
+FROM node:20-alpine as frontend-builder
+
+WORKDIR /app/frontend
+
+# Copy package files
+COPY package*.json ./
+RUN npm ci
+
+# Copy source files
+COPY . .
+
+# Build the app (skip TypeScript check for deployment)
+RUN npm run build:skip-ts
+
+# Multi-stage build - Backend dependencies
+FROM python:3.11-slim as backend-deps
+
+WORKDIR /app/backend
+
+# Install system dependencies needed for Python packages
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    unixodbc-dev \
+    curl \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Microsoft ODBC Driver for SQL Server
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && apt-get remove -y libodbc2 libodbcinst2 unixodbc-common || true \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql17
+
+# Copy FXSpotStream requirements and install
+COPY backend-source/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Production stage - unified container
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    nginx \
+    supervisor \
+    unixodbc-dev \
+    curl \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Microsoft ODBC Driver for SQL Server
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && apt-get remove -y libodbc2 libodbcinst2 unixodbc-common || true \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql17
+
+# Copy Python dependencies from backend-deps stage
+COPY --from=backend-deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=backend-deps /usr/local/bin /usr/local/bin
+
+# Copy built frontend from frontend-builder
+COPY --from=frontend-builder /app/frontend/dist /var/www/html
+
+# Copy Flask backend
+COPY backend-source/ /app/backend/
+
+# Copy TLS certificates to backend directory
+COPY backend-source/*.pem /app/backend/
+
+# Create nginx configuration with WebSocket support
+RUN echo 'server { \
+    listen 3500; \
+    server_name localhost; \
+    root /var/www/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+    location /ws_esp { \
+        proxy_pass http://localhost:5100; \
+        proxy_http_version 1.1; \
+        proxy_set_header Upgrade $http_upgrade; \
+        proxy_set_header Connection "upgrade"; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+        proxy_connect_timeout 60s; \
+        proxy_send_timeout 60s; \
+        proxy_read_timeout 60s; \
+        proxy_buffering off; \
+    } \
+    location /ws_rfs { \
+        proxy_pass http://localhost:5100; \
+        proxy_http_version 1.1; \
+        proxy_set_header Upgrade $http_upgrade; \
+        proxy_set_header Connection "upgrade"; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+        proxy_connect_timeout 60s; \
+        proxy_send_timeout 60s; \
+        proxy_read_timeout 60s; \
+        proxy_buffering off; \
+    } \
+    location /ws_execution { \
+        proxy_pass http://localhost:5100; \
+        proxy_http_version 1.1; \
+        proxy_set_header Upgrade $http_upgrade; \
+        proxy_set_header Connection "upgrade"; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+        proxy_connect_timeout 60s; \
+        proxy_send_timeout 60s; \
+        proxy_read_timeout 60s; \
+        proxy_buffering off; \
+    } \
+    location /api/ { \
+        proxy_pass http://localhost:5100/; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+    } \
+}' > /etc/nginx/sites-available/default
+
+# Remove default nginx config
+RUN rm -f /etc/nginx/sites-enabled/default
+RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
+
+# Create startup script for FXSpotStream with better error handling
+RUN echo '#!/bin/bash\ncd /app/backend\nexport FLASK_PORT=5100\nexport FLASK_HOST=0.0.0.0\nexport PYTHONUNBUFFERED=1\n# Create empty log config if missing\ntouch log.cfg\necho "Starting FXSpotStream backend on port 5100..."\npython -u run.py 2>&1' > /app/start-backend.sh \
+    && chmod +x /app/start-backend.sh
+
+# Copy supervisor configuration
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Set working directory for Flask app
+WORKDIR /app/backend
+
+# Expose port
+EXPOSE 3500
+
+# Start both services with supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

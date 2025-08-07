@@ -1,7 +1,0 @@
-[submodule "gzc-intel-frontend"]
-	path = gzc-intel-frontend
-	url = https://github.com/GZCIM/gzc-intel-app.git
-	branch = main
-[submodule "fx-websocket-backend"]
-	path = fx-websocket-backend
-	url = https://github.com/GZCIM/fx-websocket-backend.git

@@ -1,0 +1,271 @@
+# GZCIM Mega-Container: All services in one container
+# Includes: gzc-intel-app frontend, FXSpotStream backend, Portfolio backend, Bloomberg gateway
+
+# Stage 1: Build React Frontend (gzc-intel-app)
+FROM node:20-alpine as frontend-builder
+
+WORKDIR /app/frontend
+
+# Copy package files
+COPY package*.json ./
+RUN npm ci
+
+# Copy frontend source files
+COPY . .
+
+# Build the frontend
+RUN npm run build:skip-ts
+
+# Stage 2: Build Bloomberg Volatility Surface Frontend
+FROM node:20-alpine as bloomberg-builder
+
+WORKDIR /app/bloomberg-frontend
+
+# Copy Bloomberg package files
+COPY ../bloomberg-volatility-surface/package*.json ./
+RUN npm ci
+
+# Copy Bloomberg source
+COPY ../bloomberg-volatility-surface/ ./
+
+# Build Bloomberg frontend
+RUN npm run build
+
+# Stage 3: Python Dependencies
+FROM python:3.11-slim as python-deps
+
+WORKDIR /app/deps
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    unixodbc-dev \
+    curl \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Microsoft ODBC Driver for SQL Server
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql17
+
+# Install Python packages from all backends
+COPY ../FXSpotStream/requirements.txt /tmp/fxspotstream-requirements.txt
+COPY ../portfolio_agregator/back_end/requirements.txt /tmp/portfolio-requirements.txt
+COPY ../bloomberg-volatility-surface/tools/requirements.txt /tmp/bloomberg-requirements.txt
+
+# Combine all requirements and install
+RUN cat /tmp/*-requirements.txt | sort | uniq > /tmp/combined-requirements.txt \
+    && pip install --no-cache-dir -r /tmp/combined-requirements.txt
+
+# Stage 4: Production Mega-Container
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    nginx \
+    supervisor \
+    unixodbc-dev \
+    curl \
+    gnupg \
+    redis-server \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Microsoft ODBC Driver for SQL Server
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql17
+
+# Copy Python dependencies
+COPY --from=python-deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=python-deps /usr/local/bin /usr/local/bin
+
+# Copy built frontends
+COPY --from=frontend-builder /app/frontend/dist /var/www/html/gzc-intel-app
+COPY --from=bloomberg-builder /app/bloomberg-frontend/dist /var/www/html/bloomberg
+
+# Copy all backend services
+COPY ../FXSpotStream/ /app/services/fxspotstream/
+COPY ../portfolio_agregator/back_end/ /app/services/portfolio/
+COPY ../bloomberg-volatility-surface/tools/ /app/services/bloomberg/
+
+# Create startup scripts for each service
+RUN echo '#!/bin/bash\ncd /app/services/fxspotstream\nexport FLASK_PORT=5100\npython run.py' > /app/start-fxspotstream.sh \
+    && echo '#!/bin/bash\ncd /app/services/portfolio\nexport FLASK_PORT=5200\npython app/main.py' > /app/start-portfolio.sh \
+    && echo '#!/bin/bash\ncd /app/services/bloomberg\nexport FLASK_PORT=5300\npython bloomberg-gateway-enhanced.py' > /app/start-bloomberg.sh \
+    && chmod +x /app/start-*.sh
+
+# Create comprehensive nginx configuration
+RUN echo 'server { \
+    listen 3500; \
+    server_name localhost; \
+    \
+    # Main GZC Intel App \
+    location / { \
+        root /var/www/html/gzc-intel-app; \
+        try_files $uri $uri/ /index.html; \
+    } \
+    \
+    # Bloomberg App \
+    location /bloomberg/ { \
+        alias /var/www/html/bloomberg/; \
+        try_files $uri $uri/ /bloomberg/index.html; \
+    } \
+    \
+    # FXSpotStream WebSockets \
+    location /ws_esp { \
+        proxy_pass http://localhost:5100; \
+        proxy_http_version 1.1; \
+        proxy_set_header Upgrade $http_upgrade; \
+        proxy_set_header Connection "upgrade"; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+        proxy_connect_timeout 60s; \
+        proxy_send_timeout 60s; \
+        proxy_read_timeout 60s; \
+        proxy_buffering off; \
+    } \
+    \
+    location /ws_rfs { \
+        proxy_pass http://localhost:5100; \
+        proxy_http_version 1.1; \
+        proxy_set_header Upgrade $http_upgrade; \
+        proxy_set_header Connection "upgrade"; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+        proxy_connect_timeout 60s; \
+        proxy_send_timeout 60s; \
+        proxy_read_timeout 60s; \
+        proxy_buffering off; \
+    } \
+    \
+    location /ws_execution { \
+        proxy_pass http://localhost:5100; \
+        proxy_http_version 1.1; \
+        proxy_set_header Upgrade $http_upgrade; \
+        proxy_set_header Connection "upgrade"; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+        proxy_connect_timeout 60s; \
+        proxy_send_timeout 60s; \
+        proxy_read_timeout 60s; \
+        proxy_buffering off; \
+    } \
+    \
+    # FXSpotStream API \
+    location /api/subscribe_quote { \
+        proxy_pass http://localhost:5100; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+    } \
+    \
+    location /api/request_rfs_quote { \
+        proxy_pass http://localhost:5100; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+    } \
+    \
+    # Portfolio API \
+    location /api/portfolio/ { \
+        proxy_pass http://localhost:5200/; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+    } \
+    \
+    # Bloomberg API \
+    location /api/bloomberg/ { \
+        proxy_pass http://localhost:5300/; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+    } \
+    \
+    # Generic API fallback to FXSpotStream \
+    location /api/ { \
+        proxy_pass http://localhost:5100/; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+    } \
+}' > /etc/nginx/sites-available/default
+
+# Remove default nginx config and enable our config
+RUN rm -f /etc/nginx/sites-enabled/default \
+    && ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
+
+# Create comprehensive supervisor configuration
+RUN echo '[supervisord] \
+nodaemon=true \
+user=root \
+logfile=/var/log/supervisord.log \
+\
+[program:nginx] \
+command=nginx -g "daemon off;" \
+autostart=true \
+autorestart=true \
+stderr_logfile=/var/log/nginx.err.log \
+stdout_logfile=/var/log/nginx.out.log \
+\
+[program:redis] \
+command=redis-server --bind 127.0.0.1 --port 6379 \
+autostart=true \
+autorestart=true \
+stderr_logfile=/var/log/redis.err.log \
+stdout_logfile=/var/log/redis.out.log \
+\
+[program:fxspotstream] \
+command=/app/start-fxspotstream.sh \
+directory=/app/services/fxspotstream \
+autostart=true \
+autorestart=true \
+stderr_logfile=/var/log/fxspotstream.err.log \
+stdout_logfile=/var/log/fxspotstream.out.log \
+environment=PYTHONPATH="/app/services/fxspotstream",FLASK_PORT="5100" \
+\
+[program:portfolio] \
+command=/app/start-portfolio.sh \
+directory=/app/services/portfolio \
+autostart=true \
+autorestart=true \
+stderr_logfile=/var/log/portfolio.err.log \
+stdout_logfile=/var/log/portfolio.out.log \
+environment=PYTHONPATH="/app/services/portfolio",FLASK_PORT="5200" \
+\
+[program:bloomberg] \
+command=/app/start-bloomberg.sh \
+directory=/app/services/bloomberg \
+autostart=true \
+autorestart=true \
+stderr_logfile=/var/log/bloomberg.err.log \
+stdout_logfile=/var/log/bloomberg.out.log \
+environment=PYTHONPATH="/app/services/bloomberg",FLASK_PORT="5300" \
+' > /etc/supervisor/conf.d/supervisord.conf
+
+# Expose port
+EXPOSE 3500
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3500/ || exit 1
+
+# Start mega-container with all services
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

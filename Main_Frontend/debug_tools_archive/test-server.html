@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server Test</title>
+</head>
+<body>
+    <h1>Testing Server Connection</h1>
+    <div id="status">Checking...</div>
+    <script>
+        fetch('http://localhost:3500')
+            .then(response => {
+                document.getElementById('status').innerHTML = 
+                    `Server is running! Status: ${response.status}<br>
+                     <a href="http://localhost:3500" target="_blank">Open App</a>`;
+            })
+            .catch(error => {
+                document.getElementById('status').innerHTML = 
+                    `Server error: ${error.message}`;
+            });
+    </script>
+</body>
+</html>
