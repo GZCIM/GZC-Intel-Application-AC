@@ -13,10 +13,11 @@ import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import { QuoteProvider } from "./contexts/QuoteContext";
 import { EnhancedErrorBoundary } from "./components/EnhancedErrorBoundary";
 import { SentryErrorBoundary } from "./config/sentry";
-import { UserTabDebugger } from "./components/UserTabDebugger";
-import { InventoryDebugger } from "./components/debug/InventoryDebugger";
-import { QuoteFlowDebugger } from "./components/debug/QuoteFlowDebugger";
-import { AuthDebugger } from "./components/AuthDebugger";
+// Debug components - disabled
+// import { UserTabDebugger } from "./components/UserTabDebugger";
+// import { InventoryDebugger } from "./components/debug/InventoryDebugger";
+// import { QuoteFlowDebugger } from "./components/debug/QuoteFlowDebugger";
+// import { AuthDebugger } from "./components/AuthDebugger";
 // Portfolio test components hidden
 // import { PortfolioTest } from "./components/PortfolioTest";
 // import { SimplePortfolioTest } from "./components/SimplePortfolioTest";
@@ -121,42 +122,6 @@ function AppContent() {
                         <span style={{ color: currentTheme.success }}>
                             ● All Systems Operational
                         </span>
-                        {/* Edit Mode Controls */}
-                        {activeTab?.closable && (
-                            <button
-                                onClick={() => toggleTabEditMode(activeTabId)}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    padding: '4px 8px',
-                                    fontSize: '11px',
-                                    fontWeight: '500',
-                                    backgroundColor: activeTab?.editMode 
-                                        ? currentTheme.primary 
-                                        : 'transparent',
-                                    color: activeTab?.editMode 
-                                        ? '#ffffff' 
-                                        : currentTheme.textSecondary,
-                                    border: `1px solid ${activeTab?.editMode 
-                                        ? currentTheme.primary 
-                                        : currentTheme.border}`,
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease'
-                                }}
-                                title={activeTab?.editMode ? 'Save and lock components' : 'Edit component layout'}
-                            >
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    {activeTab?.editMode ? (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    ) : (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    )}
-                                </svg>
-                                {activeTab?.editMode ? 'Lock' : 'Edit'}
-                            </button>
-                        )}
                     </div>
                     <div
                         style={{
@@ -185,18 +150,7 @@ function AppContent() {
 
                 {/* WebSocket connection debugger - Now available through Tools menu */}
 
-                {/* Debug Components - Only in Development */}
-                {process.env.NODE_ENV === "development" && (
-                    <>
-                        <UserTabDebugger />
-                        {/* Temporary inventory debugger */}
-                        <InventoryDebugger />
-                        <AuthDebugger />
-                        {/* Portfolio API Test components hidden */}
-                        {/* <PortfolioTest /> */}
-                        {/* <SimplePortfolioTest /> */}
-                    </>
-                )}
+                {/* Debug Components - Completely removed for production */}
             </div>
 
             {/* Login Modal - Shows automatically when not authenticated */}

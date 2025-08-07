@@ -201,7 +201,14 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({
 
             ws.onmessage = (event) => {
                 try {
-                    const message = JSON.parse(event.data);
+                    // Handle echo messages from backend
+                    let messageData = event.data;
+                    if (typeof messageData === 'string' && messageData.startsWith('Echo: ')) {
+                        // Strip the "Echo: " prefix
+                        messageData = messageData.substring(6);
+                    }
+                    
+                    const message = JSON.parse(messageData);
                     console.log(
                         `[QuoteContext:${streamType}] Received message:`,
                         message
