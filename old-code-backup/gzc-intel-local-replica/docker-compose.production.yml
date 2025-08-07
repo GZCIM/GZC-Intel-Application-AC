@@ -1,0 +1,107 @@
+# Production Docker Compose for GZC Intel Application
+# Designed for Azure Container Apps deployment
+
+version: '3.8'
+
+services:
+  # Main Application Container
+  gzc-intel-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: production
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: gzc-intel-app:latest
+    ports:
+      - "5100:5100"
+    environment:
+      # Flask Configuration
+      - FLASK_ENV=production
+      - FLASK_APP=app.py
+      - PYTHONPATH=/app/backend
+      - PYTHONUNBUFFERED=1
+      
+      # FIX Protocol Configuration
+      - FIX_SOCKET_HOST=fixapi-nysim1.fxspotstream.com
+      - FIX_SOCKET_PORT=5015
+      - FIX_TARGET_COMP_ID=FXSPOTSTREAM
+      - FIX_SENDER_COMP_ID=GZCIM
+      
+      # Azure Redis Configuration (Production)
+      - REDIS_HOST=gzc-redis.redis.cache.windows.net
+      - REDIS_PORT=6380
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_SSL=true
+      - REDIS_SSL_CERT_REQS=none
+      
+      # PostgreSQL Configuration
+      - POSTGRES_HOST=${POSTGRES_HOST:-localhost}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_DB=${POSTGRES_DB:-gzc_intel}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      
+      # Bloomberg Integration
+      - BLOOMBERG_API_URL=${BLOOMBERG_API_URL:-http://20.172.249.92:8080}
+      
+      # Logging and Monitoring
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ENABLE_METRICS=${ENABLE_METRICS:-true}
+      
+      # Security
+      - SECRET_KEY=${SECRET_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+    
+    volumes:
+      # Persistent logs volume
+      - logs:/app/logs
+      
+    networks:
+      - gzc-network
+    
+    restart: unless-stopped
+    
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Reverse Proxy (for production routing)
+  nginx-proxy:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/nginx.production.conf:/etc/nginx/nginx.conf:ro
+      - ./deployment/ssl:/etc/nginx/ssl:ro
+      - logs:/var/log/nginx
+    depends_on:
+      - gzc-intel-app
+    networks:
+      - gzc-network
+    restart: unless-stopped
+
+networks:
+  gzc-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  logs:
+    driver: local

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fix test01 Tab</title>
+</head>
+<body>
+    <h1>Fix test01 Tab Component</h1>
+    <p>Open this page in your browser at http://localhost:3500/fix-test01-tab.html</p>
+    <button onclick="fixTest01Tab()">Fix test01 Tab</button>
+    <pre id="output"></pre>
+
+    <script>
+    function fixTest01Tab() {
+        const output = document.getElementById('output');
+        let fixed = false;
+        
+        // Check all possible user IDs
+        const userIds = ['user-mt', 'user-ae', 'user-ef', 'user-ls', 'default-user'];
+        
+        userIds.forEach(userId => {
+            // Check current layout
+            const currentLayoutKey = `gzc-intel-current-layout-${userId}`;
+            const currentLayout = localStorage.getItem(currentLayoutKey);
+            
+            if (currentLayout) {
+                try {
+                    const layout = JSON.parse(currentLayout);
+                    let modified = false;
+                    
+                    // Fix tabs with name "test01" or old component IDs
+                    if (layout.tabs) {
+                        layout.tabs = layout.tabs.map(tab => {
+                            if (tab.name === 'test01' || tab.id === 'test01' || 
+                                (tab.component && tab.component.startsWith('UserTab_'))) {
+                                output.textContent += `Found problematic tab in ${userId}: ${tab.name}\n`;
+                                tab.component = 'UserTabContainer';
+                                modified = true;
+                                fixed = true;
+                            }
+                            return tab;
+                        });
+                    }
+                    
+                    if (modified) {
+                        localStorage.setItem(currentLayoutKey, JSON.stringify(layout));
+                        output.textContent += `✅ Fixed current layout for ${userId}\n`;
+                    }
+                } catch (e) {
+                    output.textContent += `Error processing ${userId}: ${e.message}\n`;
+                }
+            }
+            
+            // Also check saved layouts
+            const layoutsKey = `gzc-intel-layouts-${userId}`;
+            const layouts = localStorage.getItem(layoutsKey);
+            
+            if (layouts) {
+                try {
+                    const savedLayouts = JSON.parse(layouts);
+                    let modified = false;
+                    
+                    savedLayouts.forEach(layout => {
+                        if (layout.tabs) {
+                            layout.tabs = layout.tabs.map(tab => {
+                                if (tab.name === 'test01' || tab.id === 'test01' || 
+                                    (tab.component && tab.component.startsWith('UserTab_'))) {
+                                    tab.component = 'UserTabContainer';
+                                    modified = true;
+                                    fixed = true;
+                                }
+                                return tab;
+                            });
+                        }
+                    });
+                    
+                    if (modified) {
+                        localStorage.setItem(layoutsKey, JSON.stringify(savedLayouts));
+                        output.textContent += `✅ Fixed saved layouts for ${userId}\n`;
+                    }
+                } catch (e) {
+                    output.textContent += `Error processing saved layouts for ${userId}: ${e.message}\n`;
+                }
+            }
+        });
+        
+        if (fixed) {
+            output.textContent += '\n🎉 Fixed! Refreshing page in 2 seconds...';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        } else {
+            output.textContent += '\n❌ No test01 tab found to fix.';
+        }
+    }
+    
+    // Also show current state
+    window.onload = function() {
+        const output = document.getElementById('output');
+        output.textContent = 'Current localStorage keys:\n';
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.includes('layout') || key.includes('tab')) {
+                const value = localStorage.getItem(key);
+                if (value && value.includes('test01')) {
+                    output.textContent += `\n⚠️ Found test01 in: ${key}\n`;
+                }
+            }
+        }
+    };
+    </script>
+</body>
+</html>

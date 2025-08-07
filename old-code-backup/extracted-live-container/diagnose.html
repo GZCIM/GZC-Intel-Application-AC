@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diagnostic Page</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #000; color: #0f0; }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        .info { color: #ff0; }
+        pre { background: #111; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>GZC Intel Diagnostic</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        const results = document.getElementById('results');
+        const log = (msg, type = 'info') => {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            results.appendChild(div);
+        };
+
+        log('Starting diagnostics...', 'info');
+
+        // Test 1: Check if we can fetch main.tsx
+        try {
+            const response = await fetch('/src/main.tsx');
+            if (response.ok) {
+                log('✓ main.tsx is accessible', 'success');
+                const content = await response.text();
+                log(`✓ main.tsx size: ${content.length} bytes`, 'success');
+            } else {
+                log(`✗ main.tsx fetch failed: ${response.status}`, 'error');
+            }
+        } catch (e) {
+            log(`✗ main.tsx fetch error: ${e.message}`, 'error');
+        }
+
+        // Test 2: Try to import React
+        try {
+            const React = await import('/node_modules/react/index.js');
+            log('✓ React module loaded', 'success');
+        } catch (e) {
+            log(`✗ React import failed: ${e.message}`, 'error');
+        }
+
+        // Test 3: Check localStorage
+        try {
+            const keys = Object.keys(localStorage);
+            log(`✓ localStorage accessible, ${keys.length} keys found`, 'success');
+            keys.filter(k => k.includes('gzc')).forEach(k => {
+                log(`  - ${k}: ${localStorage[k].substring(0, 50)}...`, 'info');
+            });
+        } catch (e) {
+            log(`✗ localStorage error: ${e.message}`, 'error');
+        }
+
+        // Test 4: Try loading the app
+        log('\nAttempting to load main app...', 'info');
+        try {
+            const mainModule = await import('/src/main.tsx');
+            log('✓ Main module imported successfully', 'success');
+        } catch (e) {
+            log(`✗ Main module import failed: ${e.message}`, 'error');
+            log(`Stack trace:\n${e.stack}`, 'error');
+        }
+
+        // Test 5: Check for common issues
+        log('\nChecking for common issues...', 'info');
+        
+        // Check if root element exists
+        const root = document.getElementById('root');
+        if (root) {
+            log('✓ Root element exists', 'success');
+        } else {
+            log('✗ Root element not found', 'error');
+        }
+
+        // Check console errors
+        const originalError = console.error;
+        let errorCount = 0;
+        console.error = (...args) => {
+            errorCount++;
+            log(`Console error: ${args.join(' ')}`, 'error');
+            originalError(...args);
+        };
+
+        // Final summary
+        setTimeout(() => {
+            log(`\nDiagnostic complete. ${errorCount} console errors detected.`, errorCount > 0 ? 'error' : 'success');
+        }, 2000);
+    </script>
+</body>
+</html>

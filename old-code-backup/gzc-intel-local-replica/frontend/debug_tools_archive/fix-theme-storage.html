@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fix Theme Storage Issue</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+        button { padding: 10px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Fix Theme Storage Issue</h1>
+    <p>This will fix the corrupted theme data in localStorage</p>
+    
+    <button onclick="diagnoseThemeIssue()">1. Diagnose Theme Issue</button>
+    <button onclick="fixThemeStorage()">2. Fix Theme Storage</button>
+    <button onclick="clearAllThemeData()">3. Clear All Theme Data (Nuclear Option)</button>
+    
+    <pre id="output"></pre>
+
+    <script>
+    const output = document.getElementById('output');
+    
+    function log(msg, type = 'info') {
+        output.innerHTML += `<div class="${type}">${msg}</div>`;
+    }
+    
+    function diagnoseThemeIssue() {
+        log('=== Diagnosing Theme Storage ===', 'info');
+        
+        // Find all theme-related keys
+        const themeKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.includes('theme') || key.includes('Theme'))) {
+                themeKeys.push(key);
+            }
+        }
+        
+        log(`Found ${themeKeys.length} theme-related keys:`, 'info');
+        
+        themeKeys.forEach(key => {
+            const value = localStorage.getItem(key);
+            log(`\nKey: ${key}`, 'info');
+            log(`Value: ${value}`, 'info');
+            
+            // Try to parse as JSON
+            try {
+                const parsed = JSON.parse(value);
+                log('✓ Valid JSON', 'success');
+                log('Parsed: ' + JSON.stringify(parsed, null, 2), 'info');
+            } catch (e) {
+                log('✗ Invalid JSON: ' + e.message, 'error');
+                
+                // Check if it's a simple string that should be wrapped
+                if (value && !value.startsWith('{') && !value.startsWith('[')) {
+                    log('This appears to be a plain string that needs JSON wrapping', 'error');
+                }
+            }
+        });
+        
+        // Check specific persistence key
+        const persistenceKey = 'gzc-theme-persistence';
+        const themeValue = localStorage.getItem(persistenceKey);
+        if (themeValue) {
+            log(`\nMain theme persistence key: ${persistenceKey}`, 'info');
+            log(`Current value: ${themeValue}`, 'info');
+        }
+    }
+    
+    function fixThemeStorage() {
+        log('\n=== Fixing Theme Storage ===', 'info');
+        
+        let fixed = 0;
+        
+        // Fix all theme-related keys
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key || !key.includes('theme')) continue;
+            
+            const value = localStorage.getItem(key);
+            if (!value) continue;
+            
+            // Check if it needs fixing
+            try {
+                JSON.parse(value);
+                // Already valid JSON
+            } catch (e) {
+                // Needs fixing
+                log(`Fixing ${key}...`, 'info');
+                
+                // If it's just a plain theme name like "gzc-dark"
+                if (value === 'gzc-dark' || value === 'gzc-light' || value === 'default') {
+                    const fixedValue = JSON.stringify({
+                        currentTheme: value,
+                        preferences: {
+                            colorScheme: value.includes('dark') ? 'dark' : 'light',
+                            fontSize: 'medium',
+                            accentColor: 'blue'
+                        },
+                        customThemes: []
+                    });
+                    
+                    localStorage.setItem(key, fixedValue);
+                    log(`✓ Fixed ${key} with proper theme structure`, 'success');
+                    fixed++;
+                } else {
+                    // Try to wrap in JSON
+                    try {
+                        const wrapped = JSON.stringify(value);
+                        localStorage.setItem(key, wrapped);
+                        log(`✓ Wrapped ${key} in JSON`, 'success');
+                        fixed++;
+                    } catch (e2) {
+                        log(`✗ Could not fix ${key}: ${e2.message}`, 'error');
+                    }
+                }
+            }
+        }
+        
+        log(`\nFixed ${fixed} theme storage entries`, fixed > 0 ? 'success' : 'info');
+        
+        if (fixed > 0) {
+            log('Refreshing page in 2 seconds...', 'info');
+            setTimeout(() => window.location.href = '/', 2000);
+        }
+    }
+    
+    function clearAllThemeData() {
+        if (!confirm('This will clear ALL theme data. Are you sure?')) return;
+        
+        log('\n=== Clearing All Theme Data ===', 'info');
+        
+        let cleared = 0;
+        const keysToRemove = [];
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.includes('theme') || key.includes('Theme'))) {
+                keysToRemove.push(key);
+            }
+        }
+        
+        keysToRemove.forEach(key => {
+            localStorage.removeItem(key);
+            log(`✓ Removed ${key}`, 'success');
+            cleared++;
+        });
+        
+        log(`\nCleared ${cleared} theme entries`, 'success');
+        log('Refreshing page in 2 seconds...', 'info');
+        setTimeout(() => window.location.href = '/', 2000);
+    }
+    
+    // Auto-diagnose on load
+    window.onload = () => {
+        log('Theme Storage Fix Tool Ready\n', 'info');
+    };
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Storage</title>
+</head>
+<body>
+    <h1>Clearing GZC Intel App Storage</h1>
+    <div id="status"></div>
+    
+    <script>
+        // Clear all localStorage items related to the app
+        const keys = [
+            'gzc-intel-layouts',
+            'gzc-intel-current-layout',
+            'gzc-intel-active-layout',
+            'gzc-intel-app-state',
+            'gzc-platform-view-memory'
+        ];
+        
+        const status = document.getElementById('status');
+        
+        keys.forEach(key => {
+            if (localStorage.getItem(key)) {
+                localStorage.removeItem(key);
+                status.innerHTML += `<p>✓ Cleared: ${key}</p>`;
+            } else {
+                status.innerHTML += `<p>- Not found: ${key}</p>`;
+            }
+        });
+        
+        // Clear any dynamic canvas or static canvas data
+        const allKeys = Object.keys(localStorage);
+        allKeys.forEach(key => {
+            if (key.startsWith('dynamic-canvas-') || key.startsWith('static-canvas-')) {
+                localStorage.removeItem(key);
+                status.innerHTML += `<p>✓ Cleared: ${key}</p>`;
+            }
+        });
+        
+        status.innerHTML += '<h2>Storage cleared! You can now close this tab and refresh the app.</h2>';
+        
+        // Redirect to the app after 3 seconds
+        setTimeout(() => {
+            window.location.href = 'http://localhost:3500/';
+        }, 3000);
+    </script>
+</body>
+</html>

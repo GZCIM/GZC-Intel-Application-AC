@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="messages"></div>
+    
+    <script>
+        const ws = new WebSocket('ws://localhost:5100/ws_esp');
+        const status = document.getElementById('status');
+        const messages = document.getElementById('messages');
+        
+        ws.onopen = (event) => {
+            status.textContent = '✅ Connected to WebSocket';
+            console.log('Connected:', event);
+            
+            // Subscribe to EUR/USD
+            ws.send(JSON.stringify({
+                type: 'subscribe',
+                symbol: 'EUR/USD'
+            }));
+        };
+        
+        ws.onmessage = (event) => {
+            console.log('Message:', event.data);
+            const div = document.createElement('div');
+            div.textContent = `Message: ${event.data}`;
+            messages.appendChild(div);
+        };
+        
+        ws.onerror = (error) => {
+            status.textContent = '❌ WebSocket Error';
+            console.error('WebSocket error:', error);
+        };
+        
+        ws.onclose = (event) => {
+            status.textContent = '❌ WebSocket Closed';
+            console.log('WebSocket closed:', event);
+        };
+    </script>
+</body>
+</html>

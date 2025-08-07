@@ -1,0 +1,20 @@
+<\!DOCTYPE html>
+<html>
+<head><title>Check LocalStorage</title></head>
+<body>
+<script>
+  // Open the site first
+  window.open('http://localhost:3500', 'gzc');
+  
+  // Wait a bit then check localStorage
+  setTimeout(() => {
+    const layouts = localStorage.getItem('gzc-intel-layouts');
+    const activeLayout = localStorage.getItem('gzc-intel-active-layout');
+    console.log('Layouts:', layouts);
+    console.log('Active Layout:', activeLayout);
+    document.body.innerHTML = '<pre>' + JSON.stringify({layouts: JSON.parse(layouts || '[]'), activeLayout}, null, 2) + '</pre>';
+  }, 2000);
+</script>
+</body>
+</html>
+EOF < /dev/null

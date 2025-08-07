@@ -1,0 +1,261 @@
+/* GZC Intel Global Styles */
+
+/* Bootstrap import - must come first */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* Tailwind base */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Custom Properties for Theming */
+:root {
+  /* GZC Brand Colors */
+  --gzc-primary: #8FB377;
+  --gzc-secondary: #7A9E65;
+  --gzc-success: #ABD38F;
+  --gzc-danger: #DD8B8B;
+  --gzc-warning: #E6D690;
+  --gzc-info: #8BB4DD;
+  --gzc-dark: #2D2D2D;
+  --gzc-light: #F8F9FA;
+
+  /* Default Theme (Professional Dark) */
+  --gzc-background: #0a0e27;
+  --gzc-surface: #151933;
+  --gzc-text: #ffffff;
+  --gzc-text-muted: #a0a8b8;
+  --gzc-border: #2a3441;
+}
+
+/* Pulse animation for logo */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Professional Theme */
+[data-theme="professional"] {
+  --gzc-background: #0a0e27;
+  --gzc-surface: #151933;
+  --gzc-text: #ffffff;
+  --gzc-text-muted: #a0a8b8;
+  --gzc-border: #2a3441;
+}
+
+/* Institutional Theme */
+[data-theme="institutional"] {
+  --gzc-background: #ffffff;
+  --gzc-surface: #f8f9fa;
+  --gzc-text: #212529;
+  --gzc-text-muted: #6c757d;
+  --gzc-border: #dee2e6;
+}
+
+/* Enterprise Theme */
+[data-theme="enterprise"] {
+  --gzc-background: #0f172a;
+  --gzc-surface: #1e293b;
+  --gzc-text: #f1f5f9;
+  --gzc-text-muted: #94a3b8;
+  --gzc-border: #334155;
+}
+
+/* Bootstrap Variable Overrides */
+:root {
+  --bs-primary: var(--gzc-primary);
+  --bs-secondary: var(--gzc-secondary);
+  --bs-success: var(--gzc-success);
+  --bs-danger: var(--gzc-danger);
+  --bs-warning: var(--gzc-warning);
+  --bs-info: var(--gzc-info);
+  --bs-dark: var(--gzc-dark);
+  --bs-light: var(--gzc-light);
+}
+
+/* Global Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--gzc-background);
+  color: var(--gzc-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Custom Utility Classes */
+.gzc-surface {
+  background-color: var(--gzc-surface);
+}
+
+.gzc-text {
+  color: var(--gzc-text);
+}
+
+.gzc-text-muted {
+  color: var(--gzc-text-muted);
+}
+
+.gzc-border {
+  border-color: var(--gzc-border);
+}
+
+/* Animation Classes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* Keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Hover Effects */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.hover-scale {
+  transition: transform 0.2s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+/* Grid Layout Overrides */
+.react-grid-layout {
+  position: relative;
+}
+
+.react-grid-item {
+  transition: all 0.2s ease;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: #95BD78;
+  opacity: 0.2;
+  transition-duration: 100ms;
+  z-index: 2;
+  border-radius: 8px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 100;
+  opacity: 0.9;
+}
+
+.react-grid-item.resizing {
+  z-index: 100;
+  opacity: 0.9;
+}
+
+.react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}
+
+.react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 5px;
+  height: 5px;
+  border-right: 2px solid #95BD78;
+  border-bottom: 2px solid #95BD78;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gzc-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gzc-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gzc-primary);
+}
+
+/* Focus States */
+.focus\:gzc-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(143, 179, 119, 0.3);
+}
+
+/* Print Styles */
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+  }
+}

@@ -1,0 +1,19 @@
+<\!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Old Tabs</title>
+</head>
+<body>
+    <h1>Clearing Old Tab Configuration</h1>
+    <script>
+        // Clear any saved layouts that might have old tabs
+        localStorage.removeItem('gzc-intel-layouts');
+        localStorage.removeItem('gzc-intel-active-layout');
+        localStorage.removeItem('gzc-intel-active-tab');
+        
+        console.log('Old tab configurations cleared');
+        document.write('<p>Old tab configurations have been cleared. You can close this window.</p>');
+    </script>
+</body>
+</html>
+EOF < /dev/null

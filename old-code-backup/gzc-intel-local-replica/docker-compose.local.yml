@@ -1,0 +1,66 @@
+version: '3.8'
+services:
+  # Frontend Development Server
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3500:3500"
+    volumes:
+      - "./frontend/src:/app/src"
+      - "./frontend/public:/app/public"
+      - "./frontend/vite.config.ts:/app/vite.config.ts"
+      # Exclude node_modules from volume to prevent corruption
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:5100
+      - VITE_WEBSOCKET_ESP=/ws_esp
+      - VITE_WEBSOCKET_RFS=/ws_rfs
+      - VITE_WEBSOCKET_EXECUTION=/ws_execution
+    depends_on:
+      - backend
+    networks:
+      - gzc-network
+    restart: unless-stopped
+
+  # Backend WebSocket Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5100:5100"
+    environment:
+      - FIX_SOCKET_HOST=fixapi-nysim1.fxspotstream.com
+      - FIX_SOCKET_PORT=5015
+      - FIX_TARGET_COMP_ID=FXSPOTSTREAM
+      - FIX_SENDER_COMP_ID=GZCIM
+      - REDIS_HOST=gzc-redis.redis.cache.windows.net
+      - REDIS_PORT=6380
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_SSL=true
+      - FLASK_PORT=5100
+      - PYTHONPATH=/app
+    volumes:
+      - "./backend:/app"
+    networks:
+      - gzc-network
+
+  # Local Redis (for development when Azure Redis is not accessible)
+  redis-local:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - gzc-network
+
+networks:
+  gzc-network:
+    driver: bridge
+
+volumes:
+  redis_data:

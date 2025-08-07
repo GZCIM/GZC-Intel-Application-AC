@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><title>Debug Analytics Component</title></head>
+<body>
+<h1>Debug Analytics Component</h1>
+<button onclick="checkComponent()">Check Component State</button>
+<pre id="output"></pre>
+<script>
+async function checkComponent() {
+  try {
+    // Import the component registry
+    const module = await import('http://localhost:3500/src/core/tabs/componentRegistry.ts');
+    const output = document.getElementById('output');
+    
+    output.textContent = 'Component Registry:\n';
+    output.textContent += JSON.stringify(Object.keys(module.componentRegistry), null, 2) + '\n\n';
+    
+    // Check Analytics component
+    output.textContent += 'Analytics component loader:\n';
+    output.textContent += module.componentRegistry.Analytics.toString() + '\n\n';
+    
+    // Try to load the component
+    output.textContent += 'Loading Analytics component...\n';
+    const analyticsModule = await module.componentRegistry.Analytics();
+    output.textContent += 'Loaded module keys: ' + Object.keys(analyticsModule).join(', ') + '\n';
+    output.textContent += 'Default export: ' + analyticsModule.default.name + '\n';
+  } catch (error) {
+    document.getElementById('output').textContent = 'Error: ' + error.message + '\n' + error.stack;
+  }
+}
+</script>
+</body>
+</html>

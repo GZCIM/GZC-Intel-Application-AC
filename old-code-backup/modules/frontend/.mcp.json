@@ -1,0 +1,32 @@
+{
+  "name": "gzc-intel-debug",
+  "version": "1.0.0",
+  "description": "Chrome DevTools debugging integration for GZC Intel App",
+  "commands": {
+    "start:debug": {
+      "command": "npm run dev:debug",
+      "description": "Start dev server with Chrome debugging enabled"
+    },
+    "debug:events": {
+      "command": "npm run debug:events",
+      "description": "Analyze event listeners for conflicts"
+    },
+    "debug:performance": {
+      "command": "npm run debug:performance",
+      "description": "Monitor real-time performance metrics"
+    },
+    "debug:live": {
+      "command": "npm run debug:live",
+      "description": "Interactive debugging session"
+    },
+    "check:conflicts": {
+      "command": "node scripts/debug/event-conflicts.js",
+      "description": "Quick check for event conflicts on widgets"
+    }
+  },
+  "prompts": {
+    "analyzeFreeze": "Run event conflict analysis and identify why widgets are freezing",
+    "monitorDrag": "Monitor drag and drop performance in real-time",
+    "debugWidget": "Debug specific widget with selector: {selector}"
+  }
+}

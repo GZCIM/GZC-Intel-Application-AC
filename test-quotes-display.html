@@ -1,0 +1,94 @@
+<\!DOCTYPE html>
+<html>
+<head>
+    <title>Quote Display Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .quote { padding: 10px; margin: 5px; border: 1px solid #ccc; border-radius: 5px; }
+        .connected { background-color: #d4edda; }
+        .disconnected { background-color: #f8d7da; }
+        #quotes { margin-top: 20px; }
+        .quote-item { display: flex; justify-content: space-between; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>FX Quote Display Test</h1>
+    <div id="status" class="quote disconnected">Connecting...</div>
+    <div id="quotes"></div>
+    
+    <script>
+        const ws = new WebSocket('ws://localhost:5100/ws_esp');
+        const status = document.getElementById('status');
+        const quotesDiv = document.getElementById('quotes');
+        const quotes = {};
+        
+        ws.onopen = (event) => {
+            status.textContent = '✅ Connected to WebSocket';
+            status.className = 'quote connected';
+            console.log('Connected:', event);
+        };
+        
+        ws.onmessage = (event) => {
+            console.log('Raw message:', event.data);
+            
+            try {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'quote') {
+                    const key = `${data.symbol}-${data.side}-${data.provider}`;
+                    quotes[key] = data;
+                    updateQuoteDisplay();
+                }
+            } catch (e) {
+                // Handle non-JSON messages
+                console.log('Non-JSON message:', event.data);
+            }
+        };
+        
+        function updateQuoteDisplay() {
+            quotesDiv.innerHTML = '<h2>Current Quotes:</h2>';
+            
+            const symbols = {};
+            Object.values(quotes).forEach(quote => {
+                if (\!symbols[quote.symbol]) {
+                    symbols[quote.symbol] = { bids: [], asks: [] };
+                }
+                if (quote.side === 'Bid') {
+                    symbols[quote.symbol].bids.push(quote);
+                } else {
+                    symbols[quote.symbol].asks.push(quote);
+                }
+            });
+            
+            Object.entries(symbols).forEach(([symbol, data]) => {
+                const div = document.createElement('div');
+                div.className = 'quote';
+                div.innerHTML = `
+                    <h3>${symbol}</h3>
+                    <div class="quote-item">
+                        <strong>Best Bid:</strong> 
+                        ${data.bids.length > 0 ? data.bids[0].price + ' (' + data.bids[0].provider + ')' : 'No bids'}
+                    </div>
+                    <div class="quote-item">
+                        <strong>Best Ask:</strong> 
+                        ${data.asks.length > 0 ? data.asks[0].price + ' (' + data.asks[0].provider + ')' : 'No asks'}
+                    </div>
+                `;
+                quotesDiv.appendChild(div);
+            });
+        }
+        
+        ws.onerror = (error) => {
+            status.textContent = '❌ WebSocket Error';
+            status.className = 'quote disconnected';
+            console.error('WebSocket error:', error);
+        };
+        
+        ws.onclose = (event) => {
+            status.textContent = '❌ WebSocket Closed';
+            status.className = 'quote disconnected';
+            console.log('WebSocket closed:', event);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+# Ultimate fix: Install Vite globally to avoid module resolution issues
+FROM node:20-alpine
+
+# Install system dependencies
+RUN apk add --no-cache dumb-init git
+
+# Create app user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
+
+WORKDIR /app
+
+# Install Vite globally to bypass local module issues
+RUN npm install -g vite@latest
+
+# Copy package files and install dependencies
+COPY --chown=nextjs:nodejs package*.json ./
+RUN npm ci --no-audit --no-fund
+
+# Copy source code
+COPY --chown=nextjs:nodejs . .
+
+# Set ownership
+RUN chown -R nextjs:nodejs /app
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 3500
+
+# Use global Vite installation
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["vite", "--host", "0.0.0.0", "--port", "3500", "--clearScreen", "false"]

@@ -1,0 +1,38 @@
+<\!DOCTYPE html>
+<html>
+<head>
+    <title>Debug User Tab</title>
+</head>
+<body>
+    <h1>Debug User Tab Loading Issue</h1>
+    <p>Open browser console and check for errors</p>
+    
+    <script type="module">
+        // Test if we can import the UserTabContainer
+        console.log('Testing UserTabContainer import...');
+        
+        try {
+            const module = await import('/src/components/UserTabContainer.tsx');
+            console.log('✅ UserTabContainer module loaded:', module);
+        } catch (error) {
+            console.error('❌ Failed to load UserTabContainer:', error);
+        }
+        
+        // Test canvas imports
+        try {
+            const dynamicCanvas = await import('/src/components/canvas/DynamicCanvas.tsx');
+            console.log('✅ DynamicCanvas loaded:', dynamicCanvas);
+        } catch (error) {
+            console.error('❌ Failed to load DynamicCanvas:', error);
+        }
+        
+        try {
+            const staticCanvas = await import('/src/components/canvas/StaticCanvas.tsx');
+            console.log('✅ StaticCanvas loaded:', staticCanvas);
+        } catch (error) {
+            console.error('❌ Failed to load StaticCanvas:', error);
+        }
+    </script>
+</body>
+</html>
+EOF < /dev/null

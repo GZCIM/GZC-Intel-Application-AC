@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Error Check</title>
+</head>
+<body style="background: #000; color: #0f0; font-family: monospace; padding: 20px;">
+    <h1>Error Analysis</h1>
+    <button onclick="clearAll()">Clear All Errors & Storage</button>
+    <button onclick="window.location.href='/'">Go to Main App</button>
+    <hr>
+    <div id="output"></div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        // Check localStorage
+        const section = (title) => {
+            const h3 = document.createElement('h3');
+            h3.textContent = title;
+            h3.style.color = '#ff0';
+            output.appendChild(h3);
+        };
+        
+        const log = (key, value) => {
+            const div = document.createElement('div');
+            div.innerHTML = `<strong style="color:#0ff">${key}:</strong> <pre style="background:#111;padding:5px;overflow:auto">${value}</pre>`;
+            output.appendChild(div);
+        };
+        
+        section('LocalStorage Contents');
+        Object.keys(localStorage).forEach(key => {
+            try {
+                const value = localStorage.getItem(key);
+                if (value && value.length > 200) {
+                    log(key, value.substring(0, 200) + '... (truncated)');
+                } else {
+                    log(key, value);
+                }
+            } catch (e) {
+                log(key, 'Error reading: ' + e.message);
+            }
+        });
+        
+        section('SessionStorage Contents');
+        Object.keys(sessionStorage).forEach(key => {
+            const value = sessionStorage.getItem(key);
+            log(key, value);
+        });
+        
+        section('Console Errors');
+        const errors = [];
+        const originalError = console.error;
+        console.error = (...args) => {
+            errors.push(args.join(' '));
+            originalError(...args);
+        };
+        
+        // Try to get error monitor log
+        try {
+            const errorLog = localStorage.getItem('error-monitor-log');
+            if (errorLog) {
+                const parsedErrors = JSON.parse(errorLog);
+                log('Error Monitor Log', JSON.stringify(parsedErrors, null, 2));
+            }
+        } catch (e) {
+            log('Error Monitor', 'No errors or parse error');
+        }
+        
+        function clearAll() {
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('All storage cleared! Refreshing...');
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>

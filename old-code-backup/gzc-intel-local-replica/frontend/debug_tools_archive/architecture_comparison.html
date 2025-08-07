@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture Comparison - Conflict Analysis</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1, h2 {
+            color: #ffffff;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .section {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        .mermaid {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .highlight {
+            background-color: #ff6b6b;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #51cf66;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        @media (max-width: 1000px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>GZC Intel App - Architecture Conflict Analysis</h1>
+    
+    <div class="section">
+        <h2>The Core Problem: Three-Way Event Conflict</h2>
+        <p>When combining Port 3000 (drag & drop) with Port 3200 (collapse/expand), we get:</p>
+        <ul>
+            <li><span class="highlight">React Grid Layout</span> wants exclusive control of mouse events for dragging</li>
+            <li><span class="highlight">Collapse Components</span> need click events on the same elements</li>
+            <li><span class="highlight">React DnD</span> competes for drag event handling</li>
+        </ul>
+        <p>Result: <strong>DEADLOCK</strong> - The UI freezes when these systems fight for the same events</p>
+    </div>
+
+    <div class="comparison">
+        <div class="section">
+            <h2>❌ Current Architecture (Port 3500 Attempt)</h2>
+            <div class="mermaid">
+graph TB
+    subgraph "CURRENT MONOLITHIC DISASTER"
+        subgraph "Port 3000 - Analytics Dashboard"
+            P3000[React App :3000]
+            P3000 --> RGL[React Grid Layout]
+            P3000 --> DD[React DnD]
+            P3000 --> Charts[Recharts]
+            
+            RGL -.->|CONFLICT| DragEvents[Mouse Drag Events]
+            DD -.->|CONFLICT| DragEvents
+            
+            style RGL fill:#ff9999
+            style DD fill:#ff9999
+            style DragEvents fill:#ff0000,color:#fff
+        end
+        
+        subgraph "Port 3200 - Trading Interface"
+            P3200[React App :3200]
+            P3200 --> Collapse[Collapse Components]
+            P3200 --> StateM[React State Manager]
+            
+            Collapse -.->|CONFLICT| ClickEvents[Click Events]
+            StateM -.->|CONFLICT| ClickEvents
+            
+            style Collapse fill:#ff9999
+            style StateM fill:#ff9999
+            style ClickEvents fill:#ff0000,color:#fff
+        end
+        
+        subgraph "Port 3500 - IMPOSSIBLE COMBINATION"
+            P3500[React App :3500 - FAILED]
+            P3500 -.->|ATTEMPTS| RGL
+            P3500 -.->|ATTEMPTS| DD
+            P3500 -.->|ATTEMPTS| Collapse
+            P3500 -.->|ATTEMPTS| StateM
+            
+            RGL -.->|DEADLOCK| Collapse
+            DD -.->|MUTEX VIOLATION| StateM
+            
+            style P3500 fill:#ff0000,color:#fff
+        end
+    end
+            </div>
+            <h3>Critical Conflicts Identified:</h3>
+            <ul>
+                <li>❌ React Grid Layout + Collapse Panels = DEADLOCK</li>
+                <li>❌ React DnD + State Manager Events = MUTEX VIOLATION</li>
+                <li>❌ Mouse Events + Click Events = CONFLICT</li>
+                <li>❌ Drag Operations + Panel Toggles = FREEZE</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>✅ Proposed Solution (Remove Collapse)</h2>
+            <div class="mermaid">
+graph TB
+    subgraph "SIMPLIFIED SOLUTION - NO CONFLICTS"
+        subgraph "Port 3500 - NOW POSSIBLE!"
+            P3500[React App :3500 - WORKING]
+            P3500 --> RGL[React Grid Layout ✓]
+            P3500 --> FS[Fullscreen Buttons ✓]
+            P3500 --> Modular[Port 3200 Architecture ✓]
+            P3500 --> Style[Port 3200 Styling ✓]
+            
+            style P3500 fill:#51cf66
+            style RGL fill:#51cf66
+            style FS fill:#51cf66
+            style Modular fill:#51cf66
+            style Style fill:#51cf66
+        end
+        
+        subgraph "Clean Event Separation"
+            RGL --> DragZone[Header = Drag Only]
+            FS --> ButtonZone[Button = Click Only]
+            Modular --> Components[Modular Components]
+            
+            DragZone -.->|NO OVERLAP| ButtonZone
+            
+            style DragZone fill:#4dabf7
+            style ButtonZone fill:#4dabf7
+            style Components fill:#4dabf7
+        end
+        
+        subgraph "Benefits"
+            Benefits[Clean Architecture Benefits]
+            Benefits --> B1[No Event Conflicts]
+            Benefits --> B2[Simple Testing]
+            Benefits --> B3[Easy Maintenance]
+            Benefits --> B4[Better Performance]
+            
+            style Benefits fill:#f59f00
+            style B1 fill:#f59f00
+            style B2 fill:#f59f00
+            style B3 fill:#f59f00
+            style B4 fill:#f59f00
+        end
+    end
+            </div>
+            <h3>Why This Works:</h3>
+            <ul>
+                <li><span class="success">✓</span> Drag events isolated to header only</li>
+                <li><span class="success">✓</span> Fullscreen uses dedicated button (no conflict)</li>
+                <li><span class="success">✓</span> No competing event systems</li>
+                <li><span class="success">✓</span> Combines best of both ports</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Implementation Strategy</h2>
+        <div class="mermaid">
+graph LR
+    subgraph "Implementation Flow"
+        A[Remove Collapse Logic] --> B[Keep Grid Layout]
+        B --> C[Add Fullscreen Buttons]
+        C --> D[Import 3200 Components]
+        D --> E[Apply 3200 Styling]
+        E --> F[Working Dashboard!]
+        
+        style A fill:#ff6b6b
+        style B fill:#4dabf7
+        style C fill:#4dabf7
+        style D fill:#4dabf7
+        style E fill:#4dabf7
+        style F fill:#51cf66
+    end
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Technical Implementation</h2>
+        <pre><code>// Simple widget with fullscreen - NO COLLAPSE = NO CONFLICTS
+const GridWidget: React.FC<WidgetProps> = ({ id, title, children }) => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  return (
+    &lt;div className="widget"&gt;
+      &lt;div className="widget-header"&gt; {/* Drag handle - no click handler! */}
+        &lt;h3&gt;{title}&lt;/h3&gt;
+        &lt;button 
+          className="fullscreen-btn"
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent any drag interference
+            setIsFullscreen(!isFullscreen);
+          }}
+        &gt;
+          {isFullscreen ? '⤦' : '⤢'}
+        &lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div className="widget-content"&gt;
+        {children}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};</code></pre>
+    </div>
+</body>
+</html>

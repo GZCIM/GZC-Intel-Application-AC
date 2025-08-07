@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chrome DevTools Debug & Fix</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre { background: #f0f0f0; padding: 10px; overflow: auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Chrome DevTools Component Debug & Fix</h1>
+    <p>This tool will find and fix the test01 tab issue using Chrome DevTools approach</p>
+    
+    <button onclick="runDiagnostics()">1. Run Diagnostics</button>
+    <button onclick="findTest01Tab()">2. Find test01 Tab</button>
+    <button onclick="fixComponentRegistry()">3. Fix Component Registry</button>
+    <button onclick="clearViteCache()">4. Clear Vite Cache</button>
+    
+    <div id="output"></div>
+
+    <script>
+    const output = document.getElementById('output');
+    
+    function log(message, type = 'info') {
+        const div = document.createElement('div');
+        div.className = type;
+        div.textContent = `[${new Date().toTimeString().slice(0,8)}] ${message}`;
+        output.appendChild(div);
+    }
+    
+    function runDiagnostics() {
+        log('=== Running Chrome DevTools Diagnostics ===', 'info');
+        
+        // Check for Vite
+        if (window.__vite_ssr_dynamic_import_support__) {
+            log('✓ Vite detected', 'success');
+        } else {
+            log('✗ Vite not detected properly', 'error');
+        }
+        
+        // Check module imports
+        log('Testing dynamic imports...', 'info');
+        
+        const tests = [
+            '/src/components/UserTabContainer.tsx',
+            '/src/components/DirectUserTabContainer.tsx',
+            '/src/components/SimpleUserTabContainer.tsx',
+            '/src/components/canvas/DynamicCanvas.tsx'
+        ];
+        
+        tests.forEach(path => {
+            import(path)
+                .then(() => log(`✓ ${path} loaded successfully`, 'success'))
+                .catch(err => log(`✗ ${path} failed: ${err.message}`, 'error'));
+        });
+        
+        // Check React Error Boundary
+        if (window.React && window.React.Component) {
+            log('✓ React loaded', 'success');
+        }
+        
+        // Check localStorage for problematic data
+        let problematicKeys = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            const value = localStorage.getItem(key);
+            if (value && value.includes('UserTab_')) {
+                problematicKeys++;
+                log(`⚠️ Found old component ID in ${key}`, 'error');
+            }
+        }
+        
+        if (problematicKeys === 0) {
+            log('✓ No old component IDs found in localStorage', 'success');
+        }
+    }
+    
+    function findTest01Tab() {
+        log('=== Finding test01 Tab ===', 'info');
+        
+        const results = [];
+        const userIds = ['user-mt', 'user-ae', 'user-ef', 'user-ls', 'default-user'];
+        
+        userIds.forEach(userId => {
+            ['current-layout', 'layouts', 'active-layout'].forEach(suffix => {
+                const key = `gzc-intel-${suffix}-${userId}`;
+                const value = localStorage.getItem(key);
+                
+                if (value) {
+                    try {
+                        const data = JSON.parse(value);
+                        let found = false;
+                        
+                        // Deep search for test01
+                        const searchObj = (obj, path = '') => {
+                            if (typeof obj === 'string' && obj.includes('test01')) {
+                                found = true;
+                                results.push({ userId, key, path, value: obj });
+                            } else if (typeof obj === 'object' && obj !== null) {
+                                Object.keys(obj).forEach(k => {
+                                    searchObj(obj[k], `${path}.${k}`);
+                                });
+                            }
+                        };
+                        
+                        searchObj(data);
+                        
+                        if (found) {
+                            log(`Found test01 in ${userId} - ${key}`, 'error');
+                        }
+                    } catch (e) {}
+                }
+            });
+        });
+        
+        if (results.length === 0) {
+            log('No test01 tab found in any user data', 'info');
+        } else {
+            log(`Found ${results.length} instances of test01`, 'error');
+            results.forEach(r => {
+                log(`  ${r.userId}: ${r.path} = ${r.value}`, 'info');
+            });
+        }
+        
+        return results;
+    }
+    
+    function fixComponentRegistry() {
+        log('=== Fixing Component Registry ===', 'info');
+        
+        let fixed = 0;
+        
+        // Fix all user layouts
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key || !key.includes('layout')) continue;
+            
+            const value = localStorage.getItem(key);
+            if (!value) continue;
+            
+            try {
+                const data = JSON.parse(value);
+                let modified = false;
+                
+                // Fix function
+                const fixComponent = (obj) => {
+                    if (obj && typeof obj === 'object') {
+                        if (obj.component && (obj.component.startsWith('UserTab_') || obj.component === 'UserTab')) {
+                            log(`Fixing ${obj.component} -> UserTabContainer in ${key}`, 'success');
+                            obj.component = 'UserTabContainer';
+                            modified = true;
+                            fixed++;
+                        }
+                        
+                        // Fix tabs array
+                        if (obj.tabs && Array.isArray(obj.tabs)) {
+                            obj.tabs.forEach(tab => {
+                                if (tab.component && (tab.component.startsWith('UserTab_') || tab.name === 'test01')) {
+                                    log(`Fixing tab ${tab.name}: ${tab.component} -> UserTabContainer`, 'success');
+                                    tab.component = 'UserTabContainer';
+                                    modified = true;
+                                    fixed++;
+                                }
+                            });
+                        }
+                        
+                        // Recurse
+                        Object.values(obj).forEach(v => {
+                            if (typeof v === 'object') fixComponent(v);
+                        });
+                    }
+                };
+                
+                fixComponent(data);
+                
+                if (modified) {
+                    localStorage.setItem(key, JSON.stringify(data));
+                    log(`✓ Updated ${key}`, 'success');
+                }
+            } catch (e) {
+                log(`Error processing ${key}: ${e.message}`, 'error');
+            }
+        }
+        
+        log(`Fixed ${fixed} component references`, fixed > 0 ? 'success' : 'info');
+        
+        if (fixed > 0) {
+            log('Refreshing in 2 seconds...', 'info');
+            setTimeout(() => window.location.href = '/', 2000);
+        }
+    }
+    
+    function clearViteCache() {
+        log('=== Clearing Vite Cache ===', 'info');
+        
+        // Clear module cache
+        if (window.__vite__) {
+            log('Clearing Vite module cache...', 'info');
+            // This would require server restart
+        }
+        
+        // Clear service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                registrations.forEach(registration => {
+                    registration.unregister();
+                    log('✓ Unregistered service worker', 'success');
+                });
+            });
+        }
+        
+        // Clear caches
+        if ('caches' in window) {
+            caches.keys().then(names => {
+                names.forEach(name => {
+                    caches.delete(name);
+                    log(`✓ Cleared cache: ${name}`, 'success');
+                });
+            });
+        }
+        
+        log('Cache cleared. Restart Vite dev server for full effect.', 'info');
+    }
+    
+    // Auto-run diagnostics on load
+    window.onload = () => {
+        log('Chrome DevTools Debug Tool Ready', 'info');
+        log('Click the buttons in order to diagnose and fix the issue', 'info');
+    };
+    </script>
+</body>
+</html>

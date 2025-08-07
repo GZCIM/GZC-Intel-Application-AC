@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head><title>Force Reload</title></head>
+<body>
+<h1>Force Clear and Reload</h1>
+<button onclick="forceReload()">Force Clear Everything and Reload</button>
+<script>
+function forceReload() {
+  // Clear all localStorage
+  localStorage.clear();
+  
+  // Clear sessionStorage
+  sessionStorage.clear();
+  
+  // Clear all cookies
+  document.cookie.split(";").forEach(function(c) { 
+    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+  });
+  
+  // Clear cache and hard reload
+  if ('caches' in window) {
+    caches.keys().then(names => {
+      names.forEach(name => caches.delete(name));
+    }).then(() => {
+      // Force reload with cache bypass
+      window.location.href = 'http://localhost:3500?nocache=' + Date.now();
+    });
+  } else {
+    window.location.href = 'http://localhost:3500?nocache=' + Date.now();
+  }
+}
+</script>
+</body>
+</html>

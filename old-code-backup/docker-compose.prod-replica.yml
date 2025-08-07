@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Backend service - Flask app on port 5100
+  backend:
+    build: 
+      context: ./fx-websocket-backend
+      dockerfile: Dockerfile.simple
+    container_name: fx-backend
+    ports:
+      - "5100:5100"
+    environment:
+      - FLASK_PORT=5100
+      - FLASK_HOST=0.0.0.0
+      - PYTHONPATH=/app
+      - FIX_SOCKET_HOST=fixapi-nysim1.fxspotstream.com
+      - FIX_RFS_STREAMING_PORT=9100
+      - FIX_RFS_TRADING_PORT=9110
+      - FIX_TARGET_COMP_ID=FXSPOTSTREAMUAT
+      - FIX_RFS_SENDER_COMP_ID_MKT=MT_MARKET_RFS
+      - FIX_RFS_SENDER_COMP_ID_TRD=MT_TRADING_RFS
+      - FIX_USERNAME=gzc_user
+      - FIX_PASSWORD=gzc_password
+      - FIX_ESP_STREAMING_PORT=9120
+      - FIX_ESP_TRADING_PORT=9130
+      - FIX_ESP_SENDER_COMP_ID=MT_ESP
+    volumes:
+      - ./fx-websocket-backend:/app
+    networks:
+      - fx-network
+
+  # Frontend service with nginx
+  frontend:
+    build: 
+      context: ./gzc-intel-frontend
+      dockerfile: Dockerfile.prod
+    container_name: fx-frontend
+    ports:
+      - "3500:3500"
+    depends_on:
+      - backend
+    networks:
+      - fx-network
+
+
+networks:
+  fx-network:
+    driver: bridge

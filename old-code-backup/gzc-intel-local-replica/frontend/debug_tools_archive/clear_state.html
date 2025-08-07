@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head><title>Clear State</title></head>
+<body>
+<h1>Clear GZC Intel State</h1>
+<button onclick="clearState()">Clear All State and Reload</button>
+<script>
+function clearState() {
+  // Clear all localStorage items related to the app
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.includes('gzc-intel') || key.includes('analytics') || key.includes('flatgrid') || key.includes('widget'))) {
+      keysToRemove.push(key);
+    }
+  }
+  
+  keysToRemove.forEach(key => {
+    console.log('Removing:', key);
+    localStorage.removeItem(key);
+  });
+  
+  // Redirect to the app
+  window.location.href = 'http://localhost:3500';
+}
+</script>
+</body>
+</html>
