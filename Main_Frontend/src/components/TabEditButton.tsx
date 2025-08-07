@@ -37,6 +37,7 @@ export const TabEditButton: React.FC<TabEditButtonProps> = ({ tabId }) => {
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
+      title={isEditMode ? 'Save and lock components' : 'Edit component layout'}
       style={{
         position: 'absolute',
         top: '12px',
@@ -44,8 +45,8 @@ export const TabEditButton: React.FC<TabEditButtonProps> = ({ tabId }) => {
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
-        gap: '6px',
-        padding: '6px 12px',
+        justifyContent: 'center',
+        padding: '8px',
         fontSize: '11px',
         fontWeight: '500',
         backgroundColor: isEditMode 
@@ -57,7 +58,9 @@ export const TabEditButton: React.FC<TabEditButtonProps> = ({ tabId }) => {
         border: `1px solid ${isEditMode 
           ? currentTheme.primary 
           : (isHovered && !isEditMode ? currentTheme.primary : currentTheme.border)}`,
-        borderRadius: '6px',
+        borderRadius: '50%',
+        width: '32px',
+        height: '32px',
         cursor: 'pointer',
         transition: 'all 0.2s ease',
         backdropFilter: 'blur(8px)',
@@ -66,10 +69,10 @@ export const TabEditButton: React.FC<TabEditButtonProps> = ({ tabId }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Icon */}
+      {/* Icon only - no text */}
       <svg 
-        width="12" 
-        height="12" 
+        width="14" 
+        height="14" 
         fill="none" 
         stroke="currentColor" 
         viewBox="0 0 24 24"
@@ -92,9 +95,6 @@ export const TabEditButton: React.FC<TabEditButtonProps> = ({ tabId }) => {
           />
         )}
       </svg>
-      
-      {/* Text */}
-      {isEditMode ? 'Save' : 'Edit'}
     </motion.button>
   )
 }

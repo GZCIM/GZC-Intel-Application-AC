@@ -1,15 +1,109 @@
-# GZC Intel App - Production Copy
+# GZC Intel Application AC
 
-This is an exact copy of the production application extracted from Azure Container Registry.
-
-## What's Included
-
-- **Frontend**: Production build with the Tools menu (from `/var/www/html`)
-- **Backend**: FXSpotStream Flask application (from `/app/backend`)
-- **Nginx Config**: Production routing configuration
-- **Supervisor Config**: Process management configuration
+Financial intelligence dashboard with drag-and-drop components, real-time data visualization, and portfolio management.
 
 ## Quick Start
+
+```bash
+# Local development
+cd Main_Frontend
+npm install
+npm run dev
+
+# Deploy to Azure
+docker build --no-cache -t gzcacr.azurecr.io/gzc-intel-app:latest --platform linux/amd64 .
+docker push gzcacr.azurecr.io/gzc-intel-app:latest
+az containerapp update --name gzc-intel-application-ac \
+  --resource-group gzc-kubernetes-rg \
+  --image gzcacr.azurecr.io/gzc-intel-app:latest
+```
+
+**Production URL**: https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io
+
+## Architecture
+
+```
+Main_Frontend/          # React frontend with drag-drop grid
+├── src/
+│   ├── components/
+│   │   ├── canvas/     # Grid layout system
+│   │   └── gzc-portfolio/  # Portfolio component
+│   └── core/
+│       └── components/ # Component inventory & constraints
+│
+FSS_Socket/backend/     # Flask WebSocket backend
+├── app/
+└── requirements.txt
+```
+
+## Key Features
+
+- **Dynamic Canvas**: Drag-and-drop component grid with size constraints
+- **Portfolio Management**: Real-time FX trades and positions
+- **Theme System**: Dark/light themes with CSS variables
+- **WebSocket Data**: Real-time market data streams
+
+## Development Journal
+
+See `/journal/` for daily progress and decisions:
+- `/journal/2025-01-08/` - Grid resize fixes, deployment issues
+
+## Core Systems
+
+### Component Grid Layout
+- 12-column responsive grid
+- Min/max size constraints per component
+- Edit mode for arrangement
+- Persistence via localStorage
+
+### Authentication
+- Azure MSAL integration
+- PostgreSQL for user preferences
+- Redis for session management
+
+### Deployment Pipeline
+- Docker multi-stage build
+- Azure Container Apps hosting
+- Nginx static serving + Flask API
+
+## Common Tasks
+
+### Fix Component Not Resizing
+Check `DynamicCanvas.tsx` data-grid attributes - must include minW/minH/maxW/maxH
+
+### Deployment Not Updating
+1. Use `docker build --no-cache`
+2. Verify correct app: `gzc-intel-application-ac`
+3. Clear browser cache (Ctrl+Shift+R)
+
+### Database Connection Failed
+```bash
+az postgres flexible-server db create \
+  --resource-group AEWS \
+  --server-name gzcdevserver \
+  --database-name gzc_intel
+```
+
+## Environment Variables
+
+Required for backend:
+- `POSTGRES_PASSWORD` - PostgreSQL password
+- `REDIS_URL` - Redis connection string
+- `AZURE_CLIENT_ID` - MSAL authentication
+
+## Testing
+
+```bash
+# Frontend tests
+cd Main_Frontend
+npm test
+
+# Check deployment
+curl https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io/health
+```
+
+---
+For AI assistance context, see `CLAUDE.md`
 
 ### Option 1: Docker Compose (Recommended)
 ```bash

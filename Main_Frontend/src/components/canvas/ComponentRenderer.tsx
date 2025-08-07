@@ -159,24 +159,40 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({
       }}>
         {isEditMode && (
           <button
-            onClick={onRemove}
+            onClick={() => {
+              if (window.confirm(`Are you sure you want to remove ${meta.displayName}?\n\nThis action cannot be undone.`)) {
+                onRemove()
+              }
+            }}
             style={{
               position: 'absolute',
               top: '8px',
               right: '8px',
               zIndex: 10,
-              background: currentTheme.surface,
-              border: `1px solid ${currentTheme.border}`,
-              borderRadius: '4px',
+              background: currentTheme.error + '15',
+              border: `1px solid ${currentTheme.error}`,
+              borderRadius: '50%',
               cursor: 'pointer',
-              color: currentTheme.textSecondary,
-              padding: '4px 8px',
-              fontSize: '12px',
-              opacity: 0.8,
-              transition: 'opacity 0.2s ease'
+              color: currentTheme.error,
+              width: '24px',
+              height: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              opacity: 0.7,
+              transition: 'all 0.2s ease'
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.opacity = '1' }}
-            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.8' }}
+            onMouseEnter={(e) => { 
+              e.currentTarget.style.opacity = '1'
+              e.currentTarget.style.backgroundColor = currentTheme.error + '25'
+            }}
+            onMouseLeave={(e) => { 
+              e.currentTarget.style.opacity = '0.7'
+              e.currentTarget.style.backgroundColor = currentTheme.error + '15'
+            }}
+            title={`Remove ${meta.displayName}`}
           >
             ×
           </button>

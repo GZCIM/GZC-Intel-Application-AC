@@ -55,17 +55,27 @@ export REDIS_PASSWORD="[from Azure Key Vault or app/backend/.env]"
 
 ## Deployment
 
+**CRITICAL: Use the correct container app name!**
+- Production App: `gzc-intel-application-ac` (NOT gzc-intel-app)
+- URL: https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io
+
 To deploy changes:
 ```bash
-# Build new image
-docker build -t gzcacr.azurecr.io/gzc-intel-app:new-version .
+# Build new image (use --no-cache when fixing issues)
+docker build --no-cache -t gzcacr.azurecr.io/gzc-intel-app:latest --platform linux/amd64 .
 
 # Push to ACR
 az acr login --name gzcacr
-docker push gzcacr.azurecr.io/gzc-intel-app:new-version
+docker push gzcacr.azurecr.io/gzc-intel-app:latest
 
-# Update Container App
-az containerapp update --name gzc-intel-app \
+# Update Container App (USE CORRECT NAME!)
+az containerapp update --name gzc-intel-application-ac \
   --resource-group gzc-kubernetes-rg \
-  --image gzcacr.azurecr.io/gzc-intel-app:new-version
+  --image gzcacr.azurecr.io/gzc-intel-app:latest
 ```
+
+**Common Deployment Issues:**
+1. Wrong app name - Always use `gzc-intel-application-ac`
+2. Docker cache - Use `--no-cache` when fixes aren't working
+3. Browser cache - Force refresh with Ctrl+Shift+R
+4. Database missing - Create with `az postgres flexible-server db create`

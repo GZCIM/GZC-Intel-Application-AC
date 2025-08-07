@@ -4,7 +4,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 // PROFESSIONAL ARCHITECTURE: Unified provider system (no conflicts)
 import { UnifiedProvider } from "./core/providers/UnifiedProvider";
 import { GridProvider } from "./core/layout";
-import { TabLayoutProvider } from "./core/tabs";
+import { TabLayoutProvider, useTabLayout } from "./core/tabs";
 import { ProfessionalHeader } from "./components/ProfessionalHeader";
 import { EnhancedComponentLoader } from "./core/tabs/EnhancedComponentLoader";
 import { MarketIntelPanel } from "./components/MarketIntelPanel";
@@ -39,6 +39,10 @@ function AppContent() {
     const { currentTheme } = useTheme();
     const { isAuthenticated } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
+    const { currentLayout, activeTabId, toggleTabEditMode } = useTabLayout();
+    
+    // Get active tab from current layout
+    const activeTab = currentLayout?.tabs.find(tab => tab.id === activeTabId);
 
     // Show login modal if not authenticated
     useEffect(() => {
@@ -117,18 +121,42 @@ function AppContent() {
                         <span style={{ color: currentTheme.success }}>
                             ● All Systems Operational
                         </span>
-                        <span style={{ color: currentTheme.textSecondary }}>
-                            Latency: 8ms
-                        </span>
-                        <span style={{ color: currentTheme.textSecondary }}>
-                            AI Models: 12/12 Online
-                        </span>
-                        <span style={{ color: currentTheme.textSecondary }}>
-                            Blockchain Sync: 100%
-                        </span>
-                        <span style={{ color: currentTheme.textSecondary }}>
-                            Layout: LG
-                        </span>
+                        {/* Edit Mode Controls */}
+                        {activeTab?.closable && (
+                            <button
+                                onClick={() => toggleTabEditMode(activeTabId)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    padding: '4px 8px',
+                                    fontSize: '11px',
+                                    fontWeight: '500',
+                                    backgroundColor: activeTab?.editMode 
+                                        ? currentTheme.primary 
+                                        : 'transparent',
+                                    color: activeTab?.editMode 
+                                        ? '#ffffff' 
+                                        : currentTheme.textSecondary,
+                                    border: `1px solid ${activeTab?.editMode 
+                                        ? currentTheme.primary 
+                                        : currentTheme.border}`,
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease'
+                                }}
+                                title={activeTab?.editMode ? 'Save and lock components' : 'Edit component layout'}
+                            >
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    {activeTab?.editMode ? (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    ) : (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    )}
+                                </svg>
+                                {activeTab?.editMode ? 'Lock' : 'Edit'}
+                            </button>
+                        )}
                     </div>
                     <div
                         style={{
@@ -138,18 +166,18 @@ function AppContent() {
                         }}
                     >
                         <span style={{ color: currentTheme.textSecondary }}>
-                            Gas: 45 gwei
-                        </span>
-                        <span style={{ color: currentTheme.textSecondary }}>
-                            BTC: $67,234
-                        </span>
-                        <span style={{ color: currentTheme.textSecondary }}>
-                            ETH: $3,456
-                        </span>
-                        <span style={{ color: currentTheme.textSecondary }}>
-                            24h P&L:{" "}
+                            Month to Date P&L:{" "}
                             <span style={{ color: currentTheme.success }}>
-                                +$12,497.97
+                                +$86,930.45
+                            </span>
+                        </span>
+                        <span style={{ color: currentTheme.textSecondary }}>
+                            |
+                        </span>
+                        <span style={{ color: currentTheme.textSecondary }}>
+                            Daily P&L:{" "}
+                            <span style={{ color: currentTheme.success }}>
+                                +$12,886.81
                             </span>
                         </span>
                     </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
 import { FeatherIcon } from './icons/FeatherIcon'
+import { getVersionString } from '../utils/version'
 
 export const MarketIntelPanel = () => {
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -116,7 +117,7 @@ export const MarketIntelPanel = () => {
             <span style={{ color: theme.success }}>●</span> All Systems Operational
           </div>
           <div style={{ marginBottom: '6px' }}>
-            Version: 1.0.0 | Build: 202507
+{getVersionString()}
           </div>
           <div>
             Professional Architecture | Content-Agnostic

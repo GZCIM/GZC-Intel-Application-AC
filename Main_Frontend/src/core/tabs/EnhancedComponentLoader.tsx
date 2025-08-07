@@ -352,10 +352,7 @@ export function EnhancedComponentLoader() {
       <ErrorBoundary>
         <Suspense fallback={<LoadingComponent name={activeTab.name} />}>
           <div className="h-full w-full relative" style={{ height: '100%', width: '100%' }}>
-            {/* Edit/Save Button for User-Created Tabs */}
-            {activeTab.closable && (
-              <TabEditButton tabId={activeTab.id} />
-            )}
+            {/* Edit button moved to bottom toolbar */}
             <Component {...(activeTab.props || {})} tabId={activeTab.id} type={activeTab.type} />
           </div>
         </Suspense>

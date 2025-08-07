@@ -19,10 +19,12 @@ def create_app():
     from .controllers.rfs_controller import fix_bp
     from .controllers.esp_controller import ws_bp
     from .controllers.trade_result_controller import tr_bp
+    from .controllers.preferences_controller import preferences_bp
 
     app.register_blueprint(fix_bp)
     app.register_blueprint(ws_bp)
     app.register_blueprint(tr_bp)
+    app.register_blueprint(preferences_bp)
     # app.register_blueprint(trade_esp)
     # app.register_blueprint(trade_rsf)
 

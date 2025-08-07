@@ -93,10 +93,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <small className="text-muted">
               GZC Intel - Modular Trading Intelligence Platform
             </small>
-            <div className="d-flex gap-3">
-              <small className="text-muted">Foundation: ✅</small>
-              <small className="text-muted">Components: 🚧</small>
-              <small className="text-muted">Analytics: ⏳</small>
+            <div className="d-flex align-items-center gap-3">
+              <div className="d-flex align-items-center gap-2">
+                <small className="text-muted">Month to Date P&L:</small>
+                <small className="text-success fw-semibold">+$86,930.45</small>
+                <span className="text-muted">|</span>
+                <small className="text-muted">Daily P&L:</small>
+                <small className="text-success fw-semibold">+$12,886.81</small>
+              </div>
+              <span className="text-muted">|</span>
+              <div className="d-flex gap-3">
+                <small className="text-muted">Foundation: ✅</small>
+                <small className="text-muted">Components: 🚧</small>
+                <small className="text-muted">Analytics: ⏳</small>
+              </div>
             </div>
           </div>
         </div>

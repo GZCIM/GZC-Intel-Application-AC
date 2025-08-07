@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Responsive, WidthProvider, Layout } from 'react-grid-layout'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -7,6 +7,7 @@ import { useViewMemory } from '../../hooks/useViewMemory'
 import { componentInventory, ComponentMeta } from '../../core/components/ComponentInventory'
 import { ComponentRenderer } from './ComponentRenderer'
 import { ComponentPortalModal } from '../ComponentPortalModal'
+import '../../styles/analytics-dashboard.css'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
 
@@ -33,6 +34,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
   const [layouts, setLayouts] = useState<{ [key: string]: Layout[] }>({})
   const [isDragging, setIsDragging] = useState(false)
   const [showComponentPortal, setShowComponentPortal] = useState(false)
+  const [isLayoutReady, setIsLayoutReady] = useState(false)
 
   const tab = currentLayout?.tabs.find(t => t.id === tabId)
   const isEditMode = tab?.editMode || false
@@ -70,12 +72,18 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     }
   }, [tabId, tab?.components, loadFromMemory])
 
-  // Handle layout changes
-  const handleLayoutChange = (layout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
+  // Handle layout changes with memoization
+  const handleLayoutChange = useCallback((layout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
     setLayouts(allLayouts)
     // Always save for dynamic tabs (auto-save feature)
     saveLayoutToTab(layout)
-  }
+  }, [])
+
+  // Memoize drag/resize handlers
+  const handleDragStart = useCallback(() => setIsDragging(true), [])
+  const handleDragStop = useCallback(() => setIsDragging(false), [])
+  const handleResizeStart = useCallback(() => setIsDragging(true), [])
+  const handleResizeStop = useCallback(() => setIsDragging(false), [])
 
   // Save current state
   const saveLayoutToTab = (layout?: Layout[]) => {
@@ -122,8 +130,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
     setComponents(prev => [...prev, newInstance])
     
-    // Auto-add to layout
-    const newLayout = [...(layouts.lg || []), {
+    // Auto-add to layout with proper constraints
+    const newLayoutItem = {
       i: newInstance.id,
       x: newInstance.x,
       y: newInstance.y,
@@ -131,14 +139,19 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
       h: newInstance.h,
       minW: componentMeta.minSize.w,
       minH: componentMeta.minSize.h,
-      maxW: componentMeta.maxSize?.w,
-      maxH: componentMeta.maxSize?.h
-    }]
+      maxW: componentMeta.maxSize?.w || 12,
+      maxH: componentMeta.maxSize?.h || 20,
+      isDraggable: isEditMode,
+      isResizable: isEditMode
+    }
 
-    setLayouts(prev => ({ ...prev, lg: newLayout }))
+    setLayouts(prev => ({ 
+      ...prev, 
+      lg: [...(prev.lg || []), newLayoutItem] 
+    }))
     
     if (!isEditMode) {
-      saveLayoutToTab(newLayout)
+      saveLayoutToTab([...(layouts.lg || []), newLayoutItem])
     }
   }
 
@@ -151,18 +164,31 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     }))
   }
 
-  // Generate layout from components
-  const generateLayout = (): Layout[] => {
-    return components.map(comp => ({
-      i: comp.id,
-      x: comp.x,
-      y: comp.y,
-      w: comp.w,
-      h: comp.h,
-      minW: 1,
-      minH: 1
-    }))
-  }
+  // Memoize layout generation to prevent infinite re-renders
+  const generateLayout = useMemo((): Layout[] => {
+    return components.map(comp => {
+      const meta = componentInventory.getComponent(comp.componentId)
+      return {
+        i: comp.id,
+        x: comp.x,
+        y: comp.y,
+        w: comp.w,
+        h: comp.h,
+        minW: meta?.minSize?.w || 2,
+        minH: meta?.minSize?.h || 2,
+        maxW: meta?.maxSize?.w || 12,
+        maxH: meta?.maxSize?.h || 20,
+        isDraggable: isEditMode,
+        isResizable: isEditMode
+      }
+    })
+  }, [components, isEditMode])
+
+  // Set layout ready after initial render
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLayoutReady(true), 100)
+    return () => clearTimeout(timer)
+  }, [components.length])
 
 
   // Component instance wrapper
@@ -189,45 +215,16 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     )
   }
 
+
   return (
-    <div style={{
-      height: '100%',
-      width: '100%',
-      backgroundColor: currentTheme.background,
-      position: 'relative'
-    }}>
-      {/* Edit/Save Button is rendered by EnhancedComponentLoader, not here */}
-      
-      {/* Add Component Button (Edit Mode) */}
-      {isEditMode && (
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            console.log('DynamicCanvas: Opening component portal')
-            setShowComponentPortal(true)
-          }}
-          style={{
-            position: 'absolute',
-            top: '60px',
-            right: '12px',
-            padding: '8px 16px',
-            backgroundColor: currentTheme.primary,
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '12px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            zIndex: 1000,
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
-          }}
-        >
-          <span>➕</span> Add Component
-        </motion.button>
-      )}
+    <div 
+      style={{
+        height: '100%',
+        width: '100%',
+        backgroundColor: currentTheme.background,
+        position: 'relative'
+      }}
+    >
 
       {/* Canvas Area */}
       <div style={{
@@ -279,15 +276,16 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           </div>
         ) : (
           <ResponsiveGridLayout
-            className="layout"
-            layouts={layouts}
+            className={`layout ${isLayoutReady ? 'layout-ready' : ''}`}
+            layouts={layouts.lg ? layouts : { lg: generateLayout }}
             onLayoutChange={handleLayoutChange}
-            onDragStart={() => setIsDragging(true)}
-            onDragStop={() => setIsDragging(false)}
-            onResizeStart={() => setIsDragging(true)}
-            onResizeStop={() => setIsDragging(false)}
+            onDragStart={handleDragStart}
+            onDragStop={handleDragStop}
+            onResizeStart={handleResizeStart}
+            onResizeStop={handleResizeStop}
             isDraggable={isEditMode}
             isResizable={isEditMode}
+            useCSSTransforms={true}
             margin={[8, 8]}
             containerPadding={[0, 0]}
             rowHeight={60}
@@ -295,12 +293,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           >
             {components.map(instance => (
-              <div key={instance.id} style={{
-                background: currentTheme.surface,
-                border: `1px solid ${currentTheme.border}`,
-                borderRadius: '8px',
-                overflow: 'hidden'
-              }}>
+              <div 
+                key={instance.id}
+                style={{
+                  background: currentTheme.surface,
+                  border: `1px solid ${currentTheme.border}`,
+                  borderRadius: '8px',
+                  overflow: 'hidden'
+                }}
+              >
                 <ComponentInstanceWrapper instance={instance} />
               </div>
             ))}

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '../contexts/ThemeContext'
 import { useTabLayout } from '../core/tabs/TabLayoutManager'
+import { ComponentPortalModal } from './ComponentPortalModal'
+import { ComponentMeta } from '../core/components/ComponentInventory'
 
 interface TabContextMenuProps {
   tabId: string
@@ -17,11 +19,13 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
   onClose
 }) => {
   const { currentTheme } = useTheme()
-  const { currentLayout, removeTab, toggleTabEditMode, updateTab } = useTabLayout()
+  const { currentLayout, removeTab, updateTab } = useTabLayout()
   const [showRenameModal, setShowRenameModal] = useState(false)
   const [newName, setNewName] = useState('')
+  const [showComponentPortal, setShowComponentPortal] = useState(false)
 
   const tab = currentLayout?.tabs.find(t => t.id === tabId)
+  const isEditMode = tab?.editMode || false
 
   useEffect(() => {
     const handleClickOutside = () => onClose()
@@ -63,16 +67,52 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
     setNewName('')
   }
 
-  const handleEdit = () => {
-    toggleTabEditMode(tabId)
-    onClose()
-  }
 
   const handleRemove = () => {
     if (confirm(`Are you sure you want to remove the tab "${tab.name}"?`)) {
       removeTab(tabId)
     }
     onClose()
+  }
+
+  const handleToggleEditMode = () => {
+    updateTab(tabId, { editMode: !isEditMode })
+    onClose()
+  }
+
+  const handleAddComponent = () => {
+    setShowComponentPortal(true)
+    onClose()
+  }
+
+  const handleComponentSelected = (componentMeta: ComponentMeta) => {
+    if (!tab.components) return
+    
+    // Find next available position
+    const existingPositions = tab.components.map(c => ({ x: c.x, y: c.y }))
+    let x = 0, y = 0
+    while (existingPositions.some(pos => pos.x === x && pos.y === y)) {
+      x += 2
+      if (x > 10) {
+        x = 0
+        y += 2
+      }
+    }
+
+    const newComponent = {
+      id: `${componentMeta.id}-${Date.now()}`,
+      componentId: componentMeta.id,
+      x,
+      y,
+      w: componentMeta.defaultSize?.w || 4,
+      h: componentMeta.defaultSize?.h || 4,
+      props: componentMeta.defaultProps || {}
+    }
+
+    updateTab(tabId, {
+      components: [...tab.components, newComponent]
+    })
+    setShowComponentPortal(false)
   }
 
   // Early return check after all hooks
@@ -82,24 +122,29 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
     {
       icon: (
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isEditMode ? "M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" : "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"} />
+        </svg>
+      ),
+      label: isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode',
+      onClick: handleToggleEditMode
+    },
+    ...(isEditMode ? [{
+      icon: (
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+      ),
+      label: 'Add Component',
+      onClick: handleAddComponent
+    }] : []),
+    {
+      icon: (
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
       ),
       label: 'Rename',
       onClick: handleRename
-    },
-    {
-      icon: (
-        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          {tab.editMode ? (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          )}
-        </svg>
-      ),
-      label: tab.editMode ? 'Save' : 'Edit',
-      onClick: handleEdit
     },
     {
       icon: (
@@ -136,7 +181,7 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {menuItems.map((item, index) => (
+            {menuItems.map((item) => (
               <motion.button
                 key={item.label}
                 onClick={item.onClick}
@@ -268,6 +313,15 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Component Portal Modal */}
+      {showComponentPortal && (
+        <ComponentPortalModal
+          isOpen={showComponentPortal}
+          onClose={() => setShowComponentPortal(false)}
+          onComponentSelected={handleComponentSelected}
+        />
+      )}
     </>
   )
 }

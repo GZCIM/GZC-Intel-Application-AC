@@ -111,15 +111,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 {/* Avatar */}
                 <div
                     style={{
-                        width: "24px",
-                        height: "24px",
+                        width: "20px",
+                        height: "20px",
                         borderRadius: "50%",
                         backgroundColor: userColor,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         color: theme.background,
-                        fontSize: "10px",
+                        fontSize: "9px",
                         fontWeight: "600",
                     }}
                 >

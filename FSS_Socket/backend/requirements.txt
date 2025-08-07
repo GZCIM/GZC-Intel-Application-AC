@@ -7,3 +7,5 @@ redis==5.2.1
 simplefix==1.0.17
 SQLAlchemy==2.0.27
 pyodbc==5.1.0
+psycopg2-binary==2.9.9
+PyJWT==2.8.0

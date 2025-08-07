@@ -52,6 +52,7 @@ export function VolatilityAnalysis({
   
   const smileChartRef = useRef<HTMLDivElement>(null)
   const termChartRef = useRef<HTMLDivElement>(null)
+  const resizeObserverRef = useRef<ResizeObserver | null>(null)
   
   // Convert tenor to actual time in years - moved to global scope
   const tenorToYears = (tenor: string): number => {
@@ -181,6 +182,42 @@ export function VolatilityAnalysis({
     fetchSpotRates() // Fetch spot rates on component mount
     fetchData()
   }, [fetchData, fetchSpotRates])
+
+  // Set up resize observer for smooth chart resizing
+  useEffect(() => {
+    const handleResize = () => {
+      // Re-render charts on resize with debounce
+      if (surfaceData.length > 0) {
+        requestAnimationFrame(() => {
+          drawVolatilitySmile(surfaceData)
+          drawTermStructure(surfaceData)
+        })
+      }
+    }
+
+    // Create resize observer
+    resizeObserverRef.current = new ResizeObserver(() => {
+      handleResize()
+    })
+
+    // Observe chart containers
+    if (smileChartRef.current) {
+      resizeObserverRef.current.observe(smileChartRef.current)
+    }
+    if (termChartRef.current) {
+      resizeObserverRef.current.observe(termChartRef.current)
+    }
+
+    // Also listen for window resize
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect()
+      }
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [surfaceData, currentTheme])
 
   // D3.js Term Structure Visualization
   const drawTermStructureChart = useCallback(() => {
@@ -1123,15 +1160,19 @@ export function VolatilityAnalysis({
         display: 'flex',
         gap: '2px',
         backgroundColor: currentTheme.border,
-        height: 'calc(100% - 80px)'
+        height: 'calc(100% - 80px)',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
         
         {/* Left Column: Smile and Term Structure */}
         <div style={{
-          flex: '0 0 50%',
+          flex: '1 1 50%',
+          minWidth: '300px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '2px'
+          gap: '2px',
+          overflow: 'hidden'
         }}>
         
           {/* Volatility Smile Section */}
@@ -1298,11 +1339,13 @@ export function VolatilityAnalysis({
         
         {/* Right Column: Full height 3D Surface */}
         <div style={{
-          flex: '1',
+          flex: '1 1 50%',
+          minWidth: '400px',
           backgroundColor: currentTheme.background,
           padding: '12px',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          overflow: 'hidden'
         }}>
           <h3 style={{ 
             fontSize: '13px', 

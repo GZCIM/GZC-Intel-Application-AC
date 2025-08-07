@@ -21,9 +21,7 @@ export const ProfessionalHeader = () => {
     currentLayout,
     activeTabId,
     setActiveTab,
-    createTabWithPrompt,
-    removeTab,
-    toggleTabEditMode
+    createTabWithPrompt
   } = useTabLayout()
   
   const { currentTheme: theme } = useTheme()

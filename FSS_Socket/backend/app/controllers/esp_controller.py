@@ -89,38 +89,43 @@ def websocket(ws):
         ssl=os.getenv("REDIS_SSL", "False") == "True"
     )
     
-    # Function to send Redis quotes
+    # Function to send Redis quotes - get ALL available data
     def send_redis_quotes():
-        symbols = ["EUR/USD", "GBP/USD", "USD/JPY"]
         while ws in connected_clients:
             try:
-                for symbol in symbols:
-                    # Try to get quote from Redis
-                    for side in ["Bid", "Ask"]:
-                        for provider in ["JPMC", "BAML", "CITI", "GS"]:
-                            try:
-                                quote_data = redis_dao.get_exchange_rate(
-                                    symbol=symbol,
-                                    type="SPOT",
-                                    quantity=1000000,
-                                    side=side,
-                                    settlement="SP",
-                                    provider=provider
-                                )
-                                if quote_data and quote_data.get("rate"):
-                                    message = {
-                                        "type": "quote",
-                                        "symbol": symbol,
-                                        "price": quote_data.get("rate"),
-                                        "side": side,
-                                        "provider": provider,
-                                        "timestamp": quote_data.get("timestamp"),
-                                        "source": "redis"
-                                    }
-                                    ws.send(json.dumps(message))
-                                    break  # Found a quote, move to next side
-                            except:
-                                continue
+                # Get ALL exchange rate keys from Redis
+                all_rates = redis_dao.get_all_exchange_rates()
+                
+                # Send each quote to the client
+                for key, quote_data in all_rates.items():
+                    if quote_data and quote_data.get("rate"):
+                        # Parse the key to extract details
+                        # Format: exchange_rate:quote_type:symbol:type:quantity:side:settlement:provider
+                        parts = key.split(":")
+                        if len(parts) >= 7:
+                            quote_type = parts[1]  # esp or rfs
+                            symbol = parts[2]
+                            rate_type = parts[3]  # SPOT, FORWARD, etc
+                            quantity = parts[4]
+                            side = parts[5]
+                            settlement = parts[6]
+                            provider = parts[7] if len(parts) > 7 else "Unknown"
+                            
+                            message = {
+                                "type": "quote",
+                                "quote_type": quote_type,
+                                "symbol": symbol,
+                                "rate_type": rate_type,
+                                "price": quote_data.get("rate"),
+                                "side": side,
+                                "provider": provider,
+                                "quantity": quantity,
+                                "settlement": settlement,
+                                "timestamp": quote_data.get("timestamp"),
+                                "source": "redis"
+                            }
+                            ws.send(json.dumps(message))
+                
                 time.sleep(2)  # Update every 2 seconds
             except Exception as e:
                 print(f"Error sending Redis quotes: {e}")
