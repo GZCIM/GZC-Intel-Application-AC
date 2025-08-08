@@ -38,27 +38,18 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
   const tab = currentLayout?.tabs.find(t => t.id === tabId)
   const isEditMode = tab?.editMode || false
+  
+  console.log('DynamicCanvas render - tabId:', tabId, 'isEditMode:', isEditMode, 'components:', components.length)
 
-  // Load components from memory or tab configuration
+  // Load components from tab configuration (prioritize tab over memory for live updates)
   useEffect(() => {
-    // Try to load from memory first
-    const memoryData = loadFromMemory(`dynamic-canvas-${tabId}`)
-    if (memoryData && memoryData.components) {
-      const loadedComponents = memoryData.components.map((comp: any) => ({
-        id: comp.id,
-        componentId: comp.type,
-        x: comp.position.x,
-        y: comp.position.y,
-        w: comp.position.w,
-        h: comp.position.h,
-        props: comp.props || {}
-      }))
-      setComponents(loadedComponents)
-      if (memoryData.layouts) {
-        setLayouts(memoryData.layouts)
-      }
-    } else if (tab?.components) {
-      // Fall back to tab configuration
+    console.log('DynamicCanvas useEffect - tab components:', tab?.components?.length, 'editMode:', tab?.editMode)
+    console.log('FULL TAB OBJECT:', tab)
+    
+    if (tab?.components && tab.components.length > 0) {
+      // Always use tab configuration when it has components
+      console.log('Loading components from tab:', tab.components)
+      console.log('WILL SET COMPONENTS TO:', tab.components.length, 'items')
       const loadedComponents = tab.components.map(comp => ({
         id: comp.id,
         componentId: comp.type,
@@ -69,8 +60,32 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         props: comp.props || {}
       }))
       setComponents(loadedComponents)
+    } else if (!tab?.components || tab.components.length === 0) {
+      // Only load from memory if we don't already have components
+      if (components.length === 0) {
+        console.log('No tab components and no existing components, checking memory...')
+        const memoryData = loadFromMemory(`dynamic-canvas-${tabId}`)
+        if (memoryData && memoryData.components) {
+          console.log('Loading components from memory:', memoryData.components.length)
+          const loadedComponents = memoryData.components.map((comp: any) => ({
+            id: comp.id,
+            componentId: comp.type,
+            x: comp.position.x,
+            y: comp.position.y,
+            w: comp.position.w,
+            h: comp.position.h,
+            props: comp.props || {}
+          }))
+          setComponents(loadedComponents)
+          if (memoryData.layouts) {
+            setLayouts(memoryData.layouts)
+          }
+        }
+      } else {
+        console.log('Tab has no components but canvas has', components.length, 'components - keeping them')
+      }
     }
-  }, [tabId, tab?.components, loadFromMemory])
+  }, [tabId, tab?.components])
 
   // Handle layout changes with memoization
   const handleLayoutChange = useCallback((layout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
@@ -117,7 +132,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
   // Add new component to canvas
   const addComponent = (componentMeta: ComponentMeta) => {
-    console.log('DynamicCanvas: Adding component:', componentMeta)
+    console.log('🟢 DynamicCanvas.addComponent: Called with meta:', componentMeta)
+    console.log('🟢 DynamicCanvas.addComponent: Current components:', components)
     
     const newInstance: ComponentInstance = {
       id: `${componentMeta.id}_${Date.now()}`,
@@ -127,8 +143,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
       w: componentMeta.defaultSize.w,
       h: componentMeta.defaultSize.h
     }
+    
+    console.log('🟢 DynamicCanvas.addComponent: Creating new instance:', newInstance)
 
-    setComponents(prev => [...prev, newInstance])
+    setComponents(prev => {
+      const updated = [...prev, newInstance]
+      console.log('🟢 DynamicCanvas.addComponent: Updated components list:', updated)
+      return updated
+    })
     
     // Auto-add to layout with proper constraints
     const newLayoutItem = {
@@ -342,13 +364,23 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           setShowComponentPortal(false)
         }}
         onComponentSelect={(componentId) => {
-          console.log('DynamicCanvas: Component selected:', componentId)
+          console.log('🔵 DynamicCanvas: Component selected:', componentId)
+          console.log('🔵 DynamicCanvas: Getting component from inventory...')
+          
+          const allComponents = componentInventory.getAllComponents()
+          console.log('🔵 DynamicCanvas: All inventory components:', allComponents.map(c => c.id))
+          
           const meta = componentInventory.getComponent(componentId)
+          console.log('🔵 DynamicCanvas: Component meta retrieved:', meta)
+          
           if (meta) {
+            console.log('✅ DynamicCanvas: Adding component to canvas:', meta)
             addComponent(meta)
             setShowComponentPortal(false)
+            console.log('✅ DynamicCanvas: Component added successfully')
           } else {
-            console.error('DynamicCanvas: Component not found in inventory:', componentId)
+            console.error('❌ DynamicCanvas: Component not found in inventory:', componentId)
+            console.error('❌ DynamicCanvas: Available components in inventory:', allComponents.map(c => c.id))
           }
         }}
       />

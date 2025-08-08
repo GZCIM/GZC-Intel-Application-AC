@@ -94,6 +94,7 @@ const DEFAULT_TABS: TabConfig[] = [
     closable: true,  // Changed to true so Edit button appears
     gridLayoutEnabled: true,
     components: [],
+    editMode: false,  // Initialize editMode to false
     memoryStrategy: 'hybrid'
   },
   {
@@ -297,15 +298,29 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
   }
 
   const updateTab = (tabId: string, updates: Partial<TabConfig>) => {
+    console.log('UPDATE TAB CALLED:', { tabId, updates })
+    
+    // Preserve editMode if not explicitly set in updates
+    const currentTab = currentLayout.tabs.find(t => t.id === tabId)
+    const preservedUpdates = {
+      ...updates,
+      // If editMode is undefined in updates, preserve current value
+      editMode: updates.editMode !== undefined ? updates.editMode : currentTab?.editMode
+    }
+    
     const updatedLayout = {
       ...currentLayout,
       tabs: currentLayout.tabs.map(t =>
-        t.id === tabId ? { ...t, ...updates } : t
+        t.id === tabId ? { ...t, ...preservedUpdates } : t
       ),
       updatedAt: new Date().toISOString()
     }
 
+    console.log('UPDATED LAYOUT:', updatedLayout)
     setCurrentLayout(updatedLayout)
+    
+    // CRITICAL: Save to localStorage immediately to prevent loss
+    localStorage.setItem(getUserKey('gzc-intel-current-layout'), JSON.stringify(updatedLayout))
 
     // Update in layouts array if it's a saved layout
     if (!currentLayout.isDefault) {

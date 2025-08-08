@@ -132,6 +132,12 @@ echo "Deployed $VERSION at $(date)" >> ../journal/$(date +%Y-%m-%d)/deployment.m
 ### Production URL
 https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io
 
+### Current Production Version
+- **Tag**: v20250808-171205
+- **Status**: STABLE ✅
+- **Last Deploy**: 2025-01-08 17:12:05
+- **Features**: All component persistence issues fixed
+
 ## 🏗 Architecture Patterns
 
 ### Component System
@@ -159,20 +165,27 @@ https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainer
 
 ### Context Menu (Right-click/Two-finger tap)
 - Not in edit mode → Enter edit mode
-- In edit mode → Show component portal
+- In edit mode → Add Component, Save & Exit Edit, Rename Tab
 
 ### Edit Mode
 - Drag to reposition components
 - Resize from corners
 - Click ✕ to remove components
 - Changes auto-save to localStorage
+- **FIXED (2025-01-08)**: Edit mode now persists when adding components
 
 ### Component Portal
 - Local components from ComponentInventory
 - Import from port 3200 (disabled)
 - Add to canvas with default size
+- **FIXED (2025-01-08)**: Components no longer disappear after being added
 
 ## ⚠️ Known Issues & Solutions
+
+### ~~Component Persistence Issues~~ ✅ FIXED (2025-01-08)
+- ~~Components disappearing after add~~ → Fixed in v20250808-171205
+- ~~Edit mode exiting unexpectedly~~ → Fixed with explicit state preservation
+- ~~Portfolio Manager crashes~~ → Fixed with null/undefined checks
 
 ### TypeScript Build Errors
 - Many type errors exist but don't block functionality

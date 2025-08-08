@@ -95,13 +95,20 @@ export const ProfessionalHeader = () => {
 
   const handleTabRightClick = (e: React.MouseEvent, tab: Tab) => {
     e.preventDefault()
+    console.log('RIGHT CLICK on tab:', tab.id, tab.name)
     const tabConfig = currentLayout?.tabs.find(t => t.id === tab.id)
+    console.log('Tab config:', tabConfig)
+    console.log('Is closable?', tabConfig?.closable)
+    
     if (tabConfig?.closable) {
+      console.log('Setting context menu open for tab:', tab.id)
       setContextMenu({
         isOpen: true,
         tabId: tab.id,
         position: { x: e.clientX, y: e.clientY }
       })
+    } else {
+      console.log('Tab is NOT closable, context menu not shown')
     }
   }
 
@@ -109,16 +116,27 @@ export const ProfessionalHeader = () => {
     setContextMenu({ isOpen: false, tabId: '', position: { x: 0, y: 0 } })
   }
 
-  const handleRequestAddComponent = () => {
-    console.log('ProfessionalHeader: handleRequestAddComponent called for tab:', contextMenu.tabId)
-    setComponentPortalTabId(contextMenu.tabId)
+  const handleRequestAddComponent = (tabId: string) => {
+    console.log('ProfessionalHeader: handleRequestAddComponent called for tab:', tabId)
+    setComponentPortalTabId(tabId)
     setShowComponentPortal(true)
   }
 
   const handleComponentSelected = (componentMeta: ComponentMeta) => {
     console.log('ProfessionalHeader: Component selected:', componentMeta)
+    
+    // Safety guard for componentPortalTabId
+    if (!componentPortalTabId) {
+      console.error('No componentPortalTabId set - cannot add component')
+      return
+    }
+    
     const tab = currentLayout?.tabs.find(t => t.id === componentPortalTabId)
-    if (!tab) return
+    if (!tab) {
+      console.error('Tab not found for ID:', componentPortalTabId)
+      return
+    }
+    console.log('Current tab editMode:', tab.editMode)
 
     const currentComponents = tab.components || []
     
@@ -145,11 +163,27 @@ export const ProfessionalHeader = () => {
       props: componentMeta.defaultProps || {}
     }
 
-    // Update tab with new component
-    updateTab(componentPortalTabId, {
-      components: [...currentComponents, newComponent]
+    // Update tab with new component, preserving editMode
+    // CRITICAL: Only update components, NOT editMode - let it stay as is
+    console.log('Updating tab with:', {
+      tabId: componentPortalTabId,
+      componentsCount: currentComponents.length + 1,
+      currentEditMode: tab.editMode,
+      newComponent
     })
     
+    // Only update components, don't touch editMode at all
+    console.log('BEFORE UPDATE - Tab state:', tab)
+    console.log('BEFORE UPDATE - Components to set:', [...currentComponents, newComponent])
+    
+    // CRITICAL: Preserve editMode by explicitly passing it
+    // This prevents any default value from overriding current state
+    updateTab(componentPortalTabId, {
+      components: [...currentComponents, newComponent],
+      editMode: tab.editMode  // Explicitly preserve current edit mode
+    })
+    
+    console.log('AFTER UPDATE CALL - Modal will close now')
     setShowComponentPortal(false)
     setComponentPortalTabId('')
   }

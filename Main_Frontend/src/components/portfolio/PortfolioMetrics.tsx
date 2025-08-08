@@ -15,6 +15,9 @@ export const PortfolioMetrics: React.FC<PortfolioMetricsProps> = ({
   const { currentTheme: theme } = useTheme()
 
   const formatCurrency = (value: number) => {
+    if (value === undefined || value === null || isNaN(value)) {
+      return '$0'
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -24,10 +27,16 @@ export const PortfolioMetrics: React.FC<PortfolioMetricsProps> = ({
   }
 
   const formatPercent = (value: number) => {
+    if (value === undefined || value === null || isNaN(value)) {
+      return '0.00%'
+    }
     return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
   }
 
   const formatRatio = (value: number) => {
+    if (value === undefined || value === null || isNaN(value)) {
+      return '0.00'
+    }
     return value.toFixed(2)
   }
 

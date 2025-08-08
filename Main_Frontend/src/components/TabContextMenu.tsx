@@ -8,7 +8,7 @@ interface TabContextMenuProps {
   isOpen: boolean
   position: { x: number; y: number }
   onClose: () => void
-  onRequestAddComponent?: () => void
+  onRequestAddComponent?: (tabId: string) => void
 }
 
 export const TabContextMenu: React.FC<TabContextMenuProps> = ({
@@ -25,6 +25,14 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
 
   const tab = currentLayout?.tabs.find(t => t.id === tabId)
   const isEditMode = tab?.editMode || false
+  
+  console.log('TabContextMenu render:', {
+    tabId,
+    isOpen,
+    tab,
+    closable: tab?.closable,
+    isEditMode
+  })
 
   useEffect(() => {
     const handleClickOutside = () => onClose()
@@ -80,11 +88,11 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
   }
 
   const handleAddComponent = () => {
-    console.log('TabContextMenu: handleAddComponent called')
-    onClose() // Close the menu first
+    console.log('TabContextMenu: handleAddComponent called for tab:', tabId)
     if (onRequestAddComponent) {
-      onRequestAddComponent() // Call parent's handler to show modal
+      onRequestAddComponent(tabId) // Pass tabId directly to avoid state issues
     }
+    onClose() // Close menu after calling handler
   }
 
 
@@ -128,7 +136,7 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
       ),
-      label: 'Edit',
+      label: 'Enter Edit Mode',
       onClick: handleToggleEditMode
     },
     {

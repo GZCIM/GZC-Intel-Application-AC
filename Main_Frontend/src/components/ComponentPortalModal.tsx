@@ -159,9 +159,18 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
   }
 
   const handleLocalSelect = (componentId: string) => {
-    console.log('ComponentPortalModal: handleLocalSelect called with:', componentId)
-    onComponentSelect(componentId)
-    onClose()
+    console.log('🎯 ComponentPortalModal: handleLocalSelect called with:', componentId)
+    console.log('🎯 ComponentPortalModal: Available components:', localComponents.map(c => c.id))
+    console.log('🎯 ComponentPortalModal: Calling onComponentSelect...')
+    
+    try {
+      onComponentSelect(componentId)
+      console.log('✅ ComponentPortalModal: onComponentSelect called successfully')
+      onClose()
+      console.log('✅ ComponentPortalModal: Modal closed')
+    } catch (error) {
+      console.error('❌ ComponentPortalModal: Error in handleLocalSelect:', error)
+    }
   }
 
   if (!isOpen) return null
@@ -296,7 +305,7 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
                   const componentsToRender = activeTab === 'local' ? localComponents : port3200Components
                   console.log('ComponentPortalModal: Rendering components:', componentsToRender)
                   console.log('ComponentPortalModal: Number of components to render:', componentsToRender?.length)
-                  return null
+                  // Don't return null here - it breaks the render!
                 })()}
                 {(activeTab === 'local' ? localComponents : port3200Components).length === 0 ? (
                   <div style={{ color: currentTheme.textSecondary, padding: '20px', textAlign: 'center' }}>
