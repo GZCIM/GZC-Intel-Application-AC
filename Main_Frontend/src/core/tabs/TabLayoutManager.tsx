@@ -6,6 +6,7 @@ import { useViewMemory } from '../../hooks/useViewMemory'
 import { TabCreationModal } from '../../components/TabCreationModal'
 import { stateManager } from '../../services/StateManager'
 import { useUser } from '../../hooks/useUser'
+import { databaseService } from '../../services/databaseService'
 
 // Component in tab configuration for dynamic tabs
 export interface ComponentInTab {
@@ -135,6 +136,7 @@ interface TabLayoutProviderProps {
 export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
   const { user } = useUser()
   const userId = user?.id || 'default-user'
+  const isAuthenticated = !!user?.id  // Check if user is actually authenticated
 
   // Helper function to get user-specific localStorage key
   const getUserKey = (key: string) => `${key}-${userId}`
@@ -145,64 +147,111 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
   const [showTabModal, setShowTabModal] = useState(false)
   const { saveTabOrder, saveActiveTab, saveLayout } = useViewMemory()
 
-  // Load saved layouts from localStorage when user changes
+  // Load saved layouts from PostgreSQL when user changes
   useEffect(() => {
-    console.log(`TabLayoutManager: Loading layouts for user ${userId}`)
-
-    // First, load all saved layouts for this user
-    let allLayouts = [DEFAULT_LAYOUT]
-    const savedLayouts = localStorage.getItem(getUserKey('gzc-intel-layouts'))
-    if (savedLayouts) {
-      try {
-        const parsed = JSON.parse(savedLayouts)
-        console.log(`TabLayoutManager: Found saved layouts for user ${userId}:`, parsed)
-        allLayouts = [DEFAULT_LAYOUT, ...parsed]
-        setLayouts(allLayouts)
-      } catch (e) {
-        console.error('Failed to load saved layouts:', e)
-      }
-    } else {
-      console.log(`TabLayoutManager: No saved layouts for user ${userId}, using defaults`)
+    // Skip loading if user is not authenticated
+    if (!isAuthenticated) {
+      console.log('TabLayoutManager: User not authenticated, using default layout')
+      setCurrentLayout(DEFAULT_LAYOUT)
       setLayouts([DEFAULT_LAYOUT])
+      setActiveTabId('analytics')
+      return
     }
-
-    // Load the current layout with all its tabs for this user
-    let layoutToUse = DEFAULT_LAYOUT
-    const savedCurrentLayoutStr = localStorage.getItem(getUserKey('gzc-intel-current-layout'))
-
-    if (savedCurrentLayoutStr) {
+    
+    console.log(`TabLayoutManager: Loading layouts for user ${userId}`)
+    
+    const loadUserData = async () => {
       try {
-        const parsedCurrentLayout = JSON.parse(savedCurrentLayoutStr)
-        console.log(`TabLayoutManager: Restoring current layout for user ${userId}:`, parsedCurrentLayout)
-        layoutToUse = parsedCurrentLayout
-        setCurrentLayout(parsedCurrentLayout)
-      } catch (e) {
-        console.error('Failed to load current layout:', e)
-      }
-    } else {
-      // Fallback: try to load by ID
-      const lastLayoutId = localStorage.getItem(getUserKey('gzc-intel-active-layout'))
-      if (lastLayoutId && lastLayoutId !== 'default') {
-        const savedLayout = allLayouts.find(l => l.id === lastLayoutId)
-        if (savedLayout) {
-          console.log(`TabLayoutManager: Loading layout by ID for user ${userId}:`, savedLayout)
-          layoutToUse = savedLayout
-          setCurrentLayout(savedLayout)
+        // Load tabs from PostgreSQL
+        const savedTabs = await databaseService.getUserTabs(userId)
+        console.log(`TabLayoutManager: Loaded ${savedTabs.length} tabs from database`)
+        
+        if (savedTabs.length > 0) {
+          // Convert database tabs to our format
+          const tabs: TabConfig[] = savedTabs.map((dbTab: any) => {
+            // Parse component_ids if it's a string (JSON)
+            let components = []
+            if (dbTab.component_ids) {
+              try {
+                components = typeof dbTab.component_ids === 'string' 
+                  ? JSON.parse(dbTab.component_ids) 
+                  : dbTab.component_ids
+              } catch (e) {
+                console.error('Failed to parse component_ids:', e)
+                components = []
+              }
+            }
+            
+            return {
+              id: dbTab.tab_id,
+              name: dbTab.title,
+              component: 'UserTabContainer',
+              type: dbTab.tab_type as 'dynamic' | 'static',
+              icon: dbTab.icon,
+              closable: true,
+              props: dbTab.custom_settings || {},
+              gridLayoutEnabled: dbTab.tab_type === 'dynamic',
+              components: components,
+              editMode: false,
+              memoryStrategy: 'hybrid'
+            }
+          })
+          
+          const userLayout: TabLayout = {
+            id: `user-${userId}`,
+            name: 'My Layout',
+            tabs: tabs,
+            isDefault: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+          
+          setCurrentLayout(userLayout)
+          setLayouts([DEFAULT_LAYOUT, userLayout])
+          
+          // Set active tab
+          const activeTab = tabs.find(t => t.id === sessionStorage.getItem(getUserKey('gzc-intel-active-tab')))
+          setActiveTabId(activeTab?.id || tabs[0]?.id || 'analytics')
+        } else {
+          // No saved tabs, use defaults but still try localStorage fallback
+          const savedLayoutStr = localStorage.getItem(getUserKey('gzc-intel-current-layout'))
+          if (savedLayoutStr) {
+            try {
+              const parsedLayout = JSON.parse(savedLayoutStr)
+              setCurrentLayout(parsedLayout)
+              setLayouts([DEFAULT_LAYOUT, parsedLayout])
+            } catch (e) {
+              console.log('Using default layout')
+              setCurrentLayout(DEFAULT_LAYOUT)
+              setLayouts([DEFAULT_LAYOUT])
+            }
+          } else {
+            setCurrentLayout(DEFAULT_LAYOUT)
+            setLayouts([DEFAULT_LAYOUT])
+          }
+          setActiveTabId('analytics')
         }
-      } else {
-        // No saved layout, use default
-        setCurrentLayout(DEFAULT_LAYOUT)
+      } catch (error) {
+        console.error('Failed to load user data from database:', error)
+        // Fallback to localStorage
+        const savedLayoutStr = localStorage.getItem(getUserKey('gzc-intel-current-layout'))
+        if (savedLayoutStr) {
+          try {
+            const parsedLayout = JSON.parse(savedLayoutStr)
+            setCurrentLayout(parsedLayout)
+          } catch (e) {
+            setCurrentLayout(DEFAULT_LAYOUT)
+          }
+        } else {
+          setCurrentLayout(DEFAULT_LAYOUT)
+        }
+        setLayouts([DEFAULT_LAYOUT])
+        setActiveTabId('analytics')
       }
     }
-
-    // Set initial active tab based on what layout we ended up with
-    const lastActiveTab = sessionStorage.getItem(getUserKey('gzc-intel-active-tab'))
-    if (lastActiveTab && layoutToUse.tabs.some((t: TabConfig) => t.id === lastActiveTab)) {
-      setActiveTabId(lastActiveTab)
-    } else if (layoutToUse.tabs.length > 0) {
-      setActiveTabId(layoutToUse.tabs[0].id)
-    }
-  }, [userId]) // Re-run when user changes
+    
+    loadUserData()
+  }, [userId, isAuthenticated]) // Re-run when user or auth state changes
 
   // Save layouts to localStorage whenever they change
   useEffect(() => {
@@ -254,7 +303,30 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
       setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
     }
 
-    // Force save current layout immediately
+    // Save to PostgreSQL only if authenticated
+    if (isAuthenticated) {
+      const saveToDatabase = async () => {
+        try {
+          await databaseService.saveTab(userId, {
+            tab_id: newTab.id,
+            title: newTab.name,
+            icon: newTab.icon,
+            tab_type: newTab.type,
+            components: newTab.components || [], // Send full component objects
+            custom_settings: newTab.props
+          })
+          console.log('New tab saved to database')
+        } catch (error) {
+          console.error('Failed to save new tab to database:', error)
+          // Fallback to localStorage
+          localStorage.setItem(getUserKey('gzc-intel-current-layout'), JSON.stringify(updatedLayout))
+        }
+      }
+      
+      saveToDatabase()
+    }
+
+    // Also save to localStorage as backup
     localStorage.setItem(getUserKey('gzc-intel-current-layout'), JSON.stringify(updatedLayout))
 
     // Set as active tab
@@ -285,6 +357,20 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     }
 
     setCurrentLayout(updatedLayout)
+
+    // Delete from PostgreSQL only if authenticated
+    if (isAuthenticated) {
+      const deleteFromDatabase = async () => {
+        try {
+          await databaseService.deleteTab(userId, tabId)
+          console.log('Tab deleted from database')
+        } catch (error) {
+          console.error('Failed to delete tab from database:', error)
+        }
+      }
+      
+      deleteFromDatabase()
+    }
 
     // Update in layouts array if it's a saved layout
     if (!currentLayout.isDefault) {
@@ -319,7 +405,32 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     console.log('UPDATED LAYOUT:', updatedLayout)
     setCurrentLayout(updatedLayout)
     
-    // CRITICAL: Save to localStorage immediately to prevent loss
+    // Save to PostgreSQL
+    const saveToDatabase = async () => {
+      try {
+        const tabToUpdate = updatedLayout.tabs.find(t => t.id === tabId)
+        if (tabToUpdate) {
+          await databaseService.saveTab(userId, {
+            tab_id: tabToUpdate.id,
+            title: tabToUpdate.name,
+            icon: tabToUpdate.icon,
+            tab_type: tabToUpdate.type,
+            components: tabToUpdate.components,
+            editMode: tabToUpdate.editMode,
+            custom_settings: tabToUpdate.props
+          })
+          console.log('Tab saved to database')
+        }
+      } catch (error) {
+        console.error('Failed to save tab to database:', error)
+        // Fallback to localStorage
+        localStorage.setItem(getUserKey('gzc-intel-current-layout'), JSON.stringify(updatedLayout))
+      }
+    }
+    
+    saveToDatabase()
+    
+    // Also save to localStorage as backup
     localStorage.setItem(getUserKey('gzc-intel-current-layout'), JSON.stringify(updatedLayout))
 
     // Update in layouts array if it's a saved layout
@@ -490,6 +601,21 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
     setCurrentLayout(updatedLayout)
 
+    // Save to PostgreSQL
+    const saveToDatabase = async () => {
+      try {
+        const updatedTab = updatedLayout.tabs.find(t => t.id === tabId)
+        if (updatedTab) {
+          await databaseService.saveComponentLayouts(userId, tabId, updatedTab.components || [])
+          console.log('Component added and saved to database')
+        }
+      } catch (error) {
+        console.error('Failed to save component to database:', error)
+      }
+    }
+    
+    saveToDatabase()
+
     // Save to view memory for dynamic tabs
     if (tab.memoryStrategy === 'hybrid' || tab.memoryStrategy === 'redis') {
       saveLayout(`tab-${tabId}`, updatedLayout.tabs.find(t => t.id === tabId)?.components)
@@ -548,6 +674,21 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     }
 
     setCurrentLayout(updatedLayout)
+
+    // Save to PostgreSQL
+    const saveToDatabase = async () => {
+      try {
+        const updatedTab = updatedLayout.tabs.find(t => t.id === tabId)
+        if (updatedTab) {
+          await databaseService.saveComponentLayouts(userId, tabId, updatedTab.components || [])
+          console.log('Component updated and saved to database')
+        }
+      } catch (error) {
+        console.error('Failed to update component in database:', error)
+      }
+    }
+    
+    saveToDatabase()
 
     // Save to view memory with real-time updates
     if (tab.memoryStrategy === 'hybrid' || tab.memoryStrategy === 'redis') {

@@ -71,6 +71,52 @@ lsof -i :3500
 kill $(lsof -t -i :3500)
 ```
 
+## 🏗️ User Memory Architecture (PostgreSQL + Azure AD)
+
+### Authentication & Persistence
+The application now uses proper enterprise authentication and persistence:
+
+#### Frontend Authentication
+- **MSAL Integration**: `/src/hooks/useAuth.ts` manages Azure AD authentication
+- **Token Acquisition**: Automatic token refresh and silent acquisition
+- **Database Service**: `/src/services/databaseService.ts` sends Bearer tokens with all requests
+
+#### Backend Security
+- **Main_Gateway**: FastAPI backend with Azure AD JWT validation
+- **Token Validation**: All endpoints require valid Azure AD tokens
+- **User Isolation**: Data filtered by user ID from token claims
+
+#### PostgreSQL Persistence
+```sql
+-- User-specific data storage
+tab_configurations    -- User tabs with components
+user_preferences      -- Theme, language, settings  
+component_layouts     -- Component positions and configs
+```
+
+#### Key Files Modified
+- `/src/core/tabs/TabLayoutManager.tsx` - PostgreSQL integration for tabs
+- `/src/services/databaseService.ts` - API client with MSAL tokens
+- `/Main_Gateway/backend/app/controllers/preferences_controller.py` - User data endpoints
+- `/Main_Gateway/backend/app/auth/azure_auth.py` - Azure AD validation
+
+### Testing User Memory
+```javascript
+// Browser console test
+const accounts = window.msalInstance?.getAllAccounts()
+console.log('Authenticated:', accounts?.length > 0)
+
+// Test tab persistence
+const token = await window.msalInstance.acquireTokenSilent({
+  scopes: ['User.Read'],
+  account: accounts[0]
+}).then(r => r.accessToken);
+
+fetch('http://localhost:5300/api/preferences/tabs', {
+  headers: { 'Authorization': `Bearer ${token}` }
+}).then(r => r.json()).then(console.log)
+```
+
 ## 🚀 Deployment Process - COMPLETE CHECKLIST
 
 ### Pre-Deployment Checks
