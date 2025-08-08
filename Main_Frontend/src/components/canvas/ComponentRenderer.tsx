@@ -14,11 +14,14 @@ interface ComponentRendererProps {
 // Map component IDs to actual components
 const componentMap: Record<string, () => Promise<any>> = {
   // GZC Components from port 3200
-  'gzc-portfolio': () => import('../gzc-portfolio/GZCPortfolioComponent').then(m => m.GZCPortfolioComponent),
-  'gzc-analytics': () => import('../gzc-analytics/AnalyticsDashboard').then(m => m.AnalyticsDashboard),
+  'gzc-portfolio': () => import('../gzc-portfolio/GZCPortfolioComponent'),
+  'gzc-analytics': () => import('../gzc-analytics/AnalyticsDashboard'),
   
   // Bloomberg Volatility Analysis
-  'bloomberg-volatility': () => import('../bloomberg-volatility').then(m => m.VolatilityAnalysis),
+  'bloomberg-volatility': () => import('../bloomberg-volatility'),
+  
+  // Portfolio component
+  'portfolio': () => import('../portfolio/Portfolio'),
   
   // Placeholder components - will show the nice placeholder UI for now
   'line-chart': () => Promise.resolve(null),
@@ -69,9 +72,32 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({
         setError(null)
 
         if (componentMap[componentId]) {
-          const LoadedComponent = await componentMap[componentId]()
-          if (LoadedComponent) {
-            setComponent(() => LoadedComponent)
+          const module = await componentMap[componentId]()
+          if (module) {
+            // Handle various export patterns
+            let LoadedComponent = null
+            
+            // Try different export patterns
+            if (module.default) {
+              LoadedComponent = module.default
+            } else if (module.Portfolio) {
+              LoadedComponent = module.Portfolio
+            } else if (module.GZCPortfolioComponent) {
+              LoadedComponent = module.GZCPortfolioComponent
+            } else if (module.AnalyticsDashboard) {
+              LoadedComponent = module.AnalyticsDashboard
+            } else if (module.VolatilityAnalysis) {
+              LoadedComponent = module.VolatilityAnalysis
+            } else if (typeof module === 'function') {
+              LoadedComponent = module
+            }
+            
+            if (LoadedComponent) {
+              setComponent(() => LoadedComponent)
+            } else {
+              console.warn(`Component ${componentId} module loaded but no component found`, module)
+              setComponent(null)
+            }
           } else {
             // Component exists but not implemented yet - no error, will show placeholder
             setComponent(null)

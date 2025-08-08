@@ -6,7 +6,7 @@ import { ThemeSelector } from './ThemeSelector'
 import { GZCLogo } from './GZCLogo'
 import { TabContextMenu } from './TabContextMenu'
 import { ComponentPortalModal } from './ComponentPortalModal'
-import { ComponentMeta } from '../core/components/ComponentInventory'
+import { ComponentMeta, componentInventory } from '../core/components/ComponentInventory'
 import { UserProfile } from './UserProfile'
 import { ToolsMenu } from './ToolsMenu'
 import { DraggableWindow } from './DraggableWindow'
@@ -362,7 +362,13 @@ export const ProfessionalHeader = () => {
             setShowComponentPortal(false)
             setComponentPortalTabId('')
           }}
-          onComponentSelected={handleComponentSelected}
+          onComponentSelect={(componentId) => {
+            console.log('Component selected:', componentId)
+            const componentMeta = componentInventory.getComponent(componentId)
+            if (componentMeta) {
+              handleComponentSelected(componentMeta)
+            }
+          }}
         />
       )}
 

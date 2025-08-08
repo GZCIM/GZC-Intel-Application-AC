@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
+import { clearCorruptStorage } from './utils/clearCorruptStorage';
 
 // PROFESSIONAL ARCHITECTURE: Unified provider system (no conflicts)
 import { UnifiedProvider } from "./core/providers/UnifiedProvider";
@@ -163,6 +164,11 @@ function AppContent() {
 }
 
 function App() {
+    // Check and clear corrupt localStorage on app start
+    useEffect(() => {
+        clearCorruptStorage()
+    }, [])
+
     return (
         <SentryErrorBoundary
             fallback={({ error }) => (

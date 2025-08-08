@@ -133,7 +133,7 @@ export class ComponentInventory {
       maxSize: { w: 12, h: 12 },
       tags: ['portfolio', 'fx', 'trading', 'gcf', 'gmf', 'positions', 'professional', 'port-3200'],
       complexity: 'complex',
-      quality: 'production',
+      quality: 'port-3200',
       source: 'port-3200'
     })
 
@@ -150,7 +150,7 @@ export class ComponentInventory {
       maxSize: { w: 12, h: 12 },
       tags: ['analytics', 'market', 'real-time', 'orderbook', 'performance', 'professional', 'port-3200'],
       complexity: 'complex',
-      quality: 'production',
+      quality: 'port-3200',
       source: 'port-3200'
     })
 
@@ -191,6 +191,10 @@ export class ComponentInventory {
 
   getCategories(): ComponentCategory[] {
     return Array.from(this.categories.values())
+  }
+
+  getAllComponents(): ComponentMeta[] {
+    return Array.from(this.components.values())
   }
 
   getComponentsByCategory(categoryId: string, subcategoryId?: string): ComponentMeta[] {
@@ -312,6 +316,7 @@ export interface ComponentFilter {
 }
 
 // Singleton instance
+// Force module reload
 export const componentInventory = ComponentInventory.getInstance()
 
 // Ensure portfolio component is registered (in case inventory was already initialized)

@@ -30,9 +30,20 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 }) => {
   const { initializeThemeSystem, saveThemeSettings } = useViewMemory()
   const [themeName, setThemeName] = useState<string>(() => {
-    // Try to get theme from localStorage
-    const savedTheme = localStorage.getItem('gzc-intel-theme')
-    return savedTheme && themes[savedTheme] ? savedTheme : defaultTheme
+    // Try to get theme from localStorage with error handling
+    try {
+      const savedTheme = localStorage.getItem('gzc-intel-theme')
+      return savedTheme && themes[savedTheme] ? savedTheme : defaultTheme
+    } catch (error) {
+      console.warn('Failed to load persisted theme state:', error)
+      // Clear corrupt data
+      try {
+        localStorage.removeItem('gzc-intel-theme')
+      } catch (e) {
+        // Ignore if we can't clear
+      }
+      return defaultTheme
+    }
   })
 
   const setTheme = (newThemeName: string) => {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import ReactDOM from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '../contexts/ThemeContext'
 // import { componentImportService } from '../services/ComponentImportService'
@@ -33,17 +34,60 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      // Ensure inventory is initialized
+      if (componentInventory.getAllComponents().length === 0) {
+        console.error('ComponentInventory not initialized! This is a critical error.')
+        // Force re-init by accessing the singleton
+        const inventory = componentInventory
+        console.log('Forced inventory reference:', inventory)
+      }
       loadComponents()
     }
   }, [isOpen, activeTab])
 
   const loadComponents = async () => {
     if (activeTab === 'local') {
+      // Force re-initialization if needed
+      if (componentInventory.getAllComponents().length === 0) {
+        console.warn('ComponentPortalModal: Inventory empty, forcing rebuild...')
+        componentInventory.rebuildSearchIndex()
+      }
+      
       // Load local components
-      const components = componentInventory.searchComponents('')
-      console.log('ComponentPortalModal: Loading local components:', components)
+      const allComponents = componentInventory.getAllComponents()
+      const searchComponents = componentInventory.searchComponents('')
+      console.log('ComponentPortalModal: All components from inventory:', allComponents)
+      console.log('ComponentPortalModal: Search components result:', searchComponents)
       console.log('ComponentPortalModal: Portfolio component:', componentInventory.getComponent('portfolio'))
-      setLocalComponents(components)
+      console.log('ComponentPortalModal: Components length:', searchComponents?.length)
+      
+      // Use getAllComponents as fallback if search returns nothing
+      const componentsToUse = (searchComponents && searchComponents.length > 0) 
+        ? searchComponents 
+        : allComponents
+      
+      if (componentsToUse && componentsToUse.length > 0) {
+        console.log('ComponentPortalModal: Using components:', componentsToUse)
+        setLocalComponents(componentsToUse)
+      } else {
+        console.error('ComponentPortalModal: No components found! Inventory initialization failed')
+        // Try to manually add at least the portfolio component
+        const fallbackComponents = [
+          {
+            id: 'portfolio',
+            name: 'Portfolio',
+            displayName: 'Portfolio Dashboard',
+            category: 'financial',
+            description: 'Comprehensive portfolio management dashboard',
+            defaultSize: { w: 8, h: 6 },
+            minSize: { w: 4, h: 4 },
+            tags: ['portfolio', 'financial'],
+            complexity: 'medium' as const,
+            quality: 'enhanced' as const
+          }
+        ]
+        setLocalComponents(fallbackComponents)
+      }
     } else {
       // Load port 3200 components
       setLoading(true)
@@ -115,13 +159,15 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
   }
 
   const handleLocalSelect = (componentId: string) => {
+    console.log('ComponentPortalModal: handleLocalSelect called with:', componentId)
     onComponentSelect(componentId)
     onClose()
   }
 
   if (!isOpen) return null
 
-  return (
+  // Use portal to render modal at document root to avoid z-index issues
+  return ReactDOM.createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -137,7 +183,7 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 10000
+          zIndex: 999999
         }}
         onClick={onClose}
       >
@@ -246,6 +292,17 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
                 gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
                 gap: '12px'
               }}>
+                {(() => {
+                  const componentsToRender = activeTab === 'local' ? localComponents : port3200Components
+                  console.log('ComponentPortalModal: Rendering components:', componentsToRender)
+                  console.log('ComponentPortalModal: Number of components to render:', componentsToRender?.length)
+                  return null
+                })()}
+                {(activeTab === 'local' ? localComponents : port3200Components).length === 0 ? (
+                  <div style={{ color: currentTheme.textSecondary, padding: '20px', textAlign: 'center' }}>
+                    No components available. Check console for errors.
+                  </div>
+                ) : null}
                 {(activeTab === 'local' ? localComponents : port3200Components).map(component => {
                   const status = importStatus.get(component.id)
                   
@@ -337,6 +394,7 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body // Render at document root
   )
 }
