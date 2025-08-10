@@ -80,7 +80,7 @@ interface ThemeProviderProps {
 export function ThemeProvider({ 
   children, 
   defaultTheme = 'professional',
-  persistenceKey = 'gzc-intel-theme'
+  persistenceKey = 'gzc-enhanced-theme-state'  // Different key to avoid conflict with old ThemeContext
 }: ThemeProviderProps) {
   const [state, dispatch] = useReducer(themeReducer, {
     ...initialState,
@@ -92,8 +92,8 @@ export function ThemeProvider({
     try {
       const persisted = localStorage.getItem(persistenceKey)
       if (persisted) {
-        // Handle legacy string values
-        if (persisted === 'professional' || persisted === 'dark' || persisted === 'light') {
+        // Handle legacy string values (including gzc-* theme names)
+        if (typeof persisted === 'string' && !persisted.startsWith('{')) {
           // Convert legacy string to proper format
           const legacyState = {
             currentTheme: persisted,

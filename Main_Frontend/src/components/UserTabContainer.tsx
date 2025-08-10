@@ -34,42 +34,15 @@ const UserTabContainer: React.FC<UserTabContainerProps> = ({ tabId }) => {
     components: tab.components?.length || 0
   })
   
-  // Lazy load the canvas components to avoid circular dependencies
-  if (tab.type === 'dynamic') {
-    const DynamicCanvas = React.lazy(() => import('./canvas/DynamicCanvas').then(m => ({ 
-      default: m.DynamicCanvas || m.default 
-    })))
-    return (
-      <React.Suspense fallback={<div>Loading dynamic canvas...</div>}>
-        <DynamicCanvas tabId={tabId} />
-      </React.Suspense>
-    )
-  } else if (tab.type === 'static') {
-    const StaticCanvas = React.lazy(() => import('./canvas/StaticCanvas').then(m => ({ 
-      default: m.StaticCanvas || m.default 
-    })))
-    return (
-      <React.Suspense fallback={<div>Loading static canvas...</div>}>
-        <StaticCanvas tabId={tabId} />
-      </React.Suspense>
-    )
-  } else {
-    // Fallback for unknown types
-    return (
-      <div style={{
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        gap: '16px',
-        color: '#666'
-      }}>
-        <div style={{ fontSize: '48px', opacity: 0.3 }}>❓</div>
-        <div>Unknown tab type: {tab.type}</div>
-      </div>
-    )
-  }
+  // Always use DynamicCanvas for all tab types (simplified architecture)
+  const DynamicCanvas = React.lazy(() => import('./canvas/DynamicCanvas').then(m => ({ 
+    default: m.DynamicCanvas || m.default 
+  })))
+  return (
+    <React.Suspense fallback={<div>Loading canvas...</div>}>
+      <DynamicCanvas tabId={tabId} />
+    </React.Suspense>
+  )
 }
 
 export default UserTabContainer

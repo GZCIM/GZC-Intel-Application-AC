@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { themes, Theme } from '../theme/themes'
 import { useViewMemory } from '../hooks/useViewMemory'
+import { useUserMemory } from '../hooks/useUserMemory'
 
 interface ThemeContextType {
   currentTheme: Theme
@@ -29,61 +30,80 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   defaultTheme = 'gzc-dark' 
 }) => {
   const { initializeThemeSystem, saveThemeSettings } = useViewMemory()
-  const [themeName, setThemeName] = useState<string>(() => {
-    // Try to get theme from localStorage with error handling
-    try {
-      const savedTheme = localStorage.getItem('gzc-intel-theme')
-      return savedTheme && themes[savedTheme] ? savedTheme : defaultTheme
-    } catch (error) {
-      console.warn('Failed to load persisted theme state:', error)
-      // Clear corrupt data
-      try {
-        localStorage.removeItem('gzc-intel-theme')
-      } catch (e) {
-        // Ignore if we can't clear
-      }
-      return defaultTheme
-    }
-  })
+  const { saveThemeData, loadThemeData } = useUserMemory()
+  const [themeName, setThemeName] = useState<string>(defaultTheme)
+  const [isThemeLoaded, setIsThemeLoaded] = useState(false)
 
-  const setTheme = (newThemeName: string) => {
+  // Load theme from user memory on mount
+  useEffect(() => {
+    const loadSavedTheme = async () => {
+      try {
+        const savedTheme = await loadThemeData()
+        if (savedTheme && themes[savedTheme]) {
+          setThemeName(savedTheme)
+        }
+      } catch (error) {
+        console.warn('Failed to load theme from user memory:', error)
+        // Use default theme on error
+      } finally {
+        setIsThemeLoaded(true)
+      }
+    }
+    
+    loadSavedTheme()
+  }, [loadThemeData])
+
+  const setTheme = async (newThemeName: string) => {
     if (themes[newThemeName]) {
       setThemeName(newThemeName)
-      localStorage.setItem('gzc-intel-theme', newThemeName)
       
-      // Update view memory with current theme
+      // Save to user memory instead of localStorage
+      try {
+        await saveThemeData(newThemeName)
+      } catch (error) {
+        console.warn('Failed to save theme to user memory:', error)
+        // Theme still applied locally, just won't persist across sessions
+      }
+      
+      // Update view memory with current theme (legacy support)
       saveThemeSettings({ currentTheme: newThemeName })
       
       // Apply theme to document root for CSS variables
-      const root = document.documentElement
-      const theme = themes[newThemeName]
-      
-      // Set CSS variables
-      root.style.setProperty('--theme-primary', theme.primary)
-      root.style.setProperty('--theme-secondary', theme.secondary)
-      root.style.setProperty('--theme-accent', theme.accent)
-      root.style.setProperty('--theme-background', theme.background)
-      root.style.setProperty('--theme-surface', theme.surface)
-      root.style.setProperty('--theme-surface-alt', theme.surfaceAlt)
-      root.style.setProperty('--theme-text', theme.text)
-      root.style.setProperty('--theme-text-secondary', theme.textSecondary)
-      root.style.setProperty('--theme-text-tertiary', theme.textTertiary)
-      root.style.setProperty('--theme-border', theme.border)
-      root.style.setProperty('--theme-border-light', theme.borderLight)
-      root.style.setProperty('--theme-success', theme.success)
-      root.style.setProperty('--theme-danger', theme.danger)
-      root.style.setProperty('--theme-warning', theme.warning)
-      root.style.setProperty('--theme-info', theme.info)
-      
-      // Set data attribute for theme-specific CSS
-      root.setAttribute('data-theme', newThemeName)
+      applyCSSVariables(themes[newThemeName], newThemeName)
     }
   }
 
-  // Apply theme on mount and theme change
+  // Apply CSS variables to document root
+  const applyCSSVariables = (theme: Theme, themeName: string) => {
+    const root = document.documentElement
+    
+    // Set CSS variables
+    root.style.setProperty('--theme-primary', theme.primary)
+    root.style.setProperty('--theme-secondary', theme.secondary)
+    root.style.setProperty('--theme-accent', theme.accent)
+    root.style.setProperty('--theme-background', theme.background)
+    root.style.setProperty('--theme-surface', theme.surface)
+    root.style.setProperty('--theme-surface-alt', theme.surfaceAlt)
+    root.style.setProperty('--theme-text', theme.text)
+    root.style.setProperty('--theme-text-secondary', theme.textSecondary)
+    root.style.setProperty('--theme-text-tertiary', theme.textTertiary)
+    root.style.setProperty('--theme-border', theme.border)
+    root.style.setProperty('--theme-border-light', theme.borderLight)
+    root.style.setProperty('--theme-success', theme.success)
+    root.style.setProperty('--theme-danger', theme.danger)
+    root.style.setProperty('--theme-warning', theme.warning)
+    root.style.setProperty('--theme-info', theme.info)
+    
+    // Set data attribute for theme-specific CSS
+    root.setAttribute('data-theme', themeName)
+  }
+
+  // Apply theme when loaded or changed
   useEffect(() => {
-    setTheme(themeName)
-  }, [themeName])
+    if (isThemeLoaded) {
+      applyCSSVariables(themes[themeName], themeName)
+    }
+  }, [themeName, isThemeLoaded])
 
   // Initialize comprehensive theme system in view memory
   useEffect(() => {

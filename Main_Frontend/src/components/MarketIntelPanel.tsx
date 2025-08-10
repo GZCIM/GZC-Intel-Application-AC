@@ -104,26 +104,7 @@ export const MarketIntelPanel = () => {
         </div>
       )}
 
-      {/* Professional Status Footer - only show when expanded */}
-      {!isCollapsed && (
-        <div style={{
-          marginTop: 'auto',
-          paddingTop: '16px',
-          borderTop: `1px solid ${theme.borderLight}`,
-          fontSize: '10px',
-          color: theme.textTertiary
-        }}>
-          <div style={{ marginBottom: '6px' }}>
-            <span style={{ color: theme.success }}>●</span> All Systems Operational
-          </div>
-          <div style={{ marginBottom: '6px' }}>
-{getVersionString()}
-          </div>
-          <div>
-            Professional Architecture | Content-Agnostic
-          </div>
-        </div>
-      )}
+      {/* Removed status footer - moved to main app status bar */}
     </div>
   )
 }

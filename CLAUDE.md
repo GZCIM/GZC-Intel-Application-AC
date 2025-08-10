@@ -53,6 +53,14 @@ export REDIS_PASSWORD="[from Azure Key Vault or app/backend/.env]"
 3. Backend requires Redis for real-time quotes
 4. All previous attempts and broken code are in `old-code-backup/`
 
+## Latest Deployment - v20250809-143545
+
+**Component Modal Fix Successfully Deployed**
+- Fixed AnimatePresence implementation for proper modal visibility
+- Users can now add multiple components to tabs via Tools → Add Component
+- All 4 components from ComponentInventory are accessible
+- See `/journal/2025-01-09/modal-visibility-fix.md` for full details
+
 ## Deployment
 
 **CRITICAL: Use the correct container app name!**

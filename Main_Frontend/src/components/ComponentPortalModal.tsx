@@ -173,33 +173,36 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
     }
   }
 
-  if (!isOpen) return null
-
   // Use portal to render modal at document root to avoid z-index issues
   return ReactDOM.createPortal(
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 999999
-        }}
-        onClick={onClose}
-      >
+    <AnimatePresence mode="wait">
+      {isOpen && (
         <motion.div
+          key="component-portal-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999999
+          }}
+          onClick={onClose}
+        >
+        <motion.div
+          key="modal-content"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           onClick={e => e.stopPropagation()}
           style={{
             width: '80%',
@@ -301,12 +304,6 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
                 gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
                 gap: '12px'
               }}>
-                {(() => {
-                  const componentsToRender = activeTab === 'local' ? localComponents : port3200Components
-                  console.log('ComponentPortalModal: Rendering components:', componentsToRender)
-                  console.log('ComponentPortalModal: Number of components to render:', componentsToRender?.length)
-                  // Don't return null here - it breaks the render!
-                })()}
                 {(activeTab === 'local' ? localComponents : port3200Components).length === 0 ? (
                   <div style={{ color: currentTheme.textSecondary, padding: '20px', textAlign: 'center' }}>
                     No components available. Check console for errors.
@@ -402,7 +399,8 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
             )}
           </div>
         </motion.div>
-      </motion.div>
+        </motion.div>
+      )}
     </AnimatePresence>,
     document.body // Render at document root
   )

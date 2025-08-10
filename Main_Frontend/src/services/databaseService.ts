@@ -6,7 +6,7 @@
 import { PublicClientApplication } from '@azure/msal-browser'
 import { msalConfig, loginRequest } from '../modules/shell/components/auth/msalConfig'
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5300'
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5300')
 
 interface UserPreferences {
   user_id: string
@@ -64,7 +64,7 @@ class DatabaseService {
 
   async getUserPreferences(userId: string): Promise<UserPreferences | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/preferences/user`, {
+      const response = await fetch(`${API_BASE_URL}/preferences/user`, {
         headers: await this.getAuthHeaders()
       })
       
@@ -82,7 +82,7 @@ class DatabaseService {
 
   async saveUserPreferences(userId: string, preferences: Partial<UserPreferences>): Promise<boolean> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/preferences/user`, {
+      const response = await fetch(`${API_BASE_URL}/preferences/user`, {
         method: 'PUT',
         headers: await this.getAuthHeaders(),
         body: JSON.stringify(preferences)
@@ -97,7 +97,7 @@ class DatabaseService {
 
   async getUserTabs(userId: string): Promise<any[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/preferences/tabs`, {
+      const response = await fetch(`${API_BASE_URL}/preferences/tabs`, {
         headers: await this.getAuthHeaders()
       })
       
@@ -116,7 +116,7 @@ class DatabaseService {
 
   async saveTab(userId: string, tab: any): Promise<any | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/preferences/tabs`, {
+      const response = await fetch(`${API_BASE_URL}/preferences/tabs`, {
         method: 'POST',
         headers: await this.getAuthHeaders(),
         body: JSON.stringify(tab)
@@ -136,7 +136,7 @@ class DatabaseService {
 
   async deleteTab(userId: string, tabId: string): Promise<boolean> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/preferences/tabs/${tabId}`, {
+      const response = await fetch(`${API_BASE_URL}/preferences/tabs/${tabId}`, {
         method: 'DELETE',
         headers: await this.getAuthHeaders()
       })
@@ -150,7 +150,7 @@ class DatabaseService {
 
   async saveComponentLayouts(userId: string, tabId: string, layouts: any[]): Promise<boolean> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/preferences/layouts/bulk`, {
+      const response = await fetch(`${API_BASE_URL}/preferences/layouts/bulk`, {
         method: 'POST',
         headers: await this.getAuthHeaders(),
         body: JSON.stringify({

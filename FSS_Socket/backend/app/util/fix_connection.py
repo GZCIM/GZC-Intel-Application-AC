@@ -319,87 +319,85 @@ class FixConnection:
 
     def handle_message(self, message: FixMessage):
         msg_type = message.get(35)  # Message Type
-        match msg_type:
-            case b"A":  # Logon
-                logger.debug("Received Logon")
-            case b"0":  # Heartbeat
-                logger.debug("Received Heartbeat")
-            case b"1":  # Test Request
-                self.process_test_request(message)
-            case b"2":  # Resend Request
-                new_seq_num = int(message.get(7) or 1)
+        if msg_type == b"A":  # Logon
+            logger.debug("Received Logon")
+        elif msg_type == b"0":  # Heartbeat
+            logger.debug("Received Heartbeat")
+        elif msg_type == b"1":  # Test Request
+            self.process_test_request(message)
+        elif msg_type == b"2":  # Resend Request
+            new_seq_num = int(message.get(7) or 1)
 
-                if new_seq_num != 1:
-                    self.msg_id = new_seq_num
-                    self.send_gap_fill(new_seq_num, self.msg_id + 1)
-                    logger.info(f"Sequence reset to {self.msg_id + 1}")
-                else:
-                    self.msg_id = 1
-                    logger.info("Sequence reset to 1")
-                self.save_last_seq_num()
+            if new_seq_num != 1:
+                self.msg_id = new_seq_num
+                self.send_gap_fill(new_seq_num, self.msg_id + 1)
+                logger.info(f"Sequence reset to {self.msg_id + 1}")
+            else:
+                self.msg_id = 1
+                logger.info("Sequence reset to 1")
+            self.save_last_seq_num()
 
-            case b"3":
-                self.handle_reject_message(message)
-            case b"5":  # Logout
-                logger.info("Received Logout")
-            case b"8":  # Execution Report
-                self.process_execution_report(message)
-            case b"b":  # Quote Response
-                self.process_quote_response(message)
-            case b"i":
-                self.process_quote(message)
-            case b"W":  # Market Data Snapshot/Update
-                self.process_market_data_snapshot(message)
-            case b"Y":
-                # Market Data Request Accepted - lookup original request details
-                request_id_field = message.get(262)
-                request_id = (
-                    request_id_field.decode() if request_id_field is not None else None
-                )
+        elif msg_type == b"3":
+            self.handle_reject_message(message)
+        elif msg_type == b"5":  # Logout
+            logger.info("Received Logout")
+        elif msg_type == b"8":  # Execution Report
+            self.process_execution_report(message)
+        elif msg_type == b"b":  # Quote Response
+            self.process_quote_response(message)
+        elif msg_type == b"i":
+            self.process_quote(message)
+        elif msg_type == b"W":  # Market Data Snapshot/Update
+            self.process_market_data_snapshot(message)
+        elif msg_type == b"Y":
+            # Market Data Request Accepted - lookup original request details
+            request_id_field = message.get(262)
+            request_id = (
+                request_id_field.decode() if request_id_field is not None else None
+            )
 
-                # FSS server doesn't echo back Symbol/SettlType/NDF in Y message
-                # Look up the original request details by MDReqID
-                if request_id and request_id in self.market_data_requests:
-                    request_details = self.market_data_requests[request_id]
-                    if request_details.get("batch", False):
-                        # Handle batch request
-                        symbols = request_details["symbols"]
-                        settl_types = request_details["settl_types"]
-                        ndf = request_details["ndf"]
-                        logger.info(
-                            f"Market Data Request Accepted (Batch): RequestID={request_id}, "
+            # FSS server doesn't echo back Symbol/SettlType/NDF in Y message
+            # Look up the original request details by MDReqID
+            if request_id and request_id in self.market_data_requests:
+                request_details = self.market_data_requests[request_id]
+                if request_details.get("batch", False):
+                    # Handle batch request
+                    symbols = request_details["symbols"]
+                    settl_types = request_details["settl_types"]
+                    ndf = request_details["ndf"]
+                    logger.info(
+                        f"Market Data Request Accepted (Batch): RequestID={request_id}, "
                             f"Symbols={symbols}, SettlTypes={settl_types}, NDF={ndf}"
                         )
-                    else:
-                        # Handle single request
-                        symbol = request_details["symbol"]
-                        settl_type = request_details["settl_type"]
-                        ndf = request_details["ndf"]
-                        logger.info(
-                            f"Market Data Request Accepted: RequestID={request_id}, Symbol={symbol}, SettlType={settl_type}, NDF={ndf}"
-                        )
                 else:
-                    # Fallback: try to extract from message (though FSS doesn't send these)
-                    symbol_field = message.get(55)
-                    symbol = (
-                        symbol_field.decode() if symbol_field is not None else "Unknown"
-                    )
-                    settl_type_field = message.get(63)
-                    settl_type = (
-                        settl_type_field.decode()
-                        if settl_type_field is not None
-                        else "Unknown"
-                    )
-                    ndf_field = message.get(167)
-                    ndf = ndf_field.decode() if ndf_field is not None else False
-
+                    # Handle single request
+                    symbol = request_details["symbol"]
+                    settl_type = request_details["settl_type"]
+                    ndf = request_details["ndf"]
                     logger.info(
-                        f"Market Data Request Accepted (Unknown): RequestID={request_id}, Symbol={symbol}, SettlType={settl_type}, NDF={ndf}"
+                        f"Market Data Request Accepted: RequestID={request_id}, Symbol={symbol}, SettlType={settl_type}, NDF={ndf}"
                     )
+            else:
+                # Fallback: try to extract from message (though FSS doesn't send these)
+                symbol_field = message.get(55)
+                symbol = (
+                    symbol_field.decode() if symbol_field is not None else "Unknown"
+                )
+                settl_type_field = message.get(63)
+                settl_type = (
+                    settl_type_field.decode()
+                    if settl_type_field is not None
+                    else "Unknown"
+                )
+                ndf_field = message.get(167)
+                ndf = ndf_field.decode() if ndf_field is not None else False
 
-            case _:
-                logger.warning(f"Unhandled FIX message type: {msg_type}")
-        pass
+                logger.info(
+                    f"Market Data Request Accepted (Unknown): RequestID={request_id}, Symbol={symbol}, SettlType={settl_type}, NDF={ndf}"
+                )
+
+        else:
+            logger.warning(f"Unhandled FIX message type: {msg_type}")
 
     def process_execution_report(self, message: FixMessage):
         """

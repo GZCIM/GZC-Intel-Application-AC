@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { TabManager, setupConsoleHelpers } from './TabUtils'
 import { useUserSettings } from '../../hooks/useUserSettings'
 import { useViewMemory } from '../../hooks/useViewMemory'
-import { TabCreationModal } from '../../components/TabCreationModal'
+import { TabNameModal } from '../../components/TabNameModal'
 import { stateManager } from '../../services/StateManager'
 import { useUser } from '../../hooks/useUser'
 import { databaseService } from '../../services/databaseService'
@@ -63,7 +63,6 @@ interface TabLayoutContextValue {
   createTabWithPrompt: () => void
   showTabModal: boolean
   setShowTabModal: (show: boolean) => void
-  handleCreateTab: (title: string, type: string) => void
 
   // Layout actions
   saveCurrentLayout: (name: string) => void
@@ -161,90 +160,51 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     console.log(`TabLayoutManager: Loading layouts for user ${userId}`)
     
     const loadUserData = async () => {
-      try {
-        // Load tabs from PostgreSQL
-        const savedTabs = await databaseService.getUserTabs(userId)
-        console.log(`TabLayoutManager: Loaded ${savedTabs.length} tabs from database`)
-        
-        if (savedTabs.length > 0) {
-          // Convert database tabs to our format
-          const tabs: TabConfig[] = savedTabs.map((dbTab: any) => {
-            // Parse component_ids if it's a string (JSON)
-            let components = []
-            if (dbTab.component_ids) {
-              try {
-                components = typeof dbTab.component_ids === 'string' 
-                  ? JSON.parse(dbTab.component_ids) 
-                  : dbTab.component_ids
-              } catch (e) {
-                console.error('Failed to parse component_ids:', e)
-                components = []
-              }
-            }
+      // Try database FIRST if authenticated (for cross-browser sync)
+      if (isAuthenticated && userId !== 'default-user') {
+        try {
+          const savedTabs = await databaseService.getUserTabs(userId)
+          console.log(`TabLayoutManager: Loaded ${savedTabs.length} tabs from database`)
+          
+          if (savedTabs.length > 0) {
+            // Database has tabs - use them as source of truth
+            const dbLayout = { tabs: savedTabs }
+            // Update localStorage to match database
+            localStorage.setItem(getUserKey('gzc-intel-current-layout'), JSON.stringify(dbLayout))
+            setCurrentLayout(dbLayout)
+            setLayouts([DEFAULT_LAYOUT, dbLayout])
             
-            return {
-              id: dbTab.tab_id,
-              name: dbTab.title,
-              component: 'UserTabContainer',
-              type: dbTab.tab_type as 'dynamic' | 'static',
-              icon: dbTab.icon,
-              closable: true,
-              props: dbTab.custom_settings || {},
-              gridLayoutEnabled: dbTab.tab_type === 'dynamic',
-              components: components,
-              editMode: false,
-              memoryStrategy: 'hybrid'
-            }
-          })
-          
-          const userLayout: TabLayout = {
-            id: `user-${userId}`,
-            name: 'My Layout',
-            tabs: tabs,
-            isDefault: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            const activeTabId = savedTabs[0]?.id || 'analytics'
+            setActiveTabId(activeTabId)
+            return // Database is source of truth
           }
-          
-          setCurrentLayout(userLayout)
-          setLayouts([DEFAULT_LAYOUT, userLayout])
-          
-          // Set active tab
-          const activeTab = tabs.find(t => t.id === sessionStorage.getItem(getUserKey('gzc-intel-active-tab')))
-          setActiveTabId(activeTab?.id || tabs[0]?.id || 'analytics')
-        } else {
-          // No saved tabs, use defaults but still try localStorage fallback
-          const savedLayoutStr = localStorage.getItem(getUserKey('gzc-intel-current-layout'))
-          if (savedLayoutStr) {
-            try {
-              const parsedLayout = JSON.parse(savedLayoutStr)
-              setCurrentLayout(parsedLayout)
-              setLayouts([DEFAULT_LAYOUT, parsedLayout])
-            } catch (e) {
-              console.log('Using default layout')
-              setCurrentLayout(DEFAULT_LAYOUT)
-              setLayouts([DEFAULT_LAYOUT])
-            }
-          } else {
-            setCurrentLayout(DEFAULT_LAYOUT)
-            setLayouts([DEFAULT_LAYOUT])
-          }
-          setActiveTabId('analytics')
+        } catch (e) {
+          console.error('Failed to load from database:', e)
+          // Fall through to localStorage
         }
-      } catch (error) {
-        console.error('Failed to load user data from database:', error)
-        // Fallback to localStorage
-        const savedLayoutStr = localStorage.getItem(getUserKey('gzc-intel-current-layout'))
-        if (savedLayoutStr) {
-          try {
-            const parsedLayout = JSON.parse(savedLayoutStr)
-            setCurrentLayout(parsedLayout)
-          } catch (e) {
-            setCurrentLayout(DEFAULT_LAYOUT)
-          }
-        } else {
-          setCurrentLayout(DEFAULT_LAYOUT)
+      }
+      
+      // Fallback to localStorage if no database data or not authenticated
+      const savedLayoutStr = localStorage.getItem(getUserKey('gzc-intel-current-layout'))
+      if (savedLayoutStr) {
+        try {
+          const parsedLayout = JSON.parse(savedLayoutStr)
+          console.log('Loaded layout from localStorage:', parsedLayout)
+          setCurrentLayout(parsedLayout)
+          setLayouts([DEFAULT_LAYOUT, parsedLayout])
+          
+          // Set active tab from saved layout
+          const activeTabId = parsedLayout.tabs?.[0]?.id || 'analytics'
+          setActiveTabId(activeTabId)
+        } catch (e) {
+          console.error('Failed to parse localStorage:', e)
         }
+      }
+      
+      // If no saved data anywhere, initialize with defaults
+      if (!currentLayout) {
+        console.log('Using default layout')
+        setCurrentLayout(DEFAULT_LAYOUT)
         setLayouts([DEFAULT_LAYOUT])
         setActiveTabId('analytics')
       }
@@ -403,7 +363,9 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     }
 
     console.log('UPDATED LAYOUT:', updatedLayout)
+    console.log('UPDATED TAB COMPONENTS:', updatedLayout.tabs.find(t => t.id === tabId)?.components?.length)
     setCurrentLayout(updatedLayout)
+    console.log('TabLayoutManager: setCurrentLayout called with', updatedLayout.tabs.find(t => t.id === tabId)?.components?.length, 'components')
     
     // Save to PostgreSQL
     const saveToDatabase = async () => {
@@ -534,44 +496,32 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     }
   }
 
-  // Enhanced tab creation with modal - opens in edit mode by default
+  // Enhanced tab creation - shows styled modal for tab name
   const createTabWithPrompt = () => {
     setShowTabModal(true)
   }
 
-  const handleCreateTab = (title: string, selectedType: string) => {
+  const handleTabNameConfirm = (tabName: string) => {
     // Check for duplicate names
-    const existingTab = currentLayout.tabs.find(t => t.name.toLowerCase() === title.toLowerCase())
+    const existingTab = currentLayout.tabs.find(t => t.name.toLowerCase() === tabName.toLowerCase())
     if (existingTab) {
-      alert(`Tab name "${title}" already exists. Please choose a different name.`)
+      alert(`Tab name "${tabName}" already exists. Please choose a different name.`)
       return
     }
-
+    
     const newTab: Omit<TabConfig, 'id'> = {
-      name: title,
+      name: tabName,
       component: 'UserTabContainer', // Fixed component ID for all user tabs
-      type: selectedType as TabConfig['type'],
-      icon: getIconForTabType(selectedType as TabConfig['type']),
+      type: 'dynamic', // Always use dynamic type
+      icon: 'grid', // Always use grid icon for dynamic tabs
       closable: true,
-      gridLayoutEnabled: selectedType === 'dynamic',
-      components: selectedType === 'dynamic' ? [] : undefined,
+      gridLayoutEnabled: true,
+      components: [],
       editMode: false, // Start in view mode, user can toggle to edit
-      memoryStrategy: selectedType === 'dynamic' ? 'hybrid' : 'local'
+      memoryStrategy: 'hybrid'
     }
 
     const createdTab = addTab(newTab)
-
-    // Auto-save tab immediately
-    if (!currentLayout.isDefault) {
-      // Update existing layout
-      const updatedLayout = {
-        ...currentLayout,
-        tabs: [...currentLayout.tabs, { ...newTab, id: createdTab.id }],
-        updatedAt: new Date().toISOString()
-      }
-      setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
-    }
-
     setShowTabModal(false)
   }
 
@@ -735,7 +685,6 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     createTabWithPrompt,
     showTabModal,
     setShowTabModal,
-    handleCreateTab,
     saveCurrentLayout,
     loadLayout,
     deleteLayout,
@@ -751,10 +700,11 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
   return (
     <TabLayoutContext.Provider value={value}>
       {children}
-      <TabCreationModal
+      <TabNameModal
         isOpen={showTabModal}
         onClose={() => setShowTabModal(false)}
-        onCreateTab={handleCreateTab}
+        onConfirm={handleTabNameConfirm}
+        defaultName={`New Tab ${currentLayout.tabs.filter(t => t.name.startsWith('New Tab')).length + 1}`}
       />
     </TabLayoutContext.Provider>
   )

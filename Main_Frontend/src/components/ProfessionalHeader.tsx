@@ -345,7 +345,10 @@ export const ProfessionalHeader = () => {
       
       <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: "13px" }}>
         {/* Tools Menu */}
-        <ToolsMenu onOpenAuthDebugger={() => setShowAuthDebugger(true)} />
+        <ToolsMenu 
+          onOpenAuthDebugger={() => setShowAuthDebugger(true)}
+          onRequestAddComponent={handleRequestAddComponent}
+        />
         
         {/* User Profile */}
         <UserProfile />

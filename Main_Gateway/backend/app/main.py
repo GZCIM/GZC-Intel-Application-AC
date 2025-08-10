@@ -6,6 +6,8 @@ from app.controllers import (
     historical_quotes_controller,
     portfolio_controller,
     transactions_controller,
+    preferences_controller,
+    user_memory_controller,
 )
 from app.util.logger import configure_logging, get_logger
 import os
@@ -20,6 +22,14 @@ load_dotenv()
 async def lifespan(app: FastAPI):
     # Startup logic
     logger.info("Starting FastAPI application")
+    
+    # Initialize database tables
+    from app.database.init_db import create_tables
+    if create_tables():
+        logger.info("Database tables ready")
+    else:
+        logger.warning("Database initialization had issues - continuing anyway")
+    
     # Delay to ensure event loop is fully initialized
     await asyncio.sleep(0.5)
     fix_controller.FixController.start_microservice_stream(
@@ -61,6 +71,8 @@ app.include_router(fix_controller.router)
 app.include_router(historical_quotes_controller.router)
 app.include_router(portfolio_controller.router)
 app.include_router(transactions_controller.router)
+app.include_router(preferences_controller.router)
+app.include_router(user_memory_controller.router)
 
 
 # Application runs here

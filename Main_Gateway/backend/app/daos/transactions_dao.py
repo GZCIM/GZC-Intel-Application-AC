@@ -12,7 +12,7 @@ class TransactionsDAO:
     def __init__(self):
         self.engine = engine
 
-    def get_unmatched_transactions(self, current_date: str | None = None) -> pd.DataFrame:
+    def get_unmatched_transactions(self, current_date: Optional[str] = None) -> pd.DataFrame:
         try:
             # 🔒 Uncomment this block when the DB table exists
             # if current_date:
@@ -72,7 +72,7 @@ class TransactionsDAO:
             logger.error(f"[TransactionsDAO] Error fetching unmatched transactions: {e}")
             return pd.DataFrame()
 
-    def get_all_transactions(self, current_date: str | None = None) -> pd.DataFrame:
+    def get_all_transactions(self, current_date: Optional[str] = None) -> pd.DataFrame:
         try:
             # 🔒 Uncomment this block when the DB table exists
             # if current_date:

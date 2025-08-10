@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # API Gateway - ONLY public-facing service
+  api-gateway:
+    image: nginx:alpine
+    container_name: gzc-api-gateway
+    ports:
+      - "80:80"      # Only the gateway is exposed
+      - "443:443"    # HTTPS support
+    volumes:
+      - ./nginx-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-gateway/certs:/etc/nginx/certs:ro
+    depends_on:
+      - fastapi-backend
+      - websocket-backend
+      - frontend
+    networks:
+      - internal-network
+    restart: unless-stopped
+
+  # React Frontend (internal only)
+  frontend:
+    build:
+      context: ./Main_Frontend
+      dockerfile: Dockerfile
+    container_name: gzc-frontend
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://api-gateway  # Points to gateway, not backends
+    networks:
+      - internal-network
+    # NO PORTS EXPOSED - only accessible through gateway
+
+  # FastAPI Backend (internal only) - Engineer's existing work
+  fastapi-backend:
+    build:
+      context: ./Main_Gateway/backend
+      dockerfile: Dockerfile
+    container_name: gzc-fastapi
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=gzc_intel
+      - POSTGRES_USER=gzc_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - AZURE_AD_CLIENT_ID=${AZURE_AD_CLIENT_ID}
+      - AZURE_AD_TENANT_ID=${AZURE_AD_TENANT_ID}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - internal-network
+    # NO PORTS EXPOSED - only accessible through gateway
+
+  # Flask WebSocket Backend (internal only)
+  websocket-backend:
+    build:
+      context: ./FSS_Socket/backend
+      dockerfile: Dockerfile
+    container_name: gzc-websocket
+    environment:
+      - FLASK_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    networks:
+      - internal-network
+    # NO PORTS EXPOSED - only accessible through gateway
+
+  # PostgreSQL Database (internal only)
+  postgres:
+    image: postgres:15-alpine
+    container_name: gzc-postgres
+    environment:
+      - POSTGRES_DB=gzc_intel
+      - POSTGRES_USER=gzc_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - internal-network
+    # NO PORTS EXPOSED - only accessible internally
+
+  # Redis Cache (internal only)
+  redis:
+    image: redis:7-alpine
+    container_name: gzc-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    networks:
+      - internal-network
+    # NO PORTS EXPOSED - only accessible internally
+
+networks:
+  internal-network:
+    driver: bridge
+    internal: false  # Set to true in production to block external access
+
+volumes:
+  postgres-data:
+  redis-data:

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Component Add Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .log { margin: 5px 0; padding: 5px; background: #f0f0f0; }
+        .error { background: #ffcccc; }
+        .success { background: #ccffcc; }
+        iframe { width: 100%; height: 600px; border: 2px solid #333; }
+        button { padding: 10px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Testing Component Add Flow</h1>
+    <button onclick="testComponentAdd()">Test Component Add</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+    <div id="logs"></div>
+    <iframe id="app" src="http://localhost:9000"></iframe>
+
+    <script>
+        const logsDiv = document.getElementById('logs');
+        
+        function log(message, type = '') {
+            const div = document.createElement('div');
+            div.className = 'log ' + type;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            logsDiv.appendChild(div);
+        }
+        
+        function clearLogs() {
+            logsDiv.innerHTML = '';
+        }
+        
+        async function testComponentAdd() {
+            log('Starting test...');
+            
+            const iframe = document.getElementById('app');
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const iframeWin = iframe.contentWindow;
+            
+            // Hook into console
+            const originalLog = iframeWin.console.log;
+            iframeWin.console.log = function(...args) {
+                originalLog.apply(iframeWin.console, args);
+                const msg = args.join(' ');
+                if (msg.includes('ProfessionalHeader') || 
+                    msg.includes('TabContextMenu') ||
+                    msg.includes('DynamicCanvas') ||
+                    msg.includes('editMode') ||
+                    msg.includes('Updating tab')) {
+                    log('Console: ' + msg);
+                }
+            };
+            
+            // Find the main content area
+            const mainArea = iframeDoc.querySelector('main, [role="main"], #root > div > div');
+            if (!mainArea) {
+                log('Could not find main area', 'error');
+                return;
+            }
+            
+            log('Found main area, simulating right-click...');
+            
+            // Simulate right-click
+            const rect = mainArea.getBoundingClientRect();
+            const rightClickEvent = new MouseEvent('contextmenu', {
+                bubbles: true,
+                cancelable: true,
+                view: iframeWin,
+                clientX: rect.left + 100,
+                clientY: rect.top + 100,
+                button: 2
+            });
+            
+            mainArea.dispatchEvent(rightClickEvent);
+            
+            await new Promise(r => setTimeout(r, 1000));
+            
+            // Look for context menu
+            const contextMenu = iframeDoc.querySelector('[class*="context-menu"], [role="menu"]');
+            if (contextMenu) {
+                log('Context menu appeared!', 'success');
+                
+                // Look for menu items
+                const menuItems = contextMenu.querySelectorAll('div, button, li');
+                menuItems.forEach(item => {
+                    if (item.textContent) {
+                        log('Menu item: ' + item.textContent);
+                    }
+                });
+                
+                // Try to click "Enter Edit Mode" or "Add Component"
+                let clicked = false;
+                menuItems.forEach(item => {
+                    if (item.textContent === 'Enter Edit Mode' && !clicked) {
+                        log('Clicking "Enter Edit Mode"...');
+                        item.click();
+                        clicked = true;
+                    } else if (item.textContent === 'Add Component' && !clicked) {
+                        log('Clicking "Add Component"...');
+                        item.click();
+                        clicked = true;
+                    }
+                });
+                
+                if (!clicked) {
+                    log('Could not find appropriate menu item', 'error');
+                }
+            } else {
+                log('Context menu did not appear', 'error');
+            }
+        }
+        
+        // Wait for iframe to load
+        document.getElementById('app').onload = function() {
+            log('Application loaded', 'success');
+        };
+    </script>
+</body>
+</html>

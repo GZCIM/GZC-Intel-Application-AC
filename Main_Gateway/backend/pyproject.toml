@@ -19,7 +19,9 @@ dependencies = [
     "pyodbc (>=5.2.0,<6.0.0)",
     "pandas (>=2.2.3,<3.0.0)",
     "websockets (>=15.0.1,<16.0.0)",
-    "websocket-client (>=1.8.0,<2.0.0)"
+    "websocket-client (>=1.8.0,<2.0.0)",
+    "psycopg2-binary (>=2.9.9,<3.0.0)",
+    "azure-identity (>=1.17.0,<2.0.0)"
 ]
 
 

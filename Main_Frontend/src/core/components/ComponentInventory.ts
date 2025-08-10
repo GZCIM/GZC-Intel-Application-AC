@@ -53,6 +53,7 @@ export class ComponentInventory {
   }
 
   private initializeDefaults() {
+    console.log('ComponentInventory: Initializing defaults...')
     // Initialize categories
     this.addCategory({
       id: 'financial',
@@ -177,6 +178,23 @@ export class ComponentInventory {
       }
     })
 
+    // Portfolio component
+    this.addComponent({
+      id: 'portfolio',
+      name: 'Portfolio',
+      displayName: 'Portfolio Manager',
+      category: 'financial',
+      subcategory: 'portfolio',
+      description: 'Portfolio management component with holdings and performance tracking',
+      defaultSize: { w: 8, h: 6 },
+      minSize: { w: 6, h: 4 },
+      maxSize: { w: 12, h: 10 },
+      tags: ['portfolio', 'holdings', 'performance', 'management'],
+      complexity: 'medium',
+      quality: 'standard',
+      source: 'internal'
+    })
+
     this.buildSearchIndex()
   }
 
@@ -185,8 +203,10 @@ export class ComponentInventory {
   }
 
   addComponent(component: ComponentMeta): void {
+    console.log('ComponentInventory: Adding component:', component.id, component.name)
     this.components.set(component.id, component)
     this.updateSearchIndex(component)
+    console.log('ComponentInventory: Total components now:', this.components.size)
   }
 
   getCategories(): ComponentCategory[] {
@@ -194,7 +214,9 @@ export class ComponentInventory {
   }
 
   getAllComponents(): ComponentMeta[] {
-    return Array.from(this.components.values())
+    const components = Array.from(this.components.values())
+    console.log('ComponentInventory: getAllComponents returning', components.length, 'components')
+    return components
   }
 
   getComponentsByCategory(categoryId: string, subcategoryId?: string): ComponentMeta[] {
