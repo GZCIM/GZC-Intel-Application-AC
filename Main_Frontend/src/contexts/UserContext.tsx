@@ -46,10 +46,45 @@ export function UserProvider({ children }: { children: ReactNode }) {
             const convertedUser = convertMsalAccountToUser(msalAccount);
             setUser(convertedUser);
             // Store in localStorage for persistence
-            localStorage.setItem(
-                "gzc-intel-user",
-                JSON.stringify(convertedUser)
-            );
+            try {
+                localStorage.setItem(
+                    "gzc-intel-user",
+                    JSON.stringify(convertedUser)
+                );
+            } catch (e) {
+                if (e instanceof Error && e.name === 'QuotaExceededError') {
+                    console.error('localStorage quota exceeded. Clearing old data...');
+                    
+                    // Clear non-essential data
+                    const keysToKeep = ['msal', 'gzc-intel-user'];
+                    const allKeys = Object.keys(localStorage);
+                    
+                    for (const key of allKeys) {
+                        // Skip critical keys
+                        if (keysToKeep.some(keep => key.includes(keep))) continue;
+                        
+                        // Remove old/large items
+                        if (key.includes('tabLayouts') || key.includes('canvas-state') || 
+                            key.includes('-old') || key.includes('backup')) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                    
+                    // Try again after cleanup
+                    try {
+                        localStorage.setItem(
+                            "gzc-intel-user",
+                            JSON.stringify(convertedUser)
+                        );
+                    } catch (retryError) {
+                        console.error('Still cannot save user after cleanup:', retryError);
+                        // Store in sessionStorage as fallback
+                        sessionStorage.setItem("gzc-intel-user", JSON.stringify(convertedUser));
+                    }
+                } else {
+                    console.error('Error saving user to localStorage:', e);
+                }
+            }
         } else {
             // Clear user state when not authenticated
             setUser(null);

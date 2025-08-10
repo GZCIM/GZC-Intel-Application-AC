@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
-import { clearCorruptStorage } from './utils/clearCorruptStorage';
+// import { clearCorruptStorage } from './utils/clearCorruptStorage';
 
 // PROFESSIONAL ARCHITECTURE: Unified provider system (no conflicts)
 import { UnifiedProvider } from "./core/providers/UnifiedProvider";
@@ -14,6 +14,9 @@ import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import { QuoteProvider } from "./contexts/QuoteContext";
 import { EnhancedErrorBoundary } from "./components/EnhancedErrorBoundary";
 import { SentryErrorBoundary } from "./config/sentry";
+import { DebugPanel } from "./components/debug/DebugPanel";
+import { debugLogger } from "./utils/debugLogger";
+import { getVersionString } from "./utils/version";
 // Debug components - disabled
 // import { UserTabDebugger } from "./components/UserTabDebugger";
 // import { InventoryDebugger } from "./components/debug/InventoryDebugger";
@@ -120,8 +123,8 @@ function AppContent() {
                             alignItems: "center",
                         }}
                     >
-                        <span style={{ color: currentTheme.success }}>
-                            ● All Systems Operational
+                        <span style={{ color: currentTheme.textSecondary, fontSize: "11px" }}>
+                            {getVersionString()}
                         </span>
                     </div>
                     <div
@@ -159,14 +162,32 @@ function AppContent() {
                 isOpen={showLoginModal}
                 onLogin={handleLoginModalClose}
             />
+            
+            {/* Debug Panel - Shows in development mode */}
+            {!import.meta.env.PROD && <DebugPanel />}
         </>
     );
 }
 
 function App() {
-    // Check and clear corrupt localStorage on app start
+    // Disabled corruption check - was causing infinite loops
+    // useEffect(() => {
+    //     clearCorruptStorage()
+    // }, [])
+
     useEffect(() => {
-        clearCorruptStorage()
+        debugLogger.info('App initialized', {
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            viewport: {
+                width: window.innerWidth,
+                height: window.innerHeight
+            },
+            localStorage: {
+                keys: Object.keys(localStorage),
+                size: new Blob(Object.values(localStorage)).size
+            }
+        })
     }, [])
 
     return (

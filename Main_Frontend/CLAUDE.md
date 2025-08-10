@@ -179,10 +179,10 @@ echo "Deployed $VERSION at $(date)" >> ../journal/$(date +%Y-%m-%d)/deployment.m
 https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io
 
 ### Current Production Version
-- **Tag**: v20250808-171205
+- **Tag**: v20250809-143545
 - **Status**: STABLE ✅
-- **Last Deploy**: 2025-01-08 17:12:05
-- **Features**: All component persistence issues fixed
+- **Last Deploy**: 2025-01-09 14:35:45
+- **Features**: Modal visibility fix - users can now add multiple components to tabs
 
 ## 🏗 Architecture Patterns
 
@@ -227,6 +227,10 @@ https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainer
 - **FIXED (2025-01-08)**: Components no longer disappear after being added
 
 ## ⚠️ Known Issues & Solutions
+
+### ~~Component Modal Issues~~ ✅ FIXED (2025-01-09)
+- ~~Modal not visible when clicking Add Component~~ → Fixed AnimatePresence in v20250809-143545
+- ~~Components not loading in modal~~ → Fixed component inventory initialization
 
 ### ~~Component Persistence Issues~~ ✅ FIXED (2025-01-08)
 - ~~Components disappearing after add~~ → Fixed in v20250808-171205

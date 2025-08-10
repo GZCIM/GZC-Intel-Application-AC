@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useTabLayout } from '../core/tabs/TabLayoutManager';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ToolsMenuProps {
   onOpenAuthDebugger: () => void;
+  onRequestAddComponent?: (tabId: string) => void;
 }
 
-export const ToolsMenu: React.FC<ToolsMenuProps> = ({ onOpenAuthDebugger }) => {
+export const ToolsMenu: React.FC<ToolsMenuProps> = ({ onOpenAuthDebugger, onRequestAddComponent }) => {
   const { currentTheme: theme } = useTheme();
+  const { activeTabId } = useTabLayout();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -23,6 +26,15 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({ onOpenAuthDebugger }) => {
   }, []);
 
   const menuItems = [
+    // Add Component option (only if callback provided and active tab exists)
+    ...(onRequestAddComponent && activeTabId ? [{
+      label: 'Add Component',
+      icon: '🧩',
+      onClick: () => {
+        onRequestAddComponent(activeTabId);
+        setIsOpen(false);
+      },
+    }] : []),
     {
       label: 'Authorization Debug',
       icon: '🔌',

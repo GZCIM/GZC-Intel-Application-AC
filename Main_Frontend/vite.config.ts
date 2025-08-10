@@ -66,15 +66,25 @@ export default defineConfig({
   },
   // Build settings
   build: {
-    sourcemap: true,
+    sourcemap: false, // Disable sourcemaps to reduce memory usage
+    outDir: 'dist',
+    minify: 'esbuild', // Use esbuild for faster minification
+    chunkSizeWarningLimit: 2000, // Increase chunk size warning limit
     rollupOptions: {
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['framer-motion', 'lucide-react'],
           'analytics': ['lightweight-charts', '@tanstack/react-table']
-        }
-      }
+        },
+        // Optimize chunk generation
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
+      },
+      // Increase memory limit for Rollup
+      maxParallelFileOps: 5,
+      cache: false
     }
   },
   resolve: {

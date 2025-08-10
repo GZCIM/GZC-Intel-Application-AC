@@ -1,0 +1,1 @@
+import{j as r}from"./ui-vendor-k0rDQjvt.js";import{D as a}from"./index-DZGo3HN3.js";import"./react-vendor-C_4inHyB.js";import"./index-DG8D6RJe.js";const n=({tabId:t})=>r.jsx(a,{tabId:t});export{n as AnalyticsTab,n as default};

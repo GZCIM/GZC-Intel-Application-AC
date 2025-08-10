@@ -37,7 +37,7 @@ docker push gzcacr.azurecr.io/gzc-intel-app:latest
 # Update Container App
 echo "Updating Container App..."
 az containerapp update \
-  --name gzc-intel-app \
+  --name gzc-intel-application-ac \
   --resource-group gzc-kubernetes-rg \
   --image gzcacr.azurecr.io/gzc-intel-app:latest \
   --set-env-vars \
@@ -48,4 +48,4 @@ az containerapp update \
     VITE_STREAM_URL=/ws
 
 echo "Deployment complete!"
-echo "App URL: https://gzc-intel-app.agreeablepond-1a74a92d.eastus.azurecontainerapps.io"
+echo "App URL: https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io"

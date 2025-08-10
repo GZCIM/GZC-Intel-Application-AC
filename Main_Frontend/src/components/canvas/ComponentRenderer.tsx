@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useTheme } from '../../contexts/ThemeContext'
 import { componentInventory } from '../../core/components/ComponentInventory'
+import { debugLogger, logComponentLoad } from '../../utils/debugLogger'
+import { ComponentErrorBoundary } from '../debug/ErrorBoundary'
 
 interface ComponentRendererProps {
   componentId: string
@@ -14,14 +16,14 @@ interface ComponentRendererProps {
 // Map component IDs to actual components
 const componentMap: Record<string, () => Promise<any>> = {
   // GZC Components from port 3200
-  'gzc-portfolio': () => import('../gzc-portfolio/GZCPortfolioComponent'),
-  'gzc-analytics': () => import('../gzc-analytics/AnalyticsDashboard'),
+  'gzc-portfolio': () => import('../gzc-portfolio'),
+  'gzc-analytics': () => import('../gzc-analytics'),
   
   // Bloomberg Volatility Analysis
   'bloomberg-volatility': () => import('../bloomberg-volatility'),
   
   // Portfolio component
-  'portfolio': () => import('../portfolio/Portfolio'),
+  'portfolio': () => import('../portfolio'),
   
   // Placeholder components - will show the nice placeholder UI for now
   'line-chart': () => Promise.resolve(null),
@@ -67,54 +69,124 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({
 
   useEffect(() => {
     const loadComponent = async () => {
+      const startTime = performance.now()
+      debugLogger.info(`Starting to load component: ${componentId}`, {
+        componentId,
+        instanceId,
+        hasMapping: !!componentMap[componentId]
+      })
+
       try {
         setLoading(true)
         setError(null)
 
         if (componentMap[componentId]) {
+          debugLogger.info(`Found component mapping for ${componentId}, attempting dynamic import...`)
+          
           const module = await componentMap[componentId]()
+          const loadTime = performance.now() - startTime
+          
+          debugLogger.info(`Module loaded for ${componentId} in ${loadTime.toFixed(2)}ms`, {
+            componentId,
+            loadTime,
+            moduleKeys: module ? Object.keys(module) : null,
+            moduleType: module ? typeof module : 'null'
+          })
+
           if (module) {
             // Handle various export patterns
             let LoadedComponent = null
+            const exportChecks = []
             
             // Try different export patterns
             if (module.default) {
+              exportChecks.push('default')
               LoadedComponent = module.default
             } else if (module.Portfolio) {
+              exportChecks.push('Portfolio')
               LoadedComponent = module.Portfolio
             } else if (module.GZCPortfolioComponent) {
+              exportChecks.push('GZCPortfolioComponent')
               LoadedComponent = module.GZCPortfolioComponent
             } else if (module.AnalyticsDashboard) {
+              exportChecks.push('AnalyticsDashboard')
               LoadedComponent = module.AnalyticsDashboard
             } else if (module.VolatilityAnalysis) {
+              exportChecks.push('VolatilityAnalysis')
               LoadedComponent = module.VolatilityAnalysis
             } else if (typeof module === 'function') {
+              exportChecks.push('function')
               LoadedComponent = module
             }
             
+            debugLogger.info(`Export pattern checks for ${componentId}`, {
+              exportChecks,
+              foundComponent: !!LoadedComponent,
+              moduleExports: Object.keys(module)
+            })
+            
             if (LoadedComponent) {
               setComponent(() => LoadedComponent)
+              logComponentLoad(componentId, true, undefined, {
+                instanceId,
+                loadTime,
+                exportPattern: exportChecks[exportChecks.length - 1]
+              })
             } else {
-              console.warn(`Component ${componentId} module loaded but no component found`, module)
+              const errorMsg = `Component ${componentId} module loaded but no component found`
+              debugLogger.warn(errorMsg, {
+                moduleKeys: Object.keys(module),
+                modulePrototype: module.prototype ? Object.getOwnPropertyNames(module.prototype) : null
+              })
+              console.warn(errorMsg, module)
               setComponent(null)
+              logComponentLoad(componentId, false, new Error(errorMsg), { instanceId })
             }
           } else {
             // Component exists but not implemented yet - no error, will show placeholder
+            debugLogger.info(`Component ${componentId} returned null module (placeholder mode)`)
             setComponent(null)
+            logComponentLoad(componentId, true, undefined, { 
+              instanceId, 
+              placeholder: true 
+            })
           }
         } else {
-          setError(`No component mapping for: ${componentId}`)
+          const errorMsg = `No component mapping for: ${componentId}`
+          debugLogger.error(errorMsg, {
+            availableComponents: Object.keys(componentMap),
+            componentId,
+            instanceId
+          })
+          setError(errorMsg)
+          logComponentLoad(componentId, false, new Error(errorMsg), { instanceId })
         }
       } catch (err) {
-        console.error(`Failed to load component ${componentId}:`, err)
-        setError(`Failed to load component: ${err}`)
+        const loadTime = performance.now() - startTime
+        const errorMsg = `Failed to load component ${componentId}`
+        
+        debugLogger.error(errorMsg, {
+          componentId,
+          instanceId,
+          loadTime,
+          errorMessage: err instanceof Error ? err.message : String(err),
+          errorStack: err instanceof Error ? err.stack : undefined,
+          errorType: err instanceof Error ? err.constructor.name : typeof err
+        }, err instanceof Error ? err : new Error(String(err)))
+        
+        console.error(errorMsg, err)
+        setError(`Failed to load component: ${err instanceof Error ? err.message : String(err)}`)
+        logComponentLoad(componentId, false, err instanceof Error ? err : new Error(String(err)), {
+          instanceId,
+          loadTime
+        })
       } finally {
         setLoading(false)
       }
     }
 
     loadComponent()
-  }, [componentId])
+  }, [componentId, instanceId])
 
   // Component not found in inventory
   if (!meta) {
@@ -178,43 +250,49 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({
   // Render actual component if loaded
   if (Component) {
     return (
-      <div style={{
-        height: '100%',
-        width: '100%',
-        position: 'relative'
-      }}>
-        {isEditMode && (
-          <button
-            onClick={() => {
-              if (window.confirm(`Are you sure you want to remove ${meta.displayName}?\n\nThis action cannot be undone.`)) {
-                onRemove()
-              }
-            }}
-            style={{
-              position: 'absolute',
-              top: '8px',
-              right: '8px',
-              zIndex: 10,
-              background: currentTheme.error + '15',
-              border: `1px solid ${currentTheme.error}`,
-              borderRadius: '50%',
-              cursor: 'pointer',
-              color: currentTheme.error,
-              width: '24px',
-              height: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              opacity: 0.7,
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => { 
-              e.currentTarget.style.opacity = '1'
-              e.currentTarget.style.backgroundColor = currentTheme.error + '25'
-            }}
-            onMouseLeave={(e) => { 
+      <ComponentErrorBoundary 
+        componentName={`${meta.displayName} (${componentId})`}
+        showError={true}
+      >
+        <div style={{
+          height: '100%',
+          width: '100%',
+          position: 'relative'
+        }}>
+          {isEditMode && (
+            <button
+              onClick={() => {
+                debugLogger.info(`Remove button clicked for ${componentId}`)
+                if (window.confirm(`Are you sure you want to remove ${meta.displayName}?\n\nThis action cannot be undone.`)) {
+                  debugLogger.info(`User confirmed removal of ${componentId}`)
+                  onRemove()
+                }
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                zIndex: 10,
+                background: currentTheme.error + '15',
+                border: `1px solid ${currentTheme.error}`,
+                borderRadius: '50%',
+                cursor: 'pointer',
+                color: currentTheme.error,
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                opacity: 0.7,
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => { 
+                e.currentTarget.style.opacity = '1'
+                e.currentTarget.style.backgroundColor = currentTheme.error + '25'
+              }}
+              onMouseLeave={(e) => { 
               e.currentTarget.style.opacity = '0.7'
               e.currentTarget.style.backgroundColor = currentTheme.error + '15'
             }}
@@ -225,6 +303,7 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({
         )}
         <Component {...props} />
       </div>
+      </ComponentErrorBoundary>
     )
   }
 

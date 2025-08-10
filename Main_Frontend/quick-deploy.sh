@@ -36,10 +36,10 @@ rm -rf .docker-build
 # Update the container app
 echo "Updating container app..."
 az containerapp update \
-  --name gzc-intel-app \
+  --name gzc-intel-application-ac \
   --resource-group gzc-kubernetes-rg \
   --image "${FULL_IMAGE}"
 
 echo "Deployment complete!"
 echo "Image: ${FULL_IMAGE}"
-echo "App URL: https://gzc-intel-app.agreeablepond-1a74a92d.eastus.azurecontainerapps.io"
+echo "App URL: https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io"

@@ -1,12 +1,12 @@
 /**
  * Application Version Information
- * Updated automatically during build process
+ * Dynamically set from environment or build process
  */
 
-// Current deployment version (updated during build)
-export const APP_VERSION = 'v20250807-220020'
+// Get version from environment variable (set during build) or use timestamp
+export const APP_VERSION = import.meta.env.VITE_APP_VERSION || `v${new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '').slice(0, 15)}`
 
-// Build timestamp (updated during build) 
+// Build timestamp
 export const BUILD_TIMESTAMP = new Date().toISOString().slice(0, 10).replace(/-/g, '')
 
 // Get formatted version string

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { DynamicCanvas } from './canvas/DynamicCanvas'
-import { StaticCanvas } from './canvas/StaticCanvas'
 
 interface SafeUserTabProps {
   tabId: string
@@ -50,12 +49,8 @@ export const SafeUserTab: React.FC<SafeUserTabProps> = ({ tabId, type = 'dynamic
   }
   
   try {
-    // Render the appropriate canvas based on type prop
-    if (type === 'dynamic') {
-      return <DynamicCanvas tabId={tabId} />
-    } else {
-      return <StaticCanvas tabId={tabId} />
-    }
+    // Always use DynamicCanvas (simplified architecture)
+    return <DynamicCanvas tabId={tabId} />
   } catch (err) {
     console.error('SafeUserTab: Error rendering canvas:', err)
     setError(err instanceof Error ? err.message : 'Unknown error')

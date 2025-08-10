@@ -2,7 +2,6 @@ import React from 'react'
 import { useTheme } from '../contexts/ThemeContext'
 import { useTabLayout } from '../core/tabs/TabLayoutManager'
 import { DynamicCanvas } from './canvas/DynamicCanvas'
-import { StaticCanvas } from './canvas/StaticCanvas'
 
 interface UserTabProps {
   tabId: string
@@ -30,10 +29,6 @@ export const UserTab: React.FC<UserTabProps> = ({ tabId, title }) => {
     )
   }
 
-  // Render the appropriate canvas based on tab type
-  if (tab.type === 'dynamic') {
-    return <DynamicCanvas tabId={tabId} />
-  } else {
-    return <StaticCanvas tabId={tabId} />
-  }
+  // Always use DynamicCanvas (simplified architecture)
+  return <DynamicCanvas tabId={tabId} />
 }

@@ -46,6 +46,10 @@ def return_db_connection(conn):
 
 # Import proper Azure AD auth
 from app.auth.azure_auth import validate_token
+import os
+
+# For development testing - check if auth should be bypassed
+BYPASS_AUTH = os.getenv("BYPASS_AUTH_FOR_PORTFOLIO") == "1"
 
 def get_current_user(token_payload: dict = Depends(validate_token)):
     """Get current user ID from validated Azure AD token"""
@@ -72,6 +76,45 @@ async def health_check():
             "database": "connected",
             "timestamp": datetime.now().isoformat()
         }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    finally:
+        if conn:
+            return_db_connection(conn)
+
+@router.get("/memory-status")
+async def memory_status():
+    """Check user_memory table status (NO AUTH for testing)"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # Check if table exists
+            cur.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'user_memory'
+                )
+            """)
+            table_exists = cur.fetchone()['exists']
+            
+            # Get row count if table exists
+            row_count = 0
+            stored_records = []
+            if table_exists:
+                cur.execute("SELECT COUNT(*) as count FROM user_memory")
+                row_count = cur.fetchone()['count']
+                
+                # Get actual stored data
+                cur.execute("SELECT * FROM user_memory ORDER BY updated_at DESC LIMIT 5")
+                stored_records = cur.fetchall()
+            
+            return {
+                "table_exists": table_exists,
+                "total_records": row_count,
+                "recent_records": stored_records,
+                "timestamp": datetime.now().isoformat()
+            }
     except Exception as e:
         raise HTTPException(status_code=503, detail=str(e))
     finally:

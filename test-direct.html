@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Component Add Test</title>
+</head>
+<body>
+    <h1>Testing Component Add Flow</h1>
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        // Open the app in an iframe to capture console
+        const iframe = document.createElement('iframe');
+        iframe.src = 'http://localhost:9000';
+        iframe.width = '100%';
+        iframe.height = '600px';
+        document.body.appendChild(iframe);
+        
+        iframe.onload = () => {
+            const iframeWindow = iframe.contentWindow;
+            
+            // Override console.log in iframe
+            const originalLog = iframeWindow.console.log;
+            iframeWindow.console.log = function(...args) {
+                originalLog.apply(iframeWindow.console, args);
+                
+                // Capture relevant logs
+                const logText = args.join(' ');
+                if (logText.includes('ProfessionalHeader') || 
+                    logText.includes('DynamicCanvas') || 
+                    logText.includes('editMode') ||
+                    logText.includes('Updating tab')) {
+                    const p = document.createElement('p');
+                    p.textContent = logText;
+                    p.style.fontFamily = 'monospace';
+                    p.style.fontSize = '12px';
+                    p.style.margin = '2px';
+                    results.appendChild(p);
+                }
+            };
+            
+            results.innerHTML = '<p>Iframe loaded. Please manually test adding a component and watch the logs below:</p>';
+        };
+    </script>
+</body>
+</html>
