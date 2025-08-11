@@ -5,8 +5,8 @@ from flask import Blueprint, request, jsonify
 
 debug_logs_bp = Blueprint('debug_logs', __name__)
 
-# Create debug-logs directory in workspace
-LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'debug-logs-live')
+# Create debug-logs directory in app writable location
+LOG_DIR = os.path.join('/app', 'logs', 'debug-logs-live')
 os.makedirs(LOG_DIR, exist_ok=True)
 
 @debug_logs_bp.route('/api/debug-logs', methods=['POST'])

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Authentication State Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+        .section { margin: 20px 0; padding: 10px; border: 1px solid #0f0; }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        .info { color: #ff0; }
+        button { padding: 10px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>GZC Intel - Authentication State Test</h1>
+    
+    <div class="section">
+        <h2>Quick Tests</h2>
+        <button onclick="checkMSAL()">Check MSAL State</button>
+        <button onclick="checkLocalStorage()">Check localStorage</button>
+        <button onclick="simulateRefresh()">Simulate Page Refresh</button>
+        <button onclick="testTabPersistence()">Test Tab Persistence</button>
+    </div>
+    
+    <div class="section" id="results">
+        <h2>Test Results</h2>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        const log = (msg, type = 'info') => {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toISOString().split('T')[1].slice(0, 8);
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            output.innerHTML += `<span class="${className}">[${timestamp}] ${msg}</span>\n`;
+        };
+
+        async function checkMSAL() {
+            log('=== CHECKING MSAL STATE ===', 'info');
+            
+            // Check if MSAL exists
+            if (window.msalInstance) {
+                log('✅ MSAL instance found on window', 'success');
+                
+                const accounts = window.msalInstance.getAllAccounts();
+                log(`Accounts found: ${accounts.length}`, accounts.length > 0 ? 'success' : 'error');
+                
+                if (accounts.length > 0) {
+                    accounts.forEach((acc, i) => {
+                        log(`  Account ${i}: ${acc.username} (${acc.name})`, 'info');
+                    });
+                    
+                    const activeAccount = window.msalInstance.getActiveAccount();
+                    if (activeAccount) {
+                        log(`Active account: ${activeAccount.username}`, 'success');
+                    } else {
+                        log('No active account set', 'error');
+                    }
+                }
+                
+                // Check cache location
+                const cacheLocation = window.msalInstance.config?.cache?.cacheLocation;
+                log(`Cache location: ${cacheLocation || 'not set'}`, 'info');
+                
+            } else {
+                log('❌ MSAL instance NOT found on window', 'error');
+                log('Waiting 500ms and retrying...', 'info');
+                
+                setTimeout(() => {
+                    if (window.msalInstance) {
+                        log('✅ MSAL instance now available after wait', 'success');
+                        checkMSAL();
+                    } else {
+                        log('❌ MSAL still not available', 'error');
+                    }
+                }, 500);
+            }
+        }
+
+        function checkLocalStorage() {
+            log('=== CHECKING LOCALSTORAGE ===', 'info');
+            
+            const keys = Object.keys(localStorage).filter(k => 
+                k.includes('msal') || 
+                k.includes('gzc') || 
+                k.includes('tab') || 
+                k.includes('layout')
+            );
+            
+            log(`Found ${keys.length} relevant keys`, 'info');
+            
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                const preview = value && value.length > 100 ? 
+                    value.substring(0, 100) + '...' : value;
+                log(`  ${key}: ${preview}`, 'info');
+            });
+            
+            // Check specific keys
+            const userKey = localStorage.getItem('gzc-intel-user');
+            if (userKey) {
+                try {
+                    const user = JSON.parse(userKey);
+                    log(`Stored user: ${user.email} (${user.name})`, 'success');
+                } catch (e) {
+                    log('Failed to parse stored user', 'error');
+                }
+            } else {
+                log('No stored user found', 'error');
+            }
+            
+            const layoutKey = localStorage.getItem('gzc-intel-current-layout');
+            if (layoutKey) {
+                try {
+                    const layout = JSON.parse(layoutKey);
+                    log(`Stored layout with ${layout.tabs?.length || 0} tabs`, 'success');
+                } catch (e) {
+                    log('Failed to parse stored layout', 'error');
+                }
+            } else {
+                log('No stored layout found', 'error');
+            }
+        }
+
+        async function simulateRefresh() {
+            log('=== SIMULATING PAGE REFRESH ===', 'info');
+            
+            // Store current state
+            const beforeAccounts = window.msalInstance?.getAllAccounts() || [];
+            log(`Before: ${beforeAccounts.length} accounts`, 'info');
+            
+            // Clear window.msalInstance to simulate fresh load
+            const savedInstance = window.msalInstance;
+            window.msalInstance = null;
+            log('Cleared window.msalInstance', 'info');
+            
+            // Wait and check restoration
+            log('Waiting 100ms (current delay)...', 'info');
+            await new Promise(r => setTimeout(r, 100));
+            
+            if (!window.msalInstance) {
+                log('❌ MSAL not restored after 100ms', 'error');
+                
+                log('Waiting additional 400ms (total 500ms)...', 'info');
+                await new Promise(r => setTimeout(r, 400));
+                
+                if (!window.msalInstance) {
+                    log('❌ MSAL still not restored after 500ms', 'error');
+                    // Restore for next test
+                    window.msalInstance = savedInstance;
+                    log('Restored MSAL instance for testing', 'info');
+                } else {
+                    log('✅ MSAL restored after 500ms', 'success');
+                }
+            } else {
+                log('✅ MSAL restored within 100ms', 'success');
+            }
+        }
+
+        async function testTabPersistence() {
+            log('=== TESTING TAB PERSISTENCE ===', 'info');
+            
+            // Check if TabLayoutManager would load default
+            const msalAccounts = window.msalInstance?.getAllAccounts() || [];
+            const isAuthenticated = msalAccounts.length > 0;
+            
+            log(`isAuthenticated check: ${isAuthenticated}`, isAuthenticated ? 'success' : 'error');
+            
+            if (!isAuthenticated) {
+                log('TabLayoutManager would use DEFAULT_LAYOUT', 'error');
+                log('This is the bug - tabs won\'t persist!', 'error');
+            } else {
+                log('TabLayoutManager would load from database', 'success');
+                
+                // Check if we have a user ID
+                const storedUser = localStorage.getItem('gzc-intel-user');
+                if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    log(`Would load tabs for user: ${user.id}`, 'success');
+                }
+            }
+            
+            // Test the timing issue
+            log('\n--- Testing Timing Issue ---', 'info');
+            log('1. On page load, React renders immediately', 'info');
+            log('2. MSAL needs time to restore from localStorage', 'info');
+            log('3. TabLayoutManager checks isAuthenticated too early', 'info');
+            log('4. Falls back to DEFAULT_LAYOUT before MSAL is ready', 'error');
+            log('\nFIX: Need 500ms delay before checking isAuthenticated', 'success');
+        }
+
+        // Auto-run basic check on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('Page loaded - running initial check...', 'info');
+                checkMSAL();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -9,11 +9,12 @@ from typing import Dict, Any
 import jwt
 from datetime import datetime
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from app.services.preferences_service import PreferencesService
 from app.dao.redis_dao import RedisDAO
 from app.models.user_preferences import Base
+from app.auth.azure_ad_validator import AzureADTokenValidator
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,12 @@ redis_dao = RedisDAO(
     db=1  # Use different DB for preferences
 )
 
+# Initialize Azure AD token validator
+azure_validator = AzureADTokenValidator(
+    tenant_id=os.getenv("AZURE_AD_TENANT_ID", "8274c97d-de9d-4328-98cf-2d4ee94bf104"),
+    client_id=os.getenv("AZURE_AD_CLIENT_ID", "a873f2d7-2ab9-4d59-a54c-90859226bf2e")
+)
+
 
 def get_db():
     """Get database session"""
@@ -68,33 +75,38 @@ def require_auth(f):
             # Extract token
             token = auth_header.replace('Bearer ', '')
             
-            # For Azure AD tokens, we would validate with Azure
-            # For now, decode without verification in dev mode
-            if os.getenv("DEBUG", "False") == "True":
-                # Dev mode - extract user info from token without verification
-                import base64
-                import json
-                parts = token.split('.')
-                if len(parts) >= 2:
-                    # Decode JWT payload (add padding if needed)
-                    payload = parts[1]
-                    payload += '=' * (4 - len(payload) % 4)
-                    decoded = base64.urlsafe_b64decode(payload)
-                    user_info = json.loads(decoded)
-                    g.user_id = user_info.get('oid', user_info.get('sub', 'dev-user'))
-                    g.user_email = user_info.get('email', user_info.get('upn', 'dev@gzcim.com'))
+            # Check if we're in debug mode for fallback behavior
+            debug_mode = os.getenv("DEBUG", "False") == "True"
+            
+            if debug_mode:
+                logger.info("Running in DEBUG mode - using fallback auth")
+                # Dev mode - try to parse real token first, then fallback
+                user_info = azure_validator.validate_token(token)
+                if user_info:
+                    g.user_id = user_info['user_id']
+                    g.user_email = user_info['email']
+                    g.user_name = user_info.get('name', g.user_email)
+                    logger.info(f"DEBUG mode: Authenticated {g.user_email}")
                 else:
-                    # Fallback for dev
+                    # Fallback to dev user in debug mode
                     g.user_id = 'dev-user'
                     g.user_email = 'dev@gzcim.com'
+                    g.user_name = 'Development User'
+                    logger.info("DEBUG mode: Using fallback dev credentials")
             else:
-                # Production mode - validate with Azure AD
-                # TODO: Implement proper Azure AD validation
-                return jsonify({'error': 'Token validation not implemented'}), 501
+                # Production mode - validate with Azure AD (required)
+                user_info = azure_validator.validate_token(token)
+                if not user_info:
+                    return jsonify({'error': 'Invalid or expired token'}), 401
+                    
+                g.user_id = user_info['user_id']
+                g.user_email = user_info['email']
+                g.user_name = user_info.get('name', g.user_email)
+                logger.info(f"Production mode: Authenticated {g.user_email}")
                 
         except Exception as e:
             logger.error(f"Auth error: {e}")
-            return jsonify({'error': 'Invalid token'}), 401
+            return jsonify({'error': 'Authentication failed'}), 401
         
         return f(*args, **kwargs)
     
@@ -107,7 +119,7 @@ def health_check():
     try:
         # Check database connection
         db = get_db()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         
         # Check Redis connection

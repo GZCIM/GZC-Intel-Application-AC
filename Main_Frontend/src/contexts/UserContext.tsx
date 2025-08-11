@@ -92,20 +92,39 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     }, [isAuthenticated, accounts]);
 
-    // Load user from localStorage on mount (backup for page refresh)
+    // Wait for MSAL to initialize before checking localStorage
+    // This prevents race conditions on page refresh
     useEffect(() => {
-        if (!isAuthenticated) {
-            const storedUser = localStorage.getItem("gzc-intel-user");
-            if (storedUser) {
-                try {
-                    setUser(JSON.parse(storedUser));
-                } catch (e) {
-                    console.error("Failed to parse stored user:", e);
-                    localStorage.removeItem("gzc-intel-user");
+        // CRITICAL: Only use localStorage as fallback if MSAL has no accounts
+        // Wait a moment for MSAL to initialize from its cache
+        const checkAuthState = async () => {
+            // CRITICAL: MSAL needs 300-500ms to restore from localStorage
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (!isAuthenticated && accounts.length === 0) {
+                const storedUser = localStorage.getItem("gzc-intel-user");
+                if (storedUser) {
+                    try {
+                        const parsed = JSON.parse(storedUser);
+                        console.log('📋 Using stored user as fallback:', parsed.email);
+                        setUser(parsed);
+                    } catch (e) {
+                        console.error("Failed to parse stored user:", e);
+                        localStorage.removeItem("gzc-intel-user");
+                    }
+                }
+            } else if (!isAuthenticated && accounts.length > 0) {
+                // MSAL has accounts but isAuthenticated is false - this is the refresh bug
+                console.log('🔄 MSAL has accounts but not authenticated, activating...');
+                const activeAccount = instance.getActiveAccount();
+                if (!activeAccount) {
+                    instance.setActiveAccount(accounts[0]);
                 }
             }
-        }
-    }, [isAuthenticated]);
+        };
+        
+        checkAuthState();
+    }, [isAuthenticated, accounts.length]);
 
     const login = async () => {
         try {

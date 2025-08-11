@@ -52,13 +52,24 @@ class StateManager {
         userSettings: this.getUserSettings()
       }
 
-      // Save to localStorage with compression
+      // Save to localStorage with quota protection
       const stateJson = JSON.stringify(state)
-      localStorage.setItem('gzc-intel-complete-state', stateJson)
       
-      // Also save a backup
-      localStorage.setItem('gzc-intel-state-backup', stateJson)
-      localStorage.setItem('gzc-intel-state-timestamp', state.timestamp)
+      try {
+        localStorage.setItem('gzc-intel-complete-state', stateJson)
+        localStorage.setItem('gzc-intel-state-timestamp', state.timestamp)
+        
+        // Only save backup if primary save succeeded
+        try {
+          localStorage.setItem('gzc-intel-state-backup', stateJson)
+        } catch {
+          console.warn('Skipping backup due to quota constraints')
+        }
+      } catch (quotaError) {
+        console.error('localStorage quota exceeded, cannot save state:', quotaError)
+        // Do not attempt any cleanup - prevent infinite loop
+        return
+      }
 
       console.log('State saved successfully', {
         size: stateJson.length,

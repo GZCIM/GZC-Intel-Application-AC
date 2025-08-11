@@ -14,7 +14,9 @@ RUN npm ci
 # Copy frontend source
 COPY Main_Frontend/ ./
 
-# Build frontend (skip TypeScript check for faster builds)
+# Build frontend with Application Insights (skip TypeScript check for faster builds)
+ARG VITE_APPLICATIONINSIGHTS_CONNECTION_STRING
+ENV VITE_APPLICATIONINSIGHTS_CONNECTION_STRING=${VITE_APPLICATIONINSIGHTS_CONNECTION_STRING}
 RUN npm run build:skip-ts
 
 # Stage 2: Production Container
@@ -57,7 +59,7 @@ RUN echo 'server { \
     } \
     \
     location /api/ { \
-        proxy_pass http://127.0.0.1:5000/api/; \
+        proxy_pass http://127.0.0.1:5000; \
         proxy_set_header Host $host; \
         proxy_set_header X-Real-IP $remote_addr; \
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \

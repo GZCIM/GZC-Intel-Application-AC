@@ -1,0 +1,344 @@
+version: '3.8'
+
+# Production Docker Compose for GZC Intel Application
+# Security: Network isolation, secrets management, resource limits
+
+services:
+  # API Gateway - ONLY exposed service
+  gateway:
+    image: nginx:1.25-alpine
+    container_name: gzc-gateway
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./configs/nginx.production.conf:/etc/nginx/nginx.conf:ro
+      - ./certificates:/etc/nginx/certs:ro
+      - ./error-pages:/usr/share/nginx/html/errors:ro
+      - certbot-webroot:/var/www/certbot:ro
+      - nginx-cache:/var/cache/nginx
+      - nginx-logs:/var/log/nginx
+    networks:
+      - dmz_network      # External-facing network
+      - backend_network  # Internal backend network
+    depends_on:
+      - frontend
+      - fastapi-backend
+      - websocket-backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/nginx_health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/run
+      - /var/cache/nginx
+    environment:
+      TZ: UTC
+
+  # Frontend Service (React)
+  frontend:
+    image: gzcacr.azurecr.io/gzc-intel-frontend:${VERSION:-latest}
+    container_name: gzc-frontend
+    restart: always
+    networks:
+      - backend_network
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: production
+      REACT_APP_API_URL: https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  # FastAPI Backend
+  fastapi-backend:
+    image: gzcacr.azurecr.io/gzc-intel-backend:${VERSION:-latest}
+    container_name: gzc-fastapi
+    restart: always
+    networks:
+      - backend_network
+      - database_network
+    expose:
+      - "5000"
+    environment:
+      ENVIRONMENT: production
+      LOG_LEVEL: info
+      WORKERS: 4
+      # Azure AD Configuration (from secrets)
+      AZURE_AD_TENANT_ID: ${AZURE_AD_TENANT_ID}
+      AZURE_AD_CLIENT_ID: ${AZURE_AD_CLIENT_ID}
+      # Database Configuration (from secrets)
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Redis Configuration
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      # Security
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGINS: "https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io"
+    secrets:
+      - postgres_password
+      - redis_password
+      - jwt_secret
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    security_opt:
+      - no-new-privileges:true
+
+  # WebSocket Backend (Flask)
+  websocket-backend:
+    image: gzcacr.azurecr.io/gzc-intel-websocket:${VERSION:-latest}
+    container_name: gzc-websocket
+    restart: always
+    networks:
+      - backend_network
+      - database_network
+    expose:
+      - "5100"
+    environment:
+      ENVIRONMENT: production
+      LOG_LEVEL: info
+      # Azure AD Configuration
+      AZURE_AD_TENANT_ID: ${AZURE_AD_TENANT_ID}
+      AZURE_AD_CLIENT_ID: ${AZURE_AD_CLIENT_ID}
+      # Redis Configuration
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      # WebSocket specific
+      WS_HEARTBEAT_INTERVAL: 30
+      WS_MAX_CONNECTIONS: 1000
+    secrets:
+      - redis_password
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: gzc-postgres
+    restart: always
+    networks:
+      - database_network
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    security_opt:
+      - no-new-privileges:true
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: gzc-redis
+    restart: always
+    networks:
+      - database_network
+    expose:
+      - "6379"
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --save 300 10
+      --save 900 100
+      --dbfilename redis-dump.rdb
+      --dir /data
+      --appendonly yes
+      --appendfilename "redis-appendonly.aof"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+
+  # Certificate renewal service (Let's Encrypt)
+  certbot:
+    image: certbot/certbot:latest
+    container_name: gzc-certbot
+    restart: unless-stopped
+    volumes:
+      - ./certificates:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - dmz_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+
+# Network configuration
+networks:
+  # DMZ network for external-facing services
+  dmz_network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-dmz
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+  # Backend network for internal services
+  backend_network:
+    driver: bridge
+    internal: true  # No external access
+    driver_opts:
+      com.docker.network.bridge.name: br-backend
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+
+  # Database network for data layer
+  database_network:
+    driver: bridge
+    internal: true  # No external access
+    driver_opts:
+      com.docker.network.bridge.name: br-database
+    ipam:
+      config:
+        - subnet: 172.22.0.0/24
+
+# Volumes for persistent data
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/gzc/postgres
+  
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/gzc/redis
+  
+  nginx-cache:
+    driver: local
+  
+  nginx-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/log/gzc/nginx
+  
+  certbot-webroot:
+    driver: local
+
+# Secrets management
+secrets:
+  postgres_password:
+    external: true
+    external_name: gzc_postgres_password
+  
+  redis_password:
+    external: true
+    external_name: gzc_redis_password
+  
+  jwt_secret:
+    external: true
+    external_name: gzc_jwt_secret

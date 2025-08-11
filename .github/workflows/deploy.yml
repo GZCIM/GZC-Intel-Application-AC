@@ -30,6 +30,8 @@ jobs:
 
     - name: Build frontend
       working-directory: ./Main_Frontend
+      env:
+        VITE_APPLICATIONINSIGHTS_CONNECTION_STRING: ${{ secrets.VITE_APPLICATIONINSIGHTS_CONNECTION_STRING }}
       run: npm run build:skip-ts
 
     - name: Login to Azure
@@ -47,7 +49,10 @@ jobs:
     - name: Build and push Docker image
       run: |
         VERSION=v$(date +%Y%m%d-%H%M%S)
-        docker build -t ${{ env.AZURE_ACR_NAME }}.azurecr.io/${{ env.AZURE_CONTAINER_APP_NAME }}:$VERSION --platform linux/amd64 .
+        docker build -t ${{ env.AZURE_ACR_NAME }}.azurecr.io/${{ env.AZURE_CONTAINER_APP_NAME }}:$VERSION \
+          --platform linux/amd64 \
+          --build-arg VITE_APPLICATIONINSIGHTS_CONNECTION_STRING="${{ secrets.VITE_APPLICATIONINSIGHTS_CONNECTION_STRING }}" \
+          .
         docker push ${{ env.AZURE_ACR_NAME }}.azurecr.io/${{ env.AZURE_CONTAINER_APP_NAME }}:$VERSION
         echo "IMAGE_TAG=$VERSION" >> $GITHUB_ENV
 
