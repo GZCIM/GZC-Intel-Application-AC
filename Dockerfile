@@ -20,7 +20,7 @@ ENV VITE_APPLICATIONINSIGHTS_CONNECTION_STRING=${VITE_APPLICATIONINSIGHTS_CONNEC
 RUN npm run build:skip-ts
 
 # Stage 2: Production Container
-FROM python:3.11-slim
+FROM mcr.microsoft.com/devcontainers/python:3.11
 
 WORKDIR /app
 
