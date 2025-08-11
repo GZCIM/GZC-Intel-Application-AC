@@ -7,6 +7,7 @@ import App from "./App.tsx";
 import "./utils/errorMonitoring";
 import { initSentry } from "./config/sentry";
 import { eventMonitor } from "./utils/eventMonitor";
+import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 
 // Emergency storage cleanup on app start to prevent MSAL authentication failures
 try {
@@ -56,7 +57,26 @@ try {
     }
 }
 
-// Initialize Sentry
+// Initialize Application Insights if connection string is available
+if (import.meta.env.VITE_APPLICATIONINSIGHTS_CONNECTION_STRING) {
+    const appInsights = new ApplicationInsights({
+        config: {
+            connectionString: import.meta.env.VITE_APPLICATIONINSIGHTS_CONNECTION_STRING,
+            enableAutoRouteTracking: true, // Automatically track page views
+            enableCorsCorrelation: true,   // Track AJAX/fetch requests
+            enableRequestHeaderTracking: true,
+            enableResponseHeaderTracking: true,
+            autoTrackPageVisitTime: true,  // Track time spent on pages
+        }
+    });
+    appInsights.loadAppInsights();
+    appInsights.trackPageView(); // Initial page view
+    console.log('✅ Application Insights initialized');
+} else {
+    console.warn('⚠️ Application Insights connection string not found');
+}
+
+// Initialize Sentry (fallback error tracking)
 initSentry();
 
 // Add development-only monitoring
@@ -66,10 +86,46 @@ if (import.meta.env.DEV) {
     console.log("🎯 Event conflict detection active");
 }
 
-createRoot(document.getElementById("root")!).render(
-    <StrictMode>
-        <MsalProvider instance={msalInstance}>
-            <App />
-        </MsalProvider>
-    </StrictMode>
-);
+// CRITICAL: Handle page refresh authentication restoration
+// This must happen BEFORE React renders to prevent authentication state loss
+const initializeApp = async () => {
+    try {
+        // Initialize MSAL instance first
+        await msalInstance.initialize();
+        
+        // Handle redirect promise for returning from auth redirects
+        const response = await msalInstance.handleRedirectPromise();
+        if (response) {
+            console.log('✅ Redirect authentication successful:', response.account?.username);
+            msalInstance.setActiveAccount(response.account);
+        }
+        
+        // Check for existing accounts after initialization
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length > 0) {
+            // Set the first account as active if none is set
+            const activeAccount = msalInstance.getActiveAccount();
+            if (!activeAccount) {
+                console.log('🔄 Setting active account after page refresh:', accounts[0].username);
+                msalInstance.setActiveAccount(accounts[0]);
+            }
+        }
+        
+        console.log('🔐 MSAL initialized with', accounts.length, 'accounts');
+        
+    } catch (error) {
+        console.error('❌ MSAL initialization failed:', error);
+    }
+    
+    // Render React app after MSAL is properly initialized
+    createRoot(document.getElementById("root")!).render(
+        <StrictMode>
+            <MsalProvider instance={msalInstance}>
+                <App />
+            </MsalProvider>
+        </StrictMode>
+    );
+};
+
+// Initialize the app
+initializeApp();

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Authentication Persistence Test - Production</title>
+    <style>
+        body { 
+            font-family: 'Courier New', monospace; 
+            padding: 20px; 
+            background: #0a0a0a; 
+            color: #00ff00;
+            line-height: 1.6;
+        }
+        h1 { color: #00ff00; border-bottom: 2px solid #00ff00; padding-bottom: 10px; }
+        h2 { color: #00ccff; margin-top: 30px; }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #00ff00; 
+            background: #0d0d0d;
+        }
+        button { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            background: #003300; 
+            color: #00ff00; 
+            border: 1px solid #00ff00; 
+            cursor: pointer; 
+            font-family: 'Courier New', monospace;
+        }
+        button:hover { background: #005500; }
+        .success { color: #00ff00; font-weight: bold; }
+        .error { color: #ff0000; font-weight: bold; }
+        .warning { color: #ffff00; }
+        .info { color: #00ccff; }
+        pre { 
+            background: #1a1a1a; 
+            padding: 10px; 
+            border: 1px solid #333; 
+            overflow-x: auto;
+        }
+        .result-box {
+            margin: 10px 0;
+            padding: 10px;
+            background: #0f0f0f;
+            border-left: 3px solid #00ff00;
+        }
+        .timestamp { color: #666; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <h1>🔐 GZC Intel - Authentication Persistence Test Suite</h1>
+    <p class="info">Testing production deployment: v20250811-092443</p>
+    
+    <div class="test-section">
+        <h2>📋 Quick Actions</h2>
+        <button onclick="testAll()">🚀 Run All Tests</button>
+        <button onclick="clearResults()">🗑️ Clear Results</button>
+        <button onclick="window.open('https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io', '_blank')">🌐 Open App</button>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Individual Tests</h2>
+        <button onclick="testMSALInit()">1. Test MSAL Initialization</button>
+        <button onclick="testAuthState()">2. Check Authentication State</button>
+        <button onclick="testLocalStorage()">3. Inspect LocalStorage</button>
+        <button onclick="testCookies()">4. Check Cookie Storage</button>
+        <button onclick="testTabPersistence()">5. Verify Tab Persistence Logic</button>
+        <button onclick="simulateRefresh()">6. Simulate Page Refresh</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Test Results</h2>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const PROD_URL = 'https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io';
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            
+            const entry = document.createElement('div');
+            entry.className = 'result-box';
+            entry.innerHTML = `
+                <span class="timestamp">[${timestamp}]</span>
+                <span class="${className}">${message}</span>
+            `;
+            results.appendChild(entry);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            log('Results cleared', 'info');
+        }
+
+        async function testMSALInit() {
+            log('=== Testing MSAL Initialization ===', 'info');
+            
+            // Test 1: Check if MSAL exists
+            log('Checking window.msalInstance...', 'info');
+            
+            // Inject test script into iframe
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = PROD_URL;
+            document.body.appendChild(iframe);
+            
+            setTimeout(() => {
+                try {
+                    // Try to access iframe content (will fail due to CORS but shows attempt)
+                    log('❌ Cannot directly access production app due to CORS', 'warning');
+                    log('ℹ️ Open browser DevTools on the production app to see:', 'info');
+                    log('• Check for "MSAL initialized with X accounts" message', 'info');
+                    log('• Look for "TabLayoutManager: Loading layouts for user" (GOOD)', 'success');
+                    log('• Watch for "using default layout" (BAD - means fix didn\'t work)', 'error');
+                } catch (e) {
+                    log('Expected CORS block: ' + e.message, 'warning');
+                }
+                document.body.removeChild(iframe);
+            }, 2000);
+        }
+
+        async function testAuthState() {
+            log('=== Testing Authentication State ===', 'info');
+            
+            // Create test expectations
+            log('Expected behavior after fixes:', 'info');
+            log('✅ MSAL should wait 500ms before checking auth', 'success');
+            log('✅ TabLayoutManager should use direct MSAL check', 'success');
+            log('✅ Auth state should be stored in cookies', 'success');
+            
+            log('\nTo manually verify:', 'warning');
+            log('1. Open the production app', 'info');
+            log('2. Open Browser DevTools (F12)', 'info');
+            log('3. Go to Console tab', 'info');
+            log('4. Type: window.msalInstance.getAllAccounts()', 'info');
+            log('5. Should return array with your account if logged in', 'info');
+        }
+
+        async function testLocalStorage() {
+            log('=== Checking LocalStorage Keys ===', 'info');
+            
+            const expectedKeys = [
+                'msal.[tenant-id].authority',
+                'msal.[tenant-id].idtoken',
+                'msal.[tenant-id].accesstoken',
+                'msal.[tenant-id].refreshtoken',
+                'msal.[tenant-id].account',
+                'gzc-intel-user',
+                'gzc-intel-current-layout',
+                'gzc-intel-layouts'
+            ];
+            
+            log('Expected localStorage keys after login:', 'info');
+            expectedKeys.forEach(key => {
+                log(`• ${key}`, 'info');
+            });
+            
+            log('\nTo check in production:', 'warning');
+            log('1. Open DevTools → Application → Local Storage', 'info');
+            log('2. Look for keys starting with "msal."', 'info');
+            log('3. Check for "gzc-intel-" prefixed keys', 'info');
+        }
+
+        async function testCookies() {
+            log('=== Testing Cookie Storage ===', 'info');
+            
+            log('After our fix, MSAL should store auth state in cookies', 'info');
+            log('Config change: storeAuthStateInCookie: true', 'success');
+            
+            log('\nTo verify cookies:', 'warning');
+            log('1. Open DevTools → Application → Cookies', 'info');
+            log('2. Look for cookies with names like:', 'info');
+            log('• msal.interaction.status', 'info');
+            log('• msal.[tenant-id].authority', 'info');
+        }
+
+        async function testTabPersistence() {
+            log('=== Testing Tab Persistence Logic ===', 'info');
+            
+            log('Fix #1: UserContext.tsx delay increased', 'success');
+            log('Before: 100ms → After: 500ms', 'info');
+            
+            log('\nFix #2: TabLayoutManager direct MSAL check', 'success');
+            log('Before: useIsAuthenticated() hook', 'error');
+            log('After: msalInstance.getAllAccounts() direct', 'success');
+            
+            log('\nFix #3: Cookie storage enabled', 'success');
+            log('storeAuthStateInCookie: true', 'info');
+            
+            log('\nExpected Console Output:', 'warning');
+            log('✅ "MSAL initialized with 1 accounts"', 'success');
+            log('✅ "TabLayoutManager: Waiting for MSAL to restore..."', 'success');
+            log('✅ "TabLayoutManager: Loading layouts for user [id]"', 'success');
+            log('❌ Should NOT see: "using default layout"', 'error');
+        }
+
+        async function simulateRefresh() {
+            log('=== Simulating Page Refresh Test ===', 'info');
+            
+            log('Manual Test Steps:', 'warning');
+            log('1. Login to the app with Azure AD', 'info');
+            log('2. Add a custom tab (Tools → Manage Tabs)', 'info');
+            log('3. Add some components to the tab', 'info');
+            log('4. Press Ctrl+Shift+R (hard refresh)', 'warning');
+            log('5. CHECK: Tabs should still be there!', 'success');
+            
+            log('\nIf tabs disappear after refresh:', 'error');
+            log('• The fix didn\'t work completely', 'error');
+            log('• Check console for "using default layout"', 'error');
+            log('• MSAL might need more than 500ms delay', 'warning');
+            
+            log('\nIf tabs persist after refresh:', 'success');
+            log('• Authentication persistence is FIXED! 🎉', 'success');
+        }
+
+        async function testAll() {
+            clearResults();
+            log('🚀 Running Complete Test Suite...', 'warning');
+            
+            await testMSALInit();
+            setTimeout(() => testAuthState(), 3000);
+            setTimeout(() => testLocalStorage(), 4000);
+            setTimeout(() => testCookies(), 5000);
+            setTimeout(() => testTabPersistence(), 6000);
+            setTimeout(() => simulateRefresh(), 7000);
+            
+            setTimeout(() => {
+                log('\n=== TEST SUITE COMPLETE ===', 'success');
+                log('Please perform manual verification in the production app', 'warning');
+                log('Key Success Indicator: Tabs persist after page refresh!', 'success');
+            }, 8000);
+        }
+
+        // Auto-run basic info on load
+        window.addEventListener('load', () => {
+            log('Test suite loaded. Click "Run All Tests" to begin.', 'info');
+            log(`Target: ${PROD_URL}`, 'info');
+            log('Version: v20250811-092443', 'info');
+        });
+    </script>
+</body>
+</html>

@@ -4,9 +4,12 @@
  */
 
 import { PublicClientApplication } from '@azure/msal-browser'
-import { msalConfig, loginRequest } from '../modules/shell/components/auth/msalConfig'
+import { loginRequest } from '../modules/shell/components/auth/msalConfig'
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5300')
+// Use FSS service for preferences API (both local and production)
+const API_BASE_URL = import.meta.env.PROD 
+  ? 'https://fxspotstream.delightfulground-653e61be.eastus.azurecontainerapps.io/api'
+  : 'http://localhost:5100/api'
 
 interface UserPreferences {
   user_id: string
@@ -19,44 +22,67 @@ interface UserPreferences {
 }
 
 class DatabaseService {
-  private msalInstance: PublicClientApplication
-  
-  constructor() {
-    this.msalInstance = new PublicClientApplication(msalConfig)
+  private getMsalInstance(): PublicClientApplication | null {
+    // CRITICAL: Use the shared MSAL instance with authentication state
+    return (window as any).msalInstance || null
   }
   
   private async getAuthHeaders(): Promise<HeadersInit> {
     try {
-      // Get MSAL token properly
-      const accounts = this.msalInstance.getAllAccounts()
+      const msalInstance = this.getMsalInstance()
+      if (!msalInstance) {
+        console.warn('🚨 MSAL instance not available for database service')
+        return { 'Content-Type': 'application/json' }
+      }
+      
+      // Get authenticated accounts from the shared MSAL instance
+      const accounts = msalInstance.getAllAccounts()
+      console.log('🔐 Database service: Found', accounts.length, 'MSAL accounts')
       
       if (accounts.length > 0) {
         // User is authenticated, get real Azure AD token
-        const response = await this.msalInstance.acquireTokenSilent({
+        const response = await msalInstance.acquireTokenSilent({
           ...loginRequest,
           account: accounts[0]
         })
         
+        console.log('✅ Database service: Got access token for', accounts[0].username)
         return {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${response.accessToken}`
         }
+      } else {
+        console.warn('🚫 Database service: No authenticated accounts found')
       }
     } catch (error) {
-      console.warn('Failed to acquire MSAL token:', error)
-      // Try interactive auth
-      try {
-        const response = await this.msalInstance.acquireTokenPopup(loginRequest)
-        return {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${response.accessToken}`
+      console.warn('❌ Failed to acquire MSAL token:', error)
+      
+      // Handle token expiration gracefully without popup
+      if (error.name === 'InteractionRequiredAuthError' || error.message?.includes('refresh_token_expired')) {
+        console.warn('🔄 Database service: Token expired - continuing without auth for this request')
+        // Return headers without auth instead of completely blocking
+        return { 'Content-Type': 'application/json' }
+      }
+      
+      // For other auth errors, still try popup (needed for initial login)
+      const msalInstance = this.getMsalInstance()
+      if (msalInstance) {
+        try {
+          console.log('🔄 Database service: Attempting interactive authentication...')
+          const response = await msalInstance.acquireTokenPopup(loginRequest)
+          console.log('✅ Database service: Interactive auth successful')
+          return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${response.accessToken}`
+          }
+        } catch (interactiveError) {
+          console.error('❌ Interactive auth failed:', interactiveError)
         }
-      } catch (interactiveError) {
-        console.error('Interactive auth failed:', interactiveError)
       }
     }
     
     // No auth available
+    console.warn('🚫 Database service: No authentication available')
     return {
       'Content-Type': 'application/json'
     }

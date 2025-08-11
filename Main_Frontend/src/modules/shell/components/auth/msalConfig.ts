@@ -13,7 +13,7 @@ export const msalConfig: Configuration = {
     },
     cache: {
         cacheLocation: "localStorage",
-        storeAuthStateInCookie: false,
+        storeAuthStateInCookie: true, // CRITICAL: Enable for better persistence across page refreshes
     },
     system: {
         loggerOptions: {
@@ -45,3 +45,8 @@ export const loginRequest = {
     scopes: [`api://${clientId}/.default`],
 };
 export const msalInstance = new PublicClientApplication(msalConfig);
+
+// Expose MSAL instance to window for debugging and frontend tests
+if (typeof window !== 'undefined') {
+    (window as any).msalInstance = msalInstance;
+}

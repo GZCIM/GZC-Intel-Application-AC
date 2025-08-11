@@ -4,15 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GZC Intel Application - Production copy extracted from Azure Container Registry (`gzcacr.azurecr.io/gzc-intel-app:latest`)
+GZC Intel Application - Production-grade application with secure gateway architecture and Azure cloud services integration.
 
 ## What This Is
 
-This is the EXACT production application running in Azure, including:
-- Frontend with the Tools menu (that was missing from GitHub repos)
-- FXSpotStream backend with WebSocket support
-- Nginx configuration for proper routing
-- All production configurations
+Production application with enterprise security architecture:
+- **Frontend**: React application with Tools menu and user memory persistence
+- **FSS Backend**: FXSpotStream WebSocket service for trading infrastructure
+- **Security Gateway**: Nginx with TLS 1.3, Azure AD auth, rate limiting
+- **Database**: PostgreSQL (gzc_intel) for user preferences and memory
+- **Cache**: Azure Redis for real-time data and session management
+- **Deployment**: Azure Container Apps with managed identities
 
 ## Directory Structure
 ```
@@ -42,7 +44,17 @@ export REDIS_PASSWORD="[from Azure Key Vault or app/backend/.env]"
 ```
 
 ## Access Points
-- Frontend: http://localhost:3500 (with Tools menu!)
+
+### Production (Azure)
+- **FSS Service**: https://fxspotstream.delightfulground-653e61be.eastus.azurecontainerapps.io
+- **WebSocket Endpoints**: 
+  - ESP: `wss://fxspotstream.delightfulground-653e61be.eastus.azurecontainerapps.io/ws_esp`
+  - RFS: `wss://fxspotstream.delightfulground-653e61be.eastus.azurecontainerapps.io/ws_rfs`
+  - Execution: `wss://fxspotstream.delightfulground-653e61be.eastus.azurecontainerapps.io/ws_execution`
+- **Health Check**: `GET /health` and `GET /api/preferences/health`
+
+### Local Development
+- Frontend: http://localhost:3500
 - Backend API: http://localhost:5100
 - WebSocket endpoints: /ws_esp, /ws_rfs, /ws_execution
 
@@ -66,6 +78,23 @@ export REDIS_PASSWORD="[from Azure Key Vault or app/backend/.env]"
 **CRITICAL: Use the correct container app name!**
 - Production App: `gzc-intel-application-ac` (NOT gzc-intel-app)
 - URL: https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io
+
+## User Memory Persistence Architecture
+
+### Database Schema (PostgreSQL - gzc_intel)
+- **user_preferences**: User settings, tab configurations, layouts
+- **user_sessions**: Cross-browser tab synchronization state
+- **component_memory**: Per-component state persistence
+
+### Redis Cache Strategy  
+- **Session Store**: Real-time user state (Redis DB 1)
+- **Component Cache**: Frequently accessed component data
+- **WebSocket State**: Active connection management
+
+### FSS Integration
+- **Preferences API**: `/api/preferences/*` - User settings management
+- **Health Monitoring**: Database and Redis connectivity validation
+- **Authentication**: Azure AD token validation (dev mode available)
 
 To deploy changes:
 ```bash

@@ -21,12 +21,14 @@ def create_app():
     from .controllers.trade_result_controller import tr_bp
     from .controllers.preferences_controller import preferences_bp
     from .controllers.debug_logs_controller import debug_logs_bp
+    from .controllers.health_controller import health_bp
 
     app.register_blueprint(fix_bp)
     app.register_blueprint(ws_bp)
     app.register_blueprint(tr_bp)
     app.register_blueprint(preferences_bp)
     app.register_blueprint(debug_logs_bp)
+    app.register_blueprint(health_bp)
     # app.register_blueprint(trade_esp)
     # app.register_blueprint(trade_rsf)
 

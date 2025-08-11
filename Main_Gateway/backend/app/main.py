@@ -8,6 +8,7 @@ from app.controllers import (
     transactions_controller,
     preferences_controller,
     user_memory_controller,
+    cosmos_config_controller,
 )
 from app.util.logger import configure_logging, get_logger
 import os
@@ -73,6 +74,7 @@ app.include_router(portfolio_controller.router)
 app.include_router(transactions_controller.router)
 app.include_router(preferences_controller.router)
 app.include_router(user_memory_controller.router)
+app.include_router(cosmos_config_controller.router)
 
 
 # Application runs here

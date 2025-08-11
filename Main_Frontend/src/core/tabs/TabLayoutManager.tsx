@@ -7,6 +7,7 @@ import { TabNameModal } from '../../components/TabNameModal'
 import { stateManager } from '../../services/StateManager'
 import { useUser } from '../../hooks/useUser'
 import { databaseService } from '../../services/databaseService'
+import { cosmosConfigService } from '../../services/cosmosConfigService'
 
 // Component in tab configuration for dynamic tabs
 export interface ComponentInTab {
@@ -148,20 +149,57 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
   // Load saved layouts from PostgreSQL when user changes
   useEffect(() => {
-    // Skip loading if user is not authenticated
-    if (!isAuthenticated) {
-      console.log('TabLayoutManager: User not authenticated, using default layout')
-      setCurrentLayout(DEFAULT_LAYOUT)
-      setLayouts([DEFAULT_LAYOUT])
-      setActiveTabId('analytics')
-      return
-    }
-    
-    console.log(`TabLayoutManager: Loading layouts for user ${userId}`)
-    
-    const loadUserData = async () => {
-      // Try database FIRST if authenticated (for cross-browser sync)
-      if (isAuthenticated && userId !== 'default-user') {
+    const checkAuthAndLoad = async () => {
+      // CRITICAL FIX: Direct MSAL check instead of hook to avoid race condition
+      const msalInstance = (window as any).msalInstance;
+      const accounts = msalInstance?.getAllAccounts() || [];
+      let isUserAuthenticated = accounts.length > 0;
+      
+      // If no accounts yet, wait for MSAL to restore from cache
+      if (!isUserAuthenticated) {
+        console.log('TabLayoutManager: Waiting for MSAL to restore authentication...')
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Re-check after delay
+        const accountsAfterDelay = msalInstance?.getAllAccounts() || [];
+        isUserAuthenticated = accountsAfterDelay.length > 0;
+        
+        if (!isUserAuthenticated) {
+          console.log('TabLayoutManager: No authenticated accounts after wait, using default layout')
+          setCurrentLayout(DEFAULT_LAYOUT)
+          setLayouts([DEFAULT_LAYOUT])
+          setActiveTabId('analytics')
+          return
+        }
+      }
+      
+      console.log(`TabLayoutManager: Loading layouts for user ${userId}`)
+      
+      // Try Cosmos DB FIRST (works without backend!)
+      try {
+        const cosmosConfig = await cosmosConfigService.loadConfiguration()
+        if (cosmosConfig?.tabs && cosmosConfig.tabs.length > 0) {
+          console.log(`TabLayoutManager: Loaded ${cosmosConfig.tabs.length} tabs from Cosmos DB`)
+          const cosmosLayout = { 
+            ...DEFAULT_LAYOUT,
+            tabs: cosmosConfig.tabs,
+            id: 'cosmos-layout',
+            name: 'Cosmos Layout'
+          }
+          setCurrentLayout(cosmosLayout)
+          setLayouts([DEFAULT_LAYOUT, cosmosLayout])
+          
+          const activeTabId = cosmosConfig.tabs[0]?.id || 'analytics'
+          setActiveTabId(activeTabId)
+          return // Cosmos DB is source of truth
+        }
+      } catch (e) {
+        console.error('Failed to load from Cosmos DB:', e)
+        // Fall through to other methods
+      }
+      
+      // Try database if Cosmos DB fails (for backward compatibility)
+      if (isUserAuthenticated && userId !== 'default-user') {
         try {
           const savedTabs = await databaseService.getUserTabs(userId)
           console.log(`TabLayoutManager: Loaded ${savedTabs.length} tabs from database`)
@@ -210,7 +248,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
       }
     }
     
-    loadUserData()
+    checkAuthAndLoad()
   }, [userId, isAuthenticated]) // Re-run when user or auth state changes
 
   // Save layouts to localStorage whenever they change
@@ -263,7 +301,20 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
       setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
     }
 
-    // Save to PostgreSQL only if authenticated
+    // Save to Cosmos DB (works without backend!)
+    const saveToCosmosDB = async () => {
+      try {
+        await cosmosConfigService.saveConfiguration({
+          tabs: updatedLayout.tabs,
+          layouts: layouts
+        })
+        console.log('New tab saved to Cosmos DB')
+      } catch (error) {
+        console.error('Failed to save to Cosmos DB:', error)
+      }
+    }
+    
+    // Save to PostgreSQL only if authenticated (legacy - for backward compatibility)
     if (isAuthenticated) {
       const saveToDatabase = async () => {
         try {
@@ -283,7 +334,12 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         }
       }
       
+      // Try both Cosmos DB and PostgreSQL
+      saveToCosmosDB()
       saveToDatabase()
+    } else {
+      // If not authenticated, still try Cosmos DB (it has its own auth)
+      saveToCosmosDB()
     }
 
     // Also save to localStorage as backup
@@ -704,7 +760,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         isOpen={showTabModal}
         onClose={() => setShowTabModal(false)}
         onConfirm={handleTabNameConfirm}
-        defaultName={`New Tab ${currentLayout.tabs.filter(t => t.name.startsWith('New Tab')).length + 1}`}
+        defaultName={`New Tab ${currentLayout.tabs.filter(t => t.name && t.name.startsWith('New Tab')).length + 1}`}
       />
     </TabLayoutContext.Provider>
   )
