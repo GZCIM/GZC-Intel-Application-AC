@@ -71,7 +71,7 @@ class CosmosConfigService {
     try {
       const token = await this.getAccessToken()
       
-      const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
+      const response = await fetch(`${this.backendUrl}/cosmos/config`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -99,7 +99,7 @@ class CosmosConfigService {
     try {
       const token = await this.getAccessToken()
       
-      const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
+      const response = await fetch(`${this.backendUrl}/cosmos/config`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -131,7 +131,7 @@ class CosmosConfigService {
     try {
       const token = await this.getAccessToken()
       
-      const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
+      const response = await fetch(`${this.backendUrl}/cosmos/config`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -159,7 +159,7 @@ class CosmosConfigService {
     try {
       const token = await this.getAccessToken()
       
-      const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
+      const response = await fetch(`${this.backendUrl}/cosmos/config`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -184,7 +184,7 @@ class CosmosConfigService {
    */
   async checkHealth(): Promise<{ status: string; message?: string }> {
     try {
-      const response = await fetch(`${this.backendUrl}/api/cosmos/health`)
+      const response = await fetch(`${this.backendUrl}/cosmos/health`)
       
       if (response.ok) {
         return await response.json()
