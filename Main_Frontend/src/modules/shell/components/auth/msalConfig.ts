@@ -1,15 +1,15 @@
 import { Configuration, LogLevel } from "@azure/msal-browser";
 import { PublicClientApplication } from "@azure/msal-browser";
-// Runtime environment variable injection via placeholders
-// CRITICAL: These must be string literals for inject-env.sh to find and replace
-const clientId = import.meta.env.VITE_CLIENT_ID || "VITE_CLIENT_ID_PLACEHOLDER";
-const tenantId = import.meta.env.VITE_TENANT_ID || "VITE_TENANT_ID_PLACEHOLDER";
+
+// Build-time environment variables - no runtime injection needed
+const clientId = import.meta.env.VITE_CLIENT_ID;
+const tenantId = import.meta.env.VITE_TENANT_ID;
 
 // Validate configuration at runtime
-if (!clientId || clientId === "VITE_CLIENT_ID_PLACEHOLDER" || clientId === "") {
+if (!clientId) {
     console.error("❌ MSAL CLIENT_ID is not configured! Expected VITE_CLIENT_ID environment variable.");
 }
-if (!tenantId || tenantId === "VITE_TENANT_ID_PLACEHOLDER" || tenantId === "") {
+if (!tenantId) {
     console.error("❌ MSAL TENANT_ID is not configured! Expected VITE_TENANT_ID environment variable.");
 }
 const authority = `https://login.microsoftonline.com/${tenantId}`;
