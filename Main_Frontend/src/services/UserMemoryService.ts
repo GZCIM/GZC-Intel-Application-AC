@@ -95,7 +95,7 @@ export class DatabaseUserMemoryService implements UserMemoryService {
 
   async saveLayout(tabId: string, layout: any): Promise<void> {
     try {
-      await this.apiClient.post('/user-memory', {
+      await this.apiClient.post('user-memory', {
         memoryType: 'layout',
         memoryKey: tabId,
         memoryData: layout,
@@ -129,7 +129,7 @@ export class DatabaseUserMemoryService implements UserMemoryService {
 
   async saveTheme(theme: string): Promise<void> {
     try {
-      await this.apiClient.post('/user-memory', {
+      await this.apiClient.post('user-memory', {
         memoryType: 'theme',
         memoryKey: 'current',
         memoryData: { theme },
@@ -145,7 +145,7 @@ export class DatabaseUserMemoryService implements UserMemoryService {
   async loadTheme(): Promise<string | null> {
     try {
       const response = await this.apiClient.get(
-        '/user-memory/theme/current',
+        'user-memory/theme/current',
         { 
           user_id: this.userId, 
           tenant_id: this.tenantId 
@@ -163,7 +163,7 @@ export class DatabaseUserMemoryService implements UserMemoryService {
 
   async saveComponentState(componentId: string, state: any): Promise<void> {
     try {
-      await this.apiClient.post('/user-memory', {
+      await this.apiClient.post('user-memory', {
         memoryType: 'component_state',
         memoryKey: componentId,
         memoryData: state,
@@ -197,7 +197,7 @@ export class DatabaseUserMemoryService implements UserMemoryService {
 
   async savePreference(key: string, value: any): Promise<void> {
     try {
-      await this.apiClient.post('/user-memory', {
+      await this.apiClient.post('user-memory', {
         memoryType: 'preferences',
         memoryKey: key,
         memoryData: { value },
