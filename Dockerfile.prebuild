@@ -1,29 +1,6 @@
-# GZC Intel Application AC - Production Dockerfile
-# Cross-platform compatible (Windows/Mac/Linux development)
-# Deploys to Azure Container Apps (linux/amd64)
+# GZC Intel Application AC - Pre-built Frontend Dockerfile
+# Uses locally built frontend to avoid build cache issues
 
-# Stage 1: Build Frontend
-FROM node:20-alpine AS frontend-builder
-
-WORKDIR /app/frontend
-
-# Copy frontend package files
-COPY Main_Frontend/package*.json ./
-RUN npm ci
-
-# Copy frontend source
-COPY Main_Frontend/ ./
-
-# Build frontend with Application Insights and Azure AD (skip TypeScript check for faster builds)
-ARG VITE_APPLICATIONINSIGHTS_CONNECTION_STRING
-ARG VITE_CLIENT_ID
-ARG VITE_TENANT_ID
-ENV VITE_APPLICATIONINSIGHTS_CONNECTION_STRING=${VITE_APPLICATIONINSIGHTS_CONNECTION_STRING}
-ENV VITE_CLIENT_ID=${VITE_CLIENT_ID}
-ENV VITE_TENANT_ID=${VITE_TENANT_ID}
-RUN npm run build:skip-ts
-
-# Stage 2: Production Container
 FROM mcr.microsoft.com/devcontainers/python:3.11
 
 WORKDIR /app
@@ -41,8 +18,8 @@ COPY Main_Gateway/backend/requirements.txt /tmp/gateway_requirements.txt
 RUN pip install --no-cache-dir -r /tmp/fss_requirements.txt
 RUN pip install --no-cache-dir -r /tmp/gateway_requirements.txt
 
-# Copy built frontend to nginx directory
-COPY --from=frontend-builder /app/frontend/dist /var/www/html
+# Copy PRE-BUILT frontend directly (no build step!)
+COPY Main_Frontend/dist /var/www/html
 
 # Copy backend applications
 COPY FSS_Socket/backend/ /app/fss_backend/

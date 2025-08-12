@@ -18,7 +18,7 @@ interface UserConfiguration {
 class CosmosConfigService {
   // In production, use relative URL so it goes through nginx proxy
   private backendUrl = import.meta.env.VITE_BACKEND_URL || (
-    import.meta.env.PROD ? '' : 'http://localhost:5300'
+    import.meta.env.PROD ? '' : 'http://localhost:5000'  // Main gateway backend
   )
   private msalInstance: PublicClientApplication | null = null
 
@@ -192,7 +192,7 @@ class CosmosConfigService {
       
       return { status: 'error', message: 'Backend not reachable' }
     } catch (error) {
-      return { status: 'error', message: error.toString() }
+      return { status: 'error', message: error instanceof Error ? error.message : String(error) }
     }
   }
 

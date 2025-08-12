@@ -185,9 +185,7 @@ export function FeatherIconSelector({ selectedIcon, onSelectIcon, isOpen, onClos
     onClose()
   }
 
-  if (!isOpen) return null
-
-  return (
+  return isOpen ? (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
@@ -297,7 +295,7 @@ export function FeatherIconSelector({ selectedIcon, onSelectIcon, isOpen, onClos
         </div>
       </motion.div>
     </div>
-  )
+  ) : null
 }
 
 // Helper function to get icon SVG content

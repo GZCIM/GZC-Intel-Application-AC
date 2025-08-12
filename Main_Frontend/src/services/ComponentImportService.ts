@@ -197,12 +197,12 @@ export class ComponentImportService {
         category: contract.metadata.category,
         description: contract.metadata.description,
         defaultSize: { 
-          w: Math.round(contract.capabilities.sizing.defaultSize.width / 100), 
-          h: Math.round(contract.capabilities.sizing.defaultSize.height / 100) 
+          w: Math.round((contract.capabilities.sizing.minWidth || 600) / 100), 
+          h: Math.round((contract.capabilities.sizing.minHeight || 400) / 100) 
         },
         minSize: { 
-          w: Math.round(contract.capabilities.sizing.minSize.width / 100), 
-          h: Math.round(contract.capabilities.sizing.minSize.height / 100) 
+          w: Math.round((contract.capabilities.sizing.minWidth || 200) / 100), 
+          h: Math.round((contract.capabilities.sizing.minHeight || 200) / 100) 
         },
         tags: contract.metadata.tags,
         complexity: 'medium',
@@ -219,7 +219,7 @@ export class ComponentImportService {
     } catch (error) {
       return {
         success: false,
-        errors: [`Import failed: ${error.message}`]
+        errors: [`Import failed: ${error instanceof Error ? error.message : String(error)}`]
       }
     }
   }

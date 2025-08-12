@@ -1,0 +1,7 @@
+{
+  "spa": {
+    "redirectUris": [
+      "https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io"
+    ]
+  }
+}

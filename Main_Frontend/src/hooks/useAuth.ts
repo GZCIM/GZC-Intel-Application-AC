@@ -1,6 +1,7 @@
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { loginRequest } from "../modules/shell/components/auth/msalConfig";
 import { AccountInfo } from "@azure/msal-browser";
+import { telemetryService } from "../services/telemetryService";
 
 /**
  * Check if we're in development mode without Azure AD configured
@@ -59,8 +60,19 @@ export function useAuth() {
     // Production MSAL authentication
     const login = async () => {
         try {
-            await instance.loginPopup(loginRequest);
+            telemetryService.trackAuthEvent('login_attempt');
+            const response = await instance.loginPopup(loginRequest);
+            telemetryService.trackAuthEvent('login_success', {
+                username: response.account?.username,
+                accountId: response.account?.homeAccountId
+            });
+            if (response.account) {
+                telemetryService.setUserId(response.account.homeAccountId);
+            }
         } catch (error) {
+            telemetryService.trackAuthEvent('login_failure', {
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
             console.error("Login failed:", error);
             throw error;
         }
@@ -68,6 +80,7 @@ export function useAuth() {
 
     const logout = async () => {
         try {
+            telemetryService.trackAuthEvent('logout');
             await instance.logoutPopup();
         } catch (error) {
             console.error("Logout failed:", error);

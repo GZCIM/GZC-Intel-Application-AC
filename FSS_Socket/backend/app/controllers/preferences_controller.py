@@ -46,9 +46,10 @@ redis_dao = RedisDAO(
 )
 
 # Initialize Azure AD token validator
+# Using frontend's Client ID for consistent authentication
 azure_validator = AzureADTokenValidator(
     tenant_id=os.getenv("AZURE_AD_TENANT_ID", "8274c97d-de9d-4328-98cf-2d4ee94bf104"),
-    client_id=os.getenv("AZURE_AD_CLIENT_ID", "a873f2d7-2ab9-4d59-a54c-90859226bf2e")
+    client_id=os.getenv("AZURE_AD_CLIENT_ID", "5e6f0e38-f82e-48d8-aff8-c988a0e16070")
 )
 
 
