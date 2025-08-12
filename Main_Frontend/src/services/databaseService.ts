@@ -6,10 +6,10 @@
 import { PublicClientApplication } from '@azure/msal-browser'
 import { loginRequest } from '../modules/shell/components/auth/msalConfig'
 
-// Use FSS service for preferences API (both local and production)
+// Use main gateway backend for database API (not FSS!)
 const API_BASE_URL = import.meta.env.PROD 
-  ? 'https://fxspotstream.delightfulground-653e61be.eastus.azurecontainerapps.io/api'
-  : 'http://localhost:5100/api'
+  ? '/api'  // Use relative URL in production (goes through nginx to port 5000)
+  : 'http://localhost:5000/api'  // Main gateway backend in development
 
 interface UserPreferences {
   user_id: string
@@ -58,7 +58,7 @@ class DatabaseService {
       console.warn('❌ Failed to acquire MSAL token:', error)
       
       // Handle token expiration gracefully without popup
-      if (error.name === 'InteractionRequiredAuthError' || error.message?.includes('refresh_token_expired')) {
+      if (error instanceof Error && (error.name === 'InteractionRequiredAuthError' || error.message?.includes('refresh_token_expired'))) {
         console.warn('🔄 Database service: Token expired - continuing without auth for this request')
         // Return headers without auth instead of completely blocking
         return { 'Content-Type': 'application/json' }

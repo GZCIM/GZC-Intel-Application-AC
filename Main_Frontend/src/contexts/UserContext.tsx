@@ -129,7 +129,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const login = async () => {
         try {
             await instance.loginPopup({
-                scopes: [`api://${import.meta.env.VITE_CLIENT_ID}/.default`],
+                scopes: ["User.Read"],
             });
             // User state will be updated automatically through useEffect
         } catch (error) {

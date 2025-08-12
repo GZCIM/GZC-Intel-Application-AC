@@ -111,7 +111,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   }, [initializeThemeSystem])
 
   const value: ThemeContextType = {
-    currentTheme: themes[themeName],
+    currentTheme: themes[themeName] || themes['gzc-dark'], // Fallback to gzc-dark theme if undefined
     themeName,
     setTheme,
     availableThemes: Object.keys(themes)

@@ -96,7 +96,18 @@ export REDIS_PASSWORD="[from Azure Key Vault or app/backend/.env]"
 - **Health Monitoring**: Database and Redis connectivity validation
 - **Authentication**: Azure AD token validation (dev mode available)
 
-To deploy changes:
+## Deployment (Updated 2025-08-11)
+
+### GitHub Actions CI/CD (RECOMMENDED - 5 minutes)
+```bash
+# Just push your code!
+git push origin component-state-refactor
+
+# Watch deployment at:
+# https://github.com/GZCIM/GZC-Intel-Application-AC/actions
+```
+
+### Manual Docker Deployment (Legacy - 7+ minutes)
 ```bash
 # Build new image (use --no-cache when fixing issues)
 docker build --no-cache -t gzcacr.azurecr.io/gzc-intel-app:latest --platform linux/amd64 .
@@ -110,6 +121,8 @@ az containerapp update --name gzc-intel-application-ac \
   --resource-group gzc-kubernetes-rg \
   --image gzcacr.azurecr.io/gzc-intel-app:latest
 ```
+
+**NEW: GitHub Actions is configured and working! See `/docs/GITHUB_ACTIONS_DEPLOYMENT.md` for details.**
 
 **Common Deployment Issues:**
 1. Wrong app name - Always use `gzc-intel-application-ac`

@@ -44,22 +44,45 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     const { currentTheme: theme } = useTheme();
     const [isOpen, setIsOpen] = useState(false);
 
-    // If not authenticated, show login prompt
+    // If not authenticated, show login button
     if (!isAuthenticated || !user) {
+        const { login } = useAuth();
+        
         return (
-            <div
+            <motion.button
+                onClick={async () => {
+                    try {
+                        await login();
+                    } catch (error) {
+                        console.error("Login failed:", error);
+                    }
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
-                    padding: "4px 8px",
+                    padding: "6px 12px",
                     borderRadius: "20px",
                     fontSize: "12px",
-                    color: theme.textSecondary,
+                    color: theme.text,
+                    backgroundColor: theme.primary,
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    fontWeight: "500"
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = theme.primaryHover || theme.primary;
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = theme.primary;
                 }}
             >
-                Not signed in
-            </div>
+                <span>🔐</span>
+                Sign In
+            </motion.button>
         );
     }
 

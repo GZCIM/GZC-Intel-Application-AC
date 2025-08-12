@@ -1,15 +1,24 @@
 import { Configuration, LogLevel } from "@azure/msal-browser";
 import { PublicClientApplication } from "@azure/msal-browser";
-// Vite uses import.meta.env (ensure VITE_ prefix for env vars)
-const clientId = import.meta.env.VITE_CLIENT_ID || "";
-const tenantId = import.meta.env.VITE_TENANT_ID || "";
+// Runtime environment variable injection via placeholders
+// CRITICAL: These must be string literals for inject-env.sh to find and replace
+const clientId = import.meta.env.VITE_CLIENT_ID || "VITE_CLIENT_ID_PLACEHOLDER";
+const tenantId = import.meta.env.VITE_TENANT_ID || "VITE_TENANT_ID_PLACEHOLDER";
+
+// Validate configuration at runtime
+if (!clientId || clientId === "VITE_CLIENT_ID_PLACEHOLDER" || clientId === "") {
+    console.error("❌ MSAL CLIENT_ID is not configured! Expected VITE_CLIENT_ID environment variable.");
+}
+if (!tenantId || tenantId === "VITE_TENANT_ID_PLACEHOLDER" || tenantId === "") {
+    console.error("❌ MSAL TENANT_ID is not configured! Expected VITE_TENANT_ID environment variable.");
+}
 const authority = `https://login.microsoftonline.com/${tenantId}`;
 
 export const msalConfig: Configuration = {
     auth: {
         clientId,
         authority,
-        redirectUri: "/",
+        redirectUri: window.location.origin,
     },
     cache: {
         cacheLocation: "localStorage",
@@ -42,7 +51,7 @@ export const msalConfig: Configuration = {
     },
 };
 export const loginRequest = {
-    scopes: [`api://${clientId}/.default`],
+    scopes: ["User.Read"],
 };
 export const msalInstance = new PublicClientApplication(msalConfig);
 

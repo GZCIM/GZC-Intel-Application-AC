@@ -26,7 +26,7 @@ function getTempUserInfo() {
 }
 
 export function useUserMemory() {
-  const userInfo = getTempUserInfo() // TODO: Replace with useAuth()
+  const [userInfo] = useState(() => getTempUserInfo()) // TODO: Replace with useAuth()
   
   const [service, setService] = useState<UserMemoryService>(() => 
     userInfo ? createUserMemoryService(userInfo.userId, userInfo.tenantId, userInfo.accessToken) : 

@@ -8,6 +8,7 @@ import "./utils/errorMonitoring";
 import { initSentry } from "./config/sentry";
 import { eventMonitor } from "./utils/eventMonitor";
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+import { telemetryService } from './services/telemetryService';
 
 // Emergency storage cleanup on app start to prevent MSAL authentication failures
 try {
@@ -90,8 +91,17 @@ if (import.meta.env.DEV) {
 // This must happen BEFORE React renders to prevent authentication state loss
 const initializeApp = async () => {
     try {
+        // Debug MSAL configuration before initialization
+        const config = msalInstance.getConfiguration();
+        console.log('🔍 MSAL Configuration:', {
+            clientId: config?.auth?.clientId || 'NOT SET',
+            authority: config?.auth?.authority || 'NOT SET',
+            redirectUri: config?.auth?.redirectUri || 'NOT SET',
+        });
+        
         // Initialize MSAL instance first
         await msalInstance.initialize();
+        console.log('✅ MSAL initialized successfully');
         
         // Handle redirect promise for returning from auth redirects
         const response = await msalInstance.handleRedirectPromise();
@@ -115,6 +125,12 @@ const initializeApp = async () => {
         
     } catch (error) {
         console.error('❌ MSAL initialization failed:', error);
+        console.error('❌ Error details:', {
+            message: error?.message,
+            name: error?.name,
+            stack: error?.stack,
+        });
+        // Still render the app even if MSAL fails, so users can see error messages
     }
     
     // Render React app after MSAL is properly initialized

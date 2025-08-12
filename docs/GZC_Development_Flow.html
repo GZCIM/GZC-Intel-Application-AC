@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>GZC Development Flow - How We Build Intelligence Components</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #333;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        #presentation-container {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .slide {
+            position: absolute;
+            width: 90%;
+            max-width: 1200px;
+            height: 85vh;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 60px;
+            overflow-y: auto;
+            opacity: 0;
+            transform: translateX(100px);
+            pointer-events: none;
+            transition: all 0.5s ease-out;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+        
+        h1 {
+            color: #0078d4;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #0078d4;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #005a9e;
+            font-size: 2em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        h3 {
+            color: #0078d4;
+            font-size: 1.5em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        h4 {
+            color: #005a9e;
+            font-size: 1.2em;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+        
+        p, li {
+            line-height: 1.8;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        ul {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: white;
+            color: #0078d4;
+            border: 2px solid #0078d4;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover:not(:disabled) {
+            background: #0078d4;
+            color: white;
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #slide-counter {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #0078d4;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .title-slide {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .title-slide h1 {
+            font-size: 3.5em;
+            border: none;
+            margin-bottom: 30px;
+        }
+        
+        .flow-step {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+            border: 2px solid #0078d4;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: #0078d4;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.95em;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        
+        .diagram-box {
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .azure-service {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .azure-service:hover {
+            border-color: #0078d4;
+            box-shadow: 0 5px 15px rgba(0,120,212,0.1);
+        }
+        
+        .service-icon {
+            font-size: 2em;
+            margin-right: 15px;
+            width: 50px;
+            text-align: center;
+        }
+        
+        .service-info {
+            flex: 1;
+        }
+        
+        .service-name {
+            font-weight: 600;
+            color: #0078d4;
+            margin-bottom: 5px;
+        }
+        
+        .service-desc {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .integration-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+            position: relative;
+        }
+        
+        .flow-node {
+            background: white;
+            border: 3px solid #0078d4;
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 120px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .flow-arrow {
+            position: absolute;
+            top: 50%;
+            width: calc(100% - 240px);
+            left: 120px;
+            height: 3px;
+            background: linear-gradient(90deg, #0078d4 0%, #00bcf2 100%);
+            z-index: 1;
+            transform: translateY(-50%);
+        }
+        
+        .flow-arrow::after {
+            content: '▶';
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #0078d4;
+            font-size: 1.5em;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .success-box {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="presentation-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active title-slide">
+            <h1>GZC Development Flow</h1>
+            <h2 style="color: #005a9e;">How We Build Intelligence Components</h2>
+            <h3 style="color: #0078d4;">Analyze → Build → Template → Integrate</h3>
+            <br><br>
+            <p><strong>Not a Sales Pitch • This is How We Actually Work</strong></p>
+            <br>
+            <div style="text-align: left; max-width: 600px;">
+                <p><strong>Flow:</strong> Start with standalone analysis, build with templates, seamless Azure + React integration</p>
+                <p><strong>Goal:</strong> Explain the actual development process we use daily</p>
+                <p><strong>Audience:</strong> Technical teams who need to understand our workflow</p>
+            </div>
+        </div>
+        
+        <!-- Slide 2: Step 1 - Analyze Phase -->
+        <div class="slide">
+            <h1>Step 1: Analyze Phase</h1>
+            <h2>Deep Analysis Before Any Code</h2>
+            
+            <div class="flow-step">
+                <div class="step-number">1</div>
+                <h3>📊 Problem Analysis</h3>
+                <p>We start every component by understanding the problem deeply:</p>
+                <ul>
+                    <li><strong>Data Sources:</strong> What data do we need? (Bloomberg API, FRED, internal)</li>
+                    <li><strong>Business Logic:</strong> What calculations/transformations?</li>
+                    <li><strong>User Interface:</strong> How will users interact with it?</li>
+                    <li><strong>Integration Points:</strong> What other components will use this?</li>
+                </ul>
+            </div>
+            
+            <div class="highlight-box">
+                <h4>Real Example: Bloomberg Volatility Component</h4>
+                <p><strong>Analysis:</strong></p>
+                <ul>
+                    <li>Data: Real-time options data from Bloomberg Terminal API (20.172.249.92:8080)</li>
+                    <li>Logic: Black-Scholes calculations, volatility surface modeling</li>
+                    <li>UI: 3D surface charts, real-time Greeks display</li>
+                    <li>Integration: Risk management system, portfolio optimizer</li>
+                </ul>
+            </div>
+            
+            <div class="code-block">
+# Analysis Output: Component Specification
+{
+  "name": "bloomberg-volatility-surface",
+  "data_sources": ["bloomberg_api"],
+  "calculations": ["black_scholes", "volatility_surface"],
+  "ui_components": ["3d_chart", "greeks_table"],
+  "integrations": ["risk_engine", "portfolio_optimizer"]
+}
+            </div>
+        </div>
+        
+        <!-- Slide 3: Step 2 - Build Standalone -->
+        <div class="slide">
+            <h1>Step 2: Build Standalone</h1>
+            <h2>Independent Component Development</h2>
+            
+            <div class="flow-step">
+                <div class="step-number">2</div>
+                <h3>🔧 Standalone Development</h3>
+                <p>Every component starts as a completely independent service:</p>
+                <ul>
+                    <li><strong>Self-contained:</strong> No external dependencies on our platform</li>
+                    <li><strong>Docker containerized:</strong> Runs anywhere</li>
+                    <li><strong>API-first:</strong> RESTful endpoints + WebSocket streams</li>
+                    <li><strong>Real data integration:</strong> Direct Bloomberg Terminal connection</li>
+                </ul>
+            </div>
+            
+            <div class="diagram-box">
+Bloomberg Volatility Component (Standalone)
+┌─────────────────────────────────────────┐
+│  Docker Container                       │
+│  ┌─────────────┐  ┌─────────────────┐   │
+│  │   FastAPI   │  │  React Frontend │   │
+│  │   Backend   │  │   (Vite dev)    │   │
+│  │ Port 8000   │  │   Port 3000     │   │
+│  └─────────────┘  └─────────────────┘   │
+│           │              │              │
+│           └──────────────┘              │
+│  ┌─────────────────────────────────────┐ │
+│  │    Bloomberg Terminal API           │ │
+│  │    20.172.249.92:8080              │ │
+│  └─────────────────────────────────────┘ │
+└─────────────────────────────────────────┘
+            </div>
+            
+            <div class="success-box">
+                <h4>✅ Standalone Benefits:</h4>
+                <ul>
+                    <li>Fast development - no platform dependencies</li>
+                    <li>Easy debugging - self-contained environment</li>
+                    <li>Portable - can be deployed anywhere</li>
+                    <li>Real data validation - immediate feedback</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Slide 4: Step 3 - Template System -->
+        <div class="slide">
+            <h1>Step 3: Template System</h1>
+            <h2>Standardized Component Structure</h2>
+            
+            <div class="flow-step">
+                <div class="step-number">3</div>
+                <h3>📋 Component Templates</h3>
+                <p>Once standalone works, we apply our standard template structure:</p>
+            </div>
+            
+            <div class="code-block">
+component-template/
+├── Dockerfile                 # Multi-stage build
+├── docker-compose.yml         # Local development
+├── kubernetes/
+│   ├── deployment.yaml        # K8s deployment
+│   ├── service.yaml          # Internal service
+│   └── ingress.yaml          # External access
+├── backend/
+│   ├── main.py               # FastAPI app
+│   ├── models/               # Pydantic models
+│   ├── services/             # Business logic
+│   └── requirements.txt      # Dependencies
+├── frontend/
+│   ├── src/
+│   │   ├── components/       # React components
+│   │   ├── hooks/           # Custom hooks
+│   │   └── services/        # API clients
+│   ├── package.json
+│   └── vite.config.ts
+└── docs/
+    ├── API.md               # API documentation
+    └── INTEGRATION.md       # Integration guide
+            </div>
+            
+            <div class="azure-service">
+                <div class="service-icon">📦</div>
+                <div class="service-info">
+                    <div class="service-name">Template Benefits</div>
+                    <div class="service-desc">Consistent structure, predictable deployment, automated documentation</div>
+                </div>
+            </div>
+            
+            <div class="azure-service">
+                <div class="service-icon">🔄</div>
+                <div class="service-info">
+                    <div class="service-name">Automated Generation</div>
+                    <div class="service-desc">CLI tool generates template, fills in component-specific details</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 5: Step 4 - Azure Integration -->
+        <div class="slide">
+            <h1>Step 4: Azure Integration</h1>
+            <h2>Seamless Cloud Deployment</h2>
+            
+            <div class="flow-step">
+                <div class="step-number">4</div>
+                <h3>☁️ Azure Services Integration</h3>
+                <p>Template automatically configures Azure services:</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="azure-service">
+                    <div class="service-icon">📦</div>
+                    <div class="service-info">
+                        <div class="service-name">Container Registry</div>
+                        <div class="service-desc">Automated Docker builds push to ACR</div>
+                    </div>
+                </div>
+                
+                <div class="azure-service">
+                    <div class="service-icon">☸️</div>
+                    <div class="service-info">
+                        <div class="service-name">Kubernetes (AKS)</div>
+                        <div class="service-desc">Helm chart deployment with scaling</div>
+                    </div>
+                </div>
+                
+                <div class="azure-service">
+                    <div class="service-icon">🌍</div>
+                    <div class="service-info">
+                        <div class="service-name">Cosmos DB</div>
+                        <div class="service-desc">Component state and configuration</div>
+                    </div>
+                </div>
+                
+                <div class="azure-service">
+                    <div class="service-icon">📨</div>
+                    <div class="service-info">
+                        <div class="service-name">Event Hub</div>
+                        <div class="service-desc">Real-time data streaming</div>
+                    </div>
+                </div>
+                
+                <div class="azure-service">
+                    <div class="service-icon">🔒</div>
+                    <div class="service-info">
+                        <div class="service-name">Key Vault</div>
+                        <div class="service-desc">Secrets and configuration</div>
+                    </div>
+                </div>
+                
+                <div class="azure-service">
+                    <div class="service-icon">📊</div>
+                    <div class="service-info">
+                        <div class="service-name">Monitor</div>
+                        <div class="service-desc">Automated alerts and metrics</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+# Automated Azure Integration
+az acr build --registry gzcacr --image bloomberg-vol:latest .
+helm install bloomberg-vol ./kubernetes/ --namespace components
+kubectl get service bloomberg-vol  # Auto-exposed endpoint
+            </div>
+        </div>
+        
+        <!-- Slide 6: Step 5 - React Integration -->
+        <div class="slide">
+            <h1>Step 5: React Integration</h1>
+            <h2>Frontend Component Discovery</h2>
+            
+            <div class="flow-step">
+                <div class="step-number">5</div>
+                <h3>⚛️ Automatic React Integration</h3>
+                <p>Components automatically appear in the main React dashboard:</p>
+            </div>
+            
+            <div class="integration-flow">
+                <div class="flow-node">
+                    <h4>Component Deploy</h4>
+                    <p>K8s deployment</p>
+                </div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">
+                    <h4>Service Discovery</h4>
+                    <p>API registration</p>
+                </div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">
+                    <h4>UI Integration</h4>
+                    <p>React component</p>
+                </div>
+            </div>
+            
+            <div class="code-block">
+// Auto-generated React integration
+export const BloombergVolatilityComponent = () => {
+  const { data, loading } = useComponentData('bloomberg-vol');
+  const ws = useWebSocket(`ws://bloomberg-vol/stream`);
+  
+  return (
+    &lt;ComponentWrapper
+      title="Bloomberg Volatility Surface"
+      endpoint="/api/bloomberg-vol"
+      webSocketUrl="ws://bloomberg-vol/stream"
+    &gt;
+      &lt;VolatilitySurface3D data={data} /&gt;
+      &lt;GreeksTable data={ws.data} /&gt;
+    &lt;/ComponentWrapper&gt;
+  );
+};
+            </div>
+            
+            <div class="success-box">
+                <h4>✅ What Users See:</h4>
+                <ul>
+                    <li>Component appears in "Add Component" menu within 30 seconds</li>
+                    <li>Drag-and-drop onto dashboard</li>
+                    <li>Real-time data streaming</li>
+                    <li>Automatic resize and persistence</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Slide 7: Real Example - Bloomberg Component -->
+        <div class="slide">
+            <h1>Real Example: Bloomberg Component</h1>
+            <h2>Complete Development Flow in Practice</h2>
+            
+            <div class="highlight-box">
+                <h3>🎯 Actual Bloomberg Volatility Component Development</h3>
+                <p>This is how we built the Bloomberg volatility surface component:</p>
+            </div>
+            
+            <h3>Phase 1: Analysis (2 days)</h3>
+            <ul>
+                <li>Analyzed Bloomberg Terminal API at 20.172.249.92:8080</li>
+                <li>Identified options data structure and real-time feeds</li>
+                <li>Designed Black-Scholes calculation pipeline</li>
+                <li>Planned 3D visualization requirements</li>
+            </ul>
+            
+            <h3>Phase 2: Standalone Build (3 days)</h3>
+            <div class="code-block">
+# Standalone development environment
+docker-compose up  # FastAPI + React + Bloomberg API connection
+# Developed and verified isolated from main platform
+curl localhost:8000/api/volatility/AAPL  # Local verification with real Bloomberg data
+            </div>
+            
+            <h3>Phase 3: Template Application (1 day)</h3>
+            <ul>
+                <li>Applied standard component template structure</li>
+                <li>Generated Kubernetes deployment files</li>
+                <li>Configured Azure service connections</li>
+            </ul>
+            
+            <h3>Phase 4: Integration (1 day)</h3>
+            <div class="code-block">
+# Deployment to Azure
+helm install bloomberg-vol ./kubernetes/
+# Component automatically discovered by main React app
+# Available in UI within 30 seconds
+            </div>
+            
+            <div class="success-box">
+                <strong>Total Time: 7 days</strong> from analysis to production deployment
+            </div>
+        </div>
+        
+        <!-- Slide 8: Why This Flow Works -->
+        <div class="slide">
+            <h1>Why This Development Flow Works</h1>
+            <h2>Benefits of Analyze → Build → Template → Integrate</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div class="flow-step" style="margin: 0;">
+                    <h3>🎯 Deep Analysis First</h3>
+                    <ul>
+                        <li>Understand the problem completely</li>
+                        <li>Avoid architectural mistakes</li>
+                        <li>Plan integration points early</li>
+                        <li>Identify reusable patterns</li>
+                    </ul>
+                </div>
+                
+                <div class="flow-step" style="margin: 0;">
+                    <h3>🔧 Standalone Development</h3>
+                    <ul>
+                        <li>Fast iteration cycles</li>
+                        <li>Easy debugging</li>
+                        <li>No platform dependencies</li>
+                        <li>Portable and reliable</li>
+                    </ul>
+                </div>
+                
+                <div class="flow-step" style="margin: 0;">
+                    <h3>📋 Template Standardization</h3>
+                    <ul>
+                        <li>Consistent structure</li>
+                        <li>Automated deployment</li>
+                        <li>Predictable behavior</li>
+                        <li>Easy maintenance</li>
+                    </ul>
+                </div>
+                
+                <div class="flow-step" style="margin: 0;">
+                    <h3>☁️ Seamless Integration</h3>
+                    <ul>
+                        <li>Automatic service discovery</li>
+                        <li>Zero configuration deployment</li>
+                        <li>Real-time data streams</li>
+                        <li>Production-ready scaling</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <h3>🚀 Key Innovation: Template-Driven Architecture</h3>
+                <p>The template system bridges the gap between standalone development and enterprise deployment. Developers focus on business logic while templates handle infrastructure, deployment, and integration automatically.</p>
+            </div>
+            
+            <div class="success-box">
+                <h4>✅ Results:</h4>
+                <ul>
+                    <li><strong>7-day cycle</strong> from idea to production</li>
+                    <li><strong>Zero manual deployment</strong> configuration</li>
+                    <li><strong>Automatic integration</strong> with React dashboard</li>
+                    <li><strong>Enterprise-grade</strong> reliability and scaling</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div id="slide-counter">
+        <span id="current">1</span> / <span id="total">8</span>
+    </div>
+    
+    <div class="navigation">
+        <button class="nav-btn" id="prev" onclick="changeSlide(-1)">← Previous</button>
+        <button class="nav-btn" onclick="jumpToSlide()">Jump to Slide</button>
+        <button class="nav-btn" id="next" onclick="changeSlide(1)">Next →</button>
+    </div>
+    
+    <script>
+        let currentSlide = 1;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        
+        // Initialize
+        document.getElementById('total').textContent = totalSlides;
+        updateSlideVisibility();
+        
+        function updateSlideVisibility() {
+            // Hide all slides first
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+            });
+            
+            // Show only current slide
+            if (slides[currentSlide - 1]) {
+                slides[currentSlide - 1].classList.add('active');
+            }
+            
+            // Update counter
+            document.getElementById('current').textContent = currentSlide;
+            
+            // Update button states
+            document.getElementById('prev').disabled = currentSlide === 1;
+            document.getElementById('next').disabled = currentSlide === totalSlides;
+        }
+        
+        function changeSlide(direction) {
+            const newSlide = currentSlide + direction;
+            if (newSlide >= 1 && newSlide <= totalSlides) {
+                currentSlide = newSlide;
+                updateSlideVisibility();
+            }
+        }
+        
+        function jumpToSlide() {
+            const slideNum = prompt(`Enter slide number (1-${totalSlides}):`);
+            if (slideNum && !isNaN(slideNum)) {
+                const num = parseInt(slideNum);
+                if (num >= 1 && num <= totalSlides) {
+                    currentSlide = num;
+                    updateSlideVisibility();
+                }
+            }
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+        });
+        
+        // Ensure only one slide visible on load
+        window.addEventListener('load', () => {
+            updateSlideVisibility();
+        });
+    </script>
+</body>
+</html>

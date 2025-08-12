@@ -85,11 +85,11 @@ export class DatabaseUserMemoryService implements UserMemoryService {
     this.userId = userId
     this.tenantId = tenantId
     
-    const headers = accessToken 
+    const headers: Record<string, string> = accessToken 
       ? { 'Authorization': `Bearer ${accessToken}` }
       : {}
     
-    const baseUrl = import.meta.env.PROD ? '/api' : 'http://localhost:5300/api'
+    const baseUrl = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api'
     this.apiClient = new SimpleApiClient(baseUrl, headers)
   }
 
@@ -156,8 +156,8 @@ export class DatabaseUserMemoryService implements UserMemoryService {
       if (error instanceof Error && error.message.includes('404')) {
         return null // No theme found is expected
       }
-      console.error('Failed to load theme:', error)
-      throw error
+      console.warn('Failed to load theme, using default:', error)
+      return null // Return null instead of throwing
     }
   }
 

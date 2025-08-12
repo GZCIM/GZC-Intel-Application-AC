@@ -3,20 +3,17 @@ import { ThemeToggle, DateSelector } from "../../../ui-library";
 import { useTheme, useDateContext } from "../../../ui-library";
 import { useMsal } from "@azure/msal-react";
 import { useState } from "react";
-import { loginRequest } from "../auth/msalConfig";
+import { useAuth } from "../../../../hooks/useAuth";
 
 const Header = () => {
     const { instance, accounts } = useMsal();
+    const { login } = useAuth(); // Use centralized login from useAuth hook
     const [menuOpen, setMenuOpen] = useState(false);
     const { theme, toggleTheme } = useTheme();
     const { currentDate, setCurrentDate } = useDateContext();
     const handleLogout = async () => {
         await instance.logoutPopup();
         window.location.reload(); // Force re-evaluation of auth state to show login modal
-    };
-
-    const handleLogin = async () => {
-        await instance.loginPopup(loginRequest);
     };
 
     const userEmail = accounts[0]?.username || "";
@@ -51,7 +48,7 @@ const Header = () => {
                         className="w-8 h-8 rounded-full bg-gzc-light-grey dark:bg-gzc-dark-grey cursor-pointer flex items-center justify-center text-xs font-semibold text-gzc-mid-black dark:text-gzc-light-grey"
                         title={userEmail || "Click to login"}
                         onClick={() => {
-                            if (!userEmail) handleLogin();
+                            if (!userEmail) login();
                             else setMenuOpen(!menuOpen);
                         }}
                     >

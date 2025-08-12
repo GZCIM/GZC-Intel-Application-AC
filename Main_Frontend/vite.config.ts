@@ -56,9 +56,10 @@ export default defineConfig({
       'react-router-dom',
       'react-grid-layout',
       'framer-motion',
-      'lightweight-charts'
+      'lightweight-charts',
+      '@azure/msal-browser',
+      '@azure/msal-react'
     ],
-    exclude: ['@azure/msal-browser', '@azure/msal-react'], // These can cause issues
     force: true, // Force pre-bundling of dependencies
     esbuildOptions: {
       target: 'esnext'
