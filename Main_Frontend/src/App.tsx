@@ -17,6 +17,7 @@ import { SentryErrorBoundary } from "./config/sentry";
 import { DebugPanel } from "./components/debug/DebugPanel";
 import { debugLogger } from "./utils/debugLogger";
 import { getVersionString } from "./utils/version";
+import "./styles/dashboard-layout.css";
 // Debug components - disabled
 // import { UserTabDebugger } from "./components/UserTabDebugger";
 // import { InventoryDebugger } from "./components/debug/InventoryDebugger";
@@ -82,37 +83,40 @@ function AppContent() {
     return (
         <>
             <div
-                className="min-h-screen flex flex-col"
+                className="dashboard-container"
                 style={{
                     backgroundColor: currentTheme.background,
                     color: currentTheme.text,
                 }}
             >
                 {/* Professional Header from port 3200 */}
-                <ProfessionalHeader />
+                <div className="dashboard-header">
+                    <ProfessionalHeader />
+                </div>
 
                 {/* Main Layout with Market Intel Panel */}
-                <div
-                    className="flex flex-1 overflow-hidden"
-                    style={{ position: "relative" }}
-                >
+                <div className="dashboard-body">
                     {/* Market Intel Panel - Left side */}
-                    <MarketIntelPanel />
+                    <div className="dashboard-left-panel">
+                        <MarketIntelPanel />
+                    </div>
 
                     {/* Main Content Area - Right side */}
                     <main
-                        className="flex-1 overflow-hidden"
+                        className="dashboard-content"
                         style={{
                             backgroundColor: currentTheme.background,
-                            paddingBottom: "40px",
                         }}
                     >
-                        <EnhancedComponentLoader />
+                        <div className="canvas-scroll-container">
+                            <EnhancedComponentLoader />
+                        </div>
                     </main>
                 </div>
 
                 {/* Next-Gen Status Bar - matching PMS NextGen */}
                 <div
+                    className="dashboard-status-bar"
                     style={{
                         position: "fixed",
                         bottom: 0,

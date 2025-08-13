@@ -27,9 +27,26 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration =
   };
 
   return (
-    <div className={`fixed bottom-4 right-4 ${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-slide-up z-50`}>
+    <div 
+      style={{
+        position: 'fixed',
+        bottom: '60px',  // Above the status bar (40px height + 20px gap)
+        right: '20px',
+        backgroundColor: type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6',
+        color: 'white',
+        padding: '12px 20px',
+        borderRadius: '8px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        zIndex: 9999,  // Above everything
+        animation: 'slideUp 0.3s ease-out',
+        minWidth: '300px'
+      }}
+    >
       {icons[type]}
-      <span>{message}</span>
+      <span style={{ fontSize: '14px', fontWeight: 500 }}>{message}</span>
     </div>
   );
 };
