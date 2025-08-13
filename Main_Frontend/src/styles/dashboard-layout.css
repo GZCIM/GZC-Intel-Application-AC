@@ -1,29 +1,16 @@
-/* Fixed Dashboard Layout Styles */
+/* Fixed Dashboard Layout Styles - Safe Version */
 
-/* Prevent body scrolling */
+/* Don't force body constraints that could cause render loops */
 body {
-  overflow: hidden;
-  height: 100vh;
   margin: 0;
   padding: 0;
 }
 
-#root {
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* Main app container */
+/* Main app container - safer approach */
 .dashboard-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  min-height: 100vh;
 }
 
 /* Header - fixed at top */
@@ -37,18 +24,11 @@ body {
 .dashboard-body {
   display: flex;
   flex: 1;
-  overflow: hidden;
-  position: relative;
-  height: calc(100vh - 88px - 40px); /* Minus header and status bar */
 }
 
 /* Left panel - Market Intel */
 .dashboard-left-panel {
   flex-shrink: 0;
-  position: relative;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
 }
 
 /* Scrollbar styling for left panel */

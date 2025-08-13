@@ -228,6 +228,13 @@ https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainer
 
 ## ⚠️ Known Issues & Solutions
 
+### ~~React Error #310 (Infinite Re-renders)~~ ✅ FIXED (2025-08-13)
+- ~~Hook order violation in DynamicCanvas~~ → Fixed by moving useMemo outside conditional
+- ~~Circular dependency in tab computation~~ → Fixed with memoized tab reference
+- ~~useEffect infinite loop~~ → Fixed dependency array to use primitives
+- **Session**: `241e8dc3-89fd-451f-9bde-ecea7a311930`
+- **Details**: See `/journal/2025-08-13/react-error-310-infinite-renders.md`
+
 ### ~~Component Modal Issues~~ ✅ FIXED (2025-01-09)
 - ~~Modal not visible when clicking Add Component~~ → Fixed AnimatePresence in v20250809-143545
 - ~~Components not loading in modal~~ → Fixed component inventory initialization
@@ -398,8 +405,24 @@ az containerapp revision list \
 4. **Pattern Consistency**: Follow established patterns
 5. **Transparency**: Show all errors and blockers
 
+## 🔄 Recent Critical Fixes
+
+### Session: 241e8dc3-89fd-451f-9bde-ecea7a311930 (2025-08-13)
+**React Error #310 - Infinite Re-renders**
+- Fixed hook order violation (useMemo inside conditional)
+- Memoized tab computation to prevent reference changes
+- Stabilized useEffect dependencies
+- Components now load properly without infinite loops
+
+### Key Technical Improvements
+1. **Safari Authentication**: Changed from popup to redirect flow
+2. **Dynamic Version Display**: Auto-generated based on deployment date
+3. **Drag/Drop Always Enabled**: Components draggable in all modes
+4. **Toast Positioning**: Fixed to display above footer
+5. **Performance**: Added CSS transforms, GPU acceleration
+
 ---
-Last Updated: 2025-01-08
+Last Updated: 2025-08-13
 Maintained by: Claude Code
 Primary Repository: /Users/mikaeleage/GZC Intel Application AC/Main_Frontend
 Purpose: Ensure consistent, high-quality development with complete documentation
