@@ -27,6 +27,7 @@ import { getVersionString } from "./utils/version";
 // import { SimplePortfolioTest } from "./components/SimplePortfolioTest";
 import { useAuth } from "./hooks/useAuth";
 import LoginModal from "./modules/shell/components/auth/LoginModal";
+import { Toast, toastManager } from "./components/Toast";
 
 import "./styles/globals.css";
 import "./styles/quantum.css";
@@ -45,6 +46,15 @@ function AppContent() {
     const { isAuthenticated } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
     const { currentLayout, activeTabId, toggleTabEditMode } = useTabLayout();
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+    
+    // Subscribe to toast notifications
+    useEffect(() => {
+        const unsubscribe = toastManager.subscribe((newToast) => {
+            setToast(newToast);
+        });
+        return unsubscribe;
+    }, []);
     
     // Get active tab from current layout
     const activeTab = currentLayout?.tabs.find(tab => tab.id === activeTabId);
@@ -155,6 +165,15 @@ function AppContent() {
                 {/* WebSocket connection debugger - Now available through Tools menu */}
 
                 {/* Debug Components - Completely removed for production */}
+                
+                {/* Toast Notifications */}
+                {toast && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast(null)}
+                    />
+                )}
             </div>
 
             {/* Login Modal - Shows automatically when not authenticated */}
