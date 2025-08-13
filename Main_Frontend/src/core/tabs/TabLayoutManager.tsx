@@ -389,8 +389,25 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
     setCurrentLayout(updatedLayout)
 
-    // Delete from PostgreSQL only if authenticated
+    // Save updated layout to Cosmos DB
     if (isAuthenticated) {
+      const saveToCosmosDB = async () => {
+        try {
+          await cosmosConfigService.saveConfiguration({
+            tabs: updatedLayout.tabs,
+            layouts: layouts,
+            preferences: {
+              theme: document.documentElement.getAttribute('data-theme') || 'dark',
+              language: 'en'
+            }
+          })
+          console.log('Tab removed, layout saved to Cosmos DB')
+        } catch (error) {
+          console.error('Failed to save to Cosmos DB after removing tab:', error)
+        }
+      }
+      
+      // Delete from PostgreSQL (legacy)
       const deleteFromDatabase = async () => {
         try {
           await databaseService.deleteTab(userId, tabId)
@@ -400,6 +417,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         }
       }
       
+      saveToCosmosDB()
       deleteFromDatabase()
     }
 
@@ -438,7 +456,24 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     setCurrentLayout(updatedLayout)
     console.log('TabLayoutManager: setCurrentLayout called with', updatedLayout.tabs.find(t => t.id === tabId)?.components?.length, 'components')
     
-    // Save to PostgreSQL
+    // Save to Cosmos DB (primary storage)
+    const saveToCosmosDB = async () => {
+      try {
+        await cosmosConfigService.saveConfiguration({
+          tabs: updatedLayout.tabs,
+          layouts: layouts,
+          preferences: {
+            theme: document.documentElement.getAttribute('data-theme') || 'dark',
+            language: 'en'
+          }
+        })
+        console.log('Tab updated in Cosmos DB with components:', updatedLayout.tabs.find(t => t.id === tabId)?.components?.length)
+      } catch (error) {
+        console.error('Failed to save to Cosmos DB:', error)
+      }
+    }
+    
+    // Save to PostgreSQL (legacy)
     const saveToDatabase = async () => {
       try {
         const tabToUpdate = updatedLayout.tabs.find(t => t.id === tabId)
@@ -456,11 +491,11 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         }
       } catch (error) {
         console.error('Failed to save tab to database:', error)
-        // Fallback to localStorage
-        localStorage.setItem(getUserKey('gzc-intel-current-layout'), JSON.stringify(updatedLayout))
       }
     }
     
+    // Save to both storages
+    saveToCosmosDB()
     saveToDatabase()
     
     // No localStorage - Cosmos DB only
