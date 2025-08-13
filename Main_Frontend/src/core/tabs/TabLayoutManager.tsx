@@ -195,17 +195,28 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
       try {
         const cosmosConfig = await cosmosConfigService.loadConfiguration()
         if (cosmosConfig?.tabs && cosmosConfig.tabs.length > 0) {
-          console.log(`TabLayoutManager: Loaded ${cosmosConfig.tabs.length} tabs from Cosmos DB`)
+          // Deduplicate tabs when loading
+          const tabIds = new Set<string>()
+          const uniqueTabs = cosmosConfig.tabs.filter(t => {
+            if (tabIds.has(t.id)) {
+              console.warn(`Found duplicate tab ${t.id} in loaded config, removing`)
+              return false
+            }
+            tabIds.add(t.id)
+            return true
+          })
+          
+          console.log(`TabLayoutManager: Loaded ${uniqueTabs.length} unique tabs from Cosmos DB (${cosmosConfig.tabs.length} total)`)
           const cosmosLayout = { 
             ...DEFAULT_LAYOUT,
-            tabs: cosmosConfig.tabs,
+            tabs: uniqueTabs,
             id: 'cosmos-layout',
             name: 'Cosmos Layout'
           }
           setCurrentLayout(cosmosLayout)
           setLayouts([DEFAULT_LAYOUT, cosmosLayout])
           
-          const activeTabId = cosmosConfig.tabs[0]?.id || 'analytics'
+          const activeTabId = uniqueTabs[0]?.id || 'analytics'
           setActiveTabId(activeTabId)
           return // Cosmos DB is source of truth
         }
@@ -299,9 +310,20 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
       id: uuidv4()
     }
 
+    // Deduplicate tabs before adding new one
+    const existingTabIds = new Set<string>()
+    const deduplicatedTabs = currentLayout.tabs.filter(t => {
+      if (existingTabIds.has(t.id)) {
+        console.warn(`Removing duplicate tab with ID: ${t.id}`)
+        return false
+      }
+      existingTabIds.add(t.id)
+      return true
+    })
+
     const updatedLayout = {
       ...currentLayout,
-      tabs: [...currentLayout.tabs, newTab],
+      tabs: [...deduplicatedTabs, newTab],
       updatedAt: new Date().toISOString()
     }
 
@@ -320,8 +342,19 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     // Save to Cosmos DB (works without backend!)
     const saveToCosmosDB = async () => {
       try {
+        // Deduplicate tabs before saving
+        const tabIds = new Set<string>()
+        const uniqueTabs = updatedLayout.tabs.filter(t => {
+          if (tabIds.has(t.id)) {
+            console.warn(`Skipping duplicate tab ${t.id} when saving to Cosmos`)
+            return false
+          }
+          tabIds.add(t.id)
+          return true
+        })
+        
         await cosmosConfigService.saveConfiguration({
-          tabs: updatedLayout.tabs,
+          tabs: uniqueTabs,
           layouts: layouts
         })
         console.log('New tab saved to Cosmos DB')
@@ -393,8 +426,19 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     if (isAuthenticated) {
       const saveToCosmosDB = async () => {
         try {
+          // Deduplicate tabs before saving (should already be unique after filter, but double-check)
+          const tabIds = new Set<string>()
+          const uniqueTabs = updatedLayout.tabs.filter(t => {
+            if (tabIds.has(t.id)) {
+              console.warn(`Removing duplicate tab ${t.id} in removeTab`)
+              return false
+            }
+            tabIds.add(t.id)
+            return true
+          })
+          
           await cosmosConfigService.saveConfiguration({
-            tabs: updatedLayout.tabs,
+            tabs: uniqueTabs,
             layouts: layouts,
             preferences: {
               theme: document.documentElement.getAttribute('data-theme') || 'dark',
@@ -459,15 +503,26 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     // Save to Cosmos DB (primary storage)
     const saveToCosmosDB = async () => {
       try {
+        // Deduplicate tabs before saving
+        const tabIds = new Set<string>()
+        const uniqueTabs = updatedLayout.tabs.filter(t => {
+          if (tabIds.has(t.id)) {
+            console.warn(`Removing duplicate tab ${t.id} in updateTab`)
+            return false
+          }
+          tabIds.add(t.id)
+          return true
+        })
+        
         await cosmosConfigService.saveConfiguration({
-          tabs: updatedLayout.tabs,
+          tabs: uniqueTabs,
           layouts: layouts,
           preferences: {
             theme: document.documentElement.getAttribute('data-theme') || 'dark',
             language: 'en'
           }
         })
-        console.log('Tab updated in Cosmos DB with components:', updatedLayout.tabs.find(t => t.id === tabId)?.components?.length)
+        console.log('Tab updated in Cosmos DB with components:', uniqueTabs.find(t => t.id === tabId)?.components?.length)
       } catch (error) {
         console.error('Failed to save to Cosmos DB:', error)
       }
