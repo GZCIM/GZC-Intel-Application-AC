@@ -12,7 +12,7 @@ import '../../styles/analytics-dashboard.css'
 import '../../styles/dynamic-canvas.css'
 
 // Memoize WidthProvider for better performance (Context7 recommendation)
-const ResponsiveGridLayout = React.useMemo(() => WidthProvider(Responsive), [])
+const ResponsiveGridLayout = WidthProvider(Responsive)
 
 interface DynamicCanvasProps {
   tabId: string
@@ -29,7 +29,7 @@ interface ComponentInstance {
   component?: React.ComponentType<any>
 }
 
-export const DynamicCanvas: React.FC<DynamicCanvasProps> = React.memo(({ tabId }) => {
+export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
   const { currentTheme } = useTheme()
   const { currentLayout, updateTab } = useTabLayout()
   const { saveLayout: saveToMemory, getLayout: loadFromMemory } = useViewMemory()
@@ -530,4 +530,4 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = React.memo(({ tabId }
       </div>
     </>
   )
-})
+}

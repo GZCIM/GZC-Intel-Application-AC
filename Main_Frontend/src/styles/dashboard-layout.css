@@ -1,0 +1,132 @@
+/* Fixed Dashboard Layout Styles */
+
+/* Prevent body scrolling */
+body {
+  overflow: hidden;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Main app container */
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Header - fixed at top */
+.dashboard-header {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 100;
+}
+
+/* Main content wrapper */
+.dashboard-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  height: calc(100vh - 88px - 40px); /* Minus header and status bar */
+}
+
+/* Left panel - Market Intel */
+.dashboard-left-panel {
+  flex-shrink: 0;
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling for left panel */
+.dashboard-left-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-left-panel::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-left-panel::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.dashboard-left-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Main content area - scrollable */
+.dashboard-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  position: relative;
+}
+
+/* Better scrollbar for main content */
+.dashboard-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dashboard-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.dashboard-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.dashboard-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-content::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Status bar - fixed at bottom */
+.dashboard-status-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  flex-shrink: 0;
+  z-index: 1000;
+}
+
+/* Canvas container within scrollable area */
+.canvas-scroll-container {
+  min-height: 100%;
+  padding: 16px;
+  position: relative;
+}
+
+/* Toast notification animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
