@@ -4,6 +4,7 @@
  */
 
 import { PublicClientApplication } from '@azure/msal-browser'
+import { toastManager } from '../components/Toast'
 
 interface UserConfiguration {
   id: string
@@ -112,8 +113,10 @@ class CosmosConfigService {
       }
 
       console.log('Configuration saved to Cosmos DB via backend')
+      toastManager.show('✓ Configuration saved to cloud', 'success')
     } catch (error) {
       console.error('Error saving to Cosmos DB:', error)
+      toastManager.show('Failed to save configuration', 'error')
       throw error  // No fallback - require Cosmos DB
     }
   }
