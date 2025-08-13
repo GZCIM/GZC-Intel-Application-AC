@@ -96,8 +96,7 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
   }
 
 
-  // Early return check after all hooks
-  if (!tab || !tab.closable) return null
+  // All hooks must be called before any conditional returns
 
   const menuItems = isEditMode ? [
     // Edit mode menu items
@@ -160,7 +159,7 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
     }
   ]
 
-  return (
+  return (!tab || !tab.closable) ? null : (
     <>
       <AnimatePresence>
         {isOpen && (

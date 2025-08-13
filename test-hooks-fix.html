@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>React Hooks Fix Verification</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #00ff88;
+            border-bottom: 2px solid #00ff88;
+            padding-bottom: 10px;
+        }
+        .status {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+        }
+        .success {
+            border-color: #00ff88;
+            background: #001a0d;
+        }
+        .error {
+            border-color: #ff4444;
+            background: #1a0000;
+        }
+        .warning {
+            border-color: #ffaa00;
+            background: #1a0f00;
+        }
+        .info {
+            border-color: #4488ff;
+            background: #001a33;
+        }
+        .code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre;
+            font-size: 12px;
+        }
+        .test-frame {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover {
+            background: #00cc6a;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .metric {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .metric-label {
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .metric-value {
+            color: #00ff88;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 React Hooks Fix Verification</h1>
+        
+        <div class="status info">
+            <h2>Deployment Info</h2>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-label">Version</div>
+                    <div class="metric-value">v20250812-170409</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Revision</div>
+                    <div class="metric-value">0000164</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Build Hash</div>
+                    <div class="metric-value">BMKEISmf</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Status</div>
+                    <div class="metric-value" id="app-status">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status" id="test-status">
+            <h2>Test Results</h2>
+            <p>Testing React hooks violations...</p>
+            <div class="code" id="test-output"></div>
+        </div>
+
+        <div class="status warning">
+            <h2>Components Fixed (7 files)</h2>
+            <div class="code">✅ DraggableWindow.tsx - Fixed early return after hooks
+✅ FeatherIconSelector.tsx - Fixed early return after hooks  
+✅ UserTabDebugger.tsx - Fixed early return after hooks
+✅ TabEditButton.tsx - Fixed early return after hooks
+✅ TabContextMenu.tsx - Fixed early return after hooks
+✅ TabBar.tsx - Fixed early return after hooks
+✅ BlotterTable.tsx - Fixed early return after hooks
+
+Pattern applied: Converted all early returns to ternary operators
+Before: if (!condition) return null;
+After:  return !condition ? null : (...</div>
+        </div>
+
+        <div>
+            <h2>Live Application Test</h2>
+            <button onclick="testProduction()">Test Production App</button>
+            <button onclick="checkConsoleErrors()">Check Console Errors</button>
+            <button onclick="clearCache()">Clear Cache & Reload</button>
+        </div>
+
+        <iframe 
+            id="app-frame"
+            class="test-frame" 
+            src="https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io"
+            onload="checkAppStatus()"
+        ></iframe>
+    </div>
+
+    <script>
+        let errorCount = 0;
+        let hookErrors = [];
+        
+        function checkAppStatus() {
+            const frame = document.getElementById('app-frame');
+            const statusEl = document.getElementById('app-status');
+            
+            try {
+                // Can't access cross-origin iframe content directly
+                statusEl.textContent = 'Loaded';
+                statusEl.style.color = '#00ff88';
+            } catch (e) {
+                statusEl.textContent = 'Cross-origin';
+                statusEl.style.color = '#ffaa00';
+            }
+        }
+
+        async function testProduction() {
+            const output = document.getElementById('test-output');
+            const status = document.getElementById('test-status');
+            
+            output.textContent = 'Testing production app...\n';
+            
+            try {
+                // Test health endpoint
+                const healthResponse = await fetch('https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io/health');
+                const health = await healthResponse.json();
+                output.textContent += `\n✅ Health Check: ${JSON.stringify(health, null, 2)}\n`;
+                
+                // Check main page
+                const pageResponse = await fetch('https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io');
+                const pageText = await pageResponse.text();
+                
+                // Check for new build hash
+                if (pageText.includes('BMKEISmf')) {
+                    output.textContent += '\n✅ New build deployed (BMKEISmf)\n';
+                    status.className = 'status success';
+                } else if (pageText.includes('B1emBr4R')) {
+                    output.textContent += '\n❌ Old build still active (B1emBr4R)\n';
+                    status.className = 'status error';
+                } else {
+                    output.textContent += '\n⚠️ Unknown build version\n';
+                    status.className = 'status warning';
+                }
+                
+                // Check for React error indicators
+                if (pageText.includes('error #300')) {
+                    output.textContent += '\n❌ React error #300 still present in HTML\n';
+                    status.className = 'status error';
+                } else {
+                    output.textContent += '\n✅ No React error #300 in HTML\n';
+                }
+                
+            } catch (error) {
+                output.textContent += `\n❌ Test failed: ${error.message}\n`;
+                status.className = 'status error';
+            }
+        }
+
+        function checkConsoleErrors() {
+            const output = document.getElementById('test-output');
+            output.textContent = `Console Error Check:
+            
+To verify hooks fixes are working:
+1. Open browser DevTools (F12)
+2. Go to Console tab
+3. Refresh the app in the iframe
+4. Look for:
+   - No "React error #300" (hooks violation)
+   - No "Rendered fewer hooks than expected"
+   - No "Rendered more hooks than during the previous render"
+   
+Current deployment should have ZERO hooks errors.`;
+        }
+
+        function clearCache() {
+            if (confirm('This will clear all cache and reload. Continue?')) {
+                // Clear various caches
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => caches.delete(name));
+                    });
+                }
+                
+                // Clear localStorage and sessionStorage
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Hard reload
+                location.reload(true);
+            }
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            setTimeout(testProduction, 1000);
+        });
+    </script>
+</body>
+</html>

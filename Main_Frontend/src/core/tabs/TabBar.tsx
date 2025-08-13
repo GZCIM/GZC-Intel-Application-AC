@@ -21,8 +21,6 @@ export function TabBar() {
   const [showLayoutMenu, setShowLayoutMenu] = useState(false)
   const [layoutName, setLayoutName] = useState('')
 
-  if (!currentLayout) return null
-
   const handleSaveLayout = () => {
     if (layoutName.trim()) {
       saveCurrentLayout(layoutName.trim())
@@ -31,7 +29,7 @@ export function TabBar() {
     }
   }
 
-  return (
+  return !currentLayout ? null : (
     <div style={{
       display: 'flex',
       alignItems: 'center',
