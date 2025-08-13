@@ -29,6 +29,7 @@ import { useAuth } from "./hooks/useAuth";
 import LoginModal from "./modules/shell/components/auth/LoginModal";
 import { Toast, toastManager } from "./components/Toast";
 import { memoryService } from "./services/memoryService";
+import { LayoutController } from "./components/LayoutController";
 
 import "./styles/globals.css";
 import "./styles/quantum.css";
@@ -168,6 +169,9 @@ function AppContent() {
                 {/* WebSocket connection debugger - Now available through Tools menu */}
 
                 {/* Debug Components - Completely removed for production */}
+                
+                {/* Layout Controller */}
+                {isAuthenticated && <LayoutController />}
                 
                 {/* Toast Notifications */}
                 {toast && (
