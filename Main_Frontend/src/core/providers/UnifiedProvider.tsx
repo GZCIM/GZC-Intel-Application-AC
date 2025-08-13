@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect } from "react";
+import React, { ReactNode, useEffect, useCallback } from "react";
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { ThemeProvider } from "../theme";
 import {
@@ -32,7 +32,7 @@ export const UnifiedProvider: React.FC<UnifiedProviderProps> = ({
     const { instance, accounts } = useMsal();
     const isAuthenticated = useIsAuthenticated();
 
-    const getToken = async () => {
+    const getToken = useCallback(async () => {
         if (!isAuthenticated || accounts.length === 0) {
             throw new Error("User not authenticated");
         }
@@ -59,7 +59,7 @@ export const UnifiedProvider: React.FC<UnifiedProviderProps> = ({
                 throw new Error("Unable to acquire authentication token");
             }
         }
-    };
+    }, [isAuthenticated, accounts, instance]);
 
     const authContextValue = {
         getToken,

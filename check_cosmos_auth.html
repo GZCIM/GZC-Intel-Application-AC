@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Cosmos DB Authentication</title>
+</head>
+<body>
+    <h1>Cosmos DB Authentication Diagnostic</h1>
+    <button onclick="diagnoseAuth()">Run Diagnostic</button>
+    <pre id="output"></pre>
+
+    <script>
+        async function diagnoseAuth() {
+            const output = document.getElementById('output');
+            output.textContent = 'Running diagnostics...\n\n';
+
+            try {
+                // Check MSAL
+                output.textContent += '1. MSAL STATUS:\n';
+                const msalInstance = window.msalInstance;
+                output.textContent += `   - MSAL present: ${!!msalInstance}\n`;
+                
+                if (!msalInstance) {
+                    output.textContent += '   ❌ MSAL not initialized\n';
+                    return;
+                }
+
+                // Check accounts
+                const accounts = msalInstance.getAllAccounts();
+                output.textContent += `   - Accounts found: ${accounts.length}\n`;
+                
+                if (accounts.length > 0) {
+                    const account = accounts[0];
+                    output.textContent += `   - Username: ${account.username}\n`;
+                    output.textContent += `   - Account ID: ${account.localAccountId || account.homeAccountId}\n`;
+                    output.textContent += `   - Tenant: ${account.tenantId}\n`;
+                }
+
+                // Check token acquisition
+                output.textContent += '\n2. TOKEN ACQUISITION:\n';
+                if (accounts.length > 0) {
+                    try {
+                        const response = await msalInstance.acquireTokenSilent({
+                            scopes: ['User.Read'],
+                            account: accounts[0]
+                        });
+                        output.textContent += `   ✅ Token acquired successfully\n`;
+                        output.textContent += `   - Token length: ${response.accessToken.length}\n`;
+                        output.textContent += `   - Expires: ${response.expiresOn}\n`;
+                    } catch (e) {
+                        output.textContent += `   ❌ Token acquisition failed: ${e.message}\n`;
+                    }
+                }
+
+                // Check backend connectivity
+                output.textContent += '\n3. BACKEND CONNECTIVITY:\n';
+                
+                // Check Cosmos health
+                const healthResponse = await fetch('/api/cosmos/health');
+                output.textContent += `   - Cosmos health endpoint: ${healthResponse.ok ? '✅' : '❌'} (${healthResponse.status})\n`;
+                
+                if (healthResponse.ok) {
+                    const health = await healthResponse.json();
+                    output.textContent += `   - Database: ${health.database}\n`;
+                    output.textContent += `   - Container: ${health.container}\n`;
+                    output.textContent += `   - Documents: ${health.document_count}\n`;
+                }
+
+                // Check current configuration
+                output.textContent += '\n4. CURRENT USER CONFIG:\n';
+                if (accounts.length > 0) {
+                    const token = await msalInstance.acquireTokenSilent({
+                        scopes: ['User.Read'],
+                        account: accounts[0]
+                    }).then(r => r.accessToken);
+
+                    const configResponse = await fetch('/api/cosmos/config', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (configResponse.ok) {
+                        const config = await configResponse.json();
+                        if (config) {
+                            output.textContent += `   ✅ Config found for user ${config.userId}\n`;
+                            output.textContent += `   - Tabs: ${config.tabs ? config.tabs.length : 0}\n`;
+                            output.textContent += `   - Last updated: ${config.timestamp}\n`;
+                        } else {
+                            output.textContent += `   ⚠️ No config found for this user\n`;
+                        }
+                    } else {
+                        output.textContent += `   ❌ Failed to load config: ${configResponse.status}\n`;
+                    }
+                }
+
+                // Check localStorage fallback
+                output.textContent += '\n5. LOCALSTORAGE STATUS:\n';
+                const localKeys = Object.keys(localStorage).filter(k => k.includes('gzc-intel'));
+                output.textContent += `   - GZC Intel keys: ${localKeys.length}\n`;
+                localKeys.forEach(key => {
+                    const size = (localStorage[key]?.length || 0) / 1024;
+                    output.textContent += `   - ${key}: ${size.toFixed(1)}KB\n`;
+                });
+
+            } catch (error) {
+                output.textContent += `\n❌ ERROR: ${error.message}\n`;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

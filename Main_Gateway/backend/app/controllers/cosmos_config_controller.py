@@ -57,8 +57,30 @@ async def get_user_config(payload: Dict = Depends(validate_token)) -> Optional[D
         return item
         
     except exceptions.CosmosResourceNotFoundError:
-        logger.info(f"No configuration found for user {user_id}")
-        return None
+        logger.info(f"No configuration found for user {user_id}, returning default")
+        # Return default configuration for first-time users
+        return {
+            "id": user_id,
+            "userId": user_id,
+            "userEmail": payload.get("preferred_username", ""),
+            "tabs": [
+                {
+                    "id": "analytics",
+                    "name": "Analytics",
+                    "icon": "BarChart3",
+                    "type": "analytics",
+                    "components": []
+                }
+            ],
+            "layouts": [],
+            "preferences": {
+                "theme": "dark",
+                "language": "en"
+            },
+            "timestamp": datetime.utcnow().isoformat(),
+            "type": "user-config",
+            "isDefault": True
+        }
     except Exception as e:
         logger.error(f"Error reading configuration: {e}")
         raise HTTPException(status_code=500, detail="Failed to load configuration")

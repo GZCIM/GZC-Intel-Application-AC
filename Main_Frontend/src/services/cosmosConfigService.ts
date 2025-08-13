@@ -35,11 +35,13 @@ class CosmosConfigService {
   private async getAccessToken(): Promise<string> {
     const msal = this.msalInstance
     if (!msal) {
-      // In development, return empty token
-      if (import.meta.env.DEV) {
-        return 'dev-token'
+      // Wait for MSAL to be initialized
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      const retryMsal = this.msalInstance
+      if (!retryMsal) {
+        throw new Error('MSAL not initialized after wait')
       }
-      throw new Error('MSAL not initialized')
+      return this.getAccessToken() // Retry with initialized MSAL
     }
 
     // Check if MSAL is actually initialized (not just present)
@@ -47,20 +49,23 @@ class CosmosConfigService {
     try {
       accounts = msal.getAllAccounts()
     } catch (e) {
-      // MSAL not initialized yet
-      if (import.meta.env.DEV) {
-        return 'dev-token'
+      // MSAL not initialized yet, wait and retry
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      try {
+        accounts = msal.getAllAccounts()
+      } catch (e2) {
+        throw new Error('MSAL not initialized after wait: ' + e2.message)
       }
-      throw new Error('MSAL not initialized: ' + e.message)
     }
     if (accounts.length === 0) {
       throw new Error('No authenticated user')
     }
 
     try {
-      // Request token for backend API
+      // Request token for our backend API (not Graph API)
+      // Use the default scope for our app's client ID
       const response = await msal.acquireTokenSilent({
-        scopes: ['User.Read'],
+        scopes: [`api://a873f2d7-2ab9-4d59-a54c-90859226bf2e/.default`],
         account: accounts[0]
       })
       return response.accessToken
@@ -68,7 +73,7 @@ class CosmosConfigService {
       console.error('Failed to get token:', error)
       // Fallback to interactive if silent fails
       const response = await msal.acquireTokenPopup({
-        scopes: ['User.Read'],
+        scopes: [`api://a873f2d7-2ab9-4d59-a54c-90859226bf2e/.default`],
         account: accounts[0]
       })
       return response.accessToken
@@ -80,9 +85,20 @@ class CosmosConfigService {
    */
   async saveConfiguration(config: Partial<UserConfiguration>): Promise<void> {
     try {
+      // Check if user is authenticated first
+      const msal = this.msalInstance
+      if (!msal) {
+        throw new Error('Authentication required - MSAL not initialized')
+      }
+      
+      const accounts = msal.getAllAccounts()
+      if (accounts.length === 0) {
+        throw new Error('Authentication required - please login to save configurations')
+      }
+      
       const token = await this.getAccessToken()
       
-      const response = await fetch(`${this.backendUrl}/cosmos/config`, {
+      const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -98,8 +114,7 @@ class CosmosConfigService {
       console.log('Configuration saved to Cosmos DB via backend')
     } catch (error) {
       console.error('Error saving to Cosmos DB:', error)
-      // Fallback to localStorage
-      this.saveToLocalStorage(config)
+      throw error  // No fallback - require Cosmos DB
     }
   }
 
@@ -108,9 +123,22 @@ class CosmosConfigService {
    */
   async loadConfiguration(): Promise<UserConfiguration | null> {
     try {
+      // Check if user is authenticated first
+      const msal = this.msalInstance
+      if (!msal) {
+        console.log('MSAL not initialized, skipping Cosmos load')
+        return null
+      }
+      
+      const accounts = msal.getAllAccounts()
+      if (accounts.length === 0) {
+        console.log('No authenticated user, skipping Cosmos load')
+        return null
+      }
+      
       const token = await this.getAccessToken()
       
-      const response = await fetch(`${this.backendUrl}/cosmos/config`, {
+      const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -142,7 +170,7 @@ class CosmosConfigService {
     try {
       const token = await this.getAccessToken()
       
-      const response = await fetch(`${this.backendUrl}/cosmos/config`, {
+      const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -170,7 +198,7 @@ class CosmosConfigService {
     try {
       const token = await this.getAccessToken()
       
-      const response = await fetch(`${this.backendUrl}/cosmos/config`, {
+      const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -195,7 +223,7 @@ class CosmosConfigService {
    */
   async checkHealth(): Promise<{ status: string; message?: string }> {
     try {
-      const response = await fetch(`${this.backendUrl}/cosmos/health`)
+      const response = await fetch(`${this.backendUrl}/api/cosmos/health`)
       
       if (response.ok) {
         return await response.json()

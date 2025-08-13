@@ -19,12 +19,8 @@ interface State {
 export const EnhancedErrorBoundary: React.FC<Omit<Props, 'theme'>> = (props) => {
   const { currentTheme: theme } = useTheme();
   
-  if (!theme) {
-    // Fallback to basic error boundary without theme
-    return <EnhancedErrorBoundaryClass {...props} />;
-  }
-  
-  return <EnhancedErrorBoundaryClass {...props} theme={theme} />;
+  // Always return the same component, just conditionally pass the theme
+  return <EnhancedErrorBoundaryClass {...props} theme={theme || undefined} />;
 };
 
 class EnhancedErrorBoundaryClass extends Component<Props, State> {
