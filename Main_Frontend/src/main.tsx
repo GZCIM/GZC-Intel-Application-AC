@@ -103,6 +103,9 @@ const initializeApp = async () => {
         await msalInstance.initialize();
         console.log('✅ MSAL initialized successfully');
         
+        // Make MSAL available globally AFTER initialization
+        (window as any).msalInstance = msalInstance;
+        
         // Handle redirect promise for returning from auth redirects
         const response = await msalInstance.handleRedirectPromise();
         if (response) {
