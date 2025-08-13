@@ -116,7 +116,7 @@ async def save_user_config(
             else:
                 logger.warning(f"Removing duplicate tab {tab.get('id')} for user {user_id}")
         
-        # Prepare document
+        # Prepare document with enhanced memory
         document = {
             "id": user_id,
             "userId": user_id,
@@ -124,8 +124,11 @@ async def save_user_config(
             "tabs": unique_tabs,
             "layouts": config.get("layouts", []),
             "preferences": config.get("preferences", {}),
+            "componentStates": config.get("componentStates", {}),
+            "sessionData": config.get("sessionData", {}),
             "timestamp": datetime.utcnow().isoformat(),
-            "type": "user-config"
+            "type": "user-config",
+            "version": config.get("version", "2.1")
         }
         
         # Upsert the document
@@ -166,13 +169,19 @@ async def update_user_config(
                 "type": "user-config"
             }
         
-        # Merge updates
+        # Merge updates with enhanced memory fields
         if "tabs" in updates:
             existing["tabs"] = updates["tabs"]
         if "layouts" in updates:
             existing["layouts"] = updates["layouts"]
         if "preferences" in updates:
             existing["preferences"] = updates["preferences"]
+        if "componentStates" in updates:
+            existing["componentStates"] = updates["componentStates"]
+        if "sessionData" in updates:
+            existing["sessionData"] = updates["sessionData"]
+        if "version" in updates:
+            existing["version"] = updates["version"]
         
         existing["timestamp"] = datetime.utcnow().isoformat()
         

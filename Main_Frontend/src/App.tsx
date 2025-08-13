@@ -28,6 +28,7 @@ import { getVersionString } from "./utils/version";
 import { useAuth } from "./hooks/useAuth";
 import LoginModal from "./modules/shell/components/auth/LoginModal";
 import { Toast, toastManager } from "./components/Toast";
+import { memoryService } from "./services/memoryService";
 
 import "./styles/globals.css";
 import "./styles/quantum.css";
@@ -65,6 +66,8 @@ function AppContent() {
             setShowLoginModal(true);
         } else {
             setShowLoginModal(false);
+            // Initialize memory service when authenticated
+            memoryService.initialize();
         }
     }, [isAuthenticated]);
 
