@@ -53,9 +53,7 @@ export const msalConfig: Configuration = {
 export const loginRequest = {
     scopes: ["User.Read"],
 };
+// Create but don't initialize yet - will be initialized in main.tsx
 export const msalInstance = new PublicClientApplication(msalConfig);
 
-// Expose MSAL instance to window for debugging and frontend tests
-if (typeof window !== 'undefined') {
-    (window as any).msalInstance = msalInstance;
-}
+// DON'T expose to window here - main.tsx will do it after initialization

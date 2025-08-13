@@ -358,8 +358,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
       saveToCosmosDB()
     }
 
-    // Also save to localStorage as backup
-    localStorage.setItem(getUserKey('gzc-intel-current-layout'), JSON.stringify(updatedLayout))
+    // No localStorage - Cosmos DB only
 
     // Set as active tab
     setActiveTabId(newTab.id)
@@ -464,8 +463,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     
     saveToDatabase()
     
-    // Also save to localStorage as backup
-    localStorage.setItem(getUserKey('gzc-intel-current-layout'), JSON.stringify(updatedLayout))
+    // No localStorage - Cosmos DB only
 
     // Update in layouts array if it's a saved layout
     if (!currentLayout.isDefault) {

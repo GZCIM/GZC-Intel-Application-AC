@@ -3,7 +3,9 @@ import { io, Socket } from "socket.io-client";
 
 // API Gateway configuration
 const API_GATEWAY_URL =
-    import.meta.env.VITE_API_GATEWAY_URL || "http://localhost:4000";
+    import.meta.env.VITE_API_GATEWAY_URL || (
+        import.meta.env.PROD ? "" : "http://localhost:4000"
+    );
 
 // Authentication token provider - will be set by the app
 let authTokenProvider: (() => Promise<string>) | null = null;

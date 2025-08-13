@@ -40,14 +40,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     showSignOut = true,
 }) => {
     const { user, isAuthenticated } = useUser();
-    const { logout } = useAuth();
+    const { logout, login } = useAuth(); // Get both login and logout from the same hook call
     const { currentTheme: theme } = useTheme();
     const [isOpen, setIsOpen] = useState(false);
 
     // If not authenticated, show login button
     if (!isAuthenticated || !user) {
-        const { login } = useAuth();
-        
         return (
             <motion.button
                 onClick={async () => {

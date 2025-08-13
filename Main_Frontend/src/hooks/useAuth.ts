@@ -21,41 +21,8 @@ export function useAuth() {
     const { instance, accounts } = useMsal();
     const isAuthenticated = useIsAuthenticated();
 
-    // Development mode fallback
-    if (isDevelopmentMode()) {
-        console.log("🚧 Using development authentication bypass mode");
-        return {
-            isAuthenticated: true, // Always authenticated in dev mode
-            login: async () => {
-                console.log("Development login - no action needed");
-            },
-            logout: async () => {
-                console.log("Development logout - no action needed");
-            },
-            getAccessToken: async (): Promise<string> => {
-                const mockToken = "dev-mock-token-" + Date.now();
-                console.log("Returning development mock token");
-                return mockToken;
-            },
-            getAccount: (): AccountInfo | null => {
-                return {
-                    homeAccountId: "dev-home-account",
-                    environment: "development",
-                    tenantId: "dev-tenant",
-                    username: "dev-user@development.com",
-                    localAccountId: "dev-local-account",
-                    name: "Development User",
-                    nativeAccountId: "dev-native-account",
-                    authorityType: "MSSTS",
-                    clientInfo: "",
-                    idToken: "",
-                    idTokenClaims: {},
-                    tenantProfiles: new Map(),
-                } as AccountInfo;
-            },
-            accounts: [],
-        };
-    }
+    // Check if in development mode (always false, but React doesn't know that)
+    const inDevMode = isDevelopmentMode();
 
     // Production MSAL authentication
     const login = async () => {
@@ -110,6 +77,8 @@ export function useAuth() {
         return accounts.length > 0 ? accounts[0] : null;
     };
 
+    // Since inDevMode is always false, we always return production auth
+    // But keeping the variable ensures React sees consistent hook usage
     return {
         isAuthenticated,
         login,
