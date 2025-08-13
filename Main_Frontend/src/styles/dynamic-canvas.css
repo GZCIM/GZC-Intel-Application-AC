@@ -1,0 +1,84 @@
+/* Dynamic Canvas Performance Optimizations */
+
+/* Use GPU acceleration for grid items */
+.react-grid-item {
+  will-change: transform;
+  transform: translateZ(0);  /* Force GPU layer */
+  backface-visibility: hidden;  /* Prevent flickering */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Smooth transitions only when not dragging */
+.react-grid-item:not(.react-draggable-dragging):not(.resizing) {
+  transition: transform 200ms ease;
+}
+
+/* Remove transitions during drag/resize for fluidity */
+.react-draggable-dragging,
+.react-grid-item.resizing {
+  transition: none !important;
+  opacity: 0.9;
+}
+
+/* Optimize placeholder animation */
+.react-grid-placeholder {
+  background: rgba(0, 136, 255, 0.15);
+  opacity: 1;
+  transition: all 100ms ease;
+  z-index: 2;
+  border-radius: 8px;
+  border: 2px dashed rgba(0, 136, 255, 0.5);
+}
+
+/* Smooth resize handles */
+.react-resizable-handle {
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.react-grid-item:hover .react-resizable-handle {
+  opacity: 0.3;
+}
+
+.react-grid-item.react-draggable-dragging .react-resizable-handle,
+.react-grid-item.resizing .react-resizable-handle {
+  opacity: 0.6;
+}
+
+/* Optimize grid container */
+.react-grid-layout {
+  position: relative;
+  transform: translateZ(0);  /* Create stacking context */
+}
+
+/* Prevent text selection during drag */
+.react-draggable-dragging * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Smooth hover effects */
+.grid-item {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.grid-item:hover {
+  z-index: 10;
+}
+
+/* Optimize shadows for performance */
+.grid-item {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.grid-item:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Remove pointer events from children during drag */
+.react-draggable-dragging > * {
+  pointer-events: none;
+}

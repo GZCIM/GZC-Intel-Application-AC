@@ -9,8 +9,10 @@ import { componentInventory, ComponentMeta } from '../../core/components/Compone
 import { ComponentRenderer } from './ComponentRenderer'
 import { ComponentPortalModal } from '../ComponentPortalModal'
 import '../../styles/analytics-dashboard.css'
+import '../../styles/dynamic-canvas.css'
 
-const ResponsiveGridLayout = WidthProvider(Responsive)
+// Memoize WidthProvider for better performance (Context7 recommendation)
+const ResponsiveGridLayout = React.useMemo(() => WidthProvider(Responsive), [])
 
 interface DynamicCanvasProps {
   tabId: string
@@ -27,7 +29,7 @@ interface ComponentInstance {
   component?: React.ComponentType<any>
 }
 
-export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
+export const DynamicCanvas: React.FC<DynamicCanvasProps> = React.memo(({ tabId }) => {
   const { currentTheme } = useTheme()
   const { currentLayout, updateTab } = useTabLayout()
   const { saveLayout: saveToMemory, getLayout: loadFromMemory } = useViewMemory()
@@ -461,7 +463,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             onResizeStop={handleResizeStop}
             isDraggable={true}  // Allow dragging in all modes
             isResizable={true}  // Allow resizing in all modes
-            useCSSTransforms={true}
+            useCSSTransforms={true}  // 6x faster paint performance
+            transformScale={1}  // Important for smooth scaling
             margin={[8, 8]}
             containerPadding={[0, 0]}
             rowHeight={60}
@@ -469,25 +472,29 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             compactType="vertical"
             preventCollision={false}
+            draggableCancel=".no-drag"  // Prevent dragging on specific elements like buttons
           >
-            {components.map(instance => (
+            {useMemo(() => components.map(instance => (
               <div 
                 key={instance.id}
+                className="grid-item"  // Better control class
                 style={{
                   background: currentTheme.surface,
                   border: `1px solid ${currentTheme.border}`,
                   borderRadius: '8px',
                   overflow: 'hidden',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)',
+                  transition: isDragging || isResizing ? 'none' : 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)',  // Disable transition during drag for fluidity
                   boxShadow: isEditMode 
                     ? `0 4px 16px ${currentTheme.primary}20, 0 2px 8px rgba(0,0,0,0.1)` 
                     : `0 2px 8px rgba(0,0,0,0.06)`,
-                  transform: isEditMode ? 'scale(1.02)' : 'scale(1)'
+                  transform: isEditMode ? 'scale(1.02)' : 'scale(1)',
+                  willChange: 'transform',  // Optimize for transform animations
+                  cursor: 'move'  // Visual feedback
                 }}
               >
                 <ComponentInstanceWrapper instance={instance} />
               </div>
-            ))}
+            )), [components, currentTheme, isDragging, isResizing, isEditMode])}
           </ResponsiveGridLayout>
         )}
       </div>
@@ -523,4 +530,4 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
       </div>
     </>
   )
-}
+})
