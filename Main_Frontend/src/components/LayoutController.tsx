@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react'
 import { useTabLayout } from '../core/tabs/TabLayoutManager'
 import { cosmosConfigService } from '../services/cosmosConfigService'
 import { toastManager } from './Toast'
+import { useTheme } from '../contexts/ThemeContext'
 import { Save, FolderOpen, Plus, Trash2, Check } from 'lucide-react'
 
 interface SavedLayout {
@@ -23,6 +24,7 @@ export const LayoutController: React.FC = () => {
   const [newLayoutName, setNewLayoutName] = useState('')
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   
+  const { currentTheme } = useTheme()
   const { 
     currentLayout, 
     saveCurrentLayout, 
@@ -39,13 +41,15 @@ export const LayoutController: React.FC = () => {
     try {
       const config = await cosmosConfigService.loadConfiguration()
       if (config?.layouts && Array.isArray(config.layouts)) {
-        const layouts: SavedLayout[] = config.layouts.map((layout: any) => ({
-          id: layout.id,
-          name: layout.name,
-          tabCount: layout.tabs?.length || 0,
-          timestamp: layout.timestamp,
-          isActive: layout.id === currentLayout?.id
-        }))
+        const layouts: SavedLayout[] = config.layouts
+          .filter((layout: any) => layout && layout.id) // Filter out invalid layouts
+          .map((layout: any) => ({
+            id: layout.id || `layout-${Date.now()}`,
+            name: layout.name || 'Unnamed Layout',
+            tabCount: layout.tabs?.length || 0,
+            timestamp: layout.timestamp || new Date().toISOString(),
+            isActive: layout.id === currentLayout?.id
+          }))
         setSavedLayouts(layouts)
       }
     } catch (error) {
@@ -144,7 +148,11 @@ export const LayoutController: React.FC = () => {
       {/* Toggle Button */}
       <button
         onClick={() => setShowController(!showController)}
-        className="fixed bottom-20 right-4 z-50 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg transition-all"
+        style={{
+          backgroundColor: currentTheme.primary,
+          color: currentTheme.text
+        }}
+        className="fixed bottom-20 right-4 z-50 p-3 rounded-full shadow-lg transition-all hover:opacity-90"
         title="Layout Manager"
       >
         <FolderOpen className="w-5 h-5" />
@@ -152,7 +160,13 @@ export const LayoutController: React.FC = () => {
 
       {/* Controller Panel */}
       {showController && (
-        <div className="fixed bottom-32 right-4 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 w-80 max-h-96 overflow-y-auto">
+        <div 
+          className="fixed bottom-32 right-4 z-50 rounded-lg shadow-xl p-4 w-80 max-h-96 overflow-y-auto"
+          style={{
+            backgroundColor: currentTheme.surface,
+            border: `1px solid ${currentTheme.border}`,
+            color: currentTheme.text
+          }}>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Layout Manager</h3>
             <button
@@ -164,10 +178,23 @@ export const LayoutController: React.FC = () => {
           </div>
 
           {/* Current Layout Info */}
-          <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded">
-            <div className="text-sm text-gray-600 dark:text-gray-400">Current Layout</div>
-            <div className="font-medium">{currentLayout?.name || 'Default'}</div>
-            <div className="text-xs text-gray-500">
+          <div 
+            className="mb-4 p-3 rounded"
+            style={{
+              backgroundColor: currentTheme.background,
+              border: `1px solid ${currentTheme.border}`
+            }}
+          >
+            <div 
+              className="text-sm"
+              style={{ color: currentTheme.textSecondary }}
+            >
+              Current Layout
+            </div>
+            <div className="font-medium" style={{ color: currentTheme.text }}>
+              {currentLayout?.name || 'Default'}
+            </div>
+            <div className="text-xs" style={{ color: currentTheme.textSecondary }}>
               {currentLayout?.tabs?.length || 0} tabs
             </div>
           </div>
@@ -204,7 +231,11 @@ export const LayoutController: React.FC = () => {
             ) : (
               <button
                 onClick={() => setShowSaveDialog(true)}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded hover:opacity-90"
+                style={{
+                  backgroundColor: currentTheme.primary,
+                  color: currentTheme.text
+                }}
               >
                 <Save className="w-4 h-4" />
                 Save Current Layout
@@ -234,7 +265,11 @@ export const LayoutController: React.FC = () => {
                       <div className="flex-1">
                         <div className="font-medium text-sm">{layout.name}</div>
                         <div className="text-xs text-gray-500">
-                          {layout.tabCount} tabs • {new Date(layout.timestamp).toLocaleDateString()}
+                          {layout.tabCount} tabs • {
+                            layout.timestamp 
+                              ? new Date(layout.timestamp).toLocaleDateString()
+                              : 'Recently saved'
+                          }
                         </div>
                       </div>
                       <div className="flex gap-1">

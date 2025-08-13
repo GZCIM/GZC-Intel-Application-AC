@@ -72,12 +72,13 @@ class CosmosConfigService {
       return response.accessToken
     } catch (error) {
       console.error('Failed to get token:', error)
-      // Fallback to interactive if silent fails
-      const response = await msal.acquireTokenPopup({
+      // Fallback to redirect if silent fails (Safari-friendly)
+      await msal.acquireTokenRedirect({
         scopes: [`api://a873f2d7-2ab9-4d59-a54c-90859226bf2e/.default`],
         account: accounts[0]
       })
-      return response.accessToken
+      // This will redirect, so we won't get here
+      throw new Error('Redirecting for authentication...')
     }
   }
 
@@ -156,13 +157,13 @@ class CosmosConfigService {
         }
       }
       
-      console.log('No configuration found in Cosmos DB, checking localStorage')
-      return this.loadFromLocalStorage()
+      console.log('No configuration found in Cosmos DB')
+      return null
       
     } catch (error) {
       console.error('Error loading from Cosmos DB:', error)
-      // Fallback to localStorage
-      return this.loadFromLocalStorage()
+      // No fallback - Cosmos DB only
+      return null
     }
   }
 
@@ -187,10 +188,11 @@ class CosmosConfigService {
       }
 
       console.log('Configuration updated in Cosmos DB via backend')
+      toastManager.show('✓ Configuration updated', 'success')
     } catch (error) {
       console.error('Error updating Cosmos DB:', error)
-      // Fallback to localStorage
-      this.saveToLocalStorage(updates)
+      toastManager.show('Failed to update configuration', 'error')
+      throw error  // No fallback - require Cosmos DB
     }
   }
 
