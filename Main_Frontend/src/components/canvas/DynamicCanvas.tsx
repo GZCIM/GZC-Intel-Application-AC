@@ -261,8 +261,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
       minH: componentMeta.minSize.h,
       maxW: componentMeta.maxSize?.w || 12,
       maxH: componentMeta.maxSize?.h || 20,
-      isDraggable: isEditMode,
-      isResizable: isEditMode
+      isDraggable: true,  // Allow dragging in all modes
+      isResizable: true  // Allow resizing in all modes
     }
 
     setLayouts(prev => ({ 
@@ -298,8 +298,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         minH: meta?.minSize?.h || 2,
         maxW: meta?.maxSize?.w || 12,
         maxH: meta?.maxSize?.h || 20,
-        isDraggable: isEditMode,
-        isResizable: isEditMode
+        isDraggable: true,  // Allow dragging in all modes
+        isResizable: true  // Allow resizing in all modes
       }
     })
   }, [components, isEditMode])
@@ -459,8 +459,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             onDragStop={handleDragStop}
             onResizeStart={handleResizeStart}
             onResizeStop={handleResizeStop}
-            isDraggable={isEditMode}
-            isResizable={isEditMode}
+            isDraggable={true}  // Allow dragging in all modes
+            isResizable={true}  // Allow resizing in all modes
             useCSSTransforms={true}
             margin={[8, 8]}
             containerPadding={[0, 0]}

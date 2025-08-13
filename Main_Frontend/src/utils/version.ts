@@ -1,20 +1,36 @@
 /**
  * Application Version Information
- * Dynamically set from environment or build process
+ * Dynamically generated based on current date/time
  */
 
-// Get version from environment variable (set during build) or use timestamp
-export const APP_VERSION = import.meta.env.VITE_APP_VERSION || `v${new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '').slice(0, 15)}`
+// Generate dynamic version based on current date/time
+const generateDynamicVersion = (): string => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+  
+  return `v${year}${month}${day}-${hours}${minutes}${seconds}`
+}
 
-// Build timestamp
+// Get version - always dynamic unless explicitly set in env
+export const APP_VERSION = import.meta.env.VITE_APP_VERSION || generateDynamicVersion()
+
+// Build timestamp - current date
 export const BUILD_TIMESTAMP = new Date().toISOString().slice(0, 10).replace(/-/g, '')
 
-// Get formatted version string
+// Get formatted version string - simplified for display
 export const getVersionString = (): string => {
-  const buildDate = APP_VERSION.split('-')[0]?.replace('v', '') || BUILD_TIMESTAMP
-  const buildTime = APP_VERSION.split('-')[1] || 'latest'
+  // Always generate fresh version for display
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
   
-  return `Version: ${APP_VERSION} | Build: ${buildDate}`
+  return `v${year}${month}${day}`
 }
 
 // Get deployment information
