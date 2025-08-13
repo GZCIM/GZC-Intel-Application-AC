@@ -20,20 +20,21 @@ class CosmosConfigService {
   private backendUrl = import.meta.env.VITE_BACKEND_URL || (
     import.meta.env.PROD ? '' : 'http://localhost:5000'  // Main gateway backend
   )
-  private msalInstance: PublicClientApplication | null = null
 
-  constructor() {
-    // Get MSAL instance from window if available
+  // Lazy-load MSAL instance to avoid initialization race condition
+  private get msalInstance(): PublicClientApplication | null {
     if (typeof window !== 'undefined' && (window as any).msalInstance) {
-      this.msalInstance = (window as any).msalInstance
+      return (window as any).msalInstance
     }
+    return null
   }
 
   /**
    * Get Azure AD token for backend API access
    */
   private async getAccessToken(): Promise<string> {
-    if (!this.msalInstance) {
+    const msal = this.msalInstance
+    if (!msal) {
       // In development, return empty token
       if (import.meta.env.DEV) {
         return 'dev-token'
@@ -41,14 +42,24 @@ class CosmosConfigService {
       throw new Error('MSAL not initialized')
     }
 
-    const accounts = this.msalInstance.getAllAccounts()
+    // Check if MSAL is actually initialized (not just present)
+    let accounts: any[] = []
+    try {
+      accounts = msal.getAllAccounts()
+    } catch (e) {
+      // MSAL not initialized yet
+      if (import.meta.env.DEV) {
+        return 'dev-token'
+      }
+      throw new Error('MSAL not initialized: ' + e.message)
+    }
     if (accounts.length === 0) {
       throw new Error('No authenticated user')
     }
 
     try {
       // Request token for backend API
-      const response = await this.msalInstance.acquireTokenSilent({
+      const response = await msal.acquireTokenSilent({
         scopes: ['User.Read'],
         account: accounts[0]
       })
@@ -56,7 +67,7 @@ class CosmosConfigService {
     } catch (error) {
       console.error('Failed to get token:', error)
       // Fallback to interactive if silent fails
-      const response = await this.msalInstance.acquireTokenPopup({
+      const response = await msal.acquireTokenPopup({
         scopes: ['User.Read'],
         account: accounts[0]
       })
@@ -200,14 +211,20 @@ class CosmosConfigService {
    * Get user ID from authenticated user
    */
   private getUserId(): string {
-    if (!this.msalInstance) {
+    const msal = this.msalInstance
+    if (!msal) {
       // Fallback to temporary user ID for testing
       return `temp_user_${Date.now()}`
     }
 
-    const accounts = this.msalInstance.getAllAccounts()
-    if (accounts.length > 0) {
-      return accounts[0].homeAccountId || accounts[0].username
+    try {
+      const accounts = msal.getAllAccounts()
+      if (accounts.length > 0) {
+        return accounts[0].homeAccountId || accounts[0].username
+      }
+    } catch (e) {
+      // MSAL not initialized yet
+      console.warn('MSAL not initialized in getUserId')
     }
 
     return `temp_user_${Date.now()}`
