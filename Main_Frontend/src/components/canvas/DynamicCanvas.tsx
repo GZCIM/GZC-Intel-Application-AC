@@ -41,7 +41,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
   const [showComponentPortal, setShowComponentPortal] = useState(false)
   const [isLayoutReady, setIsLayoutReady] = useState(false)
 
-  const tab = currentLayout?.tabs.find(t => t.id === tabId)
+  const tab = useMemo(() => currentLayout?.tabs.find(t => t.id === tabId), [currentLayout?.tabs, tabId])
   const isEditMode = tab?.editMode || false
   
   console.log('DynamicCanvas render - tabId:', tabId, 'isEditMode:', isEditMode, 'components:', components.length)
@@ -90,7 +90,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         console.log('Tab has no components but canvas has', components.length, 'components - keeping them')
       }
     }
-  }, [tabId, tab?.components])
+  }, [tabId, tab?.components?.length])
 
   // Update component positions based on layout - MOVED BEFORE handleLayoutChange to fix temporal dead zone
   const updateComponentPositions = useCallback((layout: Layout[]) => {
@@ -306,6 +306,44 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     })
   }, [components, isEditMode])
 
+  // Memoize grid children to prevent hook order violations
+  const gridChildren = useMemo(() => components.map(instance => (
+    <div 
+      key={instance.id}
+      className="grid-item"  // Better control class
+      style={{
+        background: currentTheme.surface,
+        border: `1px solid ${currentTheme.border}`,
+        borderRadius: '8px',
+        overflow: 'hidden',
+        transition: isDragging || isResizing ? 'none' : 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)',  // Disable transition during drag for fluidity
+        boxShadow: isEditMode 
+          ? `0 4px 16px ${currentTheme.primary}20, 0 2px 8px rgba(0,0,0,0.1)` 
+          : `0 2px 8px rgba(0,0,0,0.06)`,
+        transform: isEditMode ? 'scale(1.02)' : 'scale(1)',
+        willChange: 'transform',  // Optimize for transform animations
+        cursor: 'move'  // Visual feedback
+      }}
+    >
+      <ComponentRenderer
+        componentId={instance.componentId}
+        instanceId={instance.id}
+        props={instance.props || {}}
+        isEditMode={isEditMode}
+        onRemove={() => removeComponent(instance.id)}
+        onPropsUpdate={(newProps: Record<string, any>) => {
+          setComponents(prev => prev.map(comp => 
+            comp.id === instance.id 
+              ? { ...comp, props: newProps }
+              : comp
+          ))
+          // Trigger save after props update
+          saveLayoutToTab()
+        }}
+      />
+    </div>
+  )), [components, currentTheme, isDragging, isResizing, isEditMode, removeComponent, saveLayoutToTab])
+
   // Set layout ready after initial render
   useEffect(() => {
     const timer = setTimeout(() => setIsLayoutReady(true), 100)
@@ -313,29 +351,6 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
   }, [components.length])
 
 
-  // Component instance wrapper
-  const ComponentInstanceWrapper: React.FC<{ instance: ComponentInstance }> = ({ instance }) => {
-    const handlePropsUpdate = (newProps: Record<string, any>) => {
-      setComponents(prev => prev.map(comp => 
-        comp.id === instance.id 
-          ? { ...comp, props: newProps }
-          : comp
-      ))
-      // Trigger save after props update
-      saveLayoutToTab()
-    }
-
-    return (
-      <ComponentRenderer
-        componentId={instance.componentId}
-        instanceId={instance.id}
-        props={instance.props || {}}
-        isEditMode={isEditMode}
-        onRemove={() => removeComponent(instance.id)}
-        onPropsUpdate={handlePropsUpdate}
-      />
-    )
-  }
 
 
   return (
@@ -474,27 +489,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             preventCollision={false}
             draggableCancel=".no-drag"  // Prevent dragging on specific elements like buttons
           >
-            {useMemo(() => components.map(instance => (
-              <div 
-                key={instance.id}
-                className="grid-item"  // Better control class
-                style={{
-                  background: currentTheme.surface,
-                  border: `1px solid ${currentTheme.border}`,
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  transition: isDragging || isResizing ? 'none' : 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)',  // Disable transition during drag for fluidity
-                  boxShadow: isEditMode 
-                    ? `0 4px 16px ${currentTheme.primary}20, 0 2px 8px rgba(0,0,0,0.1)` 
-                    : `0 2px 8px rgba(0,0,0,0.06)`,
-                  transform: isEditMode ? 'scale(1.02)' : 'scale(1)',
-                  willChange: 'transform',  // Optimize for transform animations
-                  cursor: 'move'  // Visual feedback
-                }}
-              >
-                <ComponentInstanceWrapper instance={instance} />
-              </div>
-            )), [components, currentTheme, isDragging, isResizing, isEditMode])}
+            {gridChildren}
           </ResponsiveGridLayout>
         )}
       </div>
