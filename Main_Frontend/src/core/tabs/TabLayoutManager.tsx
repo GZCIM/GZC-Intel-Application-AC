@@ -150,27 +150,43 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
   // Load saved layouts from PostgreSQL when user changes
   useEffect(() => {
     const checkAuthAndLoad = async () => {
-      // CRITICAL FIX: Direct MSAL check instead of hook to avoid race condition
+      // CRITICAL FIX: Wait for MSAL to be initialized first
       const msalInstance = (window as any).msalInstance;
-      const accounts = msalInstance?.getAllAccounts() || [];
-      let isUserAuthenticated = accounts.length > 0;
       
-      // If no accounts yet, wait for MSAL to restore from cache
-      if (!isUserAuthenticated) {
-        console.log('TabLayoutManager: Waiting for MSAL to restore authentication...')
-        await new Promise(resolve => setTimeout(resolve, 500));
+      // Check if MSAL is initialized, if not wait
+      if (!msalInstance || !msalInstance.getConfiguration) {
+        console.log('TabLayoutManager: MSAL not available yet, waiting...')
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return; // Let the effect retry
+      }
+      
+      // Try to get accounts safely
+      let accounts = [];
+      let isUserAuthenticated = false;
+      
+      try {
+        accounts = msalInstance.getAllAccounts() || [];
+        isUserAuthenticated = accounts.length > 0;
+      } catch (e) {
+        // MSAL not initialized yet
+        console.log('TabLayoutManager: MSAL not initialized, waiting...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Re-check after delay
-        const accountsAfterDelay = msalInstance?.getAllAccounts() || [];
-        isUserAuthenticated = accountsAfterDelay.length > 0;
-        
-        if (!isUserAuthenticated) {
-          console.log('TabLayoutManager: No authenticated accounts after wait, using default layout')
-          setCurrentLayout(DEFAULT_LAYOUT)
-          setLayouts([DEFAULT_LAYOUT])
-          setActiveTabId('analytics')
-          return
+        // Try again after waiting
+        try {
+          accounts = msalInstance.getAllAccounts() || [];
+          isUserAuthenticated = accounts.length > 0;
+        } catch (e2) {
+          console.log('TabLayoutManager: MSAL still not ready, using defaults');
         }
+      }
+        
+      if (!isUserAuthenticated) {
+        console.log('TabLayoutManager: No authenticated accounts after wait, using default layout')
+        setCurrentLayout(DEFAULT_LAYOUT)
+        setLayouts([DEFAULT_LAYOUT])
+        setActiveTabId('analytics')
+        return
       }
       
       console.log(`TabLayoutManager: Loading layouts for user ${userId}`)
