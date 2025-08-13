@@ -62,9 +62,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
-  return (
+  return !isOpen ? null : (
     <div
       ref={windowRef}
       style={{

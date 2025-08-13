@@ -74,9 +74,7 @@ export const UserTabDebugger: React.FC = () => {
         };
     }, [user]);
 
-    if (!user) return null;
-
-    return (
+    return !user ? null : (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

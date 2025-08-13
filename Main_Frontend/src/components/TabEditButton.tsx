@@ -13,9 +13,7 @@ export const TabEditButton: React.FC<TabEditButtonProps> = ({ tabId }) => {
   const [isHovered, setIsHovered] = useState(false)
 
   const tab = currentLayout?.tabs.find(t => t.id === tabId)
-  if (!tab || !tab.closable) return null
-
-  const isEditMode = tab.editMode || false
+  const isEditMode = tab?.editMode || false
 
   const handleEditSave = () => {
     if (isEditMode) {
@@ -30,7 +28,7 @@ export const TabEditButton: React.FC<TabEditButtonProps> = ({ tabId }) => {
     toggleTabEditMode(tabId)
   }
 
-  return (
+  return (!tab || !tab.closable) ? null : (
     <motion.button
       onClick={handleEditSave}
       initial={{ opacity: 0, scale: 0.8 }}

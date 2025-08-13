@@ -1,9 +1,9 @@
 import { Configuration, LogLevel } from "@azure/msal-browser";
 import { PublicClientApplication } from "@azure/msal-browser";
 
-// Build-time environment variables - no runtime injection needed
-const clientId = import.meta.env.VITE_CLIENT_ID;
-const tenantId = import.meta.env.VITE_TENANT_ID;
+// Hardcoded for production stability
+const clientId = "a873f2d7-2ab9-4d59-a54c-90859226bf2e";
+const tenantId = "8274c97d-de9d-4328-98cf-2d4ee94bf104";
 
 // Validate configuration at runtime
 if (!clientId) {

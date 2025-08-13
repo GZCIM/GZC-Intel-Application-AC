@@ -35,7 +35,6 @@ const BlotterTable: React.FC = () => {
         });
     };
     const handleToggle = () => setShowTable((prev) => !prev);
-    if (transactions.length === 0) return null;
 
     const columns: ColumnDef<Transaction>[] = [
         { accessorKey: "id", header: "Transaction ID" },
@@ -47,7 +46,7 @@ const BlotterTable: React.FC = () => {
         { accessorKey: "status", header: "Status" },
     ];
 
-    return (
+    return transactions.length === 0 ? null : (
         <div style={{ 
             padding: quantumTheme.spacing.lg,
             position: 'relative',
