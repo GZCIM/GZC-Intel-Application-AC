@@ -8,6 +8,7 @@ import { stateManager } from '../../services/StateManager'
 import { useUser } from '../../hooks/useUser'
 import { databaseService } from '../../services/databaseService'
 import { cosmosConfigService } from '../../services/cosmosConfigService'
+import { configSyncService } from '../../services/configSyncService'
 
 // Component in tab configuration for dynamic tabs
 export interface ComponentInTab {
@@ -146,6 +147,42 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
   const [activeTabId, setActiveTabId] = useState<string>('analytics')
   const [showTabModal, setShowTabModal] = useState(false)
   const { saveTabOrder, saveActiveTab, saveLayout } = useViewMemory()
+  
+  // Start config sync when component mounts
+  useEffect(() => {
+    configSyncService.startAutoSync(30000) // Sync every 30 seconds
+    
+    // Listen for config updates from sync
+    const handleConfigUpdate = (event: CustomEvent) => {
+      const config = event.detail
+      if (config?.tabs) {
+        const deduplicatedTabs = deduplicateTabs(config.tabs)
+        setCurrentLayout(prev => ({
+          ...prev,
+          tabs: deduplicatedTabs
+        }))
+      }
+    }
+    
+    window.addEventListener('config-updated' as any, handleConfigUpdate)
+    return () => {
+      window.removeEventListener('config-updated' as any, handleConfigUpdate)
+      configSyncService.stopAutoSync()
+    }
+  }, [])
+  
+  // Helper function to deduplicate tabs
+  const deduplicateTabs = (tabs: TabConfig[]) => {
+    const seen = new Set<string>()
+    return tabs.filter(tab => {
+      if (seen.has(tab.id)) {
+        console.warn(`Removing duplicate tab: ${tab.id}`)
+        return false
+      }
+      seen.add(tab.id)
+      return true
+    })
+  }
 
   // Load saved layouts from PostgreSQL when user changes
   useEffect(() => {
