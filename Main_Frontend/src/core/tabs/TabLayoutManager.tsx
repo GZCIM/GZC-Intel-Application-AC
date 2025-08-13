@@ -392,7 +392,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         
         await cosmosConfigService.saveConfiguration({
           tabs: uniqueTabs,
-          layouts: layouts
+          layouts: layouts  // Keep layouts for saved presets
         })
         console.log('New tab saved to Cosmos DB')
       } catch (error) {
@@ -476,7 +476,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
           
           await cosmosConfigService.saveConfiguration({
             tabs: uniqueTabs,
-            layouts: layouts,
+            layouts: layouts,  // Keep layouts for saved presets
             preferences: {
               theme: document.documentElement.getAttribute('data-theme') || 'dark',
               language: 'en'
