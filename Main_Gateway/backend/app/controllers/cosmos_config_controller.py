@@ -49,8 +49,10 @@ async def get_user_config(payload: Dict = Depends(validate_token)) -> Optional[D
         raise HTTPException(status_code=503, detail="Cosmos DB not available")
     
     try:
-        user_id = payload.get("sub") or payload.get("preferred_username", "unknown_user")
-        logger.info(f"Loading configuration for user {user_id}")
+        # Always use email as the consistent ID across browsers
+        user_email = payload.get("preferred_username") or payload.get("email", "")
+        user_id = user_email if user_email else payload.get("sub", "unknown_user")
+        logger.info(f"Loading configuration for user {user_id} (email: {user_email})")
         
         # Try to read the document
         item = container.read_item(item=user_id, partition_key=user_id)
@@ -98,16 +100,28 @@ async def save_user_config(
         raise HTTPException(status_code=503, detail="Cosmos DB not available")
     
     try:
-        user_id = payload.get("sub") or payload.get("preferred_username", "unknown_user")
-        user_email = payload.get("preferred_username", "")
-        logger.info(f"Saving configuration for user {user_id}")
+        # Always use email as the consistent ID across browsers
+        user_email = payload.get("preferred_username") or payload.get("email", "")
+        user_id = user_email if user_email else payload.get("sub", "unknown_user")
+        logger.info(f"Saving configuration for user {user_id} (email: {user_email})")
+        
+        # Deduplicate tabs before saving
+        tabs = config.get("tabs", [])
+        seen_tab_ids = set()
+        unique_tabs = []
+        for tab in tabs:
+            if tab.get("id") not in seen_tab_ids:
+                seen_tab_ids.add(tab.get("id"))
+                unique_tabs.append(tab)
+            else:
+                logger.warning(f"Removing duplicate tab {tab.get('id')} for user {user_id}")
         
         # Prepare document
         document = {
             "id": user_id,
             "userId": user_id,
             "userEmail": user_email,
-            "tabs": config.get("tabs", []),
+            "tabs": unique_tabs,
             "layouts": config.get("layouts", []),
             "preferences": config.get("preferences", {}),
             "timestamp": datetime.utcnow().isoformat(),
@@ -136,9 +150,10 @@ async def update_user_config(
         raise HTTPException(status_code=503, detail="Cosmos DB not available")
     
     try:
-        user_id = payload.get("sub") or payload.get("preferred_username", "unknown_user")
-        user_email = payload.get("preferred_username", "")
-        logger.info(f"Updating configuration for user {user_id}")
+        # Always use email as the consistent ID across browsers
+        user_email = payload.get("preferred_username") or payload.get("email", "")
+        user_id = user_email if user_email else payload.get("sub", "unknown_user")
+        logger.info(f"Updating configuration for user {user_id} (email: {user_email})")
         
         # Get existing document
         try:
@@ -180,8 +195,10 @@ async def delete_user_config(payload: Dict = Depends(validate_token)) -> Dict[st
         raise HTTPException(status_code=503, detail="Cosmos DB not available")
     
     try:
-        user_id = payload.get("sub") or payload.get("preferred_username", "unknown_user")
-        logger.info(f"Deleting configuration for user {user_id}")
+        # Always use email as the consistent ID across browsers
+        user_email = payload.get("preferred_username") or payload.get("email", "")
+        user_id = user_email if user_email else payload.get("sub", "unknown_user")
+        logger.info(f"Deleting configuration for user {user_id} (email: {user_email})")
         
         container.delete_item(item=user_id, partition_key=user_id)
         logger.info(f"Configuration deleted for user {user_id}")
