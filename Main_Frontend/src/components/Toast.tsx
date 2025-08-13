@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { FeatherIcon } from './icons/FeatherIcon';
 
 interface ToastProps {
   message: string;
@@ -15,9 +15,9 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration =
   }, [onClose, duration]);
 
   const icons = {
-    success: <CheckCircle className="w-5 h-5" />,
-    error: <XCircle className="w-5 h-5" />,
-    info: <AlertCircle className="w-5 h-5" />
+    success: <FeatherIcon name="check-circle" size={20} color="white" />,
+    error: <FeatherIcon name="x-circle" size={20} color="white" />,
+    info: <FeatherIcon name="info" size={20} color="white" />
   };
 
   const colors = {
