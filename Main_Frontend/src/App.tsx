@@ -101,7 +101,7 @@ function AppContent() {
                         <MarketIntelPanel />
                     </div>
 
-                    {/* Main Content Area - Right side */}
+                    {/* Main Content Area */}
                     <main
                         className="dashboard-content"
                         style={{

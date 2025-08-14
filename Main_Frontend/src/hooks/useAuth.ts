@@ -24,17 +24,30 @@ export function useAuth() {
     // Check if in development mode (always false, but React doesn't know that)
     const inDevMode = isDevelopmentMode();
 
-    // Production MSAL authentication
+    // Safari-compatible authentication - use redirect for Safari, popup for Chrome
     const login = async () => {
         try {
             telemetryService.trackAuthEvent('login_attempt');
-            const response = await instance.loginPopup(loginRequest);
-            telemetryService.trackAuthEvent('login_success', {
-                username: response.account?.username,
-                accountId: response.account?.homeAccountId
-            });
-            if (response.account) {
-                telemetryService.setUserId(response.account.homeAccountId);
+            
+            // Detect Safari and use redirect instead of popup
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            console.log('Browser detection - Safari:', isSafari, 'UserAgent:', navigator.userAgent);
+            
+            if (isSafari) {
+                console.log('🍎 Safari detected - using redirect authentication');
+                // For Safari, use redirect flow which is more reliable
+                await instance.loginRedirect(loginRequest);
+                // loginRedirect doesn't return response, handled by redirect callback
+            } else {
+                console.log('🌐 Chrome/Edge detected - using popup authentication');
+                const response = await instance.loginPopup(loginRequest);
+                telemetryService.trackAuthEvent('login_success', {
+                    username: response.account?.username,
+                    accountId: response.account?.homeAccountId
+                });
+                if (response.account) {
+                    telemetryService.setUserId(response.account.homeAccountId);
+                }
             }
         } catch (error) {
             telemetryService.trackAuthEvent('login_failure', {
@@ -67,9 +80,19 @@ export function useAuth() {
             });
             return response.accessToken;
         } catch (error) {
-            // Fallback to interactive token acquisition
-            const response = await instance.acquireTokenPopup(loginRequest);
-            return response.accessToken;
+            // Safari-compatible fallback - use redirect for Safari, popup for Chrome
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            
+            if (isSafari) {
+                console.log('🍎 Safari token acquisition - using redirect');
+                // For Safari, use redirect flow which is more reliable
+                await instance.acquireTokenRedirect(loginRequest);
+                throw new Error("Token acquisition redirected - will complete after redirect");
+            } else {
+                console.log('🌐 Chrome token acquisition - using popup');
+                const response = await instance.acquireTokenPopup(loginRequest);
+                return response.accessToken;
+            }
         }
     };
 

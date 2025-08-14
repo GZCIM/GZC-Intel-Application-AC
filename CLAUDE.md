@@ -10,10 +10,12 @@ GZC Intel Application - Production-grade application with secure gateway archite
 
 Production application with enterprise security architecture:
 - **Frontend**: React application with Tools menu and user memory persistence
+- **Bloomberg Integration**: Real-time FX volatility surfaces via K8s gateway
 - **FSS Backend**: FXSpotStream WebSocket service for trading infrastructure
 - **Security Gateway**: Nginx with TLS 1.3, Azure AD auth, rate limiting
 - **Database**: PostgreSQL (gzc_intel) for user preferences and memory
 - **Cache**: Azure Redis for real-time data and session management
+- **K8s Services**: Bloomberg gateway for secure Terminal data access
 - **Deployment**: Azure Container Apps with managed identities
 
 ## Directory Structure
@@ -129,3 +131,50 @@ az containerapp update --name gzc-intel-application-ac \
 2. Docker cache - Use `--no-cache` when fixes aren't working
 3. Browser cache - Force refresh with Ctrl+Shift+R
 4. Database missing - Create with `az postgres flexible-server db create`
+
+## Bloomberg Terminal Integration (Updated 2025-08-14)
+
+### Architecture
+- **K8s Gateway**: LoadBalancer at 52.149.235.82 (v3 with reference endpoint)
+- **Bloomberg VM**: Terminal API at 20.172.249.92:8080
+- **Data Flow**: Frontend → nginx proxy → K8s Gateway → Bloomberg VM
+- **No Mixed Content**: All HTTP calls proxied through HTTPS app
+
+### Bloomberg Volatility Component
+- **Location**: `Main_Frontend/src/components/bloomberg-volatility/`
+- **Access**: Tools → Add Component → Visualization → Bloomberg Volatility Analysis
+- **Features**:
+  - Real-time FX volatility surfaces
+  - ATM volatility, risk reversals, butterflies
+  - 3D surface visualization with Plotly
+  - Volatility smile and term structure charts
+  - Supported pairs: EURUSD, GBPUSD, USDJPY, AUDUSD, USDCHF, USDCAD, NZDUSD
+
+### K8s Gateway Management
+```bash
+# Check gateway status
+kubectl get pods -n bloomberg-gateway
+
+# View logs
+kubectl logs deployment/bloomberg-gateway -n bloomberg-gateway
+
+# Update gateway image
+kubectl set image deployment/bloomberg-gateway bloomberg-gateway=gzcacr.azurecr.io/bloomberg-gateway:v3 -n bloomberg-gateway
+```
+
+### API Endpoints
+- `/api/bloomberg/reference` - Securities reference data
+- `/api/bloomberg/api/volatility-surface/{pair}` - Full volatility surface
+- `/api/bloomberg/health` - Gateway health check
+
+### Data Format
+K8s gateway returns nested structure that frontend parses:
+```json
+{
+  "data": {
+    "data": {
+      "securities_data": [...]
+    }
+  }
+}
+```

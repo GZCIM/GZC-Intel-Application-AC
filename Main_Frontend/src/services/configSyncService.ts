@@ -19,28 +19,28 @@ class ConfigSyncService {
   /**
    * Start automatic sync
    */
-  startAutoSync(intervalMs: number = 30000) {
+  startAutoSync(intervalMs: number = 300000) { // Changed to 5 minutes (300000ms) instead of 30 seconds
     this.stopAutoSync()
     
-    // Initial sync
-    this.syncNow()
+    // Don't do initial sync - only sync when user explicitly saves
+    // this.syncNow()
     
-    // Set up interval
-    this.syncInterval = setInterval(() => {
-      this.syncNow()
-    }, intervalMs)
+    // Disable automatic sync completely - only sync on explicit save/logout
+    // this.syncInterval = setInterval(() => {
+    //   this.syncNow()
+    // }, intervalMs)
     
-    // Sync on visibility change
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        this.syncNow()
-      }
-    })
+    // Disable visibility change sync
+    // document.addEventListener('visibilitychange', () => {
+    //   if (!document.hidden) {
+    //     this.syncNow()
+    //   }
+    // })
     
-    // Sync on online
-    window.addEventListener('online', () => {
-      this.syncNow()
-    })
+    // Disable online sync too - only sync on explicit save
+    // window.addEventListener('online', () => {
+    //   this.syncNow()
+    // })
   }
   
   /**

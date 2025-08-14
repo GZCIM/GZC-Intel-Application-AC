@@ -9,11 +9,11 @@ export const MarketIntelPanel = () => {
   
   return (
     <div style={{
-      width: isCollapsed ? '60px' : '320px',
+      width: isCollapsed ? '48px' : '280px', // Smaller when collapsed for more space
       height: 'calc(100vh - 88px)', // Dynamic height: full viewport minus header minus footer
       backgroundColor: theme.surface,
-      borderRight: `1px solid ${theme.border}`,
-      padding: isCollapsed ? '16px 12px' : '16px',
+      borderRight: isCollapsed ? 'none' : `1px solid ${theme.border}`,
+      padding: isCollapsed ? '16px 8px' : '16px',
       paddingBottom: isCollapsed ? '16px' : '16px', // Consistent padding
       overflowY: 'auto',
       transition: 'width 0.3s ease',
@@ -43,7 +43,18 @@ export const MarketIntelPanel = () => {
         )}
         
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => {
+            setIsCollapsed(!isCollapsed)
+            // Fire event to notify grid layout - both immediate and delayed
+            window.dispatchEvent(new CustomEvent('panel-toggled'))
+            // Also trigger a resize event to force grid recalculation
+            setTimeout(() => {
+              window.dispatchEvent(new Event('resize'))
+            }, 50)
+            setTimeout(() => {
+              window.dispatchEvent(new Event('resize'))
+            }, 350) // After animation completes
+          }}
           style={{
             background: 'none',
             border: 'none',

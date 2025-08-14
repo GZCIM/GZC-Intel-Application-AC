@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '../contexts/ThemeContext'
 import { useTabLayout } from '../core/tabs/TabLayoutManager'
+import { configSyncService } from '../services/configSyncService'
 
 interface TabContextMenuProps {
   tabId: string
@@ -82,8 +83,15 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
     onClose()
   }
 
-  const handleToggleEditMode = () => {
+  const handleToggleEditMode = async () => {
     updateTab(tabId, { editMode: !isEditMode })
+    
+    // If exiting edit mode (Save & Exit), sync immediately
+    if (isEditMode) {
+      console.log('Saving layout and syncing to cloud...')
+      await configSyncService.syncNow()
+    }
+    
     onClose()
   }
 

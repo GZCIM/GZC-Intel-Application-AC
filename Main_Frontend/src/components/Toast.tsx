@@ -31,12 +31,14 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration =
       style={{
         position: 'fixed',
         bottom: '60px',  // Above the status bar (40px height + 20px gap)
-        right: '20px',
-        backgroundColor: type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6',
-        color: 'white',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        backgroundColor: type === 'success' ? '#ffffff' : type === 'error' ? '#fee2e2' : '#dbeafe',
+        color: type === 'success' ? '#059669' : type === 'error' ? '#dc2626' : '#2563eb',
+        border: `1px solid ${type === 'success' ? '#d1fae5' : type === 'error' ? '#fecaca' : '#bfdbfe'}`,
         padding: '12px 20px',
-        borderRadius: '8px',
-        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+        borderRadius: '12px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
@@ -45,7 +47,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration =
         minWidth: '300px'
       }}
     >
-      {icons[type]}
+      {React.cloneElement(icons[type], { color: type === 'success' ? '#059669' : type === 'error' ? '#dc2626' : '#2563eb' })}
       <span style={{ fontSize: '14px', fontWeight: 500 }}>{message}</span>
     </div>
   );

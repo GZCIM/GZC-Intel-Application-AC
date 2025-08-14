@@ -51,7 +51,7 @@ export const msalConfig: Configuration = {
     },
 };
 export const loginRequest = {
-    scopes: ["User.Read"],
+    scopes: ["User.Read", "api://a873f2d7-2ab9-4d59-a54c-90859226bf2e/.default"],
 };
 // Create but don't initialize yet - will be initialized in main.tsx
 export const msalInstance = new PublicClientApplication(msalConfig);

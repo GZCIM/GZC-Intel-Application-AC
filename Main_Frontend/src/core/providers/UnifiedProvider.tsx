@@ -47,10 +47,18 @@ export const UnifiedProvider: React.FC<UnifiedProviderProps> = ({
         } catch (error) {
             console.error("Failed to acquire token silently:", error);
 
-            // Fallback to interactive token acquisition
+            // Fallback to interactive token acquisition - Safari-compatible
             try {
-                const response = await instance.acquireTokenPopup(loginRequest);
-                return response.accessToken;
+                const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+                if (isSafari) {
+                    console.log('🍎 UnifiedProvider: Safari detected - using redirect for token');
+                    await instance.acquireTokenRedirect(loginRequest);
+                    throw new Error('Token acquisition redirected - will complete after redirect');
+                } else {
+                    console.log('🌐 UnifiedProvider: Chrome/Edge detected - using popup for token');
+                    const response = await instance.acquireTokenPopup(loginRequest);
+                    return response.accessToken;
+                }
             } catch (interactiveError) {
                 console.error(
                     "Failed to acquire token interactively:",

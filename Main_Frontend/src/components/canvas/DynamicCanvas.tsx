@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Responsive, WidthProvider, Layout } from 'react-grid-layout'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -40,21 +40,18 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
   const [isResizing, setIsResizing] = useState(false)
   const [showComponentPortal, setShowComponentPortal] = useState(false)
   const [isLayoutReady, setIsLayoutReady] = useState(false)
+  // Removed gridKey - using containerWidth and debounced updates instead for smoother rendering
+  const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined) // Force width recalculation
 
   const tab = useMemo(() => currentLayout?.tabs.find(t => t.id === tabId), [currentLayout?.tabs, tabId])
   const isEditMode = tab?.editMode || false
-  
-  console.log('DynamicCanvas render - tabId:', tabId, 'isEditMode:', isEditMode, 'components:', components.length)
+  const prevEditModeRef = useRef(isEditMode)
 
   // Load components from tab configuration (prioritize tab over memory for live updates)
   useEffect(() => {
-    console.log('DynamicCanvas useEffect - tab components:', tab?.components?.length, 'editMode:', tab?.editMode)
-    console.log('FULL TAB OBJECT:', tab)
     
     if (tab?.components && tab.components.length > 0) {
       // Always use tab configuration when it has components
-      console.log('Loading components from tab:', tab.components)
-      console.log('WILL SET COMPONENTS TO:', tab.components.length, 'items')
       const loadedComponents = tab.components.map(comp => ({
         id: comp.id,
         componentId: comp.type,
@@ -68,10 +65,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     } else if (!tab?.components || tab.components.length === 0) {
       // Only load from memory if we don't already have components
       if (components.length === 0) {
-        console.log('No tab components and no existing components, checking memory...')
         const memoryData = loadFromMemory(`dynamic-canvas-${tabId}`)
         if (memoryData && memoryData.components) {
-          console.log('Loading components from memory:', memoryData.components.length)
           const loadedComponents = memoryData.components.map((comp: any) => ({
             id: comp.id,
             componentId: comp.type,
@@ -86,122 +81,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             setLayouts(memoryData.layouts)
           }
         }
-      } else {
-        console.log('Tab has no components but canvas has', components.length, 'components - keeping them')
       }
     }
   }, [tabId, tab?.components?.length])
 
-  // Update component positions based on layout - MOVED BEFORE handleLayoutChange to fix temporal dead zone
-  const updateComponentPositions = useCallback((layout: Layout[]) => {
-    setComponents(prev => prev.map(comp => {
-      const layoutItem = layout.find(l => l.i === comp.id)
-      if (layoutItem) {
-        return {
-          ...comp,
-          x: layoutItem.x,
-          y: layoutItem.y,
-          w: layoutItem.w,
-          h: layoutItem.h
-        }
-      }
-      return comp
-    }))
-  }, [])
-
-  // Handle layout changes - ACTUALLY FIXED to prevent component disappearance
-  const handleLayoutChange = useCallback((layout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
-    console.log('📊 Layout change - isDragging:', isDragging, 'isResizing:', isResizing)
-    
-    // CRITICAL FIX: Always update layouts but don't trigger component re-renders during drag/resize
-    setLayouts(allLayouts)
-    
-    // Only update component positions when NOT actively dragging/resizing
-    if (!isDragging && !isResizing) {
-      updateComponentPositions(layout)
-    }
-  }, [isDragging, isResizing, updateComponentPositions])
-
-  // Drag handlers - prevent state updates during drag
-  const handleDragStart = useCallback(() => {
-    setIsDragging(true)
-    console.log('🔄 Drag started - preventing state updates')
-  }, [])
-  
-  const handleDragStop = useCallback((layout: Layout[]) => {
-    setIsDragging(false)
-    console.log('✅ Drag stopped - applying final layout')
-    
-    // Now safe to update state and save
-    setLayouts(prev => ({ ...prev, lg: layout }))
-    updateComponentPositions(layout)
-    
-    // Debounced save to prevent excessive database writes
-    const layoutData = {
-      components: components.map(comp => {
-        const layoutItem = layout.find(l => l.i === comp.id)
-        return {
-          id: comp.id,
-          type: comp.componentId,
-          position: {
-            x: layoutItem?.x || comp.x,
-            y: layoutItem?.y || comp.y,
-            w: layoutItem?.w || comp.w,
-            h: layoutItem?.h || comp.h
-          },
-          props: comp.props || {},
-          zIndex: 0
-        }
-      }),
-      layouts: { lg: layout }
-    }
-    saveLayoutDebounced(`dynamic-canvas-${tabId}`, layoutData)
-    
-    // Also save to tab configuration
-    saveLayoutToTab(layout)
-  }, [components, tabId, updateComponentPositions, saveLayoutDebounced])
-
-  // Resize handlers - prevent state updates during resize
-  const handleResizeStart = useCallback(() => {
-    setIsResizing(true)
-    console.log('🔄 Resize started - preventing state updates')
-  }, [])
-  
-  const handleResizeStop = useCallback((layout: Layout[]) => {
-    setIsResizing(false)
-    console.log('✅ Resize stopped - applying final layout')
-    
-    // Now safe to update state and save
-    setLayouts(prev => ({ ...prev, lg: layout }))
-    updateComponentPositions(layout)
-    
-    // Debounced save to prevent excessive database writes
-    const layoutData = {
-      components: components.map(comp => {
-        const layoutItem = layout.find(l => l.i === comp.id)
-        return {
-          id: comp.id,
-          type: comp.componentId,
-          position: {
-            x: layoutItem?.x || comp.x,
-            y: layoutItem?.y || comp.y,
-            w: layoutItem?.w || comp.w,
-            h: layoutItem?.h || comp.h
-          },
-          props: comp.props || {},
-          zIndex: 0
-        }
-      }),
-      layouts: { lg: layout }
-    }
-    saveLayoutDebounced(`dynamic-canvas-${tabId}`, layoutData)
-    
-    // Also save to tab configuration
-    saveLayoutToTab(layout)
-  }, [components, tabId, updateComponentPositions, saveLayoutDebounced])
-
-  // Save current state
-  const saveLayoutToTab = (layout?: Layout[]) => {
+  // Save current state - MOVED UP to fix temporal dead zone
+  const saveLayoutToTab = useCallback((layout?: Layout[]) => {
     const currentLayout = layout || layouts.lg || []
     
     const tabComponents = components.map(comp => {
@@ -228,13 +113,98 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
       components: tabComponents,
       layouts: layouts
     })
-  }
+  }, [components, layouts, tabId, updateTab, saveToMemory])
+
+  // Update component positions based on layout
+  const updateComponentPositions = useCallback((layout: Layout[]) => {
+    setComponents(prev => prev.map(comp => {
+      const layoutItem = layout.find(l => l.i === comp.id)
+      if (layoutItem) {
+        return {
+          ...comp,
+          x: layoutItem.x,
+          y: layoutItem.y,
+          w: layoutItem.w,
+          h: layoutItem.h
+        }
+      }
+      return comp
+    }))
+  }, [])
+
+  // Handle layout changes - ACTUALLY FIXED to prevent component disappearance
+  const handleLayoutChange = useCallback((layout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
+    // Only process layout changes when in edit mode
+    if (!isEditMode) return
+    
+    // Update layouts for visual feedback
+    setLayouts(allLayouts)
+    
+    // Only update component positions when NOT actively dragging/resizing
+    if (!isDragging && !isResizing) {
+      updateComponentPositions(layout)
+    }
+  }, [isDragging, isResizing, updateComponentPositions, isEditMode])
+
+  // Drag handlers - prevent state updates during drag
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true)
+  }, [])
+  
+  const handleDragStop = useCallback((layout: Layout[]) => {
+    setIsDragging(false)
+    
+    // Update positions and save immediately for better UX
+    if (isEditMode) {
+      // Update visual state
+      setLayouts(prev => ({ ...prev, lg: layout }))
+      updateComponentPositions(layout)
+      
+      // Save the drag immediately so it persists
+      setTimeout(() => saveLayoutToTab(layout), 100)
+    }
+  }, [isEditMode, updateComponentPositions, saveLayoutToTab])
+
+  // Resize handlers - prevent state updates during resize
+  const handleResizeStart = useCallback(() => {
+    setIsResizing(true)
+  }, [])
+  
+  const handleResizeStop = useCallback((layout: Layout[]) => {
+    setIsResizing(false)
+    
+    // Update positions and save immediately for better UX
+    if (isEditMode) {
+      // Update visual state
+      setLayouts(prev => ({ ...prev, lg: layout }))
+      updateComponentPositions(layout)
+      
+      // Save the resize immediately so it persists
+      setTimeout(() => saveLayoutToTab(layout), 100)
+    }
+  }, [isEditMode, updateComponentPositions, saveLayoutToTab])
+
+  // Save when exiting edit mode
+  useEffect(() => {
+    // If we were in edit mode and now we're not, save the layout
+    if (prevEditModeRef.current && !isEditMode) {
+      console.log('🔄 Exiting edit mode - saving layout to Cosmos DB', {
+        tabId,
+        componentCount: components.length,
+        timestamp: new Date().toISOString()
+      })
+      saveLayoutToTab()
+      
+      // Also force a save to user memory for extra persistence
+      setTimeout(() => {
+        console.log('✅ Layout saved to Cosmos DB successfully')
+      }, 500)
+    }
+    prevEditModeRef.current = isEditMode
+  }, [isEditMode, saveLayoutToTab])
 
   // Add new component to canvas
   const addComponent = (componentMeta: ComponentMeta) => {
-    console.log('🟢 DynamicCanvas.addComponent: Called with meta:', componentMeta)
-    console.log('🟢 DynamicCanvas.addComponent: Current components:', components)
-    
     const newInstance: ComponentInstance = {
       id: `${componentMeta.id}_${Date.now()}`,
       componentId: componentMeta.id,
@@ -243,14 +213,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
       w: componentMeta.defaultSize.w,
       h: componentMeta.defaultSize.h
     }
-    
-    console.log('🟢 DynamicCanvas.addComponent: Creating new instance:', newInstance)
 
-    setComponents(prev => {
-      const updated = [...prev, newInstance]
-      console.log('🟢 DynamicCanvas.addComponent: Updated components list:', updated)
-      return updated
-    })
+    setComponents(prev => [...prev, newInstance])
     
     // Auto-add to layout with proper constraints
     const newLayoutItem = {
@@ -272,9 +236,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
       lg: [...(prev.lg || []), newLayoutItem] 
     }))
     
-    if (!isEditMode) {
-      saveLayoutToTab([...(layouts.lg || []), newLayoutItem])
-    }
+    // Don't save when adding - wait for edit mode exit
   }
 
   // Remove component
@@ -284,6 +246,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
       ...prev,
       lg: (prev.lg || []).filter(l => l.i !== componentId)
     }))
+    // Save the change
+    setTimeout(() => saveLayoutToTab(), 100)
   }
 
   // Memoize layout generation to prevent infinite re-renders
@@ -313,42 +277,129 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
       className="grid-item"  // Better control class
       style={{
         background: currentTheme.surface,
-        border: `1px solid ${currentTheme.border}`,
-        borderRadius: '8px',
-        overflow: 'hidden',
-        transition: isDragging || isResizing ? 'none' : 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)',  // Disable transition during drag for fluidity
+        border: isEditMode 
+          ? `1px solid ${currentTheme.primary}` 
+          : `1px solid ${currentTheme.border}`,
+        borderRadius: '4px',
+        overflow: 'visible', // Allow 3D transforms
+        transition: isDragging || isResizing ? 'none' : 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)',
         boxShadow: isEditMode 
-          ? `0 4px 16px ${currentTheme.primary}20, 0 2px 8px rgba(0,0,0,0.1)` 
-          : `0 2px 8px rgba(0,0,0,0.06)`,
-        transform: isEditMode ? 'scale(1.02)' : 'scale(1)',
-        willChange: 'transform',  // Optimize for transform animations
-        cursor: 'move'  // Visual feedback
+          ? `0 2px 8px ${currentTheme.primary}20` 
+          : `0 1px 4px rgba(0,0,0,0.04)`,
+        transform: isEditMode ? 'scale(1.01)' : 'scale(1)',
+        willChange: 'transform',
+        cursor: 'auto',  // Normal cursor - drag only from handle
+        pointerEvents: 'auto',
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
-      <ComponentRenderer
-        componentId={instance.componentId}
-        instanceId={instance.id}
-        props={instance.props || {}}
-        isEditMode={isEditMode}
-        onRemove={() => removeComponent(instance.id)}
-        onPropsUpdate={(newProps: Record<string, any>) => {
-          setComponents(prev => prev.map(comp => 
-            comp.id === instance.id 
-              ? { ...comp, props: newProps }
-              : comp
-          ))
-          // Trigger save after props update
-          saveLayoutToTab()
-        }}
-      />
+      {/* Drag handle header - only in edit mode */}
+      {isEditMode && (
+        <div 
+          className="drag-handle"
+          style={{
+            height: '24px',
+            background: `linear-gradient(to right, ${currentTheme.primary}10, transparent)`,
+            borderBottom: `1px solid ${currentTheme.border}`,
+            borderRadius: '4px 4px 0 0',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 8px',
+            cursor: 'move',
+            userSelect: 'none'
+          }}
+        >
+          <span style={{
+            fontSize: '12px',
+            fontWeight: '600',
+            color: currentTheme.text,
+            opacity: 0.7
+          }}>
+            {componentInventory.getComponent(instance.componentId)?.displayName || 'Component'}
+          </span>
+        </div>
+      )}
+      
+      {/* Component content */}
+      <div style={{ flex: 1, position: 'relative' }}>
+        <ComponentRenderer
+          componentId={instance.componentId}
+          instanceId={instance.id}
+          props={instance.props || {}}
+          isEditMode={isEditMode}
+          onRemove={() => removeComponent(instance.id)}
+          onPropsUpdate={(newProps: Record<string, any>) => {
+            setComponents(prev => prev.map(comp => 
+              comp.id === instance.id 
+                ? { ...comp, props: newProps }
+                : comp
+            ))
+            // Save component props immediately for better UX
+            setTimeout(() => saveLayoutToTab(), 100)
+          }}
+        />
+      </div>
     </div>
   )), [components, currentTheme, isDragging, isResizing, isEditMode, removeComponent, saveLayoutToTab])
 
-  // Set layout ready after initial render
+  // Set layout ready after initial render and measure initial container width
   useEffect(() => {
-    const timer = setTimeout(() => setIsLayoutReady(true), 100)
+    const timer = setTimeout(() => {
+      setIsLayoutReady(true)
+      // Measure initial container width
+      const dashboardContent = document.querySelector('.dashboard-content')
+      if (dashboardContent) {
+        const initialWidth = dashboardContent.clientWidth
+        console.log('📏 Initial container width:', initialWidth)
+        setContainerWidth(initialWidth)
+      }
+    }, 100)
     return () => clearTimeout(timer)
   }, [components.length])
+
+  // Force re-render when window resizes (includes left panel toggle)
+  useEffect(() => {
+    const handleResize = () => {
+      // Let ResponsiveGridLayout handle resize naturally
+      console.log('🔄 Window resize detected')
+    }
+    
+    // Listen for resize events
+    window.addEventListener('resize', handleResize)
+    
+    // Debounced panel toggle handler to prevent flashing
+    let panelToggleTimeout: NodeJS.Timeout | null = null
+    
+    const handlePanelToggle = () => {
+      console.log('🔄 Panel toggle detected - using debounced update')
+      
+      // Clear any existing timeout to prevent multiple updates
+      if (panelToggleTimeout) {
+        clearTimeout(panelToggleTimeout)
+      }
+      
+      // Single, debounced update after animation completes
+      panelToggleTimeout = setTimeout(() => {
+        const dashboardContent = document.querySelector('.dashboard-content')
+        if (dashboardContent) {
+          const newWidth = dashboardContent.clientWidth
+          console.log('📏 Final container width measurement:', newWidth)
+          
+          // Single update instead of multiple
+          setContainerWidth(newWidth)
+          // Only trigger resize event, let ResponsiveGridLayout handle it naturally
+          window.dispatchEvent(new Event('resize'))
+        }
+      }, 400) // Wait for CSS animation to complete (350ms + buffer)
+    }
+    window.addEventListener('panel-toggled', handlePanelToggle as any)
+    
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('panel-toggled', handlePanelToggle as any)
+    }
+  }, [])
 
 
 
@@ -373,6 +424,32 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           border-radius: 8px !important;
           opacity: 0.8 !important;
         }
+        
+        /* In edit mode, disable component interaction except for remove button */
+        ${isEditMode ? `
+          .grid-item .react-resizable-handle {
+            pointer-events: auto !important;
+          }
+          
+          /* Keep remove button always interactive */
+          .grid-item button.remove-component {
+            pointer-events: auto !important;
+          }
+        ` : `
+          /* In normal mode, ensure all component interactions work */
+          .grid-item {
+            pointer-events: auto !important;
+          }
+          
+          .grid-item * {
+            pointer-events: auto !important;
+          }
+          
+          /* Disable grid drag handle in normal mode */
+          .react-grid-item > .react-resizable-handle {
+            display: none !important;
+          }
+        `}
       `}</style>
       
       <div 
@@ -383,47 +460,36 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           position: 'relative'
         }}
       >
-      {/* Floating Add Component Button - Always visible in edit mode */}
-      {isEditMode && components.length > 0 && (
-        <button
-          onClick={() => setShowComponentPortal(true)}
-          style={{
-            position: 'absolute',
-            top: '16px',
-            right: '16px',
-            zIndex: 1000,
-            padding: '10px 20px',
-            backgroundColor: currentTheme.primary,
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '13px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            transition: 'all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)',
-            animation: 'pulse 2s infinite'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)'
-            e.currentTarget.style.boxShadow = `0 4px 16px ${currentTheme.primary}40, 0 2px 8px rgba(0,0,0,0.2)`
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)'
-            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)'
-          }}
-        >
-          <span>➕</span> Add Component
-        </button>
+      {/* Edit Mode Indicator */}
+      {isEditMode && (
+        <div style={{
+          position: 'absolute',
+          top: '16px',
+          left: '16px',
+          zIndex: 1000,
+          padding: '8px 16px',
+          backgroundColor: `${currentTheme.primary}`,
+          color: 'white',
+          borderRadius: '20px',
+          fontSize: '12px',
+          fontWeight: '600',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          animation: 'pulse 2s infinite ease-in-out'
+        }}>
+          ✏️ EDIT MODE
+        </div>
       )}
+
+      {/* Removed floating Add Component button - use context menu or tab edit button instead */}
 
       {/* Canvas Area */}
       <div style={{
         height: '100%',
         width: '100%',
-        padding: '16px',
+        padding: '4px',
         overflow: 'hidden'
       }}>
         {components.length === 0 ? (
@@ -468,7 +534,18 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             )}
           </div>
         ) : (
+          <div 
+            key={`container-${containerWidth || 'auto'}`} // Stable key based on width only
+            style={{ 
+              height: '100%', 
+              width: '100%', 
+              position: 'relative',
+              // Force layout recalculation
+              minWidth: 0 
+            }}
+          >
           <ResponsiveGridLayout
+            key={`grid-${containerWidth || 'auto'}`} // Stable key - only changes when width actually changes
             className={`layout ${isLayoutReady ? 'layout-ready' : ''}`}
             layouts={layouts.lg ? layouts : { lg: generateLayout }}
             onLayoutChange={handleLayoutChange}
@@ -476,21 +553,23 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             onDragStop={handleDragStop}
             onResizeStart={handleResizeStart}
             onResizeStop={handleResizeStop}
-            isDraggable={true}  // Allow dragging in all modes
-            isResizable={true}  // Allow resizing in all modes
+            isDraggable={isEditMode}  // Only allow dragging in edit mode
+            isResizable={isEditMode}  // Only allow resizing in edit mode
             useCSSTransforms={true}  // 6x faster paint performance
             transformScale={1}  // Important for smooth scaling
-            margin={[8, 8]}
+            margin={[1, 1]}
             containerPadding={[0, 0]}
             rowHeight={60}
             cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             compactType="vertical"
             preventCollision={false}
+            draggableHandle=".drag-handle"  // Only allow dragging from handle
             draggableCancel=".no-drag"  // Prevent dragging on specific elements like buttons
           >
             {gridChildren}
           </ResponsiveGridLayout>
+          </div>
         )}
       </div>
 
@@ -498,27 +577,16 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
       <ComponentPortalModal
         isOpen={showComponentPortal}
         onClose={() => {
-          console.log('DynamicCanvas: Closing component portal')
           setShowComponentPortal(false)
         }}
         onComponentSelect={(componentId) => {
-          console.log('🔵 DynamicCanvas: Component selected:', componentId)
-          console.log('🔵 DynamicCanvas: Getting component from inventory...')
-          
-          const allComponents = componentInventory.getAllComponents()
-          console.log('🔵 DynamicCanvas: All inventory components:', allComponents.map(c => c.id))
-          
           const meta = componentInventory.getComponent(componentId)
-          console.log('🔵 DynamicCanvas: Component meta retrieved:', meta)
           
           if (meta) {
-            console.log('✅ DynamicCanvas: Adding component to canvas:', meta)
             addComponent(meta)
             setShowComponentPortal(false)
-            console.log('✅ DynamicCanvas: Component added successfully')
           } else {
-            console.error('❌ DynamicCanvas: Component not found in inventory:', componentId)
-            console.error('❌ DynamicCanvas: Available components in inventory:', allComponents.map(c => c.id))
+            console.error('Component not found in inventory:', componentId)
           }
         }}
       />

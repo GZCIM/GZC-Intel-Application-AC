@@ -71,7 +71,7 @@ lsof -i :3500
 kill $(lsof -t -i :3500)
 ```
 
-## 🏗️ User Memory Architecture (PostgreSQL + Azure AD)
+## 🏗️ User Memory Architecture (Cosmos DB + Azure AD) ✅ VERIFIED WORKING
 
 ### Authentication & Persistence
 The application now uses proper enterprise authentication and persistence:
@@ -86,33 +86,57 @@ The application now uses proper enterprise authentication and persistence:
 - **Token Validation**: All endpoints require valid Azure AD tokens
 - **User Isolation**: Data filtered by user ID from token claims
 
-#### PostgreSQL Persistence
-```sql
--- User-specific data storage
-tab_configurations    -- User tabs with components
-user_preferences      -- Theme, language, settings  
-component_layouts     -- Component positions and configs
+#### Cosmos DB Persistence (Primary)
+```javascript
+// User configuration document structure
+{
+  id: "user-{userId}",
+  userId: "homeAccountId",
+  tabs: [...],        // User tabs with components
+  layouts: [...],     // Saved layout presets
+  preferences: {      // Theme, language, settings
+    theme: "dark",
+    language: "en"
+  },
+  timestamp: "2025-08-14T04:30:00Z",
+  type: "user-config"
+}
 ```
 
+#### PostgreSQL Fallback (Legacy)
+- Used as backup when Cosmos DB is unavailable
+- Maintains compatibility with older installations
+
 #### Key Files Modified
-- `/src/core/tabs/TabLayoutManager.tsx` - PostgreSQL integration for tabs
-- `/src/services/databaseService.ts` - API client with MSAL tokens
-- `/Main_Gateway/backend/app/controllers/preferences_controller.py` - User data endpoints
+- `/src/core/tabs/TabLayoutManager.tsx` - Cosmos DB integration for tabs and layouts
+- `/src/services/cosmosConfigService.ts` - Primary Cosmos DB client
+- `/Main_Gateway/backend/app/controllers/cosmos_config_controller.py` - Cosmos DB API endpoints
 - `/Main_Gateway/backend/app/auth/azure_auth.py` - Azure AD validation
 
-### Testing User Memory
+#### API Endpoints
+- **GET** `/api/cosmos/config` - Load user configuration from Cosmos DB
+- **POST** `/api/cosmos/config` - Save user configuration to Cosmos DB
+- **GET** `/api/cosmos/health` - Check Cosmos DB connectivity
+
+### Testing User Memory Persistence
 ```javascript
 // Browser console test
 const accounts = window.msalInstance?.getAllAccounts()
 console.log('Authenticated:', accounts?.length > 0)
 
-// Test tab persistence
+// Test Cosmos DB persistence
+// 1. Add Bloomberg Volatility component via Tools → Add Component
+// 2. Refresh page (Ctrl+R) - component should persist
+// 3. Test in different browser (Chrome vs Safari) - should sync
+// 4. Check Network tab for /api/cosmos/config calls (200 = success)
+
+// Manual API test
 const token = await window.msalInstance.acquireTokenSilent({
   scopes: ['User.Read'],
   account: accounts[0]
 }).then(r => r.accessToken);
 
-fetch('http://localhost:5300/api/preferences/tabs', {
+fetch('/api/cosmos/config', {
   headers: { 'Authorization': `Bearer ${token}` }
 }).then(r => r.json()).then(console.log)
 ```
@@ -179,10 +203,14 @@ echo "Deployed $VERSION at $(date)" >> ../journal/$(date +%Y-%m-%d)/deployment.m
 https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io
 
 ### Current Production Version
-- **Tag**: v20250809-143545
-- **Status**: STABLE ✅
-- **Last Deploy**: 2025-01-09 14:35:45
-- **Features**: Modal visibility fix - users can now add multiple components to tabs
+- **Tag**: v20250814-042941
+- **Status**: STABLE ✅ 
+- **Last Deploy**: 2025-08-14 04:29:41
+- **Critical Fixes**: 
+  - Safari compatibility (redirect auth instead of popup)
+  - Performance optimizations (debounced panel toggle, React.memo)
+  - Memory persistence reliability across Chrome and Safari
+  - Eliminated component flashing/flickering
 
 ## 🏗 Architecture Patterns
 
@@ -407,7 +435,36 @@ az containerapp revision list \
 
 ## 🔄 Recent Critical Fixes
 
-### Session: 241e8dc3-89fd-451f-9bde-ecea7a311930 (2025-08-13)
+### Latest Session: 2025-08-14 - Safari & Performance Fixes ✅
+**Version: v20250814-042941**
+
+#### 🍎 Safari Compatibility Fix (v20250814-041444)
+**Problem**: Safari was crashing due to aggressive popup blocking of MSAL authentication
+**Solution**: Browser-specific authentication strategy
+- **Safari**: Uses `loginRedirect()` and `acquireTokenRedirect()` 
+- **Chrome**: Continues using `loginPopup()` and `acquireTokenPopup()`
+- **Files Modified**: `useAuth.ts`, `UserContext.tsx`, `databaseService.ts`, `UnifiedProvider.tsx`
+- **Result**: Safari users get smooth redirect authentication, no more crashes
+
+#### ⚡ Performance Optimization Fix (v20250814-042941)  
+**Problem**: Component flashing/flickering during panel toggle
+**Solution**: Debounced rendering with React optimizations
+- **Debounced Panel Toggle**: Single update after 400ms instead of 6 rapid updates
+- **React.memo**: Added to `ResponsiveVolatilityAnalysis` and `ComponentRenderer`
+- **Stable Keys**: Simplified grid keys to prevent unnecessary re-renders
+- **Files Modified**: `DynamicCanvas.tsx`, `ResponsiveVolatilityAnalysis.tsx`, `ComponentRenderer.tsx`
+- **Result**: Smooth panel animations, no flickering, better performance
+
+#### 🔒 Memory Persistence Reliability  
+**Problem**: Inconsistent component persistence between Chrome and Safari
+**Solution**: Enhanced fallback chain and cross-browser user ID consistency
+- **Cosmos DB First**: Primary persistence with retry logic
+- **PostgreSQL Fallback**: Legacy support for backward compatibility
+- **localStorage Fallback**: Multiple key search strategy  
+- **Cross-browser**: Consistent user ID detection via MSAL accounts
+- **Result**: Components persist reliably across sessions and browsers
+
+### Previous Session: 241e8dc3-89fd-451f-9bde-ecea7a311930 (2025-08-13)
 **React Error #310 - Infinite Re-renders**
 - Fixed hook order violation (useMemo inside conditional)
 - Memoized tab computation to prevent reference changes
