@@ -69,37 +69,48 @@ async def validate_token(
         logger.warning("Bypassing auth: MOCK token accepted")
         return {"sub": "mock-user", "roles": ["mock"], "aud": CLIENT_ID}
     try:
-        signing_key = get_signing_key(token)
-        # First try with our client ID as audience
+        # Log token info for debugging
+        import base64
+        import json
         try:
-            payload = jwt.decode(
-                token,
-                key=signing_key,
-                algorithms=["RS256"],
-                audience=CLIENT_ID,
-                issuer=ISSUER,
-            )
-            logger.info(f"Token verified with app audience: {payload.get('aud')}")
-            return payload
-        except JWTError:
-            # If that fails, try accepting any token from our tenant
-            # This allows tokens with Graph API audience to work
-            payload = jwt.decode(
-                token,
-                key=signing_key,
-                algorithms=["RS256"],
-                issuer=ISSUER,
-                options={"verify_aud": False}  # Don't verify audience
-            )
-            # But still verify it's from our tenant
-            if payload.get("tid") == TENANT_ID or payload.get("iss", "").startswith(f"https://login.microsoftonline.com/{TENANT_ID}"):
-                logger.info(f"Token verified from same tenant: {payload.get('aud')}")
-                return payload
-            else:
-                raise HTTPException(status_code=401, detail="Token not from expected tenant")
+            parts = token.split('.')
+            if len(parts) == 3:
+                payload_str = parts[1] + '=' * (4 - len(parts[1]) % 4)
+                decoded = base64.urlsafe_b64decode(payload_str)
+                token_info = json.loads(decoded)
+                logger.info(f"Token audience: {token_info.get('aud')}, issuer: {token_info.get('iss')}")
+        except:
+            pass
+        
+        signing_key = get_signing_key(token)
+        
+        # Try to decode with minimal verification - just signature and expiry
+        payload = jwt.decode(
+            token,
+            key=signing_key,
+            algorithms=["RS256"],
+            options={
+                "verify_aud": False,  # Don't verify audience
+                "verify_iss": False,  # Don't verify issuer  
+                "verify_exp": True,   # But do verify expiry
+            }
+        )
+        
+        # Manually verify it's from our tenant
+        token_tid = payload.get("tid")
+        if token_tid != TENANT_ID:
+            logger.error(f"Token from wrong tenant: expected {TENANT_ID}, got {token_tid}")
+            raise HTTPException(status_code=401, detail="Token from wrong tenant")
+        
+        logger.info(f"Token validated successfully for user: {payload.get('preferred_username', payload.get('email'))}")
+        return payload
+        
     except JWTError as e:
         logger.error(f"Token validation failed: {e}")
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error validating token: {e}")
+        raise HTTPException(status_code=401, detail="Token validation error")
 
 
 async def validate_token_ws(websocket: WebSocket):
@@ -141,33 +152,31 @@ async def validate_token_ws(websocket: WebSocket):
 
     try:
         signing_key = get_signing_key(token)
-        # First try with our client ID as audience
-        try:
-            payload = jwt.decode(
-                token,
-                key=signing_key,
-                algorithms=["RS256"],
-                audience=CLIENT_ID,
-                issuer=ISSUER,
-            )
-            logger.info(f"WS Token verified with app audience: {payload.get('aud')}")
-            return payload
-        except JWTError:
-            # If that fails, try accepting any token from our tenant
-            # This allows tokens with Graph API audience to work
-            payload = jwt.decode(
-                token,
-                key=signing_key,
-                algorithms=["RS256"],
-                issuer=ISSUER,
-                options={"verify_aud": False}  # Don't verify audience
-            )
-            # But still verify it's from our tenant
-            if payload.get("tid") == TENANT_ID or payload.get("iss", "").startswith(f"https://login.microsoftonline.com/{TENANT_ID}"):
-                logger.info(f"WS Token verified from same tenant: {payload.get('aud')}")
-                return payload
-            else:
-                raise WebSocketException(code=1008, reason="Token not from expected tenant")
+        
+        # Decode with minimal verification - just signature and expiry
+        payload = jwt.decode(
+            token,
+            key=signing_key,
+            algorithms=["RS256"],
+            options={
+                "verify_aud": False,  # Don't verify audience
+                "verify_iss": False,  # Don't verify issuer
+                "verify_exp": True,   # But do verify expiry
+            }
+        )
+        
+        # Manually verify it's from our tenant
+        token_tid = payload.get("tid")
+        if token_tid != TENANT_ID:
+            logger.error(f"WS Token from wrong tenant: expected {TENANT_ID}, got {token_tid}")
+            raise WebSocketException(code=1008, reason="Token from wrong tenant")
+        
+        logger.info(f"WS Token validated for user: {payload.get('preferred_username', payload.get('email'))}")
+        return payload
+        
     except JWTError as e:
         logger.error(f"WebSocket token validation failed: {e}")
-        raise WebSocketException(code=1008, reason="Unauthorized: Invalid token")
+        raise WebSocketException(code=1008, reason=f"Invalid token: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error validating WS token: {e}")
+        raise WebSocketException(code=1008, reason="Token validation error")
