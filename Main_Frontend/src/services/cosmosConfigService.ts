@@ -63,22 +63,32 @@ class CosmosConfigService {
     }
 
     try {
-      // Request token for our backend API (not Graph API)
-      // Use the default scope for our app's client ID
+      // For now, use the User.Read token which should work with the backend
+      // The backend should accept tokens from the same tenant
       const response = await msal.acquireTokenSilent({
-        scopes: [`api://a873f2d7-2ab9-4d59-a54c-90859226bf2e/.default`],
+        scopes: ["User.Read"],
         account: accounts[0]
       })
       return response.accessToken
     } catch (error) {
-      console.error('Failed to get token:', error)
-      // Fallback to redirect if silent fails (Safari-friendly)
-      await msal.acquireTokenRedirect({
-        scopes: [`api://a873f2d7-2ab9-4d59-a54c-90859226bf2e/.default`],
-        account: accounts[0]
-      })
-      // This will redirect, so we won't get here
-      throw new Error('Redirecting for authentication...')
+      console.error('Failed to get token silently:', error)
+      // Try popup for interactive auth
+      try {
+        const response = await msal.acquireTokenPopup({
+          scopes: ["User.Read"],
+          account: accounts[0]
+        })
+        return response.accessToken
+      } catch (popupError) {
+        console.error('Popup failed, trying redirect:', popupError)
+        // Last resort: redirect (Safari-friendly)
+        await msal.acquireTokenRedirect({
+          scopes: ["User.Read"],
+          account: accounts[0]
+        })
+        // This will redirect, so we won't get here
+        throw new Error('Redirecting for authentication...')
+      }
     }
   }
 

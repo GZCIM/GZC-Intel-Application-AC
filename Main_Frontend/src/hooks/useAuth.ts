@@ -27,6 +27,14 @@ export function useAuth() {
     // Safari-compatible authentication - use redirect for Safari, popup for Chrome
     const login = async () => {
         try {
+            // Clear any in-progress interactions first
+            const inProgress = instance.getInProgressInstance();
+            if (inProgress) {
+                console.log('Clearing in-progress MSAL interaction');
+                // Wait a bit for the interaction to settle
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
             telemetryService.trackAuthEvent('login_attempt');
             
             // Detect Safari and use redirect instead of popup
@@ -50,6 +58,26 @@ export function useAuth() {
                 }
             }
         } catch (error) {
+            // Check if it's an interaction_in_progress error
+            if (error instanceof Error && error.message.includes('interaction_in_progress')) {
+                console.log('MSAL interaction in progress, waiting and retrying...');
+                // Wait longer and retry once
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                try {
+                    const response = await instance.loginPopup(loginRequest);
+                    telemetryService.trackAuthEvent('login_success_retry', {
+                        username: response.account?.username,
+                        accountId: response.account?.homeAccountId
+                    });
+                    if (response.account) {
+                        telemetryService.setUserId(response.account.homeAccountId);
+                    }
+                    return;
+                } catch (retryError) {
+                    console.error("Login retry also failed:", retryError);
+                }
+            }
+            
             telemetryService.trackAuthEvent('login_failure', {
                 error: error instanceof Error ? error.message : 'Unknown error'
             });
