@@ -129,8 +129,8 @@ export class ComponentInventory {
       category: 'financial',
       subcategory: 'portfolio',
       description: 'Professional FX portfolio with trades and positions views, fund filtering, and real-time P&L',
-      defaultSize: { w: 10, h: 8 },
-      minSize: { w: 8, h: 6 },
+      defaultSize: { w: 6, h: 8 },
+      minSize: { w: 4, h: 4 },
       maxSize: { w: 12, h: 12 },
       tags: ['portfolio', 'fx', 'trading', 'gcf', 'gmf', 'positions', 'professional', 'port-3200'],
       complexity: 'complex',
@@ -146,8 +146,8 @@ export class ComponentInventory {
       category: 'analytics',
       subcategory: 'dashboard',
       description: 'Real-time market analytics with live prices, order book, performance metrics, and correlations',
-      defaultSize: { w: 10, h: 8 },
-      minSize: { w: 8, h: 6 },
+      defaultSize: { w: 6, h: 8 },
+      minSize: { w: 4, h: 4 },
       maxSize: { w: 12, h: 12 },
       tags: ['analytics', 'market', 'real-time', 'orderbook', 'performance', 'professional', 'port-3200'],
       complexity: 'complex',
@@ -163,8 +163,8 @@ export class ComponentInventory {
       category: 'visualization',
       subcategory: 'volatility',
       description: 'Professional FX options volatility surface visualization with smile analysis and term structure. Real-time Bloomberg data.',
-      defaultSize: { w: 10, h: 8 },
-      minSize: { w: 8, h: 6 },
+      defaultSize: { w: 6, h: 8 },
+      minSize: { w: 4, h: 4 },
       maxSize: { w: 12, h: 12 },
       tags: ['volatility', 'options', 'bloomberg', 'fx', 'surface', '3d', 'smile', 'term-structure', 'real-time'],
       complexity: 'complex',
@@ -174,7 +174,7 @@ export class ComponentInventory {
       props: {
         apiEndpoint: process.env.NODE_ENV === 'development' 
           ? 'http://localhost:8080' 
-          : 'http://20.172.249.92:8080'
+          : 'http://20.172.249.92:8080'  // Direct Bloomberg VM API (K8s gateway at 52.149.235.82 available)
       }
     })
 
@@ -186,8 +186,8 @@ export class ComponentInventory {
       category: 'financial',
       subcategory: 'portfolio',
       description: 'Portfolio management component with holdings and performance tracking',
-      defaultSize: { w: 8, h: 6 },
-      minSize: { w: 6, h: 4 },
+      defaultSize: { w: 6, h: 6 },
+      minSize: { w: 4, h: 4 },
       maxSize: { w: 12, h: 10 },
       tags: ['portfolio', 'holdings', 'performance', 'management'],
       complexity: 'medium',
@@ -383,7 +383,7 @@ if (!componentInventory.getComponent('bloomberg-volatility')) {
     props: {
       apiEndpoint: process.env.NODE_ENV === 'development' 
         ? 'http://localhost:8080' 
-        : 'http://bloomberg-gateway.bloomberg-gateway'
+        : '/api/bloomberg'  // Use nginx proxy to avoid mixed content
     }
   })
   

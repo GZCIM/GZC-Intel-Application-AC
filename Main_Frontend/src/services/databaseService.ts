@@ -69,11 +69,21 @@ class DatabaseService {
       if (msalInstance) {
         try {
           console.log('🔄 Database service: Attempting interactive authentication...')
-          const response = await msalInstance.acquireTokenPopup(loginRequest)
-          console.log('✅ Database service: Interactive auth successful')
-          return {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${response.accessToken}`
+          
+          // Safari-compatible token acquisition
+          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+          if (isSafari) {
+            console.log('🍎 DatabaseService: Safari detected - using redirect for token');
+            await msalInstance.acquireTokenRedirect(loginRequest);
+            throw new Error('Token acquisition redirected - will complete after redirect');
+          } else {
+            console.log('🌐 DatabaseService: Chrome/Edge detected - using popup for token');
+            const response = await msalInstance.acquireTokenPopup(loginRequest)
+            console.log('✅ Database service: Interactive auth successful')
+            return {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${response.accessToken}`
+            }
           }
         } catch (interactiveError) {
           console.error('❌ Interactive auth failed:', interactiveError)

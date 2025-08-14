@@ -26,9 +26,12 @@ body {
   flex: 1;
 }
 
-/* Left panel - Market Intel */
+/* Left panel - Market Intel - width now controlled by React component */
 .dashboard-left-panel {
   flex-shrink: 0;
+  /* width removed - controlled by MarketIntelPanel component */
+  position: relative;
+  z-index: 10;
 }
 
 /* Scrollbar styling for left panel */

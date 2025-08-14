@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Volatility Component Data Parsing</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #333; }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .data { background: #222; padding: 10px; margin: 10px 0; overflow-x: auto; }
+        pre { margin: 0; }
+    </style>
+</head>
+<body>
+    <h1>Bloomberg Volatility Component - Data Parsing Verification</h1>
+    
+    <div class="test">
+        <h2>1. Raw K8s Gateway Response</h2>
+        <button onclick="fetchRawData()">Fetch Raw Data</button>
+        <div id="raw-data" class="data"></div>
+    </div>
+    
+    <div class="test">
+        <h2>2. Parsed Data Structure (Frontend Logic)</h2>
+        <button onclick="parseAndDisplay()">Parse Data</button>
+        <div id="parsed-data" class="data"></div>
+    </div>
+    
+    <div class="test">
+        <h2>3. Component Ready Check</h2>
+        <button onclick="checkComponentReady()">Check Component</button>
+        <div id="component-check" class="data"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io/api/bloomberg/api/volatility-surface/EURUSD';
+        
+        async function fetchRawData() {
+            const div = document.getElementById('raw-data');
+            div.innerHTML = 'Fetching...';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(['1M', '3M'])
+                });
+                const data = await response.json();
+                
+                div.innerHTML = `<span class="success">✓ Raw Response Structure:</span><pre>${JSON.stringify({
+                    success: data.success,
+                    pair: data.pair,
+                    hasData: !!data.data,
+                    hasSecuritiesData: !!(data.data?.data?.securities_data),
+                    securitiesCount: data.data?.data?.securities_data?.length || 0,
+                    firstSecurity: data.data?.data?.securities_data?.[0] || null
+                }, null, 2)}</pre>`;
+                
+                window.rawData = data;
+            } catch (err) {
+                div.innerHTML = `<span class="error">✗ Error: ${err.message}</span>`;
+            }
+        }
+        
+        async function parseAndDisplay() {
+            const div = document.getElementById('parsed-data');
+            
+            if (!window.rawData) {
+                await fetchRawData();
+            }
+            
+            const volData = window.rawData;
+            let data = [];
+            
+            // Apply the same parsing logic as frontend
+            if (volData.data?.data?.securities_data) {
+                console.log('Parsing K8s gateway format');
+                const securities = volData.data.data.securities_data;
+                const selectedPair = 'EURUSD';
+                
+                // Group securities by tenor
+                const byTenor = {};
+                securities.forEach(sec => {
+                    if (sec.success && sec.fields) {
+                        const ticker = sec.security;
+                        // Extract tenor from ticker
+                        const match = ticker.match(new RegExp(`${selectedPair}(\\\\d*[RBV])(\\\\d+[DWMY])\\\\s`));
+                        if (match) {
+                            const tenor = match[2];
+                            if (!byTenor[tenor]) {
+                                byTenor[tenor] = {
+                                    tenor,
+                                    raw: {},
+                                    securities: []
+                                };
+                            }
+                            
+                            byTenor[tenor].securities.push({
+                                ticker: ticker.replace(' BGN Curncy', ''),
+                                last: sec.fields.PX_LAST,
+                                bid: sec.fields.PX_BID,
+                                ask: sec.fields.PX_ASK
+                            });
+                            
+                            // Parse the ticker type
+                            const typeMatch = ticker.match(new RegExp(`${selectedPair}(\\\\d*)?([RBV])(\\\\d+[DWMY])`));
+                            if (typeMatch) {
+                                const delta = typeMatch[1] || '';
+                                const type = typeMatch[2];
+                                
+                                if (type === 'V') {
+                                    byTenor[tenor].raw.atm_bid = sec.fields.PX_BID || null;
+                                    byTenor[tenor].raw.atm_ask = sec.fields.PX_ASK || null;
+                                    byTenor[tenor].atm_mid = sec.fields.PX_LAST || null;
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                data = Object.values(byTenor);
+            }
+            
+            div.innerHTML = `<span class="success">✓ Parsed Data:</span><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            window.parsedData = data;
+        }
+        
+        async function checkComponentReady() {
+            const div = document.getElementById('component-check');
+            
+            if (!window.parsedData) {
+                await parseAndDisplay();
+            }
+            
+            const checks = {
+                'Data Available': window.parsedData?.length > 0,
+                'Has ATM Values': window.parsedData?.some(d => d.atm_mid !== null),
+                'Has Raw Data': window.parsedData?.some(d => d.raw && Object.keys(d.raw).length > 0),
+                'Tenor Count': window.parsedData?.length || 0,
+                'Ready for Visualization': window.parsedData?.length > 0 && window.parsedData.some(d => d.atm_mid)
+            };
+            
+            const allPassed = Object.values(checks).every(v => v === true || v > 0);
+            
+            let html = allPassed 
+                ? '<span class="success">✅ Component is ready to display data!</span>\n\n' 
+                : '<span class="error">❌ Component may have issues</span>\n\n';
+            
+            Object.entries(checks).forEach(([key, value]) => {
+                const icon = (value === true || value > 0) ? '✓' : '✗';
+                const cls = (value === true || value > 0) ? 'success' : 'error';
+                html += `<span class="${cls}">${icon} ${key}: ${value}</span>\n`;
+            });
+            
+            div.innerHTML = `<pre>${html}</pre>`;
+        }
+        
+        // Auto-run on load
+        window.onload = () => {
+            console.log('Volatility parsing verification loaded');
+            console.log('API URL:', API_URL);
+        };
+    </script>
+</body>
+</html>

@@ -7,7 +7,6 @@ import { ErrorBoundary } from '../../components/ErrorBoundary'
 import { ComponentLink, TabTemplate } from './TabTemplate'
 import { FeatherIcon } from '../../components/icons/FeatherIcon'
 import { TabContainer } from '../../components/TabContainer'
-import { TabEditButton } from '../../components/TabEditButton'
 // GridTabWrapper removed - all components render directly
 import { 
   componentRegistry, 

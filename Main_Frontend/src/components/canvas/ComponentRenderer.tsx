@@ -53,7 +53,7 @@ const componentMap: Record<string, () => Promise<any>> = {
   'scanner-results': () => Promise.resolve(null)
 }
 
-export const ComponentRenderer: React.FC<ComponentRendererProps> = ({
+export const ComponentRenderer = React.memo<ComponentRendererProps>(({
   componentId,
   instanceId,
   props = {},
@@ -261,6 +261,7 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({
         }}>
           {isEditMode && (
             <button
+              className="remove-component"
               onClick={() => {
                 debugLogger.info(`Remove button clicked for ${componentId}`)
                 if (window.confirm(`Are you sure you want to remove ${meta.displayName}?\n\nThis action cannot be undone.`)) {
@@ -396,4 +397,4 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({
       </div>
     </div>
   )
-}
+})

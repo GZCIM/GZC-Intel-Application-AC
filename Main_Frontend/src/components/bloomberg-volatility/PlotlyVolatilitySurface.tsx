@@ -35,13 +35,13 @@ export function PlotlyVolatilitySurface({ surfaceData, selectedPair }: PlotlyVol
       const row: number[] = []
       tenorLabels.push(tenor.tenor)
       
-      // Get mid values
+      // Get mid values - using .raw structure to match standalone app exactly
       const atmMid = tenor.raw?.atm_bid && tenor.raw?.atm_ask ? (tenor.raw.atm_bid + tenor.raw.atm_ask) / 2 : 0
       
       // Process each delta point
       deltaPoints.forEach(delta => {
         if (!atmMid) {
-          row.push(0)
+          row.push(0)  // Use 0 for missing data to match standalone
           return
         }
         
@@ -79,9 +79,9 @@ export function PlotlyVolatilitySurface({ surfaceData, selectedPair }: PlotlyVol
             break
         }
         
-        // Calculate volatility using FX convention
+        // Calculate volatility using FX convention (matching standalone app exactly)
         const vol = isPut 
-          ? atmMid - rr/2 + bf  // Put volatility
+          ? atmMid - rr/2 + bf  // Put volatility 
           : atmMid + rr/2 + bf  // Call volatility
           
         row.push(vol)
@@ -90,12 +90,14 @@ export function PlotlyVolatilitySurface({ surfaceData, selectedPair }: PlotlyVol
       volMatrix.push(row)
     })
 
-    // Create Plotly 3D surface
+    // Create Plotly 3D surface with smoothing
     const data: Plotly.Data[] = [{
       type: 'surface',
       x: deltaLabels,
       y: tenorLabels,
       z: volMatrix,
+      connectgaps: true,  // Connect gaps in data
+      smoothing: 0.85,    // Add smoothing for better interpolation
       colorscale: [
         [0, '#1a1a1a'],      // Deep carbon black (low vol)
         [0.25, '#2d4a3a'],   // Dark forest green  

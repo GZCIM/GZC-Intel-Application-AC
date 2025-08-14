@@ -136,8 +136,32 @@ interface TabLayoutProviderProps {
 
 export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
   const { user } = useUser()
-  const userId = user?.id || 'default-user'
+  
+  // Try multiple ways to get a consistent userId across browsers
+  const getUserId = () => {
+    if (user?.id) return user.id
+    
+    // Try to get from MSAL accounts
+    try {
+      const msalInstance = (window as any).msalInstance
+      if (msalInstance) {
+        const accounts = msalInstance.getAllAccounts()
+        if (accounts?.length > 0) {
+          return accounts[0].homeAccountId || accounts[0].username || 'msal-user'
+        }
+      }
+    } catch (e) {
+      // Ignore MSAL errors
+    }
+    
+    // Fallback to a browser-consistent identifier
+    return 'default-user'
+  }
+  
+  const userId = getUserId()
   const isAuthenticated = !!user?.id  // Check if user is actually authenticated
+  
+  console.log('TabLayoutProvider: Using userId:', userId, 'isAuthenticated:', isAuthenticated)
 
   // Helper function to get user-specific localStorage key
   const getUserKey = (key: string) => `${key}-${userId}`
@@ -187,79 +211,96 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
   // Load saved layouts from PostgreSQL when user changes
   useEffect(() => {
     const checkAuthAndLoad = async () => {
-      // CRITICAL FIX: Wait for MSAL to be initialized first
-      const msalInstance = (window as any).msalInstance;
+      // CRITICAL FIX: Better MSAL availability check with retry logic
+      let msalInstance = (window as any).msalInstance;
+      let retryCount = 0;
+      const maxRetries = 5;
       
-      // Check if MSAL is initialized, if not wait
+      // Wait for MSAL to be properly initialized with retry logic
+      while ((!msalInstance || !msalInstance.getConfiguration) && retryCount < maxRetries) {
+        console.log(`TabLayoutManager: MSAL not available yet, retry ${retryCount + 1}/${maxRetries}...`)
+        await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1))); // Progressive delay
+        msalInstance = (window as any).msalInstance;
+        retryCount++;
+      }
+      
+      // If MSAL still not available after retries, proceed with defaults
       if (!msalInstance || !msalInstance.getConfiguration) {
-        console.log('TabLayoutManager: MSAL not available yet, waiting...')
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return; // Let the effect retry
-      }
-      
-      // Try to get accounts safely
-      let accounts = [];
-      let isUserAuthenticated = false;
-      
-      try {
-        accounts = msalInstance.getAllAccounts() || [];
-        isUserAuthenticated = accounts.length > 0;
-      } catch (e) {
-        // MSAL not initialized yet
-        console.log('TabLayoutManager: MSAL not initialized, waiting...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Try again after waiting
-        try {
-          accounts = msalInstance.getAllAccounts() || [];
-          isUserAuthenticated = accounts.length > 0;
-        } catch (e2) {
-          console.log('TabLayoutManager: MSAL still not ready, using defaults');
-        }
-      }
-        
-      if (!isUserAuthenticated) {
-        console.log('TabLayoutManager: No authenticated accounts after wait, using default layout')
+        console.log('TabLayoutManager: MSAL not available after retries, using defaults')
         setCurrentLayout(DEFAULT_LAYOUT)
         setLayouts([DEFAULT_LAYOUT])
         setActiveTabId('analytics')
         return
       }
       
+      // Try to get accounts safely with better error handling
+      let accounts = [];
+      let isUserAuthenticated = false;
+      
+      try {
+        accounts = msalInstance.getAllAccounts() || [];
+        isUserAuthenticated = accounts.length > 0;
+        console.log(`TabLayoutManager: Found ${accounts.length} authenticated accounts`)
+      } catch (e) {
+        console.log('TabLayoutManager: Error getting accounts, using defaults', e);
+        isUserAuthenticated = false;
+      }
+        
+      if (!isUserAuthenticated) {
+        console.log('TabLayoutManager: No authenticated accounts, but still trying to load from Cosmos DB (works without MSAL)')
+        // Don't return early - still try to load from Cosmos DB as it works without backend auth
+      }
+      
       console.log(`TabLayoutManager: Loading layouts for user ${userId}`)
       
-      // Try Cosmos DB FIRST (works without backend!)
-      try {
-        const cosmosConfig = await cosmosConfigService.loadConfiguration()
-        if (cosmosConfig?.tabs && cosmosConfig.tabs.length > 0) {
-          // Deduplicate tabs when loading
-          const tabIds = new Set<string>()
-          const uniqueTabs = cosmosConfig.tabs.filter(t => {
-            if (tabIds.has(t.id)) {
-              console.warn(`Found duplicate tab ${t.id} in loaded config, removing`)
-              return false
+      // Try Cosmos DB FIRST (works without backend!) - with better retry logic
+      let cosmosRetryCount = 0;
+      const maxCosmosRetries = 3;
+      
+      while (cosmosRetryCount < maxCosmosRetries) {
+        try {
+          console.log(`TabLayoutManager: Attempting to load from Cosmos DB (attempt ${cosmosRetryCount + 1}/${maxCosmosRetries})`)
+          const cosmosConfig = await cosmosConfigService.loadConfiguration()
+          
+          if (cosmosConfig?.tabs && cosmosConfig.tabs.length > 0) {
+            // Deduplicate tabs when loading and ensure editMode is false
+            const tabIds = new Set<string>()
+            const uniqueTabs = cosmosConfig.tabs.filter(t => {
+              if (tabIds.has(t.id)) {
+                console.warn(`Found duplicate tab ${t.id} in loaded config, removing`)
+                return false
+              }
+              tabIds.add(t.id)
+              return true
+            }).map(t => ({
+              ...t,
+              editMode: false // Always start with edit mode OFF when loading
+            }))
+            
+            console.log(`✅ TabLayoutManager: Successfully loaded ${uniqueTabs.length} unique tabs from Cosmos DB`)
+            const cosmosLayout = { 
+              ...DEFAULT_LAYOUT,
+              tabs: uniqueTabs,
+              id: 'cosmos-layout',
+              name: 'Cosmos Layout'
             }
-            tabIds.add(t.id)
-            return true
-          })
-          
-          console.log(`TabLayoutManager: Loaded ${uniqueTabs.length} unique tabs from Cosmos DB (${cosmosConfig.tabs.length} total)`)
-          const cosmosLayout = { 
-            ...DEFAULT_LAYOUT,
-            tabs: uniqueTabs,
-            id: 'cosmos-layout',
-            name: 'Cosmos Layout'
+            setCurrentLayout(cosmosLayout)
+            setLayouts([DEFAULT_LAYOUT, cosmosLayout])
+            
+            const activeTabId = uniqueTabs[0]?.id || 'analytics'
+            setActiveTabId(activeTabId)
+            return // Cosmos DB is source of truth
+          } else {
+            console.log('TabLayoutManager: Cosmos DB returned empty or invalid config')
+            break; // No point retrying if we got a response but it's empty
           }
-          setCurrentLayout(cosmosLayout)
-          setLayouts([DEFAULT_LAYOUT, cosmosLayout])
-          
-          const activeTabId = uniqueTabs[0]?.id || 'analytics'
-          setActiveTabId(activeTabId)
-          return // Cosmos DB is source of truth
+        } catch (e) {
+          console.error(`TabLayoutManager: Cosmos DB attempt ${cosmosRetryCount + 1} failed:`, e)
+          cosmosRetryCount++;
+          if (cosmosRetryCount < maxCosmosRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * cosmosRetryCount)); // Progressive delay
+          }
         }
-      } catch (e) {
-        console.error('Failed to load from Cosmos DB:', e)
-        // Fall through to other methods
       }
       
       // Try database if Cosmos DB fails (for backward compatibility)
@@ -286,30 +327,58 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         }
       }
       
-      // Fallback to localStorage if no database data or not authenticated
-      const savedLayoutStr = localStorage.getItem(getUserKey('gzc-intel-current-layout'))
+      // Fallback to localStorage - try MULTIPLE storage keys to find user data
+      console.log('Trying localStorage fallback...')
+      
+      // Try the user-specific key first
+      let savedLayoutStr = localStorage.getItem(getUserKey('gzc-intel-current-layout'))
+      
+      // If user-specific not found, try default key (for backward compatibility)
+      if (!savedLayoutStr) {
+        savedLayoutStr = localStorage.getItem('gzc-intel-current-layout')
+        console.log('Trying default localStorage key...')
+      }
+      
+      // Also try searching for any layout data
+      if (!savedLayoutStr) {
+        const allKeys = Object.keys(localStorage).filter(key => key.includes('layout') || key.includes('tab'))
+        console.log('Found potential layout keys:', allKeys)
+        
+        for (const key of allKeys) {
+          try {
+            const data = localStorage.getItem(key)
+            if (data && data.includes('components') && data.includes('Bloomberg')) {
+              console.log(`Found layout data in key: ${key}`)
+              savedLayoutStr = data
+              break
+            }
+          } catch (e) {
+            // Skip invalid keys
+          }
+        }
+      }
+      
       if (savedLayoutStr) {
         try {
           const parsedLayout = JSON.parse(savedLayoutStr)
-          console.log('Loaded layout from localStorage:', parsedLayout)
+          console.log('✅ Successfully loaded layout from localStorage:', parsedLayout)
           setCurrentLayout(parsedLayout)
           setLayouts([DEFAULT_LAYOUT, parsedLayout])
           
           // Set active tab from saved layout
           const activeTabId = parsedLayout.tabs?.[0]?.id || 'analytics'
           setActiveTabId(activeTabId)
+          return // Don't fall back to defaults if we found saved data
         } catch (e) {
           console.error('Failed to parse localStorage:', e)
         }
       }
       
       // If no saved data anywhere, initialize with defaults
-      if (!currentLayout) {
-        console.log('Using default layout')
-        setCurrentLayout(DEFAULT_LAYOUT)
-        setLayouts([DEFAULT_LAYOUT])
-        setActiveTabId('analytics')
-      }
+      console.log('⚠️ No saved layout found anywhere, using default layout')
+      setCurrentLayout(DEFAULT_LAYOUT)
+      setLayouts([DEFAULT_LAYOUT])
+      setActiveTabId('analytics')
     }
     
     checkAuthAndLoad()
@@ -516,6 +585,17 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
   const updateTab = (tabId: string, updates: Partial<TabConfig>) => {
     console.log('UPDATE TAB CALLED:', { tabId, updates })
     
+    // Log when components are being saved (this means exiting edit mode)
+    if (updates.components) {
+      console.log('💾 Saving component layout to Cosmos DB:', {
+        tabId,
+        componentCount: updates.components.length,
+        hasEditModeChange: updates.editMode !== undefined,
+        editMode: updates.editMode,
+        timestamp: new Date().toISOString()
+      })
+    }
+    
     // Preserve editMode if not explicitly set in updates
     const currentTab = currentLayout.tabs.find(t => t.id === tabId)
     const preservedUpdates = {
@@ -551,6 +631,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
           return true
         })
         
+        console.log('🚀 Sending to Cosmos DB...')
         await cosmosConfigService.saveConfiguration({
           tabs: uniqueTabs,
           layouts: layouts,

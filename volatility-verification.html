@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloomberg Volatility Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .verification-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 8px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #333;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bloomberg Volatility Surface Verification</h1>
+        
+        <div class="verification-section">
+            <h2>1. K8s Gateway Health Check</h2>
+            <button onclick="checkHealth()">Check Health</button>
+            <div id="health-result" class="result"></div>
+        </div>
+
+        <div class="verification-section">
+            <h2>2. Reference Data Endpoint</h2>
+            <select id="currency-pair">
+                <option value="EURUSD">EURUSD</option>
+                <option value="GBPUSD">GBPUSD</option>
+                <option value="USDJPY">USDJPY</option>
+                <option value="AUDUSD">AUDUSD</option>
+                <option value="USDCHF">USDCHF</option>
+                <option value="USDCAD">USDCAD</option>
+                <option value="NZDUSD">NZDUSD</option>
+            </select>
+            <select id="tenor">
+                <option value="1W">1 Week</option>
+                <option value="1M" selected>1 Month</option>
+                <option value="2M">2 Months</option>
+                <option value="3M">3 Months</option>
+                <option value="6M">6 Months</option>
+                <option value="1Y">1 Year</option>
+            </select>
+            <button onclick="fetchVolatility()">Fetch Volatility Data</button>
+            <div id="volatility-result" class="result"></div>
+        </div>
+
+        <div class="verification-section">
+            <h2>3. Full Volatility Surface</h2>
+            <button onclick="loadFullSurface()">Load Full Surface</button>
+            <div id="surface-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io';
+        const K8S_GATEWAY = 'http://52.149.235.82';
+        
+        async function checkHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.innerHTML = 'Checking K8s Gateway health...';
+            
+            try {
+                // Check through production proxy
+                const response = await fetch(`${API_BASE}/api/bloomberg/health`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✅ Gateway Health Check</span>\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        async function fetchVolatility() {
+            const resultDiv = document.getElementById('volatility-result');
+            const pair = document.getElementById('currency-pair').value;
+            const tenor = document.getElementById('tenor').value;
+            
+            resultDiv.innerHTML = `Fetching ${pair} ${tenor} volatility...`;
+            
+            try {
+                // Build tickers for ATM, RR, and BF
+                const securities = [
+                    `${pair}V${tenor} BGN Curncy`,  // ATM
+                    `${pair}25R${tenor} BGN Curncy`, // 25D Risk Reversal
+                    `${pair}25B${tenor} BGN Curncy`, // 25D Butterfly
+                    `${pair}10R${tenor} BGN Curncy`, // 10D Risk Reversal
+                    `${pair}10B${tenor} BGN Curncy`  // 10D Butterfly
+                ];
+                
+                const response = await fetch(`${API_BASE}/api/bloomberg/api/bloomberg/reference`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        securities: securities,
+                        fields: ['PX_LAST', 'PX_BID', 'PX_ASK']
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `<span class="success">✅ Volatility Data for ${pair} ${tenor}</span>\n\n`;
+                    html += '<table>';
+                    html += '<tr><th>Security</th><th>Last</th><th>Bid</th><th>Ask</th></tr>';
+                    
+                    data.data.securities_data.forEach(sec => {
+                        if (sec.success) {
+                            const ticker = sec.security.replace(' BGN Curncy', '');
+                            html += `<tr>`;
+                            html += `<td>${ticker}</td>`;
+                            html += `<td>${sec.fields.PX_LAST || '-'}</td>`;
+                            html += `<td>${sec.fields.PX_BID || '-'}</td>`;
+                            html += `<td>${sec.fields.PX_ASK || '-'}</td>`;
+                            html += `</tr>`;
+                        }
+                    });
+                    html += '</table>';
+                    
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed to get data</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        async function loadFullSurface() {
+            const resultDiv = document.getElementById('surface-result');
+            const pair = document.getElementById('currency-pair').value;
+            
+            resultDiv.innerHTML = `Loading full volatility surface for ${pair}...`;
+            
+            try {
+                const tenors = ['1W', '2W', '1M', '2M', '3M', '6M', '9M', '1Y'];
+                const deltas = ['5', '10', '15', '25', '35'];
+                const securities = [];
+                
+                // Build full surface tickers
+                tenors.forEach(tenor => {
+                    // ATM
+                    securities.push(`${pair}V${tenor} BGN Curncy`);
+                    // Risk Reversals and Butterflies
+                    deltas.forEach(delta => {
+                        securities.push(`${pair}${delta}R${tenor} BGN Curncy`);
+                        securities.push(`${pair}${delta}B${tenor} BGN Curncy`);
+                    });
+                });
+                
+                const response = await fetch(`${API_BASE}/api/bloomberg/api/bloomberg/reference`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        securities: securities,
+                        fields: ['PX_LAST']
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `<span class="success">✅ Full Volatility Surface for ${pair}</span>\n`;
+                    html += `Total securities fetched: ${data.data.securities_data.length}\n\n`;
+                    
+                    // Group by tenor
+                    const byTenor = {};
+                    data.data.securities_data.forEach(sec => {
+                        if (sec.success && sec.fields.PX_LAST !== null) {
+                            const ticker = sec.security.replace(' BGN Curncy', '');
+                            const match = ticker.match(/([A-Z]{6})([\d]*[RBV])(\d+[WMY])/);
+                            if (match) {
+                                const tenor = match[3];
+                                if (!byTenor[tenor]) byTenor[tenor] = [];
+                                byTenor[tenor].push({
+                                    ticker: ticker,
+                                    value: sec.fields.PX_LAST
+                                });
+                            }
+                        }
+                    });
+                    
+                    html += '<table>';
+                    html += '<tr><th>Tenor</th><th>ATM</th><th>25D RR</th><th>25D BF</th><th>10D RR</th><th>10D BF</th></tr>';
+                    
+                    Object.keys(byTenor).sort().forEach(tenor => {
+                        const items = byTenor[tenor];
+                        const atm = items.find(i => i.ticker.includes(`V${tenor}`));
+                        const rr25 = items.find(i => i.ticker.includes(`25R${tenor}`));
+                        const bf25 = items.find(i => i.ticker.includes(`25B${tenor}`));
+                        const rr10 = items.find(i => i.ticker.includes(`10R${tenor}`));
+                        const bf10 = items.find(i => i.ticker.includes(`10B${tenor}`));
+                        
+                        html += `<tr>`;
+                        html += `<td>${tenor}</td>`;
+                        html += `<td>${atm ? atm.value.toFixed(3) : '-'}</td>`;
+                        html += `<td>${rr25 ? rr25.value.toFixed(3) : '-'}</td>`;
+                        html += `<td>${bf25 ? bf25.value.toFixed(3) : '-'}</td>`;
+                        html += `<td>${rr10 ? rr10.value.toFixed(3) : '-'}</td>`;
+                        html += `<td>${bf10 ? bf10.value.toFixed(3) : '-'}</td>`;
+                        html += `</tr>`;
+                    });
+                    html += '</table>';
+                    
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed to get surface data</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+        
+        // Auto-log on load
+        window.onload = () => {
+            console.log('Bloomberg Volatility Verification Page Loaded');
+            console.log('API Base:', API_BASE);
+            console.log('K8s Gateway:', K8S_GATEWAY);
+        };
+    </script>
+</body>
+</html>

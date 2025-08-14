@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { AccountInfo } from "@azure/msal-browser";
+import { configSyncService } from '../services/configSyncService';
 
 interface User {
     id: string;
@@ -128,10 +129,23 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const login = async () => {
         try {
-            await instance.loginPopup({
-                scopes: ["User.Read"],
-            });
-            // User state will be updated automatically through useEffect
+            // Safari-compatible authentication - use redirect for Safari, popup for Chrome
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            console.log('UserContext login - Safari:', isSafari);
+            
+            if (isSafari) {
+                console.log('🍎 UserContext: Safari detected - using redirect authentication');
+                await instance.loginRedirect({
+                    scopes: ["User.Read"],
+                });
+                // For redirect, user state will be updated after redirect callback
+            } else {
+                console.log('🌐 UserContext: Chrome/Edge detected - using popup authentication');
+                await instance.loginPopup({
+                    scopes: ["User.Read"],
+                });
+                // User state will be updated automatically through useEffect
+            }
         } catch (error) {
             console.error("Login failed:", error);
             throw error;
@@ -140,6 +154,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const logout = async () => {
         try {
+            // Sync configuration before logout
+            console.log('Syncing configuration before logout...');
+            await configSyncService.syncNow();
+            
             await instance.logoutPopup();
             setUser(null);
             localStorage.removeItem("gzc-intel-user");

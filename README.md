@@ -1,6 +1,6 @@
 # GZC Intel Application AC
 
-Financial intelligence dashboard with drag-and-drop components, real-time data visualization, and portfolio management.
+Financial intelligence dashboard with Bloomberg Terminal integration, drag-and-drop components, real-time FX volatility surfaces, and portfolio management.
 
 ## Quick Start
 
@@ -27,19 +27,26 @@ Main_Frontend/          # React frontend with drag-drop grid
 ├── src/
 │   ├── components/
 │   │   ├── canvas/     # Grid layout system
-│   │   └── gzc-portfolio/  # Portfolio component
+│   │   ├── gzc-portfolio/  # Portfolio component
+│   │   └── bloomberg-volatility/  # FX volatility surfaces
 │   └── core/
 │       └── components/ # Component inventory & constraints
 │
 FSS_Socket/backend/     # Flask WebSocket backend
 ├── app/
 └── requirements.txt
+│
+K8s Bloomberg Gateway/  # Kubernetes-deployed Bloomberg proxy
+├── Deployment: bloomberg-gateway (52.149.235.82)
+└── Endpoints: /api/bloomberg/reference, /api/volatility-surface
 ```
 
 ## Key Features
 
+- **Bloomberg Terminal Integration**: Real-time FX volatility surfaces with ATM, risk reversals, and butterflies
 - **Dynamic Canvas**: Drag-and-drop component grid with size constraints
 - **Portfolio Management**: Real-time FX trades and positions
+- **K8s Bloomberg Gateway**: Secure proxy for Bloomberg Terminal data (no mixed content issues)
 - **Theme System**: Dark/light themes with CSS variables
 - **WebSocket Data**: Real-time market data streams
 
@@ -49,6 +56,17 @@ See `/journal/` for daily progress and decisions:
 - `/journal/2025-01-08/` - Grid resize fixes, deployment issues
 
 ## Core Systems
+
+### Bloomberg Terminal Integration
+- **Volatility Surface Component**: Professional FX options visualization
+  - Supported pairs: EURUSD, GBPUSD, USDJPY, AUDUSD, USDCHF, USDCAD, NZDUSD
+  - Tenors: ON, 1W, 2W, 1M, 2M, 3M, 6M, 9M, 1Y, 18M, 2Y
+  - Data: ATM volatility, risk reversals (5D-35D), butterflies
+- **K8s Gateway**: Centralized Bloomberg data proxy
+  - LoadBalancer: 52.149.235.82
+  - Redis caching with 15-minute TTL
+  - Endpoints: `/api/bloomberg/reference`, `/api/volatility-surface/{pair}`
+- **Bloomberg VM**: Direct Terminal connection (20.172.249.92:8080)
 
 ### Component Grid Layout
 - 12-column responsive grid
@@ -67,6 +85,12 @@ See `/journal/` for daily progress and decisions:
 - Nginx static serving + Flask API
 
 ## Common Tasks
+
+### Add Bloomberg Volatility Component
+1. Navigate to Tools → Add Component
+2. Select "Bloomberg Volatility Analysis" from Visualization category
+3. Drag to resize, displays real-time FX volatility surfaces
+4. Data flows through K8s gateway (no direct Bloomberg VM access)
 
 ### Fix Component Not Resizing
 Check `DynamicCanvas.tsx` data-grid attributes - must include minW/minH/maxW/maxH
@@ -102,8 +126,12 @@ npm test
 curl https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io/health
 ```
 
+## Documentation
+
+- [Bloomberg Integration Guide](docs/BLOOMBERG_INTEGRATION.md) - Complete Bloomberg Terminal integration documentation
+- [CLAUDE.md](CLAUDE.md) - AI assistance context and project guidelines
+
 ---
-For AI assistance context, see `CLAUDE.md`
 
 ### Option 1: Docker Compose (Recommended)
 ```bash

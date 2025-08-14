@@ -31,11 +31,19 @@ interface VolatilityAnalysisProps {
   apiEndpoint?: string
 }
 
+// Bloomberg API endpoints
+const BLOOMBERG_ENDPOINTS = {
+  VM_DIRECT: 'http://20.172.249.92:8080',      // Direct Bloomberg VM API (HTTP only - mixed content blocked)
+  K8S_GATEWAY: 'http://52.149.235.82',         // K8s Bloomberg Gateway (HTTP only - mixed content blocked)  
+  CONTAINER_APP: 'https://bloomberg-volatility-surface.agreeablepond-1a74a92d.eastus.azurecontainerapps.io',
+  PROXY: '/api/bloomberg'  // Proxy through main app backend to avoid mixed content
+}
+
 export function VolatilityAnalysis({ 
   theme,
   apiEndpoint = process.env.NODE_ENV === 'development' 
     ? 'http://localhost:8080' 
-    : 'http://20.172.249.92:8080'
+    : BLOOMBERG_ENDPOINTS.PROXY  // Use proxy to avoid mixed content issues
 }: VolatilityAnalysisProps = {}) {
   const { currentTheme } = useTheme()
   const [loading, setLoading] = useState(false)
@@ -49,6 +57,10 @@ export function VolatilityAnalysis({
   const [dataQualityScore, setDataQualityScore] = useState<number>(0)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [spotRates, setSpotRates] = useState<Record<string, number>>({})
+  
+  // React-managed tooltip state (safer than D3.js DOM manipulation)
+  const [termTooltip, setTermTooltip] = useState<{ visible: boolean; x: number; y: number; content: React.ReactNode } | null>(null)
+  const [smileTooltip, setSmileTooltip] = useState<{ visible: boolean; x: number; y: number; content: React.ReactNode } | null>(null)
   
   const smileChartRef = useRef<HTMLDivElement>(null)
   const termChartRef = useRef<HTMLDivElement>(null)
@@ -96,14 +108,12 @@ export function VolatilityAnalysis({
       const endpoint = `${apiEndpoint}/api/market-data`
       
       const response = await axios.post(endpoint, {
-        method: 'POST',
-        tickers: spotTickers.map(ticker => ({
-          ticker,
-          fields: ['PX_LAST']
-        }))
+        securities: spotTickers,
+        fields: ['PX_LAST']
       })
       
-      const result = response.data
+      // K8s gateway wraps the response in a data field
+      const result = response.data.data || response.data
       
       if (result.success && result.data?.securities_data) {
         const rates: Record<string, number> = {}
@@ -135,10 +145,97 @@ export function VolatilityAnalysis({
     try {
       // Fetch volatility surface data
       console.log('Fetching all tenors in one batched call...', STANDARD_TENORS)
-      const volResponse = await axios.post(`${apiEndpoint}/api/volatility-surface/${selectedPair}`, {
-        tenors: STANDARD_TENORS
-      })
-      const data = volResponse.data.data
+      const volResponse = await axios.post(`${apiEndpoint}/api/volatility-surface/${selectedPair}`, 
+        STANDARD_TENORS
+      )
+      
+      // Parse K8s gateway response format
+      const volData = volResponse.data
+      let data = []
+      
+      // Check if data is in the nested structure from K8s gateway
+      if (volData.data?.data?.securities_data) {
+        console.log('Parsing K8s gateway format with securities_data')
+        const securities = volData.data.data.securities_data
+        
+        // Group securities by tenor
+        const byTenor = {}
+        securities.forEach(sec => {
+          if (sec.success && sec.fields) {
+            const ticker = sec.security
+            // Extract tenor from ticker like "EURUSDV1M BGN Curncy" or "EURUSD25R1M BGN Curncy"
+            const match = ticker.match(new RegExp(`${selectedPair}(\\d*[RBV])(\\d+[DWMY])\\s`))
+            if (match) {
+              const tenor = match[2]
+              if (!byTenor[tenor]) {
+                byTenor[tenor] = {
+                  tenor,
+                  // Create .raw wrapper to match standalone app structure exactly
+                  raw: {
+                    atm_bid: null,
+                    atm_ask: null,
+                    rr_5d_bid: null,
+                    rr_5d_ask: null,
+                    bf_5d_bid: null,
+                    bf_5d_ask: null,
+                    rr_10d_bid: null,
+                    rr_10d_ask: null,
+                    bf_10d_bid: null,
+                    bf_10d_ask: null,
+                    rr_15d_bid: null,
+                    rr_15d_ask: null,
+                    bf_15d_bid: null,
+                    bf_15d_ask: null,
+                    rr_25d_bid: null,
+                    rr_25d_ask: null,
+                    bf_25d_bid: null,
+                    bf_25d_ask: null,
+                    rr_35d_bid: null,
+                    rr_35d_ask: null,
+                    bf_35d_bid: null,
+                    bf_35d_ask: null
+                  }
+                }
+              }
+              
+              // Parse the ticker type (ATM, RR, BF) and delta
+              const typeMatch = ticker.match(new RegExp(`${selectedPair}(\\d*)?([RBV])(\\d+[DWMY])`))
+              if (typeMatch) {
+                const delta = typeMatch[1] || ''
+                const type = typeMatch[2]
+                
+                if (type === 'V') {
+                  // ATM volatility - assign to .raw structure to match standalone app
+                  byTenor[tenor].raw.atm_bid = sec.fields.PX_BID || null
+                  byTenor[tenor].raw.atm_ask = sec.fields.PX_ASK || null
+                } else if (type === 'R') {
+                  // Risk Reversal - assign to .raw structure to match standalone app
+                  const fieldPrefix = `rr_${delta}d`
+                  byTenor[tenor].raw[`${fieldPrefix}_bid`] = sec.fields.PX_BID || null
+                  byTenor[tenor].raw[`${fieldPrefix}_ask`] = sec.fields.PX_ASK || null
+                } else if (type === 'B') {
+                  // Butterfly - assign to .raw structure to match standalone app
+                  const fieldPrefix = `bf_${delta}d`
+                  byTenor[tenor].raw[`${fieldPrefix}_bid`] = sec.fields.PX_BID || null
+                  byTenor[tenor].raw[`${fieldPrefix}_ask`] = sec.fields.PX_ASK || null
+                }
+              }
+            }
+          }
+        })
+        
+        // Convert to array
+        data = Object.values(byTenor)
+      } else if (volData.surface) {
+        // Original format with surface property
+        console.log('Parsing original format with surface property')
+        data = Object.keys(volData.surface).map(tenor => ({
+          tenor,
+          ...volData.surface[tenor]
+        }))
+      } else {
+        console.warn('Unknown data format from Bloomberg API')
+      }
       
       if (data && data.length > 0) {
         console.log(`Received ${data.length} volatility data points`)
@@ -187,10 +284,16 @@ export function VolatilityAnalysis({
   useEffect(() => {
     const handleResize = () => {
       // Re-render charts on resize with debounce
-      if (surfaceData.length > 0) {
+      if (surfaceData.length > 0 && smileChartRef.current && termChartRef.current) {
         requestAnimationFrame(() => {
-          drawVolatilitySmile(surfaceData)
-          drawTermStructure(surfaceData)
+          try {
+            if (smileChartRef.current && termChartRef.current) {
+              drawSmileChart()
+              drawTermStructureChart()
+            }
+          } catch (error) {
+            console.warn('Chart resize redraw failed (safe to ignore):', error)
+          }
         })
       }
     }
@@ -216,6 +319,10 @@ export function VolatilityAnalysis({
         resizeObserverRef.current.disconnect()
       }
       window.removeEventListener('resize', handleResize)
+      
+      // Hide tooltips on cleanup (no DOM manipulation needed)
+      setTermTooltip(null)
+      setSmileTooltip(null)
     }
   }, [surfaceData, currentTheme])
 
@@ -227,8 +334,17 @@ export function VolatilityAnalysis({
       return
     }
     
-    // Clear previous chart
-    d3.select(termChartRef.current).selectAll("*").remove()
+    // Safely clear previous chart by removing children directly
+    try {
+      if (termChartRef.current) {
+        // Remove all child nodes safely
+        while (termChartRef.current.firstChild) {
+          termChartRef.current.firstChild.remove()
+        }
+      }
+    } catch (error) {
+      console.warn('Error clearing term chart:', error)
+    }
     
     if (!surfaceData.length) {
       console.warn('⚠️ No surfaceData available')
@@ -348,26 +464,8 @@ export function VolatilityAnalysis({
       return
     }
 
-    // Clear previous chart
-    d3.select(termChartRef.current).selectAll("*").remove()
-    
-    // Add temporary indicator that function is running
-    d3.select(termChartRef.current)
-      .append("div")
-      .style("position", "absolute")
-      .style("top", "10px")
-      .style("right", "10px")
-      .style("background", currentTheme.primary)
-      .style("color", "white")
-      .style("padding", "4px 8px")
-      .style("border-radius", "4px")
-      .style("font-size", "10px")
-      .style("z-index", "1000")
-      .text("Rendering...")
-      .transition()
-      .delay(2000)
-      .style("opacity", 0)
-      .remove()
+    // Skip the rendering indicator to avoid DOM manipulation issues
+    // The indicator was causing removeChild errors when switching currency pairs
 
     const margin = { top: 20, right: 30, bottom: 50, left: 50 }
     const width = termChartRef.current.clientWidth - margin.left - margin.right
@@ -385,13 +483,19 @@ export function VolatilityAnalysis({
       return
     }
 
-    const svg = d3.select(termChartRef.current)
-      .append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
+    let svg, g
+    try {
+      svg = d3.select(termChartRef.current)
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
 
-    const g = svg.append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`)
+      g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+    } catch (error) {
+      console.error('Error creating term chart SVG:', error)
+      return
+    }
 
     // Get data extents from all curves
     const allPoints = allTermCurves.flatMap(c => c.points)
@@ -552,25 +656,7 @@ export function VolatilityAnalysis({
         .text(curve.label)
     })
 
-    // Create tooltip div if doesn't exist
-    let tooltipDiv = d3.select("body").select(".term-tooltip")
-    if (tooltipDiv.empty()) {
-      tooltipDiv = d3.select("body").append("div")
-        .attr("class", "term-tooltip")
-        .style("opacity", 0)
-        .style("position", "absolute")
-        .style("background", currentTheme.surface)
-        .style("border", `1px solid ${currentTheme.border}`)
-        .style("border-radius", "6px")
-        .style("padding", "10px")
-        .style("font-size", "11px")
-        .style("color", currentTheme.text)
-        .style("pointer-events", "none")
-        .style("box-shadow", "0 2px 8px rgba(0,0,0,0.15)")
-        .style("backdrop-filter", "blur(10px)")
-    }
-
-    // Add hover interactions to all points
+    // Add hover interactions to all points (use React state for tooltips)
     allTermCurves.forEach(curve => {
       g.selectAll(`.point-${curve.delta}`)
         .on("mouseover", function(event, d: any) {
@@ -580,31 +666,37 @@ export function VolatilityAnalysis({
           .duration(100)
           .attr("r", 6)
           
-        tooltipDiv.transition()
-          .duration(50)
-          .style("opacity", .95)
-          
         const days = Math.round(d.timeYears * 365)
         const curveColor = deltaColors[curve.delta] || currentTheme.primary
-        tooltipDiv.html(`
-          <div style="font-weight: 600; margin-bottom: 6px; color: ${curveColor}">
-            ${curve.label} Volatility
-          </div>
-          <div style="display: flex; justify-content: space-between; gap: 20px;">
-            <span style="color: ${currentTheme.textSecondary}">Tenor:</span>
-            <span style="font-weight: 500">${d.tenor}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; gap: 20px;">
-            <span style="color: ${currentTheme.textSecondary}">Volatility:</span>
-            <span style="font-weight: 500">${d.vol.toFixed(3)}%</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; gap: 20px; margin-top: 4px; padding-top: 4px; border-top: 1px solid ${currentTheme.border}">
-            <span style="color: ${currentTheme.textSecondary}; font-size: 10px">Time:</span>
-            <span style="font-size: 10px">${days} days</span>
-          </div>
-        `)
-          .style("left", (event.pageX + 15) + "px")
-          .style("top", (event.pageY - 40) + "px")
+        
+        // Use React state for tooltip content
+        const rect = termChartRef.current?.getBoundingClientRect()
+        if (rect) {
+          setTermTooltip({
+            visible: true,
+            x: event.clientX - rect.left + 15,
+            y: event.clientY - rect.top - 40,
+            content: (
+              <div>
+                <div style={{ fontWeight: 600, marginBottom: 6, color: curveColor }}>
+                  {curve.label} Volatility
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 20 }}>
+                  <span style={{ color: currentTheme.textSecondary }}>Tenor:</span>
+                  <span style={{ fontWeight: 500 }}>{d.tenor}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 20 }}>
+                  <span style={{ color: currentTheme.textSecondary }}>Volatility:</span>
+                  <span style={{ fontWeight: 500 }}>{d.vol.toFixed(3)}%</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 20, marginTop: 4, paddingTop: 4, borderTop: `1px solid ${currentTheme.border}` }}>
+                  <span style={{ color: currentTheme.textSecondary, fontSize: 10 }}>Time:</span>
+                  <span style={{ fontSize: 10 }}>{days} days</span>
+                </div>
+              </div>
+            )
+          })
+        }
       })
       .on("mouseout", function() {
         // Reset point size
@@ -613,9 +705,8 @@ export function VolatilityAnalysis({
           .duration(100)
           .attr("r", 3)
           
-        tooltipDiv.transition()
-          .duration(200)
-          .style("opacity", 0)
+        // Hide tooltip using React state
+        setTermTooltip(null)
       })
     })
 
@@ -643,8 +734,17 @@ export function VolatilityAnalysis({
   const drawSmileChart = useCallback(() => {
     if (!smileChartRef.current) return
     
-    // Clear previous chart
-    d3.select(smileChartRef.current).selectAll("*").remove()
+    // Safely clear previous chart by removing children directly
+    try {
+      if (smileChartRef.current) {
+        // Remove all child nodes safely
+        while (smileChartRef.current.firstChild) {
+          smileChartRef.current.firstChild.remove()
+        }
+      }
+    } catch (error) {
+      console.warn('Error clearing smile chart:', error)
+    }
     
     if (!surfaceData.length) return
 
@@ -703,13 +803,11 @@ export function VolatilityAnalysis({
       }
     })
 
-    // Clear previous chart
-    d3.select(smileChartRef.current).selectAll("*").remove()
-
     if (allSmileCurves.length === 0) {
       // Show message when no tenors selected
-      d3.select(smileChartRef.current)
-        .append("div")
+      try {
+        d3.select(smileChartRef.current)
+          .append("div")
         .style("display", "flex")
         .style("align-items", "center")
         .style("justify-content", "center")
@@ -718,6 +816,9 @@ export function VolatilityAnalysis({
         .style("font-size", "12px")
         .style("text-align", "center")
         .html("Select tenor buttons above to display volatility smile curves")
+      } catch (error) {
+        console.warn('Error showing smile message:', error)
+      }
       return
     }
 
@@ -725,13 +826,25 @@ export function VolatilityAnalysis({
     const width = smileChartRef.current.clientWidth - margin.left - margin.right
     const height = smileChartRef.current.clientHeight - margin.top - margin.bottom
 
-    const svg = d3.select(smileChartRef.current)
-      .append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
+    // Validate dimensions
+    if (width <= 0 || height <= 0) {
+      console.warn('Invalid smile chart dimensions:', { width, height })
+      return
+    }
 
-    const g = svg.append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`)
+    let svg, g
+    try {
+      svg = d3.select(smileChartRef.current)
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+
+      g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+    } catch (error) {
+      console.error('Error creating smile chart SVG:', error)
+      return
+    }
 
     // Scales - fix overlapping by using proper delta range and fixed volatility range
     const xScale = d3.scaleLinear()
@@ -808,25 +921,7 @@ export function VolatilityAnalysis({
         .attr("d", line)
         .style("filter", "drop-shadow(0 1px 2px rgba(0,0,0,0.15))")
 
-      // Enhanced tooltip on hover - no visible points for smile chart
-      let smileTooltipDiv = d3.select("body").select(".smile-tooltip")
-      if (smileTooltipDiv.empty()) {
-        smileTooltipDiv = d3.select("body").append("div")
-          .attr("class", "smile-tooltip")
-          .style("opacity", 0)
-          .style("position", "absolute")
-          .style("background", currentTheme.surface)
-          .style("border", `1px solid ${currentTheme.border}`)
-          .style("border-radius", "6px")
-          .style("padding", "10px")
-          .style("font-size", "11px")
-          .style("color", currentTheme.text)
-          .style("pointer-events", "none")
-          .style("box-shadow", "0 2px 8px rgba(0,0,0,0.15)")
-          .style("backdrop-filter", "blur(10px)")
-      }
-
-      // Invisible overlay for mouse interaction on smile curve
+      // Invisible overlay for mouse interaction on smile curve (use React state for tooltips)
       g.append("path")
         .datum(sortedPoints)
         .attr("fill", "none")
@@ -850,34 +945,38 @@ export function VolatilityAnalysis({
             }
           })
           
-          smileTooltipDiv.transition()
-            .duration(50)
-            .style("opacity", .95)
-          
-          smileTooltipDiv.html(`
-            <div style="font-weight: 600; margin-bottom: 6px; color: ${curveColor}">
-              ${curve.tenor} Smile
-            </div>
-            <div style="display: flex; justify-content: space-between; gap: 20px;">
-              <span style="color: ${currentTheme.textSecondary}">Strike:</span>
-              <span style="font-weight: 500">${closestPoint.label}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; gap: 20px;">
-              <span style="color: ${currentTheme.textSecondary}">Volatility:</span>
-              <span style="font-weight: 500">${closestPoint.vol.toFixed(3)}%</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; gap: 20px; margin-top: 4px; padding-top: 4px; border-top: 1px solid ${currentTheme.border}">
-              <span style="color: ${currentTheme.textSecondary}; font-size: 10px">Delta:</span>
-              <span style="font-size: 10px">${closestPoint.delta}Δ</span>
-            </div>
-          `)
-            .style("left", (event.pageX + 15) + "px")
-            .style("top", (event.pageY - 40) + "px")
+          // Use React state for tooltip content
+          const rect = smileChartRef.current?.getBoundingClientRect()
+          if (rect) {
+            setSmileTooltip({
+              visible: true,
+              x: event.clientX - rect.left + 15,
+              y: event.clientY - rect.top - 40,
+              content: (
+                <div>
+                  <div style={{ fontWeight: 600, marginBottom: 6, color: curveColor }}>
+                    {curve.tenor} Smile
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 20 }}>
+                    <span style={{ color: currentTheme.textSecondary }}>Strike:</span>
+                    <span style={{ fontWeight: 500 }}>{closestPoint.label}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 20 }}>
+                    <span style={{ color: currentTheme.textSecondary }}>Volatility:</span>
+                    <span style={{ fontWeight: 500 }}>{closestPoint.vol.toFixed(3)}%</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 20, marginTop: 4, paddingTop: 4, borderTop: `1px solid ${currentTheme.border}` }}>
+                    <span style={{ color: currentTheme.textSecondary, fontSize: 10 }}>Delta:</span>
+                    <span style={{ fontSize: 10 }}>{closestPoint.delta}Δ</span>
+                  </div>
+                </div>
+              )
+            })
+          }
         })
         .on("mouseout", function() {
-          smileTooltipDiv.transition()
-            .duration(200)
-            .style("opacity", 0)
+          // Hide tooltip using React state
+          setSmileTooltip(null)
         })
     })
 
@@ -1026,12 +1125,19 @@ export function VolatilityAnalysis({
       loading,
       shouldRender: surfaceData.length > 0 && !loading 
     })
-    if (surfaceData.length > 0 && !loading) {
+    if (surfaceData.length > 0 && !loading && smileChartRef.current && termChartRef.current) {
       // Add a small delay to ensure DOM is ready
       const timer = setTimeout(() => {
-        console.log('⏰ Drawing charts after 100ms delay')
-        drawSmileChart()
-        drawTermStructureChart()
+        try {
+          // Double-check refs are still valid before drawing
+          if (smileChartRef.current && termChartRef.current) {
+            console.log('⏰ Drawing charts after 100ms delay')
+            drawSmileChart()
+            drawTermStructureChart()
+          }
+        } catch (error) {
+          console.warn('Chart drawing failed (safe to ignore):', error)
+        }
       }, 100)
       
       return () => clearTimeout(timer)
@@ -1238,7 +1344,8 @@ export function VolatilityAnalysis({
             justifyContent: 'center',
             border: `1px solid ${currentTheme.border}20`,
             borderRadius: '4px',
-            backgroundColor: currentTheme.surface + '30'
+            backgroundColor: currentTheme.surface + '30',
+            position: 'relative'
           }}>
             <div ref={smileChartRef} style={{ width: '100%', height: '100%' }}>
               {(loading || surfaceData.length === 0) && (
@@ -1254,6 +1361,26 @@ export function VolatilityAnalysis({
                 </div>
               )}
             </div>
+            {/* React-managed tooltip for smile chart */}
+            {smileTooltip && smileTooltip.visible && (
+              <div style={{
+                position: 'absolute',
+                left: smileTooltip.x,
+                top: smileTooltip.y,
+                background: currentTheme.surface,
+                border: `1px solid ${currentTheme.border}`,
+                borderRadius: '6px',
+                padding: '10px',
+                fontSize: '11px',
+                color: currentTheme.text,
+                pointerEvents: 'none',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                backdropFilter: 'blur(10px)',
+                zIndex: 9999
+              }}>
+                {smileTooltip.content}
+              </div>
+            )}
           </div>
           </div>
           
@@ -1317,7 +1444,8 @@ export function VolatilityAnalysis({
             justifyContent: 'center',
             border: `1px solid ${currentTheme.border}20`,
             borderRadius: '4px',
-            backgroundColor: currentTheme.surface + '30'
+            backgroundColor: currentTheme.surface + '30',
+            position: 'relative'
           }}>
             <div ref={termChartRef} style={{ width: '100%', height: '100%' }}>
               {(loading || surfaceData.length === 0) && (
@@ -1333,6 +1461,26 @@ export function VolatilityAnalysis({
                 </div>
               )}
             </div>
+            {/* React-managed tooltip for term chart */}
+            {termTooltip && termTooltip.visible && (
+              <div style={{
+                position: 'absolute',
+                left: termTooltip.x,
+                top: termTooltip.y,
+                background: currentTheme.surface,
+                border: `1px solid ${currentTheme.border}`,
+                borderRadius: '6px',
+                padding: '10px',
+                fontSize: '11px',
+                color: currentTheme.text,
+                pointerEvents: 'none',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                backdropFilter: 'blur(10px)',
+                zIndex: 9999
+              }}>
+                {termTooltip.content}
+              </div>
+            )}
           </div>
           </div>
         </div>

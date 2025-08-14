@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { VolatilityAnalysis } from './VolatilityAnalysis'
 import { useTheme } from '../../contexts/ThemeContext'
 
@@ -11,7 +11,7 @@ interface ResponsiveVolatilityAnalysisProps {
  * Responsive wrapper for VolatilityAnalysis component
  * Handles proper resizing with ResizeObserver and smooth transitions
  */
-export function ResponsiveVolatilityAnalysis(props: ResponsiveVolatilityAnalysisProps) {
+const ResponsiveVolatilityAnalysis = React.memo((props: ResponsiveVolatilityAnalysisProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
   const [isResizing, setIsResizing] = useState(false)
@@ -170,7 +170,8 @@ export function ResponsiveVolatilityAnalysis(props: ResponsiveVolatilityAnalysis
       )}
     </div>
   )
-}
+})
 
-// Export as default for easier importing
+// Export both named and default for easier importing
+export { ResponsiveVolatilityAnalysis }
 export default ResponsiveVolatilityAnalysis
