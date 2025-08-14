@@ -27,14 +27,6 @@ export function useAuth() {
     // Safari-compatible authentication - use redirect for Safari, popup for Chrome
     const login = async () => {
         try {
-            // Clear any in-progress interactions first
-            const inProgress = instance.getInProgressInstance();
-            if (inProgress) {
-                console.log('Clearing in-progress MSAL interaction');
-                // Wait a bit for the interaction to settle
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
-            
             telemetryService.trackAuthEvent('login_attempt');
             
             // Detect Safari and use redirect instead of popup
