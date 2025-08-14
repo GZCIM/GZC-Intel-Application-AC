@@ -315,6 +315,18 @@ export function VolatilityAnalysis({
     window.addEventListener('resize', handleResize)
 
     return () => {
+      // Clean up charts using D3.js before component unmounts
+      try {
+        if (smileChartRef.current) {
+          d3.select(smileChartRef.current).selectAll("*").remove()
+        }
+        if (termChartRef.current) {
+          d3.select(termChartRef.current).selectAll("*").remove()
+        }
+      } catch (error) {
+        console.warn('Error cleaning up charts on unmount:', error)
+      }
+      
       if (resizeObserverRef.current) {
         resizeObserverRef.current.disconnect()
       }
@@ -334,14 +346,9 @@ export function VolatilityAnalysis({
       return
     }
     
-    // Safely clear previous chart by removing children directly
+    // Safely clear previous chart using D3.js selection
     try {
-      if (termChartRef.current) {
-        // Remove all child nodes safely
-        while (termChartRef.current.firstChild) {
-          termChartRef.current.firstChild.remove()
-        }
-      }
+      d3.select(termChartRef.current).selectAll("*").remove()
     } catch (error) {
       console.warn('Error clearing term chart:', error)
     }
@@ -734,14 +741,9 @@ export function VolatilityAnalysis({
   const drawSmileChart = useCallback(() => {
     if (!smileChartRef.current) return
     
-    // Safely clear previous chart by removing children directly
+    // Safely clear previous chart using D3.js selection
     try {
-      if (smileChartRef.current) {
-        // Remove all child nodes safely
-        while (smileChartRef.current.firstChild) {
-          smileChartRef.current.firstChild.remove()
-        }
-      }
+      d3.select(smileChartRef.current).selectAll("*").remove()
     } catch (error) {
       console.warn('Error clearing smile chart:', error)
     }
