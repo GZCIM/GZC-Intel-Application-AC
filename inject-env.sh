@@ -1,3 +1,16 @@
+#!/usr/bin/env bash
+set -e
+
+HTML_DIR=/var/www/html
+
+if [ -d "$HTML_DIR" ]; then
+  echo "Injecting runtime environment variables into index.html if present"
+  if [ -f "$HTML_DIR/index.html" ]; then
+    : # placeholder for future runtime injection logic
+  fi
+else
+  echo "No frontend directory at $HTML_DIR; skipping env injection"
+fi
 #!/bin/bash
 # Environment variable injection script
 # Replaces placeholders in built frontend with actual environment variables at runtime

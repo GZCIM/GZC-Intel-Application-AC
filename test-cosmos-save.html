@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Cosmos Save</title>
+    <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
+</head>
+<body>
+    <h1>Cosmos DB Save Test</h1>
+    <button onclick="login()">1. Login</button>
+    <button onclick="testSave()">2. Test Save</button>
+    <button onclick="testLoad()">3. Test Load</button>
+    <pre id="output"></pre>
+
+    <script>
+        const msalConfig = {
+            auth: {
+                clientId: "a873f2d7-2ab9-4d59-a54c-90859226bf2e",
+                authority: "https://login.microsoftonline.com/8274c97d-de9d-4328-98cf-2d4ee94bf104",
+                redirectUri: window.location.origin
+            }
+        };
+
+        const msalInstance = new msal.PublicClientApplication(msalConfig);
+        
+        async function login() {
+            try {
+                const response = await msalInstance.loginPopup({
+                    scopes: ["User.Read"]
+                });
+                document.getElementById('output').textContent = 'Logged in as: ' + response.account.username;
+            } catch (error) {
+                document.getElementById('output').textContent = 'Login error: ' + error;
+            }
+        }
+
+        async function getToken() {
+            const accounts = msalInstance.getAllAccounts();
+            if (accounts.length === 0) {
+                throw new Error('Not logged in');
+            }
+            
+            const response = await msalInstance.acquireTokenSilent({
+                scopes: ["User.Read"],
+                account: accounts[0]
+            });
+            return response.accessToken;
+        }
+
+        async function testSave() {
+            try {
+                const token = await getToken();
+                
+                const testConfig = {
+                    tabs: [{
+                        id: "test-tab",
+                        name: "Test Tab",
+                        components: [{
+                            id: "test-comp",
+                            componentId: "portfolio",
+                            x: 0, y: 0, w: 6, h: 4
+                        }]
+                    }],
+                    preferences: {
+                        theme: "dark"
+                    }
+                };
+
+                const response = await fetch('https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io/api/cosmos/config', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testConfig)
+                });
+
+                const result = await response.text();
+                document.getElementById('output').textContent = 
+                    `Save Response: ${response.status}\n${result}`;
+            } catch (error) {
+                document.getElementById('output').textContent = 'Save error: ' + error;
+            }
+        }
+
+        async function testLoad() {
+            try {
+                const token = await getToken();
+                
+                const response = await fetch('https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io/api/cosmos/config', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.text();
+                document.getElementById('output').textContent = 
+                    `Load Response: ${response.status}\n${result}`;
+            } catch (error) {
+                document.getElementById('output').textContent = 'Load error: ' + error;
+            }
+        }
+    </script>
+</body>
+</html>

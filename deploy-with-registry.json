@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2023-05-01",
+      "name": "gzc-intel-application-ac",
+      "location": "[parameters('location')]",
+      "properties": {
+        "managedEnvironmentId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/gzc-kubernetes-rg/providers/Microsoft.App/managedEnvironments/gzc-container-env')]",
+        "configuration": {
+          "activeRevisionsMode": "Single",
+          "ingress": {
+            "external": true,
+            "targetPort": 80,
+            "transport": "auto",
+            "traffic": [
+              {
+                "latestRevision": true,
+                "weight": 100
+              }
+            ]
+          }
+        },
+        "template": {
+          "containers": [
+            {
+              "name": "gzc-intel-app",
+              "image": "gzcacr.azurecr.io/gzc-intel-app:latest",
+              "resources": {
+                "cpu": 1.0,
+                "memory": "2.0Gi"
+              },
+              "env": [
+                {
+                  "name": "KEY_VAULT_URL",
+                  "value": "https://gzc-finma-keyvault.vault.azure.net/"
+                },
+                {
+                  "name": "ENVIRONMENT",
+                  "value": "production"
+                }
+              ]
+            }
+          ],
+          "scale": {
+            "minReplicas": 1,
+            "maxReplicas": 3
+          }
+        }
+      }
+    }
+  ]
+}

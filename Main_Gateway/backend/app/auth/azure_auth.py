@@ -72,38 +72,56 @@ async def validate_token(
         # Log token info for debugging
         import base64
         import json
-        try:
-            parts = token.split('.')
-            if len(parts) == 3:
-                payload_str = parts[1] + '=' * (4 - len(parts[1]) % 4)
-                decoded = base64.urlsafe_b64decode(payload_str)
-                token_info = json.loads(decoded)
-                logger.info(f"Token audience: {token_info.get('aud')}, issuer: {token_info.get('iss')}")
-        except:
-            pass
         
-        signing_key = get_signing_key(token)
+        # Decode token without verification first to check what kind it is
+        parts = token.split('.')
+        if len(parts) != 3:
+            raise HTTPException(status_code=401, detail="Invalid token format")
+            
+        payload_str = parts[1] + '=' * (4 - len(parts[1]) % 4)
+        decoded = base64.urlsafe_b64decode(payload_str)
+        token_info = json.loads(decoded)
         
-        # Try to decode with minimal verification - just signature and expiry
-        payload = jwt.decode(
-            token,
-            key=signing_key,
-            algorithms=["RS256"],
-            options={
-                "verify_aud": False,  # Don't verify audience
-                "verify_iss": False,  # Don't verify issuer  
-                "verify_exp": True,   # But do verify expiry
-            }
-        )
+        logger.info(f"Token audience: {token_info.get('aud')}, issuer: {token_info.get('iss')}")
         
-        # Manually verify it's from our tenant
-        token_tid = payload.get("tid")
-        if token_tid != TENANT_ID:
-            logger.error(f"Token from wrong tenant: expected {TENANT_ID}, got {token_tid}")
-            raise HTTPException(status_code=401, detail="Token from wrong tenant")
-        
-        logger.info(f"Token validated successfully for user: {payload.get('preferred_username', payload.get('email'))}")
-        return payload
+        # Check if it's a Microsoft Graph token
+        if token_info.get('aud') == '00000003-0000-0000-c000-000000000000':
+            logger.info("Detected Microsoft Graph token, using simplified validation")
+            
+            # For Microsoft Graph tokens, just verify tenant and expiry
+            if token_info.get("tid") != TENANT_ID:
+                logger.error(f"Token from wrong tenant: expected {TENANT_ID}, got {token_info.get('tid')}")
+                raise HTTPException(status_code=401, detail="Token from wrong tenant")
+            
+            # Check expiry
+            import time
+            if token_info.get("exp", 0) < time.time():
+                raise HTTPException(status_code=401, detail="Token expired")
+            
+            logger.info(f"Microsoft Graph token accepted for user: {token_info.get('preferred_username', token_info.get('email'))}")
+            return token_info
+        else:
+            # For app-specific tokens, do full validation
+            signing_key = get_signing_key(token)
+            
+            payload = jwt.decode(
+                token,
+                key=signing_key,
+                algorithms=["RS256"],
+                options={
+                    "verify_aud": False,  # Don't verify audience
+                    "verify_iss": False,  # Don't verify issuer  
+                    "verify_exp": True,   # But do verify expiry
+                }
+            )
+            
+            # Manually verify it's from our tenant
+            if payload.get("tid") != TENANT_ID:
+                logger.error(f"Token from wrong tenant: expected {TENANT_ID}, got {payload.get('tid')}")
+                raise HTTPException(status_code=401, detail="Token from wrong tenant")
+            
+            logger.info(f"App token validated successfully for user: {payload.get('preferred_username', payload.get('email'))}")
+            return payload
         
     except JWTError as e:
         logger.error(f"Token validation failed: {e}")

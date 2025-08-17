@@ -2,6 +2,7 @@
 // Minimal integration hook for user memory service
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useAuthContext } from '../modules/ui-library'
 import { 
   UserMemoryService, 
   createUserMemoryService,
@@ -26,12 +27,56 @@ function getTempUserInfo() {
 }
 
 export function useUserMemory() {
-  const [userInfo] = useState(() => getTempUserInfo()) // TODO: Replace with useAuth()
-  
-  const [service, setService] = useState<UserMemoryService>(() => 
-    userInfo ? createUserMemoryService(userInfo.userId, userInfo.tenantId, userInfo.accessToken) : 
+  const auth = useAuthContext?.() as { getToken: () => Promise<string> } | undefined
+  const [userInfo, setUserInfo] = useState(() => getTempUserInfo())
+  const [service, setService] = useState<UserMemoryService>(() =>
+    userInfo ? createUserMemoryService(userInfo.userId, userInfo.tenantId, userInfo.accessToken) :
     new SessionStorageUserMemoryService('anonymous')
   )
+
+  // Decode JWT payload (base64url) safely
+  const decodeJwt = useCallback((token: string): Record<string, any> | null => {
+    try {
+      const part = token.split('.')[1]
+      if (!part) return null
+      const padded = part + '='.repeat((4 - (part.length % 4)) % 4)
+      const json = atob(padded.replace(/-/g, '+').replace(/_/g, '/'))
+      return JSON.parse(json)
+    } catch {
+      return null
+    }
+  }, [])
+
+  // Initialize or refresh the DB-backed service when auth is available
+  useEffect(() => {
+    let cancelled = false
+    const init = async () => {
+      try {
+        if (auth?.getToken) {
+          const token = await auth.getToken()
+          const claims = decodeJwt(token)
+          const derivedUserId = (claims?.oid || claims?.sub || claims?.preferred_username || claims?.email || 'anonymous') as string
+          const derivedTenantId = (claims?.tid || 'default_tenant') as string
+          const effective = { userId: derivedUserId, tenantId: derivedTenantId, accessToken: token }
+          if (!cancelled) {
+            setUserInfo(effective)
+            setService(createUserMemoryService(effective.userId, effective.tenantId, effective.accessToken))
+          }
+          return
+        }
+      } catch (_) {
+        // Fall back below
+      }
+      if (!cancelled) {
+        const temp = getTempUserInfo()
+        setUserInfo(temp)
+        setService(createUserMemoryService(temp.userId, temp.tenantId, temp.accessToken))
+      }
+    }
+    init()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth?.getToken])
 
   // Graceful error handling wrapper
   const withFallback = useCallback(async <T>(
