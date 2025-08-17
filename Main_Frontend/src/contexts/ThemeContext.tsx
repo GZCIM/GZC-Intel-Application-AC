@@ -43,15 +43,23 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
           setThemeName(savedTheme)
         }
       } catch (error) {
-        console.warn('Failed to load theme from user memory:', error)
-        // Use default theme on error
+        console.warn('Failed to load theme, using default:', error)
+        // Use default theme on error - don't let theme loading break the app
+        setThemeName(defaultTheme)
       } finally {
         setIsThemeLoaded(true)
       }
     }
     
-    loadSavedTheme()
-  }, [loadThemeData])
+    // Always set theme loaded after a short delay even if loading fails
+    const timeout = setTimeout(() => {
+      setIsThemeLoaded(true)
+    }, 1000)
+    
+    loadSavedTheme().finally(() => {
+      clearTimeout(timeout)
+    })
+  }, [loadThemeData, defaultTheme])
 
   const setTheme = async (newThemeName: string) => {
     if (themes[newThemeName]) {

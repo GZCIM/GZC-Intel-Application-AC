@@ -14,13 +14,15 @@ RUN npm ci
 # Copy frontend source
 COPY Main_Frontend/ ./
 
-# Build frontend with Application Insights and Azure AD (skip TypeScript check for faster builds)
+# Build frontend with Application Insights, Azure AD and Version (skip TypeScript check for faster builds)
 ARG VITE_APPLICATIONINSIGHTS_CONNECTION_STRING
 ARG VITE_CLIENT_ID
 ARG VITE_TENANT_ID
+ARG VITE_APP_VERSION=dev
 ENV VITE_APPLICATIONINSIGHTS_CONNECTION_STRING=${VITE_APPLICATIONINSIGHTS_CONNECTION_STRING}
 ENV VITE_CLIENT_ID=${VITE_CLIENT_ID}
 ENV VITE_TENANT_ID=${VITE_TENANT_ID}
+ENV VITE_APP_VERSION=${VITE_APP_VERSION}
 RUN npm run build:skip-ts
 
 # Stage 2: Production Container
@@ -48,8 +50,10 @@ COPY --from=frontend-builder /app/frontend/dist /var/www/html
 COPY FSS_Socket/backend/ /app/fss_backend/
 COPY Main_Gateway/backend/ /app/gateway_backend/
 
-# Copy clean nginx configuration with proper cache headers
-COPY nginx.conf /etc/nginx/sites-enabled/default
+# Copy nginx config (use our provided config)
+COPY nginx-config/nginx.conf /etc/nginx/nginx.conf
+COPY nginx-config/mime.types /etc/nginx/mime.types
+COPY nginx-config/sites-available/default /etc/nginx/conf.d/default.conf
 
 # Copy environment variable injection script
 COPY inject-env.sh /usr/local/bin/inject-env.sh
@@ -94,4 +98,4 @@ environment=PYTHONUNBUFFERED="1",KEY_VAULT_URL="https://gzc-finma-keyvault.vault
 EXPOSE 80
 
 # Start with environment injection then supervisor
-CMD ["/bin/bash", "-c", "echo '🚀 Container starting...' && /usr/local/bin/inject-env.sh 2>&1 && echo '📋 Starting supervisord...' && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/bin/bash", "-c", "echo 'Container starting...' && /usr/local/bin/inject-env.sh 2>&1 && echo 'Starting supervisord...' && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]

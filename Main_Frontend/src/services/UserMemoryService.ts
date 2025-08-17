@@ -31,7 +31,8 @@ class SimpleApiClient implements ApiClient {
   }
 
   async post(url: string, data: any): Promise<{ data: any }> {
-    const response = await fetch(`${this.baseURL}${url}`, {
+    const path = url.startsWith('/') ? url : `/${url}`
+    const response = await fetch(`${this.baseURL}${path}`, {
       method: 'POST',
       headers: this.headers,
       body: JSON.stringify(data)
@@ -46,8 +47,9 @@ class SimpleApiClient implements ApiClient {
   }
 
   async get(url: string, params?: { [key: string]: string }): Promise<{ data: any }> {
+    const path = url.startsWith('/') ? url : `/${url}`
     const queryString = params ? '?' + new URLSearchParams(params).toString() : ''
-    const response = await fetch(`${this.baseURL}${url}${queryString}`, {
+    const response = await fetch(`${this.baseURL}${path}${queryString}`, {
       method: 'GET',
       headers: this.headers
     })
@@ -56,13 +58,20 @@ class SimpleApiClient implements ApiClient {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
     
-    const responseData = await response.json()
-    return { data: responseData }
+    const responseText = await response.text()
+    try {
+      const responseData = JSON.parse(responseText)
+      return { data: responseData }
+    } catch (error) {
+      console.error('Failed to parse JSON response:', responseText)
+      throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`)
+    }
   }
 
   async delete(url: string, params?: { [key: string]: string }): Promise<{ data: any }> {
+    const path = url.startsWith('/') ? url : `/${url}`
     const queryString = params ? '?' + new URLSearchParams(params).toString() : ''
-    const response = await fetch(`${this.baseURL}${url}${queryString}`, {
+    const response = await fetch(`${this.baseURL}${path}${queryString}`, {
       method: 'DELETE',
       headers: this.headers
     })

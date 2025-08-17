@@ -3,34 +3,15 @@
  * Dynamically generated based on current date/time
  */
 
-// Generate dynamic version based on current date/time
-const generateDynamicVersion = (): string => {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  const hours = String(now.getHours()).padStart(2, '0')
-  const minutes = String(now.getMinutes()).padStart(2, '0')
-  const seconds = String(now.getSeconds()).padStart(2, '0')
-  
-  return `v${year}${month}${day}-${hours}${minutes}${seconds}`
-}
-
-// Get version - always dynamic unless explicitly set in env
-export const APP_VERSION = import.meta.env.VITE_APP_VERSION || generateDynamicVersion()
+// Get version - use env var if available, otherwise fallback to dev
+export const APP_VERSION = import.meta.env.VITE_APP_VERSION || 'v-dev'
 
 // Build timestamp - current date
 export const BUILD_TIMESTAMP = new Date().toISOString().slice(0, 10).replace(/-/g, '')
 
-// Get formatted version string - simplified for display
+// Get formatted version string - show actual deployment version
 export const getVersionString = (): string => {
-  // Always generate fresh version for display
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  
-  return `v${year}${month}${day}`
+  return APP_VERSION
 }
 
 // Get deployment information
