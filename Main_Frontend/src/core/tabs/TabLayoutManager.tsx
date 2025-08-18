@@ -253,54 +253,44 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
       
       console.log(`TabLayoutManager: Loading layouts for user ${userId}`)
       
-      // Try Cosmos DB FIRST (works without backend!) - with better retry logic
-      let cosmosRetryCount = 0;
-      const maxCosmosRetries = 3;
-      
-      while (cosmosRetryCount < maxCosmosRetries) {
-        try {
-          console.log(`TabLayoutManager: Attempting to load from Cosmos DB (attempt ${cosmosRetryCount + 1}/${maxCosmosRetries})`)
-          const cosmosConfig = await cosmosConfigService.loadConfiguration()
-          
-          if (cosmosConfig?.tabs && cosmosConfig.tabs.length > 0) {
-            // Deduplicate tabs when loading and ensure editMode is false
-            const tabIds = new Set<string>()
-            const uniqueTabs = cosmosConfig.tabs.filter(t => {
-              if (tabIds.has(t.id)) {
-                console.warn(`Found duplicate tab ${t.id} in loaded config, removing`)
-                return false
-              }
-              tabIds.add(t.id)
-              return true
-            }).map(t => ({
-              ...t,
-              editMode: false // Always start with edit mode OFF when loading
-            }))
-            
-            console.log(`✅ TabLayoutManager: Successfully loaded ${uniqueTabs.length} unique tabs from Cosmos DB`)
-            const cosmosLayout = { 
-              ...DEFAULT_LAYOUT,
-              tabs: uniqueTabs,
-              id: 'cosmos-layout',
-              name: 'Cosmos Layout'
+      // Try Cosmos DB FIRST (works without backend!) - SINGLE ATTEMPT, NO RETRIES
+      try {
+        console.log('TabLayoutManager: Attempting to load from Cosmos DB (single attempt)')
+        const cosmosConfig = await cosmosConfigService.loadConfiguration()
+        
+        if (cosmosConfig?.tabs && cosmosConfig.tabs.length > 0) {
+          // Deduplicate tabs when loading and ensure editMode is false
+          const tabIds = new Set<string>()
+          const uniqueTabs = cosmosConfig.tabs.filter(t => {
+            if (tabIds.has(t.id)) {
+              console.warn(`Found duplicate tab ${t.id} in loaded config, removing`)
+              return false
             }
-            setCurrentLayout(cosmosLayout)
-            setLayouts([DEFAULT_LAYOUT, cosmosLayout])
-            
-            const activeTabId = uniqueTabs[0]?.id || 'analytics'
-            setActiveTabId(activeTabId)
-            return // Cosmos DB is source of truth
-          } else {
-            console.log('TabLayoutManager: Cosmos DB returned empty or invalid config')
-            break; // No point retrying if we got a response but it's empty
+            tabIds.add(t.id)
+            return true
+          }).map(t => ({
+            ...t,
+            editMode: false // Always start with edit mode OFF when loading
+          }))
+          
+          console.log(`✅ TabLayoutManager: Successfully loaded ${uniqueTabs.length} unique tabs from Cosmos DB`)
+          const cosmosLayout = { 
+            ...DEFAULT_LAYOUT,
+            tabs: uniqueTabs,
+            id: 'cosmos-layout',
+            name: 'Cosmos Layout'
           }
-        } catch (e) {
-          console.error(`TabLayoutManager: Cosmos DB attempt ${cosmosRetryCount + 1} failed:`, e)
-          cosmosRetryCount++;
-          if (cosmosRetryCount < maxCosmosRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * cosmosRetryCount)); // Progressive delay
-          }
+          setCurrentLayout(cosmosLayout)
+          setLayouts([DEFAULT_LAYOUT, cosmosLayout])
+          
+          const activeTabId = uniqueTabs[0]?.id || 'analytics'
+          setActiveTabId(activeTabId)
+          return // Cosmos DB is source of truth
+        } else {
+          console.log('TabLayoutManager: Cosmos DB returned empty or invalid config, trying fallbacks')
         }
+      } catch (e) {
+        console.log('TabLayoutManager: Cosmos DB failed, trying fallbacks:', e.message)
       }
       
       // Try database if Cosmos DB fails (for backward compatibility)
@@ -312,8 +302,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
           if (savedTabs.length > 0) {
             // Database has tabs - use them as source of truth
             const dbLayout = { tabs: savedTabs }
-            // Update localStorage to match database
-            localStorage.setItem(getUserKey('gzc-intel-current-layout'), JSON.stringify(dbLayout))
+            // Cosmos DB is the source of truth - no localStorage needed
             setCurrentLayout(dbLayout)
             setLayouts([DEFAULT_LAYOUT, dbLayout])
             
@@ -384,19 +373,17 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     checkAuthAndLoad()
   }, [userId, isAuthenticated]) // Re-run when user or auth state changes
 
-  // Save layouts to localStorage whenever they change
+  // Save layouts when they change
   useEffect(() => {
-    const userLayouts = layouts.filter(l => !l.isDefault)
-    localStorage.setItem(getUserKey('gzc-intel-layouts'), JSON.stringify(userLayouts))
-    // Trigger global state save
+    // Layouts are saved to Cosmos DB via saveToCosmosDB calls
+    // No localStorage needed - trigger global state save for other data
     stateManager.autoSave()
   }, [layouts, userId])
 
-  // Save current layout ID and the layout itself
+  // Save current layout to Cosmos DB only
   useEffect(() => {
-    localStorage.setItem(getUserKey('gzc-intel-active-layout'), currentLayout.id)
-    // Also save the current layout data
-    localStorage.setItem(getUserKey('gzc-intel-current-layout'), JSON.stringify(currentLayout))
+    // Current layout is saved to Cosmos DB automatically
+    // No localStorage needed for layouts
     stateManager.autoSave()
   }, [currentLayout, userId])
 
@@ -484,8 +471,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
           console.log('New tab saved to database')
         } catch (error) {
           console.error('Failed to save new tab to database:', error)
-          // Fallback to localStorage
-          localStorage.setItem(getUserKey('gzc-intel-current-layout'), JSON.stringify(updatedLayout))
+          // No localStorage fallback - rely on Cosmos DB for persistence
         }
       }
       
