@@ -19,9 +19,9 @@ interface UserConfiguration {
 }
 
 class CosmosConfigService {
-  // In production, use relative URL so it goes through nginx proxy
+  // In production, use relative URL so it goes through nginx proxy to Main Gateway
   private backendUrl = import.meta.env.VITE_BACKEND_URL || (
-    import.meta.env.PROD ? '' : 'http://localhost:5300'  // Main gateway backend
+    import.meta.env.PROD ? '' : 'http://localhost:5300'  // Local dev: Main Gateway at 5300, Production: proxied through nginx to port 5000
   )
 
   // Lazy-load MSAL instance to avoid initialization race condition
@@ -33,40 +33,28 @@ class CosmosConfigService {
   }
 
   /**
-   * Get Azure AD token for backend API access
+   * Get Azure AD token for backend API access - NO RETRY LOOPS
    */
   private async getAccessToken(): Promise<string> {
     const msal = this.msalInstance
     if (!msal) {
-      // Wait for MSAL to be initialized
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      const retryMsal = this.msalInstance
-      if (!retryMsal) {
-        throw new Error('MSAL not initialized after wait')
-      }
-      return this.getAccessToken() // Retry with initialized MSAL
+      throw new Error('MSAL not initialized - authentication required')
     }
 
-    // Check if MSAL is actually initialized (not just present)
+    // Check if MSAL is actually initialized (no retries to avoid loops)
     let accounts: any[] = []
     try {
       accounts = msal.getAllAccounts()
     } catch (e) {
-      // MSAL not initialized yet, wait and retry
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      try {
-        accounts = msal.getAllAccounts()
-      } catch (e2) {
-        throw new Error('MSAL not initialized after wait: ' + e2.message)
-      }
+      throw new Error('MSAL not properly initialized: ' + e.message)
     }
+    
     if (accounts.length === 0) {
-      throw new Error('No authenticated user')
+      throw new Error('No authenticated user - login required')
     }
 
     try {
-      // For now, use the User.Read token which should work with the backend
-      // The backend should accept tokens from the same tenant
+      // Silent token acquisition first
       const response = await msal.acquireTokenSilent({
         scopes: ["User.Read"],
         account: accounts[0]
@@ -74,123 +62,140 @@ class CosmosConfigService {
       return response.accessToken
     } catch (error) {
       console.error('Failed to get token silently:', error)
-      // Try popup for interactive auth
-      try {
-        const response = await msal.acquireTokenPopup({
-          scopes: ["User.Read"],
-          account: accounts[0]
-        })
-        return response.accessToken
-      } catch (popupError) {
-        console.error('Popup failed, trying redirect:', popupError)
-        // Last resort: redirect (Safari-friendly)
-        await msal.acquireTokenRedirect({
-          scopes: ["User.Read"],
-          account: accounts[0]
-        })
-        // This will redirect, so we won't get here
-        throw new Error('Redirecting for authentication...')
+      
+      // Check if it's interaction_in_progress error - NO RETRY LOOPS
+      if (error instanceof Error && error.message.includes('interaction_in_progress')) {
+        throw new Error('Authentication in progress - please wait')
       }
+      
+      // For other errors, require user to login manually
+      throw new Error('Token acquisition failed - please refresh and login')
     }
   }
 
   /**
-   * Save user configuration via backend API
+   * Save user configuration via backend API (Cosmos DB only)
    */
   async saveConfiguration(config: Partial<UserConfiguration>): Promise<void> {
     try {
       // Check if user is authenticated first
       const msal = this.msalInstance
       if (!msal) {
-        throw new Error('Authentication required - MSAL not initialized')
+        console.log('🚨 MSAL not initialized, cannot save to Cosmos DB')
+        toastManager.show('❌ Configuration not saved - authentication required', 'error')
+        return
       }
       
       const accounts = msal.getAllAccounts()
       if (accounts.length === 0) {
-        throw new Error('Authentication required - please login to save configurations')
+        console.log('🚨 No authenticated user, cannot save to Cosmos DB')
+        toastManager.show('❌ Configuration not saved - login required', 'error')
+        return
       }
       
-      const token = await this.getAccessToken()
-      
-      console.log('💾 Saving to Cosmos DB:', {
-        tabsCount: config.tabs?.length || 0,
-        layoutsCount: config.layouts?.length || 0,
-        hasPreferences: !!config.preferences,
-        backend: this.backendUrl
-      })
-      
-      const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(config)
-      })
+      try {
+        const token = await this.getAccessToken()
+        
+        console.log('💾 Saving to Cosmos DB:', {
+          tabsCount: config.tabs?.length || 0,
+          layoutsCount: config.layouts?.length || 0,
+          hasPreferences: !!config.preferences,
+          backend: this.backendUrl
+        })
+        
+        // Add timeout to prevent hanging
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+        
+        const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(config),
+          signal: controller.signal
+        })
+        
+        clearTimeout(timeoutId)
 
-      if (!response.ok) {
-        throw new Error(`Failed to save config: ${response.statusText}`)
+        if (response.ok) {
+          console.log('✅ Configuration saved to Cosmos DB')
+          toastManager.show('✓ Configuration saved to cloud', 'success')
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+      } catch (tokenError) {
+        console.error('Token/Network error, cannot save to Cosmos DB:', tokenError.message)
+        toastManager.show('❌ Configuration not saved - cloud unavailable', 'error')
+        throw tokenError
       }
-
-      console.log('Configuration saved to Cosmos DB via backend')
-      toastManager.show('✓ Configuration saved to cloud', 'success')
     } catch (error) {
-      console.error('Error saving to Cosmos DB:', error)
-      toastManager.show('Failed to save configuration', 'error')
-      throw error  // No fallback - require Cosmos DB
+      console.error('Error saving configuration:', error)
+      toastManager.show('❌ Configuration not saved', 'error')
+      throw error
     }
   }
 
   /**
-   * Load user configuration via backend API
+   * Load user configuration via backend API (Cosmos DB only)
    */
   async loadConfiguration(): Promise<UserConfiguration | null> {
     try {
       // Check if user is authenticated first
       const msal = this.msalInstance
       if (!msal) {
-        console.log('🚨 MSAL not initialized, skipping Cosmos load')
+        console.log('🚨 MSAL not initialized, cannot load from Cosmos DB')
         return null
       }
       
       const accounts = msal.getAllAccounts()
       console.log('🔍 MSAL accounts found:', accounts.length)
       if (accounts.length === 0) {
-        console.log('🚨 No authenticated user, skipping Cosmos load')
+        console.log('🚨 No authenticated user, cannot load from Cosmos DB')
         return null
       }
       
-      console.log('🔑 Getting access token for Cosmos DB...')
-      const token = await this.getAccessToken()
-      console.log('✅ Token acquired, making Cosmos DB request')
-      
-      const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      try {
+        console.log('🔑 Getting access token for Cosmos DB...')
+        const token = await this.getAccessToken()
+        console.log('✅ Token acquired, making Cosmos DB request')
+        
+        // Add timeout to prevent hanging
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+        
+        const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          signal: controller.signal
+        })
+        
+        clearTimeout(timeoutId)
 
-      if (response.ok) {
-        const data = await response.json()
-        if (data) {
-          console.log('✅ Configuration loaded from Cosmos DB via backend:', {
-            tabsCount: data.tabs?.length || 0,
-            userId: data.userId,
-            timestamp: data.timestamp
-          })
-          return data
+        if (response.ok) {
+          const data = await response.json()
+          if (data && data.tabs) {
+            console.log('✅ Configuration loaded from Cosmos DB:', {
+              tabsCount: data.tabs?.length || 0,
+              userId: data.userId,
+              timestamp: data.timestamp
+            })
+            return data
+          }
+        } else {
+          console.log('🚨 Cosmos DB request failed:', response.status, response.statusText)
+          return null
         }
-      } else {
-        console.log('🚨 Cosmos DB request failed:', response.status, response.statusText)
+      } catch (tokenError) {
+        console.log('🚨 Token acquisition failed:', tokenError.message)
+        return null
       }
       
-      console.log('❌ No configuration found in Cosmos DB')
-      return null
-      
     } catch (error) {
-      console.error('Error loading from Cosmos DB:', error)
-      // No fallback - Cosmos DB only
+      console.error('Error loading configuration:', error)
       return null
     }
   }
@@ -246,9 +251,6 @@ class CosmosConfigService {
     } catch (error) {
       console.error('Error deleting from Cosmos DB:', error)
     }
-    
-    // Also clear localStorage
-    this.clearLocalStorage()
   }
 
   /**
@@ -329,11 +331,15 @@ class CosmosConfigService {
   }
 
   /**
-   * Update specific component state (professional pattern)
+   * Update specific component state (Cosmos DB only)
    */
   async updateComponentState(componentId: string, state: any): Promise<void> {
     try {
-      const config = await this.loadConfiguration() || this.getDefaultConfig()
+      const config = await this.loadConfiguration()
+      if (!config) {
+        console.error('No configuration available, cannot update component state')
+        throw new Error('Authentication required')
+      }
       if (!config.componentStates) config.componentStates = {}
       config.componentStates[componentId] = state
       await this.saveConfiguration(config)
@@ -357,11 +363,15 @@ class CosmosConfigService {
   }
 
   /**
-   * Update user preference (professional pattern)
+   * Update user preference (Cosmos DB only)
    */
   async updatePreference(key: string, value: any): Promise<void> {
     try {
-      const config = await this.loadConfiguration() || this.getDefaultConfig()
+      const config = await this.loadConfiguration()
+      if (!config) {
+        console.error('No configuration available, cannot update preference')
+        throw new Error('Authentication required')
+      }
       if (!config.preferences) config.preferences = {}
       config.preferences[key] = value
       await this.saveConfiguration(config)

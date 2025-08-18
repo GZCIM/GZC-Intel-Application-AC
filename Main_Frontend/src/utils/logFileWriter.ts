@@ -65,11 +65,8 @@ class LogFileWriter {
     const logs = [...this.logBuffer]
     this.logBuffer = []
     
-    // Send to backend API endpoint
+    // Send to backend API endpoint only - no localStorage to avoid quota issues
     this.sendToBackend(logs)
-    
-    // Also save to localStorage as backup
-    this.saveToLocalStorage(logs)
   }
   
   private async sendToBackend(logs: LogEntry[]) {
@@ -77,8 +74,8 @@ class LogFileWriter {
     // Skip API call to prevent 404 errors flooding console
     console.debug('Debug logging disabled for production deployment')
     
-    // Save to localStorage as backup
-    this.saveToLocalStorage(logs)
+    // No localStorage backup to avoid quota exceeded errors
+    // Debug logs are temporary and don't need persistence
   }
   
   private saveToLocalStorage(logs: LogEntry[]) {
@@ -118,18 +115,11 @@ class LogFileWriter {
   }
   
   exportLogs(): string {
-    // Get all logs from current session
-    const key = `debug-logs-${this.sessionId}`
-    const logs = localStorage.getItem(key)
-    
-    if (!logs) {
-      return JSON.stringify({ sessionId: this.sessionId, logs: [] }, null, 2)
-    }
-    
+    // Since we no longer save to localStorage, export current buffer only
     return JSON.stringify({ 
       sessionId: this.sessionId,
       exportTime: new Date().toISOString(),
-      logs: JSON.parse(logs) 
+      logs: this.logBuffer
     }, null, 2)
   }
   
@@ -148,9 +138,8 @@ class LogFileWriter {
   
   clearLogs() {
     this.logBuffer = []
-    const key = `debug-logs-${this.sessionId}`
-    localStorage.removeItem(key)
     sessionStorage.removeItem('debug-logs-export')
+    // No localStorage cleanup needed since we don't write to it anymore
   }
   
   stop() {

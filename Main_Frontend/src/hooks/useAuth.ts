@@ -20,27 +20,54 @@ const isDevelopmentMode = () => {
 export function useAuth() {
     const { instance, accounts } = useMsal();
     const isAuthenticated = useIsAuthenticated();
+    
+    // Debug authentication state
+    console.log("🔐 useAuth hook state:", {
+        isAuthenticated,
+        accountsLength: accounts.length,
+        hasAccounts: accounts.length > 0,
+        timestamp: new Date().toISOString()
+    });
 
     // Check if in development mode (always false, but React doesn't know that)
     const inDevMode = isDevelopmentMode();
 
     // Safari-compatible authentication - use redirect for Safari, popup for Chrome
     const login = async () => {
+        console.log("🔐 useAuth.login() called");
+        console.log("🔐 useAuth.login() - MSAL instance:", !!instance);
+        console.log("🔐 useAuth.login() - Accounts count:", accounts.length);
+        
+        // Additional safety check
+        if (!instance) {
+            const error = new Error("MSAL instance not initialized");
+            console.error("🔐 useAuth.login() - MSAL not initialized:", error);
+            throw error;
+        }
+        
         try {
             telemetryService.trackAuthEvent('login_attempt');
             
+            // Check current authentication state
+            console.log("🔐 useAuth.login() - Current isAuthenticated:", isAuthenticated);
+            if (isAuthenticated && accounts.length > 0) {
+                console.log("🔐 useAuth.login() - Already authenticated, skipping login");
+                return;
+            }
+            
             // Detect Safari and use redirect instead of popup
             const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-            console.log('Browser detection - Safari:', isSafari, 'UserAgent:', navigator.userAgent);
+            console.log('🔐 useAuth.login() - Browser detection - Safari:', isSafari, 'UserAgent:', navigator.userAgent);
             
             if (isSafari) {
-                console.log('🍎 Safari detected - using redirect authentication');
+                console.log('🍎 useAuth.login() - Safari detected - using redirect authentication');
                 // For Safari, use redirect flow which is more reliable
                 await instance.loginRedirect(loginRequest);
                 // loginRedirect doesn't return response, handled by redirect callback
             } else {
-                console.log('🌐 Chrome/Edge detected - using popup authentication');
+                console.log('🌐 useAuth.login() - Chrome/Edge detected - using popup authentication');
                 const response = await instance.loginPopup(loginRequest);
+                console.log('🔐 useAuth.login() - Popup response received:', !!response);
                 telemetryService.trackAuthEvent('login_success', {
                     username: response.account?.username,
                     accountId: response.account?.homeAccountId
@@ -50,28 +77,34 @@ export function useAuth() {
                 }
             }
         } catch (error) {
+            console.log("🔐 useAuth.login() - Error caught:", error);
+            
             // Check if it's an interaction_in_progress error
             if (error instanceof Error && error.message.includes('interaction_in_progress')) {
-                console.log('MSAL interaction in progress, checking for redirect response...');
+                console.log('🔐 useAuth.login() - MSAL interaction in progress, checking for redirect response...');
                 
                 // For Safari, check if we're coming back from a redirect
-                const response = await instance.handleRedirectPromise();
-                if (response && response.account) {
-                    console.log('✅ Found redirect response, login successful');
-                    telemetryService.trackAuthEvent('login_success_redirect', {
-                        username: response.account?.username,
-                        accountId: response.account?.homeAccountId
-                    });
-                    telemetryService.setUserId(response.account.homeAccountId);
-                    return;
+                try {
+                    const response = await instance.handleRedirectPromise();
+                    if (response && response.account) {
+                        console.log('✅ useAuth.login() - Found redirect response, login successful');
+                        telemetryService.trackAuthEvent('login_success_redirect', {
+                            username: response.account?.username,
+                            accountId: response.account?.homeAccountId
+                        });
+                        telemetryService.setUserId(response.account.homeAccountId);
+                        return;
+                    }
+                } catch (redirectError) {
+                    console.error("🔐 useAuth.login() - Redirect promise handling failed:", redirectError);
                 }
                 
                 // Otherwise wait and skip retry to avoid loops
-                console.log('⏳ Auth in progress, please complete the login in the popup/redirect');
+                console.log('⏳ useAuth.login() - Auth in progress, please complete the login in the popup/redirect');
                 return;
             }
             
-            console.error("Login failed:", error);
+            console.error("🔐 useAuth.login() - Login failed:", error);
             telemetryService.trackAuthEvent('login_failure', {
                 error: error instanceof Error ? error.message : 'Unknown error'
             });

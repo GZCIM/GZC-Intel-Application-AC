@@ -19,13 +19,53 @@ const LoginModal = ({ isOpen, onLogin }: LoginModalProps) => {
         return () => document.removeEventListener("keydown", handleEsc);
     }, [onLogin]);
 
-    const handleMicrosoftLogin = async () => {
+    const handleMicrosoftLogin = async (event?: React.MouseEvent<HTMLButtonElement>) => {
+        console.log("🔐 LoginModal: Microsoft login button clicked");
+        console.log("🔐 LoginModal: Event target:", event?.target);
+        console.log("🔐 LoginModal: MSAL instance available:", !!(window as any).msalInstance);
+        
         try {
+            // Check if MSAL is properly initialized
+            if (!(window as any).msalInstance) {
+                console.error("🔐 LoginModal: MSAL instance not found on window");
+                alert("Authentication system not ready. Please refresh the page and try again.");
+                return;
+            }
+
+            console.log("🔐 LoginModal: Calling login() function...");
+            
+            // Prevent multiple simultaneous login attempts
+            const button = event?.target as HTMLButtonElement;
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = "🔄 Signing in...";
+            }
+            
             await login();
+            console.log("🔐 LoginModal: Login successful, calling onLogin()");
             onLogin();
         } catch (error) {
-            console.error("Login failed:", error);
-            // You might want to show an error message to the user here
+            console.error("🔐 LoginModal: Login failed:", error);
+            
+            // Re-enable button on error
+            const button = event?.target as HTMLButtonElement;
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = '<span>🔐</span> Sign in with Microsoft Authenticator';
+            }
+            
+            // Show user-friendly error
+            if (error instanceof Error) {
+                if (error.message.includes('interaction_in_progress')) {
+                    alert("Authentication in progress. Please complete the login in the popup/redirect window.");
+                } else if (error.message.includes('popup_window_error')) {
+                    alert("Popup blocked. Please allow popups for this site and try again.");
+                } else {
+                    alert(`Login failed: ${error.message}`);
+                }
+            } else {
+                alert("Login failed. Please try again.");
+            }
         }
     };
 
