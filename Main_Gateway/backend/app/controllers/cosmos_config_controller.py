@@ -25,19 +25,34 @@ COSMOS_ENDPOINT = os.getenv("COSMOS_ENDPOINT", "https://cosmos-research-analytic
 DATABASE_ID = "gzc-intel-app-config"
 CONTAINER_ID = "user-configurations"
 
-# Initialize Cosmos client with managed identity
+# Initialize Cosmos client with managed identity - delayed initialization
 container = None
-try:
-    credential = DefaultAzureCredential()
-    cosmos_client = CosmosClient(COSMOS_ENDPOINT, credential=credential)
-    database = cosmos_client.get_database_client(DATABASE_ID)
-    container = database.get_container_client(CONTAINER_ID)
-    logger.info(f"Cosmos DB client initialized for {COSMOS_ENDPOINT}")
-except Exception as e:
-    logger.warning(f"Cosmos DB initialization failed (expected locally): {str(e)[:200]}")
-    # This is expected when running locally due to firewall restrictions
-    # Will work when deployed to Azure Container Apps with managed identity
-    container = None
+cosmos_client = None
+
+def get_cosmos_container():
+    """Get or initialize Cosmos DB container with lazy loading"""
+    global container, cosmos_client
+    
+    if container is not None:
+        return container
+    
+    try:
+        logger.info(f"Attempting to connect to Cosmos DB at {COSMOS_ENDPOINT}")
+        credential = DefaultAzureCredential()
+        cosmos_client = CosmosClient(COSMOS_ENDPOINT, credential=credential)
+        database = cosmos_client.get_database_client(DATABASE_ID)
+        container = database.get_container_client(CONTAINER_ID)
+        
+        # Verify connection by reading database properties
+        database.read()
+        logger.info(f"✅ Cosmos DB client successfully initialized for {COSMOS_ENDPOINT}")
+        return container
+    except Exception as e:
+        logger.error(f"❌ Cosmos DB initialization failed: {str(e)[:500]}")
+        # Note about NAT Gateway requirement
+        logger.info("ℹ️ Cosmos DB requires Container App outbound IPs to be whitelisted via NAT Gateway")
+        container = None
+        return None
 
 
 @router.get("/config")
@@ -45,8 +60,9 @@ async def get_user_config(payload: Dict = Depends(validate_token)) -> Optional[D
     """
     Get user configuration from Cosmos DB
     """
+    container = get_cosmos_container()
     if not container:
-        raise HTTPException(status_code=503, detail="Cosmos DB not available")
+        raise HTTPException(status_code=503, detail="Cosmos DB not available - check NAT Gateway IP whitelisting")
     
     try:
         # Always use email as the consistent ID across browsers
@@ -96,8 +112,9 @@ async def save_user_config(
     """
     Save user configuration to Cosmos DB
     """
+    container = get_cosmos_container()
     if not container:
-        raise HTTPException(status_code=503, detail="Cosmos DB not available")
+        raise HTTPException(status_code=503, detail="Cosmos DB not available - check NAT Gateway IP whitelisting")
     
     try:
         # Always use email as the consistent ID across browsers
@@ -226,6 +243,7 @@ async def cosmos_health_check() -> Dict[str, Any]:
     Check Cosmos DB connectivity
     """
     try:
+        container = get_cosmos_container()
         if not container:
             return {
                 "status": "error",

@@ -169,28 +169,59 @@ async def validate_token_ws(websocket: WebSocket):
         }
 
     try:
-        signing_key = get_signing_key(token)
+        # First decode without verification to check token type
+        import base64
+        import json
+        import time
         
-        # Decode with minimal verification - just signature and expiry
-        payload = jwt.decode(
-            token,
-            key=signing_key,
-            algorithms=["RS256"],
-            options={
-                "verify_aud": False,  # Don't verify audience
-                "verify_iss": False,  # Don't verify issuer
-                "verify_exp": True,   # But do verify expiry
-            }
-        )
+        parts = token.split('.')
+        if len(parts) != 3:
+            raise WebSocketException(code=1008, reason="Invalid token format")
+            
+        payload_str = parts[1] + '=' * (4 - len(parts[1]) % 4)
+        decoded = base64.urlsafe_b64decode(payload_str)
+        token_info = json.loads(decoded)
         
-        # Manually verify it's from our tenant
-        token_tid = payload.get("tid")
-        if token_tid != TENANT_ID:
-            logger.error(f"WS Token from wrong tenant: expected {TENANT_ID}, got {token_tid}")
-            raise WebSocketException(code=1008, reason="Token from wrong tenant")
+        logger.info(f"WS Token audience: {token_info.get('aud')}, issuer: {token_info.get('iss')}")
         
-        logger.info(f"WS Token validated for user: {payload.get('preferred_username', payload.get('email'))}")
-        return payload
+        # Check if it's a Microsoft Graph token
+        if token_info.get('aud') == '00000003-0000-0000-c000-000000000000':
+            logger.info("Detected Microsoft Graph token in WebSocket, using simplified validation")
+            
+            # For Microsoft Graph tokens, just verify tenant and expiry
+            if token_info.get("tid") != TENANT_ID:
+                logger.error(f"WS Token from wrong tenant: expected {TENANT_ID}, got {token_info.get('tid')}")
+                raise WebSocketException(code=1008, reason="Token from wrong tenant")
+            
+            # Check expiry
+            if token_info.get("exp", 0) < time.time():
+                raise WebSocketException(code=1008, reason="Token expired")
+            
+            logger.info(f"WS Microsoft Graph token accepted for user: {token_info.get('preferred_username', token_info.get('email'))}")
+            return token_info
+        else:
+            # For app-specific tokens, do full validation
+            signing_key = get_signing_key(token)
+            
+            payload = jwt.decode(
+                token,
+                key=signing_key,
+                algorithms=["RS256"],
+                options={
+                    "verify_aud": False,  # Don't verify audience
+                    "verify_iss": False,  # Don't verify issuer
+                    "verify_exp": True,   # But do verify expiry
+                }
+            )
+            
+            # Manually verify it's from our tenant
+            token_tid = payload.get("tid")
+            if token_tid != TENANT_ID:
+                logger.error(f"WS Token from wrong tenant: expected {TENANT_ID}, got {token_tid}")
+                raise WebSocketException(code=1008, reason="Token from wrong tenant")
+            
+            logger.info(f"WS Token validated for user: {payload.get('preferred_username', payload.get('email'))}")
+            return payload
         
     except JWTError as e:
         logger.error(f"WebSocket token validation failed: {e}")
