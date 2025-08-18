@@ -61,7 +61,7 @@ export class ComponentExportService {
         category: meta.category,
         tags: meta.tags,
         dependencies: meta.dependencies || [],
-        repository: 'http://localhost:3500'
+        repository: import.meta.env.PROD ? '/api' : 'http://localhost:5300/api'
       },
       capabilities: {
         sizing: {

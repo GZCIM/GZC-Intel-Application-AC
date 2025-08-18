@@ -3,11 +3,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useAuthContext } from '../modules/ui-library'
-import { 
-  UserMemoryService, 
-  createUserMemoryService,
-  SessionStorageUserMemoryService 
-} from '../services/UserMemoryService'
+import { cosmosConfigService } from '../services/cosmosConfigService'
 
 // TODO: Replace with actual MSAL integration
 // For now, using temporary user identification
@@ -27,12 +23,15 @@ function getTempUserInfo() {
 }
 
 export function useUserMemory() {
-  const auth = useAuthContext?.() as { getToken: () => Promise<string> } | undefined
+  // Try to use auth context but handle case where it's not available
+  let auth: { getToken: () => Promise<string> } | undefined
+  try {
+    auth = useAuthContext()
+  } catch (error) {
+    // AuthContext not available yet - this is ok during initial render
+    auth = undefined
+  }
   const [userInfo, setUserInfo] = useState(() => getTempUserInfo())
-  const [service, setService] = useState<UserMemoryService>(() =>
-    userInfo ? createUserMemoryService(userInfo.userId, userInfo.tenantId, userInfo.accessToken) :
-    new SessionStorageUserMemoryService('anonymous')
-  )
 
   // Decode JWT payload (base64url) safely
   const decodeJwt = useCallback((token: string): Record<string, any> | null => {
@@ -47,7 +46,7 @@ export function useUserMemory() {
     }
   }, [])
 
-  // Initialize or refresh the DB-backed service when auth is available
+  // Initialize user info when auth is available
   useEffect(() => {
     let cancelled = false
     const init = async () => {
@@ -60,7 +59,6 @@ export function useUserMemory() {
           const effective = { userId: derivedUserId, tenantId: derivedTenantId, accessToken: token }
           if (!cancelled) {
             setUserInfo(effective)
-            setService(createUserMemoryService(effective.userId, effective.tenantId, effective.accessToken))
           }
           return
         }
@@ -70,7 +68,6 @@ export function useUserMemory() {
       if (!cancelled) {
         const temp = getTempUserInfo()
         setUserInfo(temp)
-        setService(createUserMemoryService(temp.userId, temp.tenantId, temp.accessToken))
       }
     }
     init()
@@ -92,94 +89,83 @@ export function useUserMemory() {
     }
   }, [])
 
-  // Layout management
+  // Layout management - now using Cosmos DB
   const saveLayoutData = useCallback(async (tabId: string, layout: any): Promise<void> => {
-    await withFallback(
-      () => service.saveLayout(tabId, layout),
-      undefined,
-      'save layout'
-    )
-  }, [service, withFallback])
+    await withFallback(async () => {
+      // Load current config, update just the layout for this tab, save back
+      const config = await cosmosConfigService.loadConfiguration() || { 
+        tabs: [], layouts: [], preferences: {}, componentStates: {}, userMemory: {}
+      }
+      if (!config.userMemory) config.userMemory = {}
+      config.userMemory[`layout_${tabId}`] = layout
+      await cosmosConfigService.saveConfiguration(config)
+    }, undefined, 'save layout')
+  }, [withFallback])
 
   const loadLayoutData = useCallback(async (tabId: string): Promise<any | null> => {
-    return await withFallback(
-      () => service.loadLayout(tabId),
-      null,
-      'load layout'
-    )
-  }, [service, withFallback])
+    return await withFallback(async () => {
+      const config = await cosmosConfigService.loadConfiguration()
+      return config?.userMemory?.[`layout_${tabId}`] || null
+    }, null, 'load layout')
+  }, [withFallback])
 
-  // Theme management
+  // Theme management - now using Cosmos DB
   const saveThemeData = useCallback(async (theme: string): Promise<void> => {
-    await withFallback(
-      () => service.saveTheme(theme),
-      undefined,
-      'save theme'
-    )
-  }, [service, withFallback])
+    await withFallback(async () => {
+      const config = await cosmosConfigService.loadConfiguration() || { 
+        tabs: [], layouts: [], preferences: {}, componentStates: {}, userMemory: {}
+      }
+      if (!config.preferences) config.preferences = {}
+      config.preferences.theme = theme
+      await cosmosConfigService.saveConfiguration(config)
+    }, undefined, 'save theme')
+  }, [withFallback])
 
   const loadThemeData = useCallback(async (): Promise<string | null> => {
-    return await withFallback(
-      () => service.loadTheme(),
-      null,
-      'load theme'
-    )
-  }, [service, withFallback])
+    return await withFallback(async () => {
+      const config = await cosmosConfigService.loadConfiguration()
+      return config?.preferences?.theme || null
+    }, null, 'load theme')
+  }, [withFallback])
 
-  // Component state management
+  // Component state management - clean professional API
   const saveComponentStateData = useCallback(async (componentId: string, state: any): Promise<void> => {
-    await withFallback(
-      () => service.saveComponentState(componentId, state),
-      undefined,
-      'save component state'
-    )
-  }, [service, withFallback])
+    await withFallback(() => cosmosConfigService.updateComponentState(componentId, state), undefined, 'save component state')
+  }, [withFallback])
 
   const loadComponentStateData = useCallback(async (componentId: string): Promise<any> => {
-    return await withFallback(
-      () => service.loadComponentState(componentId),
-      {},
-      'load component state'
-    )
-  }, [service, withFallback])
+    return await withFallback(() => cosmosConfigService.getComponentState(componentId), {}, 'load component state')
+  }, [withFallback])
 
-  // Preferences management
+  // Preferences management - clean professional API
   const savePreferenceData = useCallback(async (key: string, value: any): Promise<void> => {
-    await withFallback(
-      () => service.savePreference(key, value),
-      undefined,
-      'save preference'
-    )
-  }, [service, withFallback])
+    await withFallback(() => cosmosConfigService.updatePreference(key, value), undefined, 'save preference')
+  }, [withFallback])
 
   const loadPreferenceData = useCallback(async (key: string): Promise<any> => {
-    return await withFallback(
-      () => service.loadPreference(key),
-      null,
-      'load preference'
-    )
-  }, [service, withFallback])
+    return await withFallback(() => cosmosConfigService.getPreference(key), null, 'load preference')
+  }, [withFallback])
 
   return {
-    // Layout functions - replace localStorage calls
+    // Layout functions - now using Cosmos DB
     saveLayoutData,
     loadLayoutData,
     
-    // Theme functions - replace localStorage calls
+    // Theme functions - now using Cosmos DB
     saveThemeData,
     loadThemeData,
     
-    // Component state functions
+    // Component state functions - now using Cosmos DB
     saveComponentStateData,
     loadComponentStateData,
     
-    // Preferences functions
+    // Preferences functions - now using Cosmos DB
     savePreferenceData,
     loadPreferenceData,
     
     // Service info for debugging
     userInfo,
-    serviceType: service.constructor.name
+    serviceType: 'CosmosDB'
   }
 }
 

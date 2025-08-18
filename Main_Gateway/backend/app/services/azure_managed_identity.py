@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any
 from azure.identity.aio import DefaultAzureCredential as AsyncDefaultAzureCredential, ManagedIdentityCredential as AsyncManagedIdentityCredential
 from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
 from azure.keyvault.secrets.aio import SecretClient
-from azure.monitor.opentelemetry import configure_azure_monitor
+# from azure.monitor.opentelemetry import configure_azure_monitor  # TODO: Install azure-monitor-opentelemetry
 from azure.core.exceptions import ClientAuthenticationError, ResourceNotFoundError
 from app.util.logger import get_logger
 import json
@@ -99,12 +99,13 @@ class AzureManagedIdentityService:
             
             if connection_string:
                 # Configure Azure Monitor with the synchronous connection string
-                logger.info("🔧 Configuring Azure Monitor with synchronous credential...")
-                configure_azure_monitor(
-                    connection_string=connection_string,
-                    credential=self.sync_credential
-                )
-                logger.info("✅ Application Insights configured with managed identity")
+                logger.info("🔧 Azure Monitor configuration disabled (module not installed)")
+                # TODO: Uncomment when azure-monitor-opentelemetry is installed
+                # configure_azure_monitor(
+                #     connection_string=connection_string,
+                #     credential=self.sync_credential
+                # )
+                # logger.info("✅ Application Insights configured with managed identity")
             else:
                 logger.warning("⚠️ Application Insights connection string not found in environment or Key Vault")
                 

@@ -132,11 +132,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     }))
   }, [])
 
-  // Handle layout changes - ACTUALLY FIXED to prevent component disappearance
+  // Handle layout changes - allow changes anytime
   const handleLayoutChange = useCallback((layout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
-    // Only process layout changes when in edit mode
-    if (!isEditMode) return
-    
     // Update layouts for visual feedback
     setLayouts(allLayouts)
     
@@ -144,7 +141,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     if (!isDragging && !isResizing) {
       updateComponentPositions(layout)
     }
-  }, [isDragging, isResizing, updateComponentPositions, isEditMode])
+  }, [isDragging, isResizing, updateComponentPositions])
 
   // Drag handlers - prevent state updates during drag
   const handleDragStart = useCallback(() => {
@@ -268,7 +265,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         isResizable: true  // Allow resizing in all modes
       }
     })
-  }, [components, isEditMode])
+  }, [components])
 
   // Memoize grid children to prevent hook order violations
   const gridChildren = useMemo(() => components.map(instance => (
@@ -553,8 +550,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             onDragStop={handleDragStop}
             onResizeStart={handleResizeStart}
             onResizeStop={handleResizeStop}
-            isDraggable={isEditMode}  // Only allow dragging in edit mode
-            isResizable={isEditMode}  // Only allow resizing in edit mode
+            isDraggable={true}  // Always allow dragging
+            isResizable={true}  // Always allow resizing
             useCSSTransforms={true}  // 6x faster paint performance
             transformScale={1}  // Important for smooth scaling
             margin={[1, 1]}
@@ -564,7 +561,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             compactType="vertical"
             preventCollision={false}
-            draggableHandle=".drag-handle"  // Only allow dragging from handle
+            // No drag handle restriction - drag from anywhere
             draggableCancel=".no-drag"  // Prevent dragging on specific elements like buttons
           >
             {gridChildren}

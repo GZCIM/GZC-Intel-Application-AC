@@ -9,7 +9,7 @@ import { loginRequest } from '../modules/shell/components/auth/msalConfig'
 // Use main gateway backend for database API (not FSS!)
 const API_BASE_URL = import.meta.env.PROD 
   ? '/api'  // Use relative URL in production (goes through nginx to port 5000)
-  : 'http://localhost:5000/api'  // Main gateway backend in development
+  : 'http://localhost:5300/api'  // Main gateway backend in development
 
 interface UserPreferences {
   user_id: string

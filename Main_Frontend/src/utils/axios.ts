@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create a configured axios instance for the backend API
 const backendUrl = import.meta.env.VITE_BACKEND_URL || (
-    import.meta.env.PROD ? "" : "http://localhost:5000"
+    import.meta.env.PROD ? "" : "http://localhost:5300"
 );
 const apiTimeout = parseInt(import.meta.env.VITE_API_TIMEOUT || "30000");
 

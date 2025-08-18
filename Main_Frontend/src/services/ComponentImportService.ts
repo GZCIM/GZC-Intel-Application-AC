@@ -24,35 +24,42 @@ interface ImportResult {
 
 export class ComponentImportService {
   private validator = new ContractValidator()
+  
+  // Use Main_Gateway as the single entry point
+  private getGatewayUrl(): string {
+    return import.meta.env.PROD ? '/api' : 'http://localhost:5300/api'
+  }
 
   /**
-   * Fetch component from port 3200
+   * Fetch component from port 3200 through Main_Gateway
    */
   async fetchFromPort3200(componentId: string): Promise<Port3200Component | null> {
     try {
-      const response = await fetch(`http://localhost:3200/api/components/${componentId}`)
+      // Route through Main_Gateway proxy endpoint
+      const response = await fetch(`${this.getGatewayUrl()}/proxy/components/${componentId}`)
       if (!response.ok) {
         throw new Error(`Failed to fetch component: ${response.statusText}`)
       }
       return await response.json()
     } catch (error) {
-      console.error(`Error fetching component from port 3200:`, error)
+      console.error(`Error fetching component through gateway:`, error)
       return null
     }
   }
 
   /**
-   * List available components from port 3200
+   * List available components from port 3200 through Main_Gateway
    */
   async listPort3200Components(): Promise<Port3200Component[]> {
     try {
-      const response = await fetch('http://localhost:3200/api/components')
+      // Route through Main_Gateway proxy endpoint
+      const response = await fetch(`${this.getGatewayUrl()}/proxy/components`)
       if (!response.ok) {
         throw new Error(`Failed to list components: ${response.statusText}`)
       }
       return await response.json()
     } catch (error) {
-      console.error(`Error listing components from port 3200:`, error)
+      console.error(`Error listing components through gateway:`, error)
       return []
     }
   }

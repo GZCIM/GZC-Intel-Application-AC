@@ -6,137 +6,91 @@ import "./styles/globals.css";
 import App from "./App.tsx";
 import "./utils/errorMonitoring";
 import { initSentry } from "./config/sentry";
-import { eventMonitor } from "./utils/eventMonitor";
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
-import { telemetryService } from './services/telemetryService';
 
-// Emergency storage cleanup on app start to prevent MSAL authentication failures
+// OPTIMIZED: Simplified storage cleanup - less aggressive
 try {
-    // Clear largest localStorage items if quota is near limit
     const storageSize = Object.keys(localStorage).reduce((total, key) => {
         return total + (localStorage[key]?.length || 0);
     }, 0);
     
-    if (storageSize > 3 * 1024 * 1024) { // If over 3MB
-        console.warn('🧹 Emergency localStorage cleanup - size:', (storageSize / 1024 / 1024).toFixed(2) + 'MB');
+    if (storageSize > 5 * 1024 * 1024) { // Only if over 5MB (less aggressive)
+        console.warn('🧹 Optimized localStorage cleanup - size:', (storageSize / 1024 / 1024).toFixed(2) + 'MB');
         
-        // Remove known large items
+        // Only remove obviously old/large items
         const keysToRemove = Object.keys(localStorage).filter(key => 
-            key.includes('tabLayouts') || 
-            key.includes('canvas-state') || 
             key.includes('-old') || 
             key.includes('backup') ||
-            localStorage[key]?.length > 100000
+            localStorage[key]?.length > 200000 // Only very large items
         );
         
         keysToRemove.forEach(key => {
-            console.log('🗑️ Removing large localStorage key:', key, (localStorage[key]?.length / 1024).toFixed(1) + 'KB');
+            console.log('🗑️ Removing old localStorage key:', key, (localStorage[key]?.length / 1024).toFixed(1) + 'KB');
             localStorage.removeItem(key);
         });
     }
 } catch (e) {
     console.error('Storage cleanup failed:', e);
-    // If all else fails, clear everything except critical auth data
-    try {
-        const critical = ['msal.', 'gzc-intel-user'];
-        const backup = {};
-        critical.forEach(prefix => {
-            Object.keys(localStorage).forEach(key => {
-                if (key.includes(prefix)) {
-                    backup[key] = localStorage[key];
-                }
-            });
-        });
-        localStorage.clear();
-        Object.entries(backup).forEach(([key, value]) => {
-            localStorage.setItem(key, value);
-        });
-        console.log('🚨 Emergency localStorage reset completed');
-    } catch (e2) {
-        console.error('Emergency reset failed:', e2);
-        localStorage.clear();
-    }
 }
 
-// Initialize Application Insights if connection string is available
+// Initialize Application Insights
 if (import.meta.env.VITE_APPLICATIONINSIGHTS_CONNECTION_STRING) {
     const appInsights = new ApplicationInsights({
         config: {
             connectionString: import.meta.env.VITE_APPLICATIONINSIGHTS_CONNECTION_STRING,
-            enableAutoRouteTracking: true, // Automatically track page views
-            enableCorsCorrelation: true,   // Track AJAX/fetch requests
+            enableAutoRouteTracking: true,
+            enableCorsCorrelation: true,
             enableRequestHeaderTracking: true,
             enableResponseHeaderTracking: true,
-            autoTrackPageVisitTime: true,  // Track time spent on pages
+            autoTrackPageVisitTime: true,
         }
     });
     appInsights.loadAppInsights();
-    appInsights.trackPageView(); // Initial page view
-    console.log('✅ Application Insights initialized');
-} else {
-    console.warn('⚠️ Application Insights connection string not found');
+    appInsights.trackPageView();
+    console.log('✅ Application Insights initialized (Optimized)');
 }
 
-// Initialize Sentry (fallback error tracking)
+// Initialize Sentry
 initSentry();
 
-// Add development-only monitoring
+// Add development monitoring
 if (import.meta.env.DEV) {
-    console.log("🔍 Error monitoring enabled for development");
-    // Event conflict monitor auto-starts in development
-    console.log("🎯 Event conflict detection active");
+    console.log("🔍 Optimized error monitoring enabled for development");
 }
 
-// CRITICAL: Handle page refresh authentication restoration
-// This must happen BEFORE React renders to prevent authentication state loss
-const initializeApp = async () => {
+// OPTIMIZED: Streamlined app initialization
+const initializeOptimizedApp = async () => {
     try {
-        // Debug MSAL configuration before initialization
-        const config = msalInstance.getConfiguration();
-        console.log('🔍 MSAL Configuration:', {
-            clientId: config?.auth?.clientId || 'NOT SET',
-            authority: config?.auth?.authority || 'NOT SET',
-            redirectUri: config?.auth?.redirectUri || 'NOT SET',
-        });
+        console.log('🚀 Initializing Optimized App...');
         
-        // Initialize MSAL instance first
+        // Initialize MSAL
         await msalInstance.initialize();
-        console.log('✅ MSAL initialized successfully');
+        console.log('✅ MSAL initialized successfully (Optimized)');
         
-        // Make MSAL available globally AFTER initialization
+        // Make MSAL available globally
         (window as any).msalInstance = msalInstance;
         
-        // Handle redirect promise for returning from auth redirects
+        // Handle redirect promise
         const response = await msalInstance.handleRedirectPromise();
         if (response) {
-            console.log('✅ Redirect authentication successful:', response.account?.username);
+            console.log('✅ Redirect authentication successful (Optimized):', response.account?.username);
             msalInstance.setActiveAccount(response.account);
         }
         
-        // Check for existing accounts after initialization
+        // Set active account if none is set
         const accounts = msalInstance.getAllAccounts();
-        if (accounts.length > 0) {
-            // Set the first account as active if none is set
-            const activeAccount = msalInstance.getActiveAccount();
-            if (!activeAccount) {
-                console.log('🔄 Setting active account after page refresh:', accounts[0].username);
-                msalInstance.setActiveAccount(accounts[0]);
-            }
+        if (accounts.length > 0 && !msalInstance.getActiveAccount()) {
+            console.log('🔄 Setting active account (Optimized):', accounts[0].username);
+            msalInstance.setActiveAccount(accounts[0]);
         }
         
-        console.log('🔐 MSAL initialized with', accounts.length, 'accounts');
+        console.log('🔐 MSAL initialized with', accounts.length, 'accounts (Optimized)');
         
     } catch (error) {
-        console.error('❌ MSAL initialization failed:', error);
-        console.error('❌ Error details:', {
-            message: error?.message,
-            name: error?.name,
-            stack: error?.stack,
-        });
-        // Still render the app even if MSAL fails, so users can see error messages
+        console.error('❌ MSAL initialization failed (Optimized):', error);
     }
     
-    // Render React app after MSAL is properly initialized
+    // OPTIMIZED: Render with MsalProvider wrapping the app
     createRoot(document.getElementById("root")!).render(
         <StrictMode>
             <MsalProvider instance={msalInstance}>
@@ -146,5 +100,5 @@ const initializeApp = async () => {
     );
 };
 
-// Initialize the app
-initializeApp();
+// Initialize the optimized app
+initializeOptimizedApp();
