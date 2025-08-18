@@ -19,5 +19,5 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Expose Flask's default port
 EXPOSE 5000
 
-# Command to run the Flask app using Gunicorn
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "wsgi:app"]
+# Command to run the FastAPI app using Uvicorn
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5000"]
