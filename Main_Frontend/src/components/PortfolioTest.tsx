@@ -18,7 +18,7 @@ export const PortfolioTest: React.FC = () => {
 
         try {
             const token = await getAccessToken();
-            const response = await fetch("http://localhost:5000/portfolio/", {
+            const response = await fetch("http://localhost:5300/portfolio/", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",

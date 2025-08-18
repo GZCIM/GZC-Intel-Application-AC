@@ -11,7 +11,7 @@ export const AuthDebugger: React.FC = () => {
         tenantId: import.meta.env.VITE_TENANT_ID || "❌ Missing",
         backendUrl:
             import.meta.env.VITE_BACKEND_URL ||
-            "http://localhost:5000 (default)",
+            "http://localhost:5300 (default)",
     };
 
     const authToken = localStorage.getItem("authToken");

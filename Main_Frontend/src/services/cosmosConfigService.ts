@@ -11,7 +11,9 @@ interface UserConfiguration {
   userId: string
   tabs: any[]
   layouts: any[]
-  preferences: any
+  preferences: Record<string, any>
+  componentStates: Record<string, any>  // Component-specific data
+  userMemory: Record<string, any>       // General key-value storage
   timestamp: string
   type: 'user-config'
 }
@@ -19,7 +21,7 @@ interface UserConfiguration {
 class CosmosConfigService {
   // In production, use relative URL so it goes through nginx proxy
   private backendUrl = import.meta.env.VITE_BACKEND_URL || (
-    import.meta.env.PROD ? '' : 'http://localhost:5000'  // Main gateway backend
+    import.meta.env.PROD ? '' : 'http://localhost:5300'  // Main gateway backend
   )
 
   // Lazy-load MSAL instance to avoid initialization race condition
@@ -110,6 +112,13 @@ class CosmosConfigService {
       
       const token = await this.getAccessToken()
       
+      console.log('💾 Saving to Cosmos DB:', {
+        tabsCount: config.tabs?.length || 0,
+        layoutsCount: config.layouts?.length || 0,
+        hasPreferences: !!config.preferences,
+        backend: this.backendUrl
+      })
+      
       const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
         method: 'POST',
         headers: {
@@ -140,17 +149,20 @@ class CosmosConfigService {
       // Check if user is authenticated first
       const msal = this.msalInstance
       if (!msal) {
-        console.log('MSAL not initialized, skipping Cosmos load')
+        console.log('🚨 MSAL not initialized, skipping Cosmos load')
         return null
       }
       
       const accounts = msal.getAllAccounts()
+      console.log('🔍 MSAL accounts found:', accounts.length)
       if (accounts.length === 0) {
-        console.log('No authenticated user, skipping Cosmos load')
+        console.log('🚨 No authenticated user, skipping Cosmos load')
         return null
       }
       
+      console.log('🔑 Getting access token for Cosmos DB...')
       const token = await this.getAccessToken()
+      console.log('✅ Token acquired, making Cosmos DB request')
       
       const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
         method: 'GET',
@@ -162,12 +174,18 @@ class CosmosConfigService {
       if (response.ok) {
         const data = await response.json()
         if (data) {
-          console.log('Configuration loaded from Cosmos DB via backend')
+          console.log('✅ Configuration loaded from Cosmos DB via backend:', {
+            tabsCount: data.tabs?.length || 0,
+            userId: data.userId,
+            timestamp: data.timestamp
+          })
           return data
         }
+      } else {
+        console.log('🚨 Cosmos DB request failed:', response.status, response.statusText)
       }
       
-      console.log('No configuration found in Cosmos DB')
+      console.log('❌ No configuration found in Cosmos DB')
       return null
       
     } catch (error) {
@@ -308,6 +326,79 @@ class CosmosConfigService {
     }
     
     return null
+  }
+
+  /**
+   * Update specific component state (professional pattern)
+   */
+  async updateComponentState(componentId: string, state: any): Promise<void> {
+    try {
+      const config = await this.loadConfiguration() || this.getDefaultConfig()
+      if (!config.componentStates) config.componentStates = {}
+      config.componentStates[componentId] = state
+      await this.saveConfiguration(config)
+    } catch (error) {
+      console.error('Failed to update component state:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get specific component state
+   */
+  async getComponentState(componentId: string): Promise<any> {
+    try {
+      const config = await this.loadConfiguration()
+      return config?.componentStates?.[componentId] || {}
+    } catch (error) {
+      console.error('Failed to get component state:', error)
+      return {}
+    }
+  }
+
+  /**
+   * Update user preference (professional pattern)
+   */
+  async updatePreference(key: string, value: any): Promise<void> {
+    try {
+      const config = await this.loadConfiguration() || this.getDefaultConfig()
+      if (!config.preferences) config.preferences = {}
+      config.preferences[key] = value
+      await this.saveConfiguration(config)
+    } catch (error) {
+      console.error('Failed to update preference:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get user preference
+   */
+  async getPreference(key: string): Promise<any> {
+    try {
+      const config = await this.loadConfiguration()
+      return config?.preferences?.[key] || null
+    } catch (error) {
+      console.error('Failed to get preference:', error)
+      return null
+    }
+  }
+
+  /**
+   * Get default configuration structure
+   */
+  private getDefaultConfig(): UserConfiguration {
+    return {
+      id: `user-${this.getUserId()}`,
+      userId: this.getUserId(),
+      tabs: [],
+      layouts: [],
+      preferences: {},
+      componentStates: {},
+      userMemory: {},
+      timestamp: new Date().toISOString(),
+      type: 'user-config'
+    }
   }
 
   /**

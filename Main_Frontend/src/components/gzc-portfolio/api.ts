@@ -6,8 +6,8 @@ import {
     TradesSummary,
 } from "./types";
 
-// Get the backend URL from environment or default to localhost:5000
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+// Get the backend URL from environment or default to localhost:5300
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5300";
 
 // Authentication token provider - will be set by the component
 let authTokenProvider: (() => Promise<string>) | null = null;

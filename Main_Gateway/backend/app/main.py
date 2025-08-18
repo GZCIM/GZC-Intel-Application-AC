@@ -9,6 +9,7 @@ from app.controllers import (
     preferences_controller,
     user_memory_controller,
     cosmos_config_controller,
+    proxy_controller,
 )
 from app.util.logger import configure_logging, get_logger
 from app.services.azure_managed_identity import get_azure_service
@@ -75,13 +76,17 @@ allowed_origins = [
     "https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io",  # Production frontend
     "http://localhost:3500",  # Local development
     "http://localhost:3501",  # Alternative dev port
+    "http://localhost:9000",  # Frontend dev server
+    "http://localhost:5173",  # Vite default port
 ]
 
 # Only allow in development for additional origins
 if os.getenv("ENVIRONMENT") == "development":
     allowed_origins.extend([
         "http://127.0.0.1:3500",
-        "http://127.0.0.1:3501"
+        "http://127.0.0.1:3501",
+        "http://127.0.0.1:9000",
+        "http://127.0.0.1:5173"
     ])
 
 app.add_middleware(
@@ -117,6 +122,7 @@ app.include_router(portfolio_controller.router)
 app.include_router(transactions_controller.router)
 app.include_router(preferences_controller.router)
 app.include_router(user_memory_controller.router)
+app.include_router(proxy_controller.router)
 app.include_router(cosmos_config_controller.router)
 
 

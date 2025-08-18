@@ -23,7 +23,7 @@ export const SimplePortfolioTest: React.FC = () => {
 
             const apiUrl = import.meta.env.PROD 
                 ? "/portfolio/" 
-                : "http://localhost:5000/portfolio/";
+                : "http://localhost:5300/portfolio/";
             
             const response = await fetch(apiUrl, {
                 method: "GET",

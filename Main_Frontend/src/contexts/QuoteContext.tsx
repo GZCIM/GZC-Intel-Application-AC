@@ -81,7 +81,7 @@ export const QuoteProvider: React.FC<QuoteProviderProps> = ({
             
             // Fallback to VITE_STREAM_URL
             const baseUrl =
-                import.meta.env.VITE_STREAM_URL || "ws://localhost:5000";
+                import.meta.env.VITE_STREAM_URL || "ws://localhost:5300";
             return `${baseUrl}/ws_${streamType}`;
         },
         []

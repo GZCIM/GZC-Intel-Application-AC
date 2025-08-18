@@ -98,7 +98,7 @@ export class DatabaseUserMemoryService implements UserMemoryService {
       ? { 'Authorization': `Bearer ${accessToken}` }
       : {}
     
-    const baseUrl = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api'
+    const baseUrl = import.meta.env.PROD ? '/api' : 'http://localhost:5300/api'
     this.apiClient = new SimpleApiClient(baseUrl, headers)
   }
 
