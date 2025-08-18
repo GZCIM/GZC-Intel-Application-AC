@@ -64,9 +64,17 @@ function AppContent() {
 
     // Show login modal if not authenticated
     useEffect(() => {
+        console.log("🔐 App.tsx: Authentication state changed:", {
+            isAuthenticated,
+            showLoginModal,
+            timestamp: new Date().toISOString()
+        });
+        
         if (!isAuthenticated) {
+            console.log("🔐 App.tsx: User NOT authenticated - showing login modal");
             setShowLoginModal(true);
         } else {
+            console.log("🔐 App.tsx: User IS authenticated - hiding login modal");
             setShowLoginModal(false);
             // Initialize memory service when authenticated
             memoryService.initialize();

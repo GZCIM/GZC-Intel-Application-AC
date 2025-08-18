@@ -9,9 +9,11 @@ export const DebugPanel: React.FC = () => {
   const [showPanel, setShowPanel] = useState(true);
 
   useEffect(() => {
-    // Subscribe to log updates
+    // Subscribe to log updates - use setTimeout to avoid setState during render
     const unsubscribe = debugLogger.subscribe((log) => {
-      setLogs(prev => [...prev.slice(-99), log]); // Keep last 100 logs
+      setTimeout(() => {
+        setLogs(prev => [...prev.slice(-99), log]); // Keep last 100 logs
+      }, 0);
     });
 
     // Load initial logs
@@ -270,7 +272,23 @@ export const DebugPanel: React.FC = () => {
                     }}>
                       {typeof log.data === 'string' 
                         ? log.data 
-                        : JSON.stringify(log.data, null, 2).substring(0, 200)}
+                        : (() => {
+                            try {
+                              // Safe JSON stringify to handle cyclic references
+                              const seen = new Set();
+                              const replacer = (key: any, value: any) => {
+                                if (typeof value === 'object' && value !== null) {
+                                  if (seen.has(value)) return '[Circular]';
+                                  seen.add(value);
+                                }
+                                return value;
+                              };
+                              return JSON.stringify(log.data, replacer, 2).substring(0, 200);
+                            } catch (error) {
+                              return '[Unable to stringify - ' + String(log.data).substring(0, 100) + ']';
+                            }
+                          })()
+                      }
                     </div>
                   )}
                   {log.error && (

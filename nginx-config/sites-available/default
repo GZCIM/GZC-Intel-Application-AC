@@ -8,9 +8,9 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # Flask WebSocket backend
+    # WebSocket feeds via Main Gateway (as required - not direct to FSS)
     location /ws_esp {
-        proxy_pass http://localhost:5100;
+        proxy_pass http://localhost:5000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -25,7 +25,7 @@ server {
     }
 
     location /ws_rfs {
-        proxy_pass http://localhost:5100;
+        proxy_pass http://localhost:5000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -40,7 +40,7 @@ server {
     }
 
     location /ws_execution {
-        proxy_pass http://localhost:5100;
+        proxy_pass http://localhost:5000/ws_exec;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";

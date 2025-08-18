@@ -34,7 +34,15 @@ export function FeatherIcon({ name, size = 16, className = '', color = 'currentC
   }, [name, size, color])
   
   if (!svgContent) {
-    return <div className={`inline-block ${className}`} style={{ width: size, height: size }} />
+    // Return a fallback icon element instead of empty div
+    return (
+      <div 
+        className={`inline-flex items-center justify-center ${className}`}
+        style={{ width: size, height: size, color, ...style }}
+      >
+        <span style={{ fontSize: size * 0.8 }}>?</span>
+      </div>
+    )
   }
   
   return (

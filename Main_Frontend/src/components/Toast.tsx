@@ -47,7 +47,10 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration =
         minWidth: '300px'
       }}
     >
-      {React.cloneElement(icons[type], { color: type === 'success' ? '#059669' : type === 'error' ? '#dc2626' : '#2563eb' })}
+      {icons[type] && React.isValidElement(icons[type]) 
+        ? React.cloneElement(icons[type], { color: type === 'success' ? '#059669' : type === 'error' ? '#dc2626' : '#2563eb' })
+        : <span style={{ fontSize: '16px' }}>{type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+      }
       <span style={{ fontSize: '14px', fontWeight: 500 }}>{message}</span>
     </div>
   );
