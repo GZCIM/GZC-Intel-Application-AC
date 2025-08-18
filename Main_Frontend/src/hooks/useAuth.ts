@@ -52,28 +52,29 @@ export function useAuth() {
         } catch (error) {
             // Check if it's an interaction_in_progress error
             if (error instanceof Error && error.message.includes('interaction_in_progress')) {
-                console.log('MSAL interaction in progress, waiting and retrying...');
-                // Wait longer and retry once
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                try {
-                    const response = await instance.loginPopup(loginRequest);
-                    telemetryService.trackAuthEvent('login_success_retry', {
+                console.log('MSAL interaction in progress, checking for redirect response...');
+                
+                // For Safari, check if we're coming back from a redirect
+                const response = await instance.handleRedirectPromise();
+                if (response && response.account) {
+                    console.log('✅ Found redirect response, login successful');
+                    telemetryService.trackAuthEvent('login_success_redirect', {
                         username: response.account?.username,
                         accountId: response.account?.homeAccountId
                     });
-                    if (response.account) {
-                        telemetryService.setUserId(response.account.homeAccountId);
-                    }
+                    telemetryService.setUserId(response.account.homeAccountId);
                     return;
-                } catch (retryError) {
-                    console.error("Login retry also failed:", retryError);
                 }
+                
+                // Otherwise wait and skip retry to avoid loops
+                console.log('⏳ Auth in progress, please complete the login in the popup/redirect');
+                return;
             }
             
+            console.error("Login failed:", error);
             telemetryService.trackAuthEvent('login_failure', {
                 error: error instanceof Error ? error.message : 'Unknown error'
             });
-            console.error("Login failed:", error);
             throw error;
         }
     };
