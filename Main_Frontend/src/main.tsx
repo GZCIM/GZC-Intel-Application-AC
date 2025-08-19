@@ -7,25 +7,37 @@ import App from "./App.tsx";
 import "./utils/errorMonitoring";
 import { initSentry } from "./config/sentry";
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+import { clearMsalCache, getStorageInfo } from "./utils/clearMsalCache";
 
-// OPTIMIZED: Simplified storage cleanup - less aggressive
+// CRITICAL FIX: Clear MSAL cache from localStorage to prevent quota exceeded errors
+// MSAL has been reconfigured to use sessionStorage going forward
 try {
-    const storageSize = Object.keys(localStorage).reduce((total, key) => {
-        return total + (localStorage[key]?.length || 0);
-    }, 0);
+    const beforeInfo = getStorageInfo();
+    console.log('📊 Storage before cleanup:', beforeInfo);
     
-    if (storageSize > 5 * 1024 * 1024) { // Only if over 5MB (less aggressive)
-        console.warn('🧹 Optimized localStorage cleanup - size:', (storageSize / 1024 / 1024).toFixed(2) + 'MB');
+    // Clear all MSAL cache entries that are causing quota issues
+    clearMsalCache();
+    
+    const afterInfo = getStorageInfo();
+    console.log('📊 Storage after cleanup:', afterInfo);
+    
+    // Additional aggressive cleanup if still over 4MB
+    if (afterInfo.totalSize > 4 * 1024 * 1024) {
+        console.warn('⚠️ Still over 4MB, performing additional cleanup...');
         
-        // Only remove obviously old/large items
-        const keysToRemove = Object.keys(localStorage).filter(key => 
-            key.includes('-old') || 
-            key.includes('backup') ||
-            localStorage[key]?.length > 200000 // Only very large items
-        );
+        // Remove large items and old data
+        const keysToRemove = Object.keys(localStorage).filter(key => {
+            const value = localStorage[key];
+            const size = new Blob([value]).size;
+            return size > 100000 || // Items over 100KB
+                   key.includes('-old') || 
+                   key.includes('backup') ||
+                   key.includes('temp') ||
+                   key.includes('cache');
+        });
         
         keysToRemove.forEach(key => {
-            console.log('🗑️ Removing old localStorage key:', key, (localStorage[key]?.length / 1024).toFixed(1) + 'KB');
+            console.log('🗑️ Removing large/old key:', key);
             localStorage.removeItem(key);
         });
     }

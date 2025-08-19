@@ -21,7 +21,7 @@ export const msalConfig: Configuration = {
         redirectUri: window.location.origin,
     },
     cache: {
-        cacheLocation: "localStorage",
+        cacheLocation: "sessionStorage", // Changed from localStorage to prevent quota exceeded errors
         storeAuthStateInCookie: true, // CRITICAL: Enable for better persistence across page refreshes
     },
     system: {
