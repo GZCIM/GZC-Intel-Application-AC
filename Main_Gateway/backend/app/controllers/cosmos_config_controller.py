@@ -15,29 +15,30 @@ from app.util.logger import get_logger
 logger = get_logger(__name__)
 
 router = APIRouter(
-    prefix="/api/cosmos",
+    prefix="/cosmos",
     tags=["cosmos-config"],
     responses={404: {"description": "Not found"}},
 )
 
 # Cosmos DB configuration
 COSMOS_ENDPOINT = os.getenv("COSMOS_ENDPOINT", "https://cosmos-research-analytics-prod.documents.azure.com:443/")
-DATABASE_ID = "gzc-intel-app-config"
-CONTAINER_ID = "user-configurations"
+DATABASE_ID = os.getenv("COSMOS_DATABASE", "agent-communication")
+CONTAINER_ID = os.getenv("COSMOS_CONTAINER", "user-memory")
 
 # Initialize Cosmos client with managed identity - delayed initialization
 container = None
 cosmos_client = None
 
 def get_cosmos_container():
-    """Get or initialize Cosmos DB container with lazy loading"""
+    """Get or initialize Cosmos DB container with managed identity (fallback to key)"""
     global container, cosmos_client
     
     if container is not None:
         return container
     
+    # Try managed identity first
     try:
-        logger.info(f"Attempting to connect to Cosmos DB at {COSMOS_ENDPOINT}")
+        logger.info(f"Attempting to connect to Cosmos DB at {COSMOS_ENDPOINT} using Managed Identity")
         credential = DefaultAzureCredential()
         cosmos_client = CosmosClient(COSMOS_ENDPOINT, credential=credential)
         database = cosmos_client.get_database_client(DATABASE_ID)
@@ -45,12 +46,32 @@ def get_cosmos_container():
         
         # Verify connection by reading database properties
         database.read()
-        logger.info(f"✅ Cosmos DB client successfully initialized for {COSMOS_ENDPOINT}")
+        logger.info(f"✅ Cosmos DB connected using Managed Identity for {COSMOS_ENDPOINT}")
         return container
-    except Exception as e:
-        logger.error(f"❌ Cosmos DB initialization failed: {str(e)[:500]}")
-        # Note about NAT Gateway requirement
-        logger.info("ℹ️ Cosmos DB requires Container App outbound IPs to be whitelisted via NAT Gateway")
+    except Exception as managed_identity_error:
+        logger.warning(f"Managed Identity failed: {str(managed_identity_error)[:200]}")
+        
+        # Fallback to key-based authentication if available
+        cosmos_key = os.getenv("COSMOS_KEY")
+        if cosmos_key:
+            try:
+                logger.info("Attempting Cosmos DB connection with key fallback")
+                cosmos_client = CosmosClient(COSMOS_ENDPOINT, credential=cosmos_key)
+                database = cosmos_client.get_database_client(DATABASE_ID)
+                container = database.get_container_client(CONTAINER_ID)
+                
+                # Verify connection
+                database.read()
+                logger.info(f"✅ Cosmos DB connected using key fallback for {COSMOS_ENDPOINT}")
+                return container
+            except Exception as key_error:
+                logger.error(f"❌ Key-based authentication also failed: {str(key_error)[:200]}")
+        else:
+            logger.info("No COSMOS_KEY environment variable found for fallback")
+        
+        # Both methods failed
+        logger.error(f"❌ Cosmos DB initialization failed completely")
+        logger.info("ℹ️ Ensure: 1) Managed Identity has Cosmos DB access, 2) Container App uses NAT Gateway IP, or 3) COSMOS_KEY is set")
         container = None
         return None
 
@@ -158,6 +179,102 @@ async def save_user_config(
         raise HTTPException(status_code=500, detail="Failed to save configuration")
 
 
+@router.post("/user-memory")
+async def save_user_memory(
+    memory_data: Dict[str, Any],
+    payload: Dict = Depends(validate_token)
+) -> Dict[str, Any]:
+    """
+    Save user memory data to Cosmos DB (replaces PostgreSQL)
+    Compatible with frontend UserMemoryStore
+    """
+    container = get_cosmos_container()
+    if not container:
+        raise HTTPException(status_code=503, detail="Cosmos DB not available - check NAT Gateway IP whitelisting")
+    
+    try:
+        # Use email as consistent ID
+        user_email = payload.get("preferred_username") or payload.get("email", "")
+        user_id = user_email if user_email else payload.get("sub", "unknown_user")
+        
+        # Extract memory details from request
+        memory_type = memory_data.get("memoryType", "config")
+        memory_key = memory_data.get("memoryKey", "default")
+        memory_content = memory_data.get("memoryData", {})
+        
+        # Document ID for Cosmos DB (composite key)
+        doc_id = f"{user_id}_{memory_type}_{memory_key}"
+        
+        document = {
+            "id": doc_id,
+            "userId": user_id,
+            "userEmail": user_email,
+            "memoryType": memory_type,
+            "memoryKey": memory_key,
+            "memoryData": memory_content,
+            "timestamp": datetime.utcnow().isoformat(),
+            "version": memory_data.get("version", 1),
+            "type": "user-memory"
+        }
+        
+        # Upsert the document
+        item = container.upsert_item(body=document)
+        logger.info(f"Memory saved for {user_id}/{memory_type}/{memory_key}")
+        
+        return {
+            "success": True,
+            "memoryData": memory_content,
+            "version": item.get("version", 1),
+            "updatedAt": item.get("timestamp")
+        }
+        
+    except Exception as e:
+        logger.error(f"Error saving user memory: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to save memory: {str(e)}")
+
+
+@router.get("/user-memory")
+async def load_user_memory(
+    memoryType: str,
+    memoryKey: str,
+    payload: Dict = Depends(validate_token)
+) -> Dict[str, Any]:
+    """
+    Load user memory data from Cosmos DB
+    """
+    container = get_cosmos_container()
+    if not container:
+        raise HTTPException(status_code=503, detail="Cosmos DB not available")
+    
+    try:
+        # Use email as consistent ID
+        user_email = payload.get("preferred_username") or payload.get("email", "")
+        user_id = user_email if user_email else payload.get("sub", "unknown_user")
+        
+        # Document ID for Cosmos DB
+        doc_id = f"{user_id}_{memoryType}_{memoryKey}"
+        
+        # Try to read the document
+        item = container.read_item(item=doc_id, partition_key=doc_id)
+        
+        return {
+            "memoryData": item.get("memoryData", {}),
+            "version": item.get("version", 1),
+            "updatedAt": item.get("timestamp")
+        }
+        
+    except exceptions.CosmosResourceNotFoundError:
+        logger.info(f"No memory found for {user_id}/{memoryType}/{memoryKey}")
+        return {
+            "memoryData": {},
+            "version": 0,
+            "updatedAt": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error loading user memory: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load memory")
+
+
 @router.put("/config")
 async def update_user_config(
     updates: Dict[str, Any],
@@ -166,6 +283,7 @@ async def update_user_config(
     """
     Update specific fields in user configuration
     """
+    container = get_cosmos_container()
     if not container:
         raise HTTPException(status_code=503, detail="Cosmos DB not available")
     
@@ -217,6 +335,7 @@ async def delete_user_config(payload: Dict = Depends(validate_token)) -> Dict[st
     """
     Delete user configuration from Cosmos DB
     """
+    container = get_cosmos_container()
     if not container:
         raise HTTPException(status_code=503, detail="Cosmos DB not available")
     
