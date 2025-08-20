@@ -1,1082 +1,1293 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { v4 as uuidv4 } from 'uuid'
-import { TabManager, setupConsoleHelpers } from './TabUtils'
-import { useUserSettings } from '../../hooks/useUserSettings'
-import { useViewMemory } from '../../hooks/useViewMemory'
-import { TabNameModal } from '../../components/TabNameModal'
-import { stateManager } from '../../services/StateManager'
-import { useUser } from '../../hooks/useUser'
-import { databaseService } from '../../services/databaseService'
-import { cosmosConfigService } from '../../services/cosmosConfigService'
-import { configSyncService } from '../../services/configSyncService'
-import { enhancedConfigService } from '../../services/enhancedConfigService'
+import React, {
+    createContext,
+    useContext,
+    useState,
+    useEffect,
+    ReactNode,
+} from "react";
+import { v4 as uuidv4 } from "uuid";
+import { TabManager, setupConsoleHelpers } from "./TabUtils";
+import { useUserSettings } from "../../hooks/useUserSettings";
+import { useViewMemory } from "../../hooks/useViewMemory";
+import { TabNameModal } from "../../components/TabNameModal";
+import { stateManager } from "../../services/StateManager";
+import { useUser } from "../../hooks/useUser";
+import { databaseService } from "../../services/databaseService";
+import { cosmosConfigService } from "../../services/cosmosConfigService";
+import { configSyncService } from "../../services/configSyncService";
+import { enhancedConfigService } from "../../services/enhancedConfigService";
 
 // Component in tab configuration for dynamic tabs
 export interface ComponentInTab {
-  id: string
-  type: string // Component type from inventory
-  position: { x: number; y: number; w: number; h: number }
-  props?: Record<string, any>
-  zIndex?: number
+    id: string;
+    type: string; // Component type from inventory
+    position: { x: number; y: number; w: number; h: number };
+    props?: Record<string, any>;
+    zIndex?: number;
 }
 
 // Tab configuration types with hybrid architecture support
 export interface TabConfig {
-  id: string
-  name: string
-  component: string // Component identifier to load
-  type: 'dynamic' | 'static' // Only two types: dynamic or static
-  icon?: string
-  closable?: boolean
-  props?: Record<string, any>
-  gridLayoutEnabled?: boolean // Enable fluid grid layout for this tab
-  gridLayout?: any[] // Store react-grid-layout configuration
-  components?: ComponentInTab[] // For dynamic tabs with multiple components
-  editMode?: boolean // Whether tab is in edit mode
-  memoryStrategy?: 'local' | 'redis' | 'hybrid' // Memory management strategy
+    id: string;
+    name: string;
+    component: string; // Component identifier to load
+    type: "dynamic" | "static"; // Only two types: dynamic or static
+    icon?: string;
+    closable?: boolean;
+    props?: Record<string, any>;
+    gridLayoutEnabled?: boolean; // Enable fluid grid layout for this tab
+    gridLayout?: any[]; // Store react-grid-layout configuration
+    components?: ComponentInTab[]; // For dynamic tabs with multiple components
+    editMode?: boolean; // Whether tab is in edit mode
+    memoryStrategy?: "local" | "redis" | "hybrid"; // Memory management strategy
 }
 
 export interface TabLayout {
-  id: string
-  name: string
-  tabs: TabConfig[]
-  isDefault?: boolean
-  createdAt: string
-  updatedAt: string
+    id: string;
+    name: string;
+    tabs: TabConfig[];
+    isDefault?: boolean;
+    createdAt: string;
+    updatedAt: string;
 }
 
 interface TabLayoutContextValue {
-  // Current state
-  currentLayout: TabLayout | null
-  activeTabId: string | null
+    // Current state
+    currentLayout: TabLayout | null;
+    activeTabId: string | null;
 
-  // Layout management
-  layouts: TabLayout[]
-  defaultLayout: TabLayout | null
-  userLayouts: TabLayout[]
+    // Layout management
+    layouts: TabLayout[];
+    defaultLayout: TabLayout | null;
+    userLayouts: TabLayout[];
 
-  // Actions
-  setActiveTab: (tabId: string) => void
-  addTab: (tab: Omit<TabConfig, 'id'>) => TabConfig
-  removeTab: (tabId: string) => void
-  updateTab: (tabId: string, updates: Partial<TabConfig>) => void
-  reorderTabs: (newTabs: TabConfig[]) => void
+    // Actions
+    setActiveTab: (tabId: string) => void;
+    addTab: (tab: Omit<TabConfig, "id">) => TabConfig;
+    removeTab: (tabId: string) => void;
+    updateTab: (tabId: string, updates: Partial<TabConfig>) => void;
+    reorderTabs: (newTabs: TabConfig[]) => void;
 
-  // Enhanced tab creation with modal
-  createTabWithPrompt: () => void
-  showTabModal: boolean
-  setShowTabModal: (show: boolean) => void
+    // Enhanced tab creation with modal
+    createTabWithPrompt: () => void;
+    showTabModal: boolean;
+    setShowTabModal: (show: boolean) => void;
 
-  // Layout actions
-  saveCurrentLayout: (name: string) => void
-  loadLayout: (layoutId: string) => void
-  deleteLayout: (layoutId: string) => void
-  resetToDefault: () => void
-  clearUserConfiguration: () => void
+    // Layout actions
+    saveCurrentLayout: (name: string) => void;
+    loadLayout: (layoutId: string) => void;
+    deleteLayout: (layoutId: string) => void;
+    resetToDefault: () => void;
+    clearUserConfiguration: () => void;
 
-  // Grid layout actions
-  updateTabGridLayout: (tabId: string, gridLayout: any[]) => void
-  toggleTabGridLayout: (tabId: string, enabled: boolean) => void
+    // Grid layout actions
+    updateTabGridLayout: (tabId: string, gridLayout: any[]) => void;
+    toggleTabGridLayout: (tabId: string, enabled: boolean) => void;
 
-  // Dynamic tab component management
-  addComponentToTab: (tabId: string, component: ComponentInTab) => void
-  removeComponentFromTab: (tabId: string, componentId: string) => void
-  updateComponentInTab: (tabId: string, componentId: string, updates: Partial<ComponentInTab>) => void
+    // Dynamic tab component management
+    addComponentToTab: (tabId: string, component: ComponentInTab) => void;
+    removeComponentFromTab: (tabId: string, componentId: string) => void;
+    updateComponentInTab: (
+        tabId: string,
+        componentId: string,
+        updates: Partial<ComponentInTab>
+    ) => void;
 
-  // Edit mode management
-  toggleTabEditMode: (tabId: string) => void
+    // Edit mode management
+    toggleTabEditMode: (tabId: string) => void;
 }
 
 // Default tabs configuration with hybrid types
 const DEFAULT_TABS: TabConfig[] = [
-  {
-    id: 'main',
-    name: 'Main',
-    component: 'Analytics',
-    type: 'dynamic',
-    icon: 'home',
-    closable: false,  // Main tab should not be closable
-    gridLayoutEnabled: true,
-    components: [],
-    editMode: false,
-    memoryStrategy: 'hybrid'
-  }
-]
+    {
+        id: "main",
+        name: "Main",
+        component: "Analytics",
+        type: "dynamic",
+        icon: "home",
+        closable: false, // Main tab should not be closable
+        gridLayoutEnabled: true,
+        components: [],
+        editMode: false,
+        memoryStrategy: "hybrid",
+    },
+];
 
 const DEFAULT_LAYOUT: TabLayout = {
-  id: 'default',
-  name: 'Default Layout',
-  tabs: DEFAULT_TABS,
-  isDefault: true,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString()
-}
+    id: "default",
+    name: "Default Layout",
+    tabs: DEFAULT_TABS,
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+};
 
-const TabLayoutContext = createContext<TabLayoutContextValue | undefined>(undefined)
+const TabLayoutContext = createContext<TabLayoutContextValue | undefined>(
+    undefined
+);
 
 export function useTabLayout() {
-  const context = useContext(TabLayoutContext)
-  if (!context) {
-    throw new Error('useTabLayout must be used within TabLayoutProvider')
-  }
-  return context
+    const context = useContext(TabLayoutContext);
+    if (!context) {
+        throw new Error("useTabLayout must be used within TabLayoutProvider");
+    }
+    return context;
 }
 
 interface TabLayoutProviderProps {
-  children: ReactNode
+    children: ReactNode;
 }
 
 export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
-  const { user } = useUser()
-  
-  // Try multiple ways to get a consistent userId across browsers
-  const getUserId = () => {
-    if (user?.id) return user.id
-    
-    // Try to get from MSAL accounts
-    try {
-      const msalInstance = (window as any).msalInstance
-      if (msalInstance) {
-        const accounts = msalInstance.getAllAccounts()
-        if (accounts?.length > 0) {
-          return accounts[0].homeAccountId || accounts[0].username || 'msal-user'
+    const { user } = useUser();
+
+    // Try multiple ways to get a consistent userId across browsers
+    const getUserId = () => {
+        if (user?.id) return user.id;
+
+        // Try to get from MSAL accounts
+        try {
+            const msalInstance = (window as any).msalInstance;
+            if (msalInstance) {
+                const accounts = msalInstance.getAllAccounts();
+                if (accounts?.length > 0) {
+                    return (
+                        accounts[0].homeAccountId ||
+                        accounts[0].username ||
+                        "msal-user"
+                    );
+                }
+            }
+        } catch (e) {
+            // Ignore MSAL errors
         }
-      }
-    } catch (e) {
-      // Ignore MSAL errors
-    }
-    
-    // Fallback to a browser-consistent identifier
-    return 'default-user'
-  }
-  
-  const userId = getUserId()
-  const isAuthenticated = !!user?.id  // Check if user is actually authenticated
-  
-  console.log('TabLayoutProvider: Using userId:', userId, 'isAuthenticated:', isAuthenticated)
 
-  // Helper function to get user-specific localStorage key
-  const getUserKey = (key: string) => `${key}-${userId}`
+        // Fallback to a browser-consistent identifier
+        return "default-user";
+    };
 
-  const [layouts, setLayouts] = useState<TabLayout[]>([DEFAULT_LAYOUT])
-  const [currentLayout, setCurrentLayout] = useState<TabLayout>(DEFAULT_LAYOUT)
-  const [activeTabId, setActiveTabId] = useState<string>('main')
-  const [showTabModal, setShowTabModal] = useState(false)
-  const { saveTabOrder, saveActiveTab, saveLayout } = useViewMemory()
-  
-  // Start config sync when component mounts
-  useEffect(() => {
-    configSyncService.startAutoSync(30000) // Sync every 30 seconds
-    
-    // Listen for config updates from sync
-    const handleConfigUpdate = (event: CustomEvent) => {
-      const config = event.detail
-      if (config?.tabs) {
-        const deduplicatedTabs = deduplicateTabs(config.tabs)
-        setCurrentLayout(prev => ({
-          ...prev,
-          tabs: deduplicatedTabs
-        }))
-      }
-    }
-    
-    window.addEventListener('config-updated' as any, handleConfigUpdate)
-    return () => {
-      window.removeEventListener('config-updated' as any, handleConfigUpdate)
-      configSyncService.stopAutoSync()
-    }
-  }, [])
-  
-  // Helper function to deduplicate tabs
-  const deduplicateTabs = (tabs: TabConfig[]) => {
-    const seen = new Set<string>()
-    return tabs.filter(tab => {
-      if (seen.has(tab.id)) {
-        console.warn(`Removing duplicate tab: ${tab.id}`)
-        return false
-      }
-      seen.add(tab.id)
-      return true
-    })
-  }
+    const userId = getUserId();
+    const isAuthenticated = !!user?.id; // Check if user is actually authenticated
 
-  // Load saved layouts from PostgreSQL when user changes
-  useEffect(() => {
-    // Set initial default layout immediately to prevent frozen UI
-    if (!currentLayout || currentLayout.tabs.length === 0) {
-      console.log('TabLayoutManager: Setting initial default layout to prevent freeze')
-      setCurrentLayout(DEFAULT_LAYOUT)
-      setLayouts([DEFAULT_LAYOUT])
-      setActiveTabId('main')
-    }
+    console.log(
+        "TabLayoutProvider: Using userId:",
+        userId,
+        "isAuthenticated:",
+        isAuthenticated
+    );
 
-    const checkAuthAndLoad = async () => {
-      // CRITICAL FIX: Non-blocking MSAL check
-      let msalInstance = (window as any).msalInstance;
-      
-      // Simple check without blocking loops
-      if (!msalInstance || !msalInstance.getConfiguration) {
-        console.log('TabLayoutManager: MSAL not available, using defaults')
-        // Default already set above
-        return
-      }
-      
-      // Try to get accounts safely with better error handling
-      let accounts = [];
-      let isUserAuthenticated = false;
-      
-      try {
-        accounts = msalInstance.getAllAccounts() || [];
-        isUserAuthenticated = accounts.length > 0;
-        console.log(`TabLayoutManager: Found ${accounts.length} authenticated accounts`)
-      } catch (e) {
-        console.log('TabLayoutManager: Error getting accounts, using defaults', e);
-        isUserAuthenticated = false;
-      }
-        
-      if (!isUserAuthenticated) {
-        console.log('TabLayoutManager: No authenticated accounts, but still trying to load from Cosmos DB (works without MSAL)')
-        // Don't return early - still try to load from Cosmos DB as it works without backend auth
-      }
-      
-      console.log(`TabLayoutManager: Loading layouts for user ${userId}`)
-      
-      // Try Cosmos DB FIRST (works without backend!) - SINGLE ATTEMPT, NO RETRIES
-      try {
-        console.log('TabLayoutManager: Attempting to load from Cosmos DB (single attempt)')
-        const cosmosConfig = await cosmosConfigService.loadConfiguration()
-        
-        if (cosmosConfig?.tabs && cosmosConfig.tabs.length > 0) {
-          // Deduplicate tabs when loading and ensure editMode is false
-          const tabIds = new Set<string>()
-          const uniqueTabs = cosmosConfig.tabs.filter(t => {
-            if (tabIds.has(t.id)) {
-              console.warn(`Found duplicate tab ${t.id} in loaded config, removing`)
-              return false
+    // Helper function to get user-specific localStorage key
+    const getUserKey = (key: string) => `${key}-${userId}`;
+
+    const [layouts, setLayouts] = useState<TabLayout[]>([DEFAULT_LAYOUT]);
+    const [currentLayout, setCurrentLayout] =
+        useState<TabLayout>(DEFAULT_LAYOUT);
+    const [activeTabId, setActiveTabId] = useState<string>("main");
+    const [showTabModal, setShowTabModal] = useState(false);
+    const { saveTabOrder, saveActiveTab, saveLayout } = useViewMemory();
+
+    // Start config sync when component mounts
+    useEffect(() => {
+        configSyncService.startAutoSync(30000); // Sync every 30 seconds
+
+        // Listen for config updates from sync
+        const handleConfigUpdate = (event: CustomEvent) => {
+            const config = event.detail;
+            if (config?.tabs) {
+                const deduplicatedTabs = deduplicateTabs(config.tabs);
+                setCurrentLayout((prev) => ({
+                    ...prev,
+                    tabs: deduplicatedTabs,
+                }));
             }
-            tabIds.add(t.id)
-            return true
-          }).map(t => ({
-            ...t,
-            editMode: false, // Always start with edit mode OFF when loading
-            // Ensure tabs have proper names - fix the "memory ones" issue
-            name: t.name || `Tab ${t.id}` || 'Unnamed Tab',
-            // Ensure tabs have valid component types
-            component: t.component || (t.type === 'dynamic' ? 'UserTabContainer' : 'Analytics'),
-            // Ensure type is valid
-            type: t.type === 'static' || t.type === 'dynamic' ? t.type : 'dynamic',
-            // Initialize components array if missing
-            components: t.components || []
-          }))
-          
-          // Check if these are valid tabs or just placeholder/memory tabs
-          const hasValidTabs = uniqueTabs.some(tab => 
-            tab.name && 
-            !tab.name.startsWith('user-memory-') && 
-            tab.name !== 'Loading...' &&
-            tab.component !== 'placeholder'
-          )
-          
-          if (hasValidTabs) {
-            console.log(`✅ TabLayoutManager: Successfully loaded ${uniqueTabs.length} valid tabs from Cosmos DB`)
-            const cosmosLayout = { 
-              ...DEFAULT_LAYOUT,
-              tabs: uniqueTabs,
-              id: 'cosmos-layout',
-              name: 'User Saved Layout'
+        };
+
+        window.addEventListener("config-updated" as any, handleConfigUpdate);
+        return () => {
+            window.removeEventListener(
+                "config-updated" as any,
+                handleConfigUpdate
+            );
+            configSyncService.stopAutoSync();
+        };
+    }, []);
+
+    // Helper function to deduplicate tabs
+    const deduplicateTabs = (tabs: TabConfig[]) => {
+        const seen = new Set<string>();
+        return tabs.filter((tab) => {
+            if (seen.has(tab.id)) {
+                console.warn(`Removing duplicate tab: ${tab.id}`);
+                return false;
             }
-            setCurrentLayout(cosmosLayout)
-            setLayouts([DEFAULT_LAYOUT, cosmosLayout])
-            
-            const activeTabId = uniqueTabs[0]?.id || 'main'
-            setActiveTabId(activeTabId)
-            return // Cosmos DB is source of truth
-          } else {
-            console.log('TabLayoutManager: Cosmos DB returned placeholder/memory tabs, using defaults instead')
-            // Fall through to use default tabs
-          }
+            seen.add(tab.id);
+            return true;
+        });
+    };
+
+    // Load saved layouts from PostgreSQL when user changes
+    useEffect(() => {
+        // Set initial default layout immediately to prevent frozen UI
+        if (!currentLayout || currentLayout.tabs.length === 0) {
+            console.log(
+                "TabLayoutManager: Setting initial default layout to prevent freeze"
+            );
+            setCurrentLayout(DEFAULT_LAYOUT);
+            setLayouts([DEFAULT_LAYOUT]);
+            setActiveTabId("main");
+        }
+
+        const checkAuthAndLoad = async () => {
+            // CRITICAL FIX: Non-blocking MSAL check
+            let msalInstance = (window as any).msalInstance;
+
+            // Simple check without blocking loops
+            if (!msalInstance || !msalInstance.getConfiguration) {
+                console.log(
+                    "TabLayoutManager: MSAL not available, using defaults"
+                );
+                // Default already set above
+                return;
+            }
+
+            // Try to get accounts safely with better error handling
+            let accounts = [];
+            let isUserAuthenticated = false;
+
+            try {
+                accounts = msalInstance.getAllAccounts() || [];
+                isUserAuthenticated = accounts.length > 0;
+                console.log(
+                    `TabLayoutManager: Found ${accounts.length} authenticated accounts`
+                );
+            } catch (e) {
+                console.log(
+                    "TabLayoutManager: Error getting accounts, using defaults",
+                    e
+                );
+                isUserAuthenticated = false;
+            }
+
+            if (!isUserAuthenticated) {
+                console.log(
+                    "TabLayoutManager: No authenticated accounts, but still trying to load from Cosmos DB (works without MSAL)"
+                );
+                // Don't return early - still try to load from Cosmos DB as it works without backend auth
+            }
+
+            console.log(`TabLayoutManager: Loading layouts for user ${userId}`);
+
+            // Try Cosmos DB FIRST (works without backend!) - SINGLE ATTEMPT, NO RETRIES
+            try {
+                console.log(
+                    "TabLayoutManager: Attempting to load from Cosmos DB (single attempt)"
+                );
+                const cosmosConfig =
+                    await cosmosConfigService.loadConfiguration();
+
+                if (cosmosConfig?.tabs && cosmosConfig.tabs.length > 0) {
+                    // Deduplicate tabs when loading and ensure editMode is false
+                    const tabIds = new Set<string>();
+                    const uniqueTabs = cosmosConfig.tabs
+                        .filter((t) => {
+                            if (tabIds.has(t.id)) {
+                                console.warn(
+                                    `Found duplicate tab ${t.id} in loaded config, removing`
+                                );
+                                return false;
+                            }
+                            tabIds.add(t.id);
+                            return true;
+                        })
+                        .map((t) => ({
+                            ...t,
+                            editMode: false, // Always start with edit mode OFF when loading
+                            // Ensure tabs have proper names - fix the "memory ones" issue
+                            name: t.name || `Tab ${t.id}` || "Unnamed Tab",
+                            // Ensure tabs have valid component types
+                            component:
+                                t.component ||
+                                (t.type === "dynamic"
+                                    ? "UserTabContainer"
+                                    : "Analytics"),
+                            // Ensure type is valid
+                            type:
+                                t.type === "static" || t.type === "dynamic"
+                                    ? t.type
+                                    : "dynamic",
+                            // Initialize components array if missing
+                            components: t.components || [],
+                        }));
+
+                    // ENHANCED VALIDATION: Filter out invalid/auto-generated tabs
+                    const validTabs = uniqueTabs.filter(
+                        (tab) =>
+                            tab.name &&
+                            !tab.name.startsWith("user-memory-") &&
+                            !tab.name.startsWith("Tab ") && // Filter out "Tab UUID" fallback names
+                            tab.name !== "Loading..." &&
+                            tab.name !== "Unnamed Tab" &&
+                            tab.component !== "placeholder" &&
+                            tab.id !== "main" // Keep only user-created tabs, not default main tab
+                    );
+
+                    console.log(
+                        `TabLayoutManager: Filtered ${uniqueTabs.length} loaded tabs down to ${validTabs.length} valid user tabs`
+                    );
+
+                    const hasValidTabs = validTabs.length > 0;
+
+                    if (hasValidTabs) {
+                        console.log(
+                            `✅ TabLayoutManager: Successfully loaded ${validTabs.length} valid tabs from Cosmos DB`
+                        );
+                        const cosmosLayout = {
+                            ...DEFAULT_LAYOUT,
+                            tabs: [DEFAULT_LAYOUT.tabs[0], ...validTabs], // Keep main tab + valid user tabs
+                            id: "cosmos-layout",
+                            name: "User Saved Layout",
+                        };
+                        setCurrentLayout(cosmosLayout);
+                        setLayouts([DEFAULT_LAYOUT, cosmosLayout]);
+
+                        const activeTabId = validTabs[0]?.id || "main";
+                        setActiveTabId(activeTabId);
+                        return; // Cosmos DB is source of truth
+                    } else {
+                        console.log(
+                            "TabLayoutManager: Cosmos DB returned placeholder/memory tabs, using defaults instead"
+                        );
+                        // Fall through to use default tabs
+                    }
+                } else {
+                    console.log(
+                        "TabLayoutManager: Cosmos DB returned empty or invalid config, trying fallbacks"
+                    );
+                }
+            } catch (e) {
+                console.log(
+                    "TabLayoutManager: Cosmos DB failed, trying fallbacks:",
+                    e.message
+                );
+            }
+
+            // Try database if Cosmos DB fails (for backward compatibility)
+            if (isUserAuthenticated && userId !== "default-user") {
+                try {
+                    const savedTabs = await databaseService.getUserTabs(userId);
+                    console.log(
+                        `TabLayoutManager: Loaded ${savedTabs.length} tabs from database`
+                    );
+
+                    if (savedTabs.length > 0) {
+                        // Database has tabs - use them as source of truth
+                        const dbLayout = { tabs: savedTabs };
+                        // Cosmos DB is the source of truth - no localStorage needed
+                        setCurrentLayout(dbLayout);
+                        setLayouts([DEFAULT_LAYOUT, dbLayout]);
+
+                        const activeTabId = savedTabs[0]?.id || "main";
+                        setActiveTabId(activeTabId);
+                        return; // Database is source of truth
+                    }
+                } catch (e) {
+                    console.error("Failed to load from database:", e);
+                    // Fall through to localStorage
+                }
+            }
+
+            // Fallback to localStorage - try MULTIPLE storage keys to find user data
+            console.log("Trying localStorage fallback...");
+
+            // Try the user-specific key first
+            let savedLayoutStr = localStorage.getItem(
+                getUserKey("gzc-intel-current-layout")
+            );
+
+            // If user-specific not found, try default key (for backward compatibility)
+            if (!savedLayoutStr) {
+                savedLayoutStr = localStorage.getItem(
+                    "gzc-intel-current-layout"
+                );
+                console.log("Trying default localStorage key...");
+            }
+
+            // Also try searching for any layout data
+            if (!savedLayoutStr) {
+                const allKeys = Object.keys(localStorage).filter(
+                    (key) => key.includes("layout") || key.includes("tab")
+                );
+                console.log("Found potential layout keys:", allKeys);
+
+                for (const key of allKeys) {
+                    try {
+                        const data = localStorage.getItem(key);
+                        if (
+                            data &&
+                            data.includes("components") &&
+                            data.includes("Bloomberg")
+                        ) {
+                            console.log(`Found layout data in key: ${key}`);
+                            savedLayoutStr = data;
+                            break;
+                        }
+                    } catch (e) {
+                        // Skip invalid keys
+                    }
+                }
+            }
+
+            if (savedLayoutStr) {
+                try {
+                    const parsedLayout = JSON.parse(savedLayoutStr);
+                    console.log(
+                        "✅ Successfully loaded layout from localStorage:",
+                        parsedLayout
+                    );
+                    setCurrentLayout(parsedLayout);
+                    setLayouts([DEFAULT_LAYOUT, parsedLayout]);
+
+                    // Set active tab from saved layout
+                    const activeTabId = parsedLayout.tabs?.[0]?.id || "main";
+                    setActiveTabId(activeTabId);
+                    return; // Don't fall back to defaults if we found saved data
+                } catch (e) {
+                    console.error("Failed to parse localStorage:", e);
+                }
+            }
+
+            // If no saved data anywhere, initialize with defaults
+            console.log(
+                "⚠️ No saved layout found anywhere, using default layout"
+            );
+            setCurrentLayout(DEFAULT_LAYOUT);
+            setLayouts([DEFAULT_LAYOUT]);
+            setActiveTabId("main");
+        };
+
+        checkAuthAndLoad();
+    }, [userId, isAuthenticated]); // Re-run when user or auth state changes
+
+    // Save layouts when they change
+    useEffect(() => {
+        // Layouts are saved to Cosmos DB via saveToCosmosDB calls
+        // No localStorage needed - trigger global state save for other data
+        stateManager.autoSave();
+    }, [layouts, userId]);
+
+    // Save current layout to Cosmos DB only
+    useEffect(() => {
+        // Current layout is saved to Cosmos DB automatically
+        // No localStorage needed for layouts
+        stateManager.autoSave();
+    }, [currentLayout, userId]);
+
+    // Save active tab
+    useEffect(() => {
+        if (activeTabId) {
+            sessionStorage.setItem(
+                getUserKey("gzc-intel-active-tab"),
+                activeTabId
+            );
+        }
+    }, [activeTabId, userId]);
+
+    const defaultLayout = layouts.find((l) => l.isDefault) || DEFAULT_LAYOUT;
+    const userLayouts = layouts.filter((l) => !l.isDefault);
+
+    const addTab = (tab: Omit<TabConfig, "id">) => {
+        const newTab: TabConfig = {
+            ...tab,
+            id: uuidv4(),
+        };
+
+        // Deduplicate tabs before adding new one
+        const existingTabIds = new Set<string>();
+        const deduplicatedTabs = currentLayout.tabs.filter((t) => {
+            if (existingTabIds.has(t.id)) {
+                console.warn(`Removing duplicate tab with ID: ${t.id}`);
+                return false;
+            }
+            existingTabIds.add(t.id);
+            return true;
+        });
+
+        const updatedLayout = {
+            ...currentLayout,
+            tabs: [...deduplicatedTabs, newTab],
+            updatedAt: new Date().toISOString(),
+        };
+
+        setCurrentLayout(updatedLayout);
+
+        // Update in layouts array
+        if (currentLayout.isDefault) {
+            // For default layout, we need to update it in the layouts array
+            // to ensure the modified default is saved
+            setLayouts(
+                layouts.map((l) => (l.id === "default" ? updatedLayout : l))
+            );
         } else {
-          console.log('TabLayoutManager: Cosmos DB returned empty or invalid config, trying fallbacks')
+            // For user layouts, update normally
+            setLayouts(
+                layouts.map((l) =>
+                    l.id === currentLayout.id ? updatedLayout : l
+                )
+            );
         }
-      } catch (e) {
-        console.log('TabLayoutManager: Cosmos DB failed, trying fallbacks:', e.message)
-      }
-      
-      // Try database if Cosmos DB fails (for backward compatibility)
-      if (isUserAuthenticated && userId !== 'default-user') {
-        try {
-          const savedTabs = await databaseService.getUserTabs(userId)
-          console.log(`TabLayoutManager: Loaded ${savedTabs.length} tabs from database`)
-          
-          if (savedTabs.length > 0) {
-            // Database has tabs - use them as source of truth
-            const dbLayout = { tabs: savedTabs }
-            // Cosmos DB is the source of truth - no localStorage needed
-            setCurrentLayout(dbLayout)
-            setLayouts([DEFAULT_LAYOUT, dbLayout])
-            
-            const activeTabId = savedTabs[0]?.id || 'main'
-            setActiveTabId(activeTabId)
-            return // Database is source of truth
-          }
-        } catch (e) {
-          console.error('Failed to load from database:', e)
-          // Fall through to localStorage
-        }
-      }
-      
-      // Fallback to localStorage - try MULTIPLE storage keys to find user data
-      console.log('Trying localStorage fallback...')
-      
-      // Try the user-specific key first
-      let savedLayoutStr = localStorage.getItem(getUserKey('gzc-intel-current-layout'))
-      
-      // If user-specific not found, try default key (for backward compatibility)
-      if (!savedLayoutStr) {
-        savedLayoutStr = localStorage.getItem('gzc-intel-current-layout')
-        console.log('Trying default localStorage key...')
-      }
-      
-      // Also try searching for any layout data
-      if (!savedLayoutStr) {
-        const allKeys = Object.keys(localStorage).filter(key => key.includes('layout') || key.includes('tab'))
-        console.log('Found potential layout keys:', allKeys)
-        
-        for (const key of allKeys) {
-          try {
-            const data = localStorage.getItem(key)
-            if (data && data.includes('components') && data.includes('Bloomberg')) {
-              console.log(`Found layout data in key: ${key}`)
-              savedLayoutStr = data
-              break
+
+        // Save to Cosmos DB (works without backend!)
+        const saveToCosmosDB = async () => {
+            try {
+                // Deduplicate tabs before saving
+                const tabIds = new Set<string>();
+                const uniqueTabs = updatedLayout.tabs.filter((t) => {
+                    if (tabIds.has(t.id)) {
+                        console.warn(
+                            `Skipping duplicate tab ${t.id} when saving to Cosmos`
+                        );
+                        return false;
+                    }
+                    tabIds.add(t.id);
+                    return true;
+                });
+
+                await cosmosConfigService.saveConfiguration({
+                    tabs: uniqueTabs,
+                    layouts: layouts, // Keep layouts for saved presets
+                });
+                console.log("New tab saved to Cosmos DB");
+
+                // Save complete configuration with all user settings
+                await enhancedConfigService.saveCompleteConfiguration();
+                console.log(
+                    "Complete configuration saved with enhanced service"
+                );
+            } catch (error) {
+                console.error("Failed to save to Cosmos DB:", error);
             }
-          } catch (e) {
-            // Skip invalid keys
-          }
+        };
+
+        // Save to PostgreSQL only if authenticated (legacy - for backward compatibility)
+        if (isAuthenticated) {
+            const saveToDatabase = async () => {
+                try {
+                    await databaseService.saveTab(userId, {
+                        tab_id: newTab.id,
+                        title: newTab.name,
+                        icon: newTab.icon,
+                        tab_type: newTab.type,
+                        components: newTab.components || [], // Send full component objects
+                        custom_settings: newTab.props,
+                    });
+                    console.log("New tab saved to database");
+                } catch (error) {
+                    console.error("Failed to save new tab to database:", error);
+                    // No localStorage fallback - rely on Cosmos DB for persistence
+                }
+            };
+
+            // Try both Cosmos DB and PostgreSQL
+            saveToCosmosDB();
+            saveToDatabase();
+        } else {
+            // If not authenticated, still try Cosmos DB (it has its own auth)
+            saveToCosmosDB();
         }
-      }
-      
-      if (savedLayoutStr) {
-        try {
-          const parsedLayout = JSON.parse(savedLayoutStr)
-          console.log('✅ Successfully loaded layout from localStorage:', parsedLayout)
-          setCurrentLayout(parsedLayout)
-          setLayouts([DEFAULT_LAYOUT, parsedLayout])
-          
-          // Set active tab from saved layout
-          const activeTabId = parsedLayout.tabs?.[0]?.id || 'main'
-          setActiveTabId(activeTabId)
-          return // Don't fall back to defaults if we found saved data
-        } catch (e) {
-          console.error('Failed to parse localStorage:', e)
+
+        // No localStorage - Cosmos DB only
+
+        // Set as active tab
+        setActiveTabId(newTab.id);
+
+        // Return the new tab
+        return newTab;
+    };
+
+    // Initialize TabManager with addTab function
+    useEffect(() => {
+        TabManager.setAddTabFunction(addTab);
+        setupConsoleHelpers();
+    }, [addTab]);
+
+    const removeTab = (tabId: string) => {
+        // Don't allow removing the last tab or non-closable tabs
+        const tab = currentLayout.tabs.find((t) => t.id === tabId);
+        if (!tab || tab.closable === false || currentLayout.tabs.length === 1) {
+            return;
         }
-      }
-      
-      // If no saved data anywhere, initialize with defaults
-      console.log('⚠️ No saved layout found anywhere, using default layout')
-      setCurrentLayout(DEFAULT_LAYOUT)
-      setLayouts([DEFAULT_LAYOUT])
-      setActiveTabId('main')
-    }
-    
-    checkAuthAndLoad()
-  }, [userId, isAuthenticated]) // Re-run when user or auth state changes
 
-  // Save layouts when they change
-  useEffect(() => {
-    // Layouts are saved to Cosmos DB via saveToCosmosDB calls
-    // No localStorage needed - trigger global state save for other data
-    stateManager.autoSave()
-  }, [layouts, userId])
+        const updatedTabs = currentLayout.tabs.filter((t) => t.id !== tabId);
+        const updatedLayout = {
+            ...currentLayout,
+            tabs: updatedTabs,
+            updatedAt: new Date().toISOString(),
+        };
 
-  // Save current layout to Cosmos DB only
-  useEffect(() => {
-    // Current layout is saved to Cosmos DB automatically
-    // No localStorage needed for layouts
-    stateManager.autoSave()
-  }, [currentLayout, userId])
+        setCurrentLayout(updatedLayout);
 
-  // Save active tab
-  useEffect(() => {
-    if (activeTabId) {
-      sessionStorage.setItem(getUserKey('gzc-intel-active-tab'), activeTabId)
-    }
-  }, [activeTabId, userId])
+        // Save updated layout to Cosmos DB
+        if (isAuthenticated) {
+            const saveToCosmosDB = async () => {
+                try {
+                    // Deduplicate tabs before saving (should already be unique after filter, but double-check)
+                    const tabIds = new Set<string>();
+                    const uniqueTabs = updatedLayout.tabs.filter((t) => {
+                        if (tabIds.has(t.id)) {
+                            console.warn(
+                                `Removing duplicate tab ${t.id} in removeTab`
+                            );
+                            return false;
+                        }
+                        tabIds.add(t.id);
+                        return true;
+                    });
 
-  const defaultLayout = layouts.find(l => l.isDefault) || DEFAULT_LAYOUT
-  const userLayouts = layouts.filter(l => !l.isDefault)
+                    await cosmosConfigService.saveConfiguration({
+                        tabs: uniqueTabs,
+                        layouts: layouts, // Keep layouts for saved presets
+                        preferences: {
+                            theme:
+                                document.documentElement.getAttribute(
+                                    "data-theme"
+                                ) || "dark",
+                            language: "en",
+                        },
+                    });
+                    console.log("Tab removed, layout saved to Cosmos DB");
 
-  const addTab = (tab: Omit<TabConfig, 'id'>) => {
-    const newTab: TabConfig = {
-      ...tab,
-      id: uuidv4()
-    }
+                    // Save complete configuration with all user settings
+                    await enhancedConfigService.saveCompleteConfiguration();
+                    console.log(
+                        "Complete configuration saved after tab removal"
+                    );
+                } catch (error) {
+                    console.error(
+                        "Failed to save to Cosmos DB after removing tab:",
+                        error
+                    );
+                }
+            };
 
-    // Deduplicate tabs before adding new one
-    const existingTabIds = new Set<string>()
-    const deduplicatedTabs = currentLayout.tabs.filter(t => {
-      if (existingTabIds.has(t.id)) {
-        console.warn(`Removing duplicate tab with ID: ${t.id}`)
-        return false
-      }
-      existingTabIds.add(t.id)
-      return true
-    })
+            // Delete from PostgreSQL (legacy)
+            const deleteFromDatabase = async () => {
+                try {
+                    await databaseService.deleteTab(userId, tabId);
+                    console.log("Tab deleted from database");
+                } catch (error) {
+                    console.error("Failed to delete tab from database:", error);
+                }
+            };
 
-    const updatedLayout = {
-      ...currentLayout,
-      tabs: [...deduplicatedTabs, newTab],
-      updatedAt: new Date().toISOString()
-    }
+            saveToCosmosDB();
+            deleteFromDatabase();
+        }
 
-    setCurrentLayout(updatedLayout)
+        // Update in layouts array if it's a saved layout
+        if (!currentLayout.isDefault) {
+            setLayouts(
+                layouts.map((l) =>
+                    l.id === currentLayout.id ? updatedLayout : l
+                )
+            );
+        }
 
-    // Update in layouts array
-    if (currentLayout.isDefault) {
-      // For default layout, we need to update it in the layouts array
-      // to ensure the modified default is saved
-      setLayouts(layouts.map(l => l.id === 'default' ? updatedLayout : l))
-    } else {
-      // For user layouts, update normally
-      setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
-    }
+        // If we removed the active tab, switch to first available
+        if (activeTabId === tabId && updatedTabs.length > 0) {
+            setActiveTabId(updatedTabs[0].id);
+        }
+    };
 
-    // Save to Cosmos DB (works without backend!)
-    const saveToCosmosDB = async () => {
-      try {
-        // Deduplicate tabs before saving
-        const tabIds = new Set<string>()
-        const uniqueTabs = updatedLayout.tabs.filter(t => {
-          if (tabIds.has(t.id)) {
-            console.warn(`Skipping duplicate tab ${t.id} when saving to Cosmos`)
-            return false
-          }
-          tabIds.add(t.id)
-          return true
-        })
-        
-        await cosmosConfigService.saveConfiguration({
-          tabs: uniqueTabs,
-          layouts: layouts  // Keep layouts for saved presets
-        })
-        console.log('New tab saved to Cosmos DB')
-        
-        // Save complete configuration with all user settings
-        await enhancedConfigService.saveCompleteConfiguration()
-        console.log('Complete configuration saved with enhanced service')
-      } catch (error) {
-        console.error('Failed to save to Cosmos DB:', error)
-      }
-    }
-    
-    // Save to PostgreSQL only if authenticated (legacy - for backward compatibility)
-    if (isAuthenticated) {
-      const saveToDatabase = async () => {
+    const updateTab = (tabId: string, updates: Partial<TabConfig>) => {
+        console.log("UPDATE TAB CALLED:", { tabId, updates });
+
+        // Log when components are being saved (this means exiting edit mode)
+        if (updates.components) {
+            console.log("💾 Saving component layout to Cosmos DB:", {
+                tabId,
+                componentCount: updates.components.length,
+                hasEditModeChange: updates.editMode !== undefined,
+                editMode: updates.editMode,
+                timestamp: new Date().toISOString(),
+            });
+        }
+
+        // Preserve editMode if not explicitly set in updates
+        const currentTab = currentLayout.tabs.find((t) => t.id === tabId);
+        const preservedUpdates = {
+            ...updates,
+            // If editMode is undefined in updates, preserve current value
+            editMode:
+                updates.editMode !== undefined
+                    ? updates.editMode
+                    : currentTab?.editMode,
+        };
+
+        const updatedLayout = {
+            ...currentLayout,
+            tabs: currentLayout.tabs.map((t) =>
+                t.id === tabId ? { ...t, ...preservedUpdates } : t
+            ),
+            updatedAt: new Date().toISOString(),
+        };
+
+        console.log("UPDATED LAYOUT:", updatedLayout);
+        console.log(
+            "UPDATED TAB COMPONENTS:",
+            updatedLayout.tabs.find((t) => t.id === tabId)?.components?.length
+        );
+        setCurrentLayout(updatedLayout);
+        console.log(
+            "TabLayoutManager: setCurrentLayout called with",
+            updatedLayout.tabs.find((t) => t.id === tabId)?.components?.length,
+            "components"
+        );
+
+        // Save to Cosmos DB (primary storage)
+        const saveToCosmosDB = async () => {
+            try {
+                // Deduplicate tabs before saving
+                const tabIds = new Set<string>();
+                const uniqueTabs = updatedLayout.tabs.filter((t) => {
+                    if (tabIds.has(t.id)) {
+                        console.warn(
+                            `Removing duplicate tab ${t.id} in updateTab`
+                        );
+                        return false;
+                    }
+                    tabIds.add(t.id);
+                    return true;
+                });
+
+                console.log("🚀 Sending to Cosmos DB...");
+                await cosmosConfigService.saveConfiguration({
+                    tabs: uniqueTabs,
+                    layouts: layouts,
+                    preferences: {
+                        theme:
+                            document.documentElement.getAttribute(
+                                "data-theme"
+                            ) || "dark",
+                        language: "en",
+                    },
+                });
+                console.log(
+                    "Tab updated in Cosmos DB with components:",
+                    uniqueTabs.find((t) => t.id === tabId)?.components?.length
+                );
+            } catch (error) {
+                console.error("Failed to save to Cosmos DB:", error);
+            }
+        };
+
+        // Save to PostgreSQL (legacy)
+        const saveToDatabase = async () => {
+            try {
+                const tabToUpdate = updatedLayout.tabs.find(
+                    (t) => t.id === tabId
+                );
+                if (tabToUpdate) {
+                    await databaseService.saveTab(userId, {
+                        tab_id: tabToUpdate.id,
+                        title: tabToUpdate.name,
+                        icon: tabToUpdate.icon,
+                        tab_type: tabToUpdate.type,
+                        components: tabToUpdate.components,
+                        editMode: tabToUpdate.editMode,
+                        custom_settings: tabToUpdate.props,
+                    });
+                    console.log("Tab saved to database");
+                }
+            } catch (error) {
+                console.error("Failed to save tab to database:", error);
+            }
+        };
+
+        // Save to both storages
+        saveToCosmosDB();
+        saveToDatabase();
+
+        // No localStorage - Cosmos DB only
+
+        // Update in layouts array if it's a saved layout
+        if (!currentLayout.isDefault) {
+            setLayouts(
+                layouts.map((l) =>
+                    l.id === currentLayout.id ? updatedLayout : l
+                )
+            );
+        }
+    };
+
+    const saveCurrentLayout = (name: string) => {
+        const newLayout: TabLayout = {
+            id: uuidv4(),
+            name,
+            tabs: currentLayout.tabs,
+            isDefault: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+
+        setLayouts([...layouts, newLayout]);
+        setCurrentLayout(newLayout);
+    };
+
+    const loadLayout = (layoutId: string) => {
+        const layout = layouts.find((l) => l.id === layoutId);
+        if (layout) {
+            setCurrentLayout(layout);
+            // Set first tab as active
+            if (layout.tabs.length > 0) {
+                setActiveTabId(layout.tabs[0].id);
+            }
+        }
+    };
+
+    const deleteLayout = (layoutId: string) => {
+        // Can't delete default layout
+        const layout = layouts.find((l) => l.id === layoutId);
+        if (!layout || layout.isDefault) {
+            return;
+        }
+
+        setLayouts(layouts.filter((l) => l.id !== layoutId));
+
+        // If we deleted the current layout, switch to default
+        if (currentLayout.id === layoutId) {
+            setCurrentLayout(defaultLayout);
+            setActiveTabId(defaultLayout.tabs[0]?.id || "");
+        }
+    };
+
+    const resetToDefault = async () => {
+        console.log("Resetting to default configuration...");
+
+        // Clear all local storage first
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Set default layout in memory
+        setCurrentLayout(defaultLayout);
+        setActiveTabId(defaultLayout.tabs[0]?.id || "");
+
+        // Save default layout to Cosmos DB
         try {
-          await databaseService.saveTab(userId, {
-            tab_id: newTab.id,
-            title: newTab.name,
-            icon: newTab.icon,
-            tab_type: newTab.type,
-            components: newTab.components || [], // Send full component objects
-            custom_settings: newTab.props
-          })
-          console.log('New tab saved to database')
+            const cleanConfig = {
+                tabs: defaultLayout.tabs.map((tab) => ({
+                    ...tab,
+                    component: tab.component || "dashboard", // Ensure component is never empty
+                    editMode: false,
+                    components: [], // Clear any broken components
+                })),
+                layouts: [],
+                preferences: {
+                    theme: "dark",
+                    language: "en",
+                },
+            };
+
+            await cosmosConfigService.saveConfiguration(cleanConfig);
+            console.log("Default configuration saved to Cosmos DB");
         } catch (error) {
-          console.error('Failed to save new tab to database:', error)
-          // No localStorage fallback - rely on Cosmos DB for persistence
+            console.error("Error saving default config to Cosmos DB:", error);
         }
-      }
-      
-      // Try both Cosmos DB and PostgreSQL
-      saveToCosmosDB()
-      saveToDatabase()
-    } else {
-      // If not authenticated, still try Cosmos DB (it has its own auth)
-      saveToCosmosDB()
-    }
+    };
 
-    // No localStorage - Cosmos DB only
+    const reorderTabs = (newTabs: TabConfig[]) => {
+        const updatedLayout = {
+            ...currentLayout,
+            tabs: newTabs,
+            updatedAt: new Date().toISOString(),
+        };
 
-    // Set as active tab
-    setActiveTabId(newTab.id)
+        setCurrentLayout(updatedLayout);
 
-    // Return the new tab
-    return newTab
-  }
-
-  // Initialize TabManager with addTab function
-  useEffect(() => {
-    TabManager.setAddTabFunction(addTab)
-    setupConsoleHelpers()
-  }, [addTab])
-
-  const removeTab = (tabId: string) => {
-    // Don't allow removing the last tab or non-closable tabs
-    const tab = currentLayout.tabs.find(t => t.id === tabId)
-    if (!tab || tab.closable === false || currentLayout.tabs.length === 1) {
-      return
-    }
-
-    const updatedTabs = currentLayout.tabs.filter(t => t.id !== tabId)
-    const updatedLayout = {
-      ...currentLayout,
-      tabs: updatedTabs,
-      updatedAt: new Date().toISOString()
-    }
-
-    setCurrentLayout(updatedLayout)
-
-    // Save updated layout to Cosmos DB
-    if (isAuthenticated) {
-      const saveToCosmosDB = async () => {
-        try {
-          // Deduplicate tabs before saving (should already be unique after filter, but double-check)
-          const tabIds = new Set<string>()
-          const uniqueTabs = updatedLayout.tabs.filter(t => {
-            if (tabIds.has(t.id)) {
-              console.warn(`Removing duplicate tab ${t.id} in removeTab`)
-              return false
-            }
-            tabIds.add(t.id)
-            return true
-          })
-          
-          await cosmosConfigService.saveConfiguration({
-            tabs: uniqueTabs,
-            layouts: layouts,  // Keep layouts for saved presets
-            preferences: {
-              theme: document.documentElement.getAttribute('data-theme') || 'dark',
-              language: 'en'
-            }
-          })
-          console.log('Tab removed, layout saved to Cosmos DB')
-          
-          // Save complete configuration with all user settings
-          await enhancedConfigService.saveCompleteConfiguration()
-          console.log('Complete configuration saved after tab removal')
-        } catch (error) {
-          console.error('Failed to save to Cosmos DB after removing tab:', error)
+        // Update in layouts array if it's a saved layout
+        if (!currentLayout.isDefault) {
+            setLayouts(
+                layouts.map((l) =>
+                    l.id === currentLayout.id ? updatedLayout : l
+                )
+            );
         }
-      }
-      
-      // Delete from PostgreSQL (legacy)
-      const deleteFromDatabase = async () => {
-        try {
-          await databaseService.deleteTab(userId, tabId)
-          console.log('Tab deleted from database')
-        } catch (error) {
-          console.error('Failed to delete tab from database:', error)
+    };
+
+    const updateTabGridLayout = (tabId: string, gridLayout: any[]) => {
+        const updatedLayout = {
+            ...currentLayout,
+            tabs: currentLayout.tabs.map((t) =>
+                t.id === tabId ? { ...t, gridLayout } : t
+            ),
+            updatedAt: new Date().toISOString(),
+        };
+
+        setCurrentLayout(updatedLayout);
+
+        // Update in layouts array if it's a saved layout
+        if (!currentLayout.isDefault) {
+            setLayouts(
+                layouts.map((l) =>
+                    l.id === currentLayout.id ? updatedLayout : l
+                )
+            );
         }
-      }
-      
-      saveToCosmosDB()
-      deleteFromDatabase()
-    }
+    };
 
-    // Update in layouts array if it's a saved layout
-    if (!currentLayout.isDefault) {
-      setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
-    }
+    const toggleTabGridLayout = (tabId: string, enabled: boolean) => {
+        const updatedLayout = {
+            ...currentLayout,
+            tabs: currentLayout.tabs.map((t) =>
+                t.id === tabId ? { ...t, gridLayoutEnabled: enabled } : t
+            ),
+            updatedAt: new Date().toISOString(),
+        };
 
-    // If we removed the active tab, switch to first available
-    if (activeTabId === tabId && updatedTabs.length > 0) {
-      setActiveTabId(updatedTabs[0].id)
-    }
-  }
+        setCurrentLayout(updatedLayout);
 
-  const updateTab = (tabId: string, updates: Partial<TabConfig>) => {
-    console.log('UPDATE TAB CALLED:', { tabId, updates })
-    
-    // Log when components are being saved (this means exiting edit mode)
-    if (updates.components) {
-      console.log('💾 Saving component layout to Cosmos DB:', {
-        tabId,
-        componentCount: updates.components.length,
-        hasEditModeChange: updates.editMode !== undefined,
-        editMode: updates.editMode,
-        timestamp: new Date().toISOString()
-      })
-    }
-    
-    // Preserve editMode if not explicitly set in updates
-    const currentTab = currentLayout.tabs.find(t => t.id === tabId)
-    const preservedUpdates = {
-      ...updates,
-      // If editMode is undefined in updates, preserve current value
-      editMode: updates.editMode !== undefined ? updates.editMode : currentTab?.editMode
-    }
-    
-    const updatedLayout = {
-      ...currentLayout,
-      tabs: currentLayout.tabs.map(t =>
-        t.id === tabId ? { ...t, ...preservedUpdates } : t
-      ),
-      updatedAt: new Date().toISOString()
-    }
-
-    console.log('UPDATED LAYOUT:', updatedLayout)
-    console.log('UPDATED TAB COMPONENTS:', updatedLayout.tabs.find(t => t.id === tabId)?.components?.length)
-    setCurrentLayout(updatedLayout)
-    console.log('TabLayoutManager: setCurrentLayout called with', updatedLayout.tabs.find(t => t.id === tabId)?.components?.length, 'components')
-    
-    // Save to Cosmos DB (primary storage)
-    const saveToCosmosDB = async () => {
-      try {
-        // Deduplicate tabs before saving
-        const tabIds = new Set<string>()
-        const uniqueTabs = updatedLayout.tabs.filter(t => {
-          if (tabIds.has(t.id)) {
-            console.warn(`Removing duplicate tab ${t.id} in updateTab`)
-            return false
-          }
-          tabIds.add(t.id)
-          return true
-        })
-        
-        console.log('🚀 Sending to Cosmos DB...')
-        await cosmosConfigService.saveConfiguration({
-          tabs: uniqueTabs,
-          layouts: layouts,
-          preferences: {
-            theme: document.documentElement.getAttribute('data-theme') || 'dark',
-            language: 'en'
-          }
-        })
-        console.log('Tab updated in Cosmos DB with components:', uniqueTabs.find(t => t.id === tabId)?.components?.length)
-      } catch (error) {
-        console.error('Failed to save to Cosmos DB:', error)
-      }
-    }
-    
-    // Save to PostgreSQL (legacy)
-    const saveToDatabase = async () => {
-      try {
-        const tabToUpdate = updatedLayout.tabs.find(t => t.id === tabId)
-        if (tabToUpdate) {
-          await databaseService.saveTab(userId, {
-            tab_id: tabToUpdate.id,
-            title: tabToUpdate.name,
-            icon: tabToUpdate.icon,
-            tab_type: tabToUpdate.type,
-            components: tabToUpdate.components,
-            editMode: tabToUpdate.editMode,
-            custom_settings: tabToUpdate.props
-          })
-          console.log('Tab saved to database')
+        // Update in layouts array if it's a saved layout
+        if (!currentLayout.isDefault) {
+            setLayouts(
+                layouts.map((l) =>
+                    l.id === currentLayout.id ? updatedLayout : l
+                )
+            );
         }
-      } catch (error) {
-        console.error('Failed to save tab to database:', error)
-      }
-    }
-    
-    // Save to both storages
-    saveToCosmosDB()
-    saveToDatabase()
-    
-    // No localStorage - Cosmos DB only
+    };
 
-    // Update in layouts array if it's a saved layout
-    if (!currentLayout.isDefault) {
-      setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
-    }
-  }
+    // Enhanced tab creation - shows styled modal for tab name
+    const createTabWithPrompt = () => {
+        setShowTabModal(true);
+    };
 
-  const saveCurrentLayout = (name: string) => {
-    const newLayout: TabLayout = {
-      id: uuidv4(),
-      name,
-      tabs: currentLayout.tabs,
-      isDefault: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-
-    setLayouts([...layouts, newLayout])
-    setCurrentLayout(newLayout)
-  }
-
-  const loadLayout = (layoutId: string) => {
-    const layout = layouts.find(l => l.id === layoutId)
-    if (layout) {
-      setCurrentLayout(layout)
-      // Set first tab as active
-      if (layout.tabs.length > 0) {
-        setActiveTabId(layout.tabs[0].id)
-      }
-    }
-  }
-
-  const deleteLayout = (layoutId: string) => {
-    // Can't delete default layout
-    const layout = layouts.find(l => l.id === layoutId)
-    if (!layout || layout.isDefault) {
-      return
-    }
-
-    setLayouts(layouts.filter(l => l.id !== layoutId))
-
-    // If we deleted the current layout, switch to default
-    if (currentLayout.id === layoutId) {
-      setCurrentLayout(defaultLayout)
-      setActiveTabId(defaultLayout.tabs[0]?.id || '')
-    }
-  }
-
-  const resetToDefault = async () => {
-    console.log('Resetting to default configuration...')
-    
-    // Clear all local storage first
-    localStorage.clear()
-    sessionStorage.clear()
-    
-    // Set default layout in memory
-    setCurrentLayout(defaultLayout)
-    setActiveTabId(defaultLayout.tabs[0]?.id || '')
-    
-    // Save default layout to Cosmos DB
-    try {
-      const cleanConfig = {
-        tabs: defaultLayout.tabs.map(tab => ({
-          ...tab,
-          component: tab.component || 'dashboard', // Ensure component is never empty
-          editMode: false,
-          components: [] // Clear any broken components
-        })),
-        layouts: [],
-        preferences: {
-          theme: 'dark',
-          language: 'en'
+    const handleTabNameConfirm = (tabName: string) => {
+        // Check for duplicate names
+        const existingTab = currentLayout.tabs.find(
+            (t) => t.name && t.name.toLowerCase() === tabName.toLowerCase()
+        );
+        if (existingTab) {
+            alert(
+                `Tab name "${tabName}" already exists. Please choose a different name.`
+            );
+            return;
         }
-      }
-      
-      await cosmosConfigService.saveConfiguration(cleanConfig)
-      console.log('Default configuration saved to Cosmos DB')
-    } catch (error) {
-      console.error('Error saving default config to Cosmos DB:', error)
-    }
-  }
 
-  const reorderTabs = (newTabs: TabConfig[]) => {
-    const updatedLayout = {
-      ...currentLayout,
-      tabs: newTabs,
-      updatedAt: new Date().toISOString()
-    }
-
-    setCurrentLayout(updatedLayout)
-
-    // Update in layouts array if it's a saved layout
-    if (!currentLayout.isDefault) {
-      setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
-    }
-  }
-
-  const updateTabGridLayout = (tabId: string, gridLayout: any[]) => {
-    const updatedLayout = {
-      ...currentLayout,
-      tabs: currentLayout.tabs.map(t =>
-        t.id === tabId ? { ...t, gridLayout } : t
-      ),
-      updatedAt: new Date().toISOString()
-    }
-
-    setCurrentLayout(updatedLayout)
-
-    // Update in layouts array if it's a saved layout
-    if (!currentLayout.isDefault) {
-      setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
-    }
-  }
-
-  const toggleTabGridLayout = (tabId: string, enabled: boolean) => {
-    const updatedLayout = {
-      ...currentLayout,
-      tabs: currentLayout.tabs.map(t =>
-        t.id === tabId ? { ...t, gridLayoutEnabled: enabled } : t
-      ),
-      updatedAt: new Date().toISOString()
-    }
-
-    setCurrentLayout(updatedLayout)
-
-    // Update in layouts array if it's a saved layout
-    if (!currentLayout.isDefault) {
-      setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
-    }
-  }
-
-  // Enhanced tab creation - shows styled modal for tab name
-  const createTabWithPrompt = () => {
-    setShowTabModal(true)
-  }
-
-  const handleTabNameConfirm = (tabName: string) => {
-    // Check for duplicate names
-    const existingTab = currentLayout.tabs.find(t => t.name && t.name.toLowerCase() === tabName.toLowerCase())
-    if (existingTab) {
-      alert(`Tab name "${tabName}" already exists. Please choose a different name.`)
-      return
-    }
-    
-    const newTab: Omit<TabConfig, 'id'> = {
-      name: tabName,
-      component: 'UserTabContainer', // Fixed component ID for all user tabs
-      type: 'dynamic', // Always use dynamic type
-      icon: 'grid', // Always use grid icon for dynamic tabs
-      closable: true,
-      gridLayoutEnabled: true,
-      components: [],
-      editMode: false, // Start in view mode, user can toggle to edit
-      memoryStrategy: 'hybrid'
-    }
-
-    const createdTab = addTab(newTab)
-    setShowTabModal(false)
-  }
-
-  // Helper function to get appropriate icon for tab type
-  const getIconForTabType = (type: TabConfig['type']): string => {
-    switch (type) {
-      case 'dynamic': return 'grid'
-      case 'static': return 'layout'
-      default: return 'square'
-    }
-  }
-
-  // Dynamic tab component management
-  const addComponentToTab = (tabId: string, component: ComponentInTab) => {
-    const tab = currentLayout.tabs.find(t => t.id === tabId)
-    if (!tab || tab.type !== 'dynamic') return
-
-    const updatedLayout = {
-      ...currentLayout,
-      tabs: currentLayout.tabs.map(t =>
-        t.id === tabId
-          ? { ...t, components: [...(t.components || []), component] }
-          : t
-      ),
-      updatedAt: new Date().toISOString()
-    }
-
-    setCurrentLayout(updatedLayout)
-
-    // Save to PostgreSQL
-    const saveToDatabase = async () => {
-      try {
-        const updatedTab = updatedLayout.tabs.find(t => t.id === tabId)
-        if (updatedTab) {
-          await databaseService.saveComponentLayouts(userId, tabId, updatedTab.components || [])
-          console.log('Component added and saved to database')
-        }
-      } catch (error) {
-        console.error('Failed to save component to database:', error)
-      }
-    }
-    
-    saveToDatabase()
-
-    // Save to view memory for dynamic tabs
-    if (tab.memoryStrategy === 'hybrid' || tab.memoryStrategy === 'redis') {
-      saveLayout(`tab-${tabId}`, updatedLayout.tabs.find(t => t.id === tabId)?.components)
-    }
-
-    // Update in layouts array if it's a saved layout
-    if (!currentLayout.isDefault) {
-      setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
-    }
-  }
-
-  const removeComponentFromTab = (tabId: string, componentId: string) => {
-    const tab = currentLayout.tabs.find(t => t.id === tabId)
-    if (!tab || tab.type !== 'dynamic') return
-
-    const updatedLayout = {
-      ...currentLayout,
-      tabs: currentLayout.tabs.map(t =>
-        t.id === tabId
-          ? { ...t, components: (t.components || []).filter(c => c.id !== componentId) }
-          : t
-      ),
-      updatedAt: new Date().toISOString()
-    }
-
-    setCurrentLayout(updatedLayout)
-
-    // Save to view memory
-    if (tab.memoryStrategy === 'hybrid' || tab.memoryStrategy === 'redis') {
-      saveLayout(`tab-${tabId}`, updatedLayout.tabs.find(t => t.id === tabId)?.components)
-    }
-
-    // Update in layouts array if it's a saved layout
-    if (!currentLayout.isDefault) {
-      setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
-    }
-  }
-
-  const updateComponentInTab = (tabId: string, componentId: string, updates: Partial<ComponentInTab>) => {
-    const tab = currentLayout.tabs.find(t => t.id === tabId)
-    if (!tab || tab.type !== 'dynamic') return
-
-    const updatedLayout = {
-      ...currentLayout,
-      tabs: currentLayout.tabs.map(t =>
-        t.id === tabId
-          ? {
-              ...t,
-              components: (t.components || []).map(c =>
-                c.id === componentId ? { ...c, ...updates } : c
-              )
-            }
-          : t
-      ),
-      updatedAt: new Date().toISOString()
-    }
-
-    setCurrentLayout(updatedLayout)
-
-    // Save to PostgreSQL
-    const saveToDatabase = async () => {
-      try {
-        const updatedTab = updatedLayout.tabs.find(t => t.id === tabId)
-        if (updatedTab) {
-          await databaseService.saveComponentLayouts(userId, tabId, updatedTab.components || [])
-          console.log('Component updated and saved to database')
-        }
-      } catch (error) {
-        console.error('Failed to update component in database:', error)
-      }
-    }
-    
-    saveToDatabase()
-
-    // Save to view memory with real-time updates
-    if (tab.memoryStrategy === 'hybrid' || tab.memoryStrategy === 'redis') {
-      saveLayout(`tab-${tabId}`, updatedLayout.tabs.find(t => t.id === tabId)?.components)
-    }
-
-    // Update in layouts array if it's a saved layout
-    if (!currentLayout.isDefault) {
-      setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
-    }
-  }
-
-  const toggleTabEditMode = (tabId: string) => {
-    const tab = currentLayout.tabs.find(t => t.id === tabId)
-    if (!tab || !tab.closable) return // Only allow edit mode for user-created tabs
-
-    const updatedLayout = {
-      ...currentLayout,
-      tabs: currentLayout.tabs.map(t =>
-        t.id === tabId ? { ...t, editMode: !t.editMode } : t
-      ),
-      updatedAt: new Date().toISOString()
-    }
-
-    setCurrentLayout(updatedLayout)
-
-    // Update in layouts array if it's a saved layout
-    if (!currentLayout.isDefault) {
-      setLayouts(layouts.map(l => l.id === currentLayout.id ? updatedLayout : l))
-    }
-  }
-
-  // Clear user configuration and reset to defaults
-  const clearUserConfiguration = async () => {
-    try {
-      console.log('Clearing user configuration from Cosmos DB and localStorage...')
-      
-      // Clear ALL localStorage and sessionStorage completely
-      localStorage.clear()
-      sessionStorage.clear()
-      
-      // Clear from Cosmos DB first
-      try {
-        await cosmosConfigService.deleteConfiguration()
-        console.log('Deleted old configuration from Cosmos DB')
-      } catch (e) {
-        console.log('No existing config to delete or delete failed:', e)
-      }
-      
-      // Create a clean default configuration with valid component types
-      const cleanDefaultConfig = {
-        tabs: [
-          {
-            id: 'analytics',
-            name: 'Analytics',
-            component: 'Analytics',  // Valid component type
-            type: 'dynamic' as const,
-            icon: 'bar-chart-2',
+        const newTab: Omit<TabConfig, "id"> = {
+            name: tabName,
+            component: "UserTabContainer", // Fixed component ID for all user tabs
+            type: "dynamic", // Always use dynamic type
+            icon: "grid", // Always use grid icon for dynamic tabs
             closable: true,
             gridLayoutEnabled: true,
             components: [],
-            editMode: false,
-            memoryStrategy: 'hybrid'
-          }
-        ],
-        layouts: [],
-        preferences: {
-          theme: 'dark',
-          language: 'en'
+            editMode: false, // Start in view mode, user can toggle to edit
+            memoryStrategy: "hybrid",
+        };
+
+        const createdTab = addTab(newTab);
+        setShowTabModal(false);
+    };
+
+    // Helper function to get appropriate icon for tab type
+    const getIconForTabType = (type: TabConfig["type"]): string => {
+        switch (type) {
+            case "dynamic":
+                return "grid";
+            case "static":
+                return "layout";
+            default:
+                return "square";
         }
-      }
-      
-      // Save the clean default to Cosmos DB
-      try {
-        await cosmosConfigService.saveConfiguration(cleanDefaultConfig)
-        console.log('Clean default configuration saved to Cosmos DB')
-      } catch (e) {
-        console.error('Failed to save clean config to Cosmos DB:', e)
-      }
-      
-      // Reset to default layout
-      console.log('Resetting to default layout...')
-      setCurrentLayout(DEFAULT_LAYOUT)
-      setLayouts([DEFAULT_LAYOUT])
-      setActiveTabId('main')
-      
-      console.log('✅ User configuration cleared and reset successfully')
-    } catch (error) {
-      console.error('Failed to clear user configuration:', error)
-    }
-  }
+    };
 
-  const value: TabLayoutContextValue = {
-    currentLayout,
-    activeTabId,
-    layouts,
-    defaultLayout,
-    userLayouts,
-    setActiveTab: setActiveTabId,
-    addTab,
-    removeTab,
-    updateTab,
-    reorderTabs,
-    createTabWithPrompt,
-    showTabModal,
-    setShowTabModal,
-    saveCurrentLayout,
-    loadLayout,
-    deleteLayout,
-    resetToDefault,
-    clearUserConfiguration,
-    updateTabGridLayout,
-    toggleTabGridLayout,
-    addComponentToTab,
-    removeComponentFromTab,
-    updateComponentInTab,
-    toggleTabEditMode
-  }
+    // Dynamic tab component management
+    const addComponentToTab = (tabId: string, component: ComponentInTab) => {
+        const tab = currentLayout.tabs.find((t) => t.id === tabId);
+        if (!tab || tab.type !== "dynamic") return;
 
-  return (
-    <TabLayoutContext.Provider value={value}>
-      {children}
-      <TabNameModal
-        isOpen={showTabModal}
-        onClose={() => setShowTabModal(false)}
-        onConfirm={handleTabNameConfirm}
-        defaultName={`New Tab ${currentLayout.tabs.filter(t => t.name && t.name.startsWith('New Tab')).length + 1}`}
-      />
-    </TabLayoutContext.Provider>
-  )
+        const updatedLayout = {
+            ...currentLayout,
+            tabs: currentLayout.tabs.map((t) =>
+                t.id === tabId
+                    ? { ...t, components: [...(t.components || []), component] }
+                    : t
+            ),
+            updatedAt: new Date().toISOString(),
+        };
+
+        setCurrentLayout(updatedLayout);
+
+        // Save to PostgreSQL
+        const saveToDatabase = async () => {
+            try {
+                const updatedTab = updatedLayout.tabs.find(
+                    (t) => t.id === tabId
+                );
+                if (updatedTab) {
+                    await databaseService.saveComponentLayouts(
+                        userId,
+                        tabId,
+                        updatedTab.components || []
+                    );
+                    console.log("Component added and saved to database");
+                }
+            } catch (error) {
+                console.error("Failed to save component to database:", error);
+            }
+        };
+
+        saveToDatabase();
+
+        // Save to view memory for dynamic tabs
+        if (tab.memoryStrategy === "hybrid" || tab.memoryStrategy === "redis") {
+            saveLayout(
+                `tab-${tabId}`,
+                updatedLayout.tabs.find((t) => t.id === tabId)?.components
+            );
+        }
+
+        // Update in layouts array if it's a saved layout
+        if (!currentLayout.isDefault) {
+            setLayouts(
+                layouts.map((l) =>
+                    l.id === currentLayout.id ? updatedLayout : l
+                )
+            );
+        }
+    };
+
+    const removeComponentFromTab = (tabId: string, componentId: string) => {
+        const tab = currentLayout.tabs.find((t) => t.id === tabId);
+        if (!tab || tab.type !== "dynamic") return;
+
+        const updatedLayout = {
+            ...currentLayout,
+            tabs: currentLayout.tabs.map((t) =>
+                t.id === tabId
+                    ? {
+                          ...t,
+                          components: (t.components || []).filter(
+                              (c) => c.id !== componentId
+                          ),
+                      }
+                    : t
+            ),
+            updatedAt: new Date().toISOString(),
+        };
+
+        setCurrentLayout(updatedLayout);
+
+        // Save to view memory
+        if (tab.memoryStrategy === "hybrid" || tab.memoryStrategy === "redis") {
+            saveLayout(
+                `tab-${tabId}`,
+                updatedLayout.tabs.find((t) => t.id === tabId)?.components
+            );
+        }
+
+        // Update in layouts array if it's a saved layout
+        if (!currentLayout.isDefault) {
+            setLayouts(
+                layouts.map((l) =>
+                    l.id === currentLayout.id ? updatedLayout : l
+                )
+            );
+        }
+    };
+
+    const updateComponentInTab = (
+        tabId: string,
+        componentId: string,
+        updates: Partial<ComponentInTab>
+    ) => {
+        const tab = currentLayout.tabs.find((t) => t.id === tabId);
+        if (!tab || tab.type !== "dynamic") return;
+
+        const updatedLayout = {
+            ...currentLayout,
+            tabs: currentLayout.tabs.map((t) =>
+                t.id === tabId
+                    ? {
+                          ...t,
+                          components: (t.components || []).map((c) =>
+                              c.id === componentId ? { ...c, ...updates } : c
+                          ),
+                      }
+                    : t
+            ),
+            updatedAt: new Date().toISOString(),
+        };
+
+        setCurrentLayout(updatedLayout);
+
+        // Save to PostgreSQL
+        const saveToDatabase = async () => {
+            try {
+                const updatedTab = updatedLayout.tabs.find(
+                    (t) => t.id === tabId
+                );
+                if (updatedTab) {
+                    await databaseService.saveComponentLayouts(
+                        userId,
+                        tabId,
+                        updatedTab.components || []
+                    );
+                    console.log("Component updated and saved to database");
+                }
+            } catch (error) {
+                console.error("Failed to update component in database:", error);
+            }
+        };
+
+        saveToDatabase();
+
+        // Save to view memory with real-time updates
+        if (tab.memoryStrategy === "hybrid" || tab.memoryStrategy === "redis") {
+            saveLayout(
+                `tab-${tabId}`,
+                updatedLayout.tabs.find((t) => t.id === tabId)?.components
+            );
+        }
+
+        // Update in layouts array if it's a saved layout
+        if (!currentLayout.isDefault) {
+            setLayouts(
+                layouts.map((l) =>
+                    l.id === currentLayout.id ? updatedLayout : l
+                )
+            );
+        }
+    };
+
+    const toggleTabEditMode = (tabId: string) => {
+        const tab = currentLayout.tabs.find((t) => t.id === tabId);
+        if (!tab || !tab.closable) return; // Only allow edit mode for user-created tabs
+
+        const updatedLayout = {
+            ...currentLayout,
+            tabs: currentLayout.tabs.map((t) =>
+                t.id === tabId ? { ...t, editMode: !t.editMode } : t
+            ),
+            updatedAt: new Date().toISOString(),
+        };
+
+        setCurrentLayout(updatedLayout);
+
+        // Update in layouts array if it's a saved layout
+        if (!currentLayout.isDefault) {
+            setLayouts(
+                layouts.map((l) =>
+                    l.id === currentLayout.id ? updatedLayout : l
+                )
+            );
+        }
+    };
+
+    // Clear user configuration and reset to defaults
+    const clearUserConfiguration = async () => {
+        try {
+            console.log(
+                "Clearing user configuration from Cosmos DB and localStorage..."
+            );
+
+            // Clear ALL localStorage and sessionStorage completely
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // Clear from Cosmos DB first
+            try {
+                await cosmosConfigService.deleteConfiguration();
+                console.log("Deleted old configuration from Cosmos DB");
+            } catch (e) {
+                console.log(
+                    "No existing config to delete or delete failed:",
+                    e
+                );
+            }
+
+            // Create a clean default configuration with valid component types
+            const cleanDefaultConfig = {
+                tabs: [
+                    {
+                        id: "analytics",
+                        name: "Analytics",
+                        component: "Analytics", // Valid component type
+                        type: "dynamic" as const,
+                        icon: "bar-chart-2",
+                        closable: true,
+                        gridLayoutEnabled: true,
+                        components: [],
+                        editMode: false,
+                        memoryStrategy: "hybrid",
+                    },
+                ],
+                layouts: [],
+                preferences: {
+                    theme: "dark",
+                    language: "en",
+                },
+            };
+
+            // Save the clean default to Cosmos DB
+            try {
+                await cosmosConfigService.saveConfiguration(cleanDefaultConfig);
+                console.log("Clean default configuration saved to Cosmos DB");
+            } catch (e) {
+                console.error("Failed to save clean config to Cosmos DB:", e);
+            }
+
+            // Reset to default layout
+            console.log("Resetting to default layout...");
+            setCurrentLayout(DEFAULT_LAYOUT);
+            setLayouts([DEFAULT_LAYOUT]);
+            setActiveTabId("main");
+
+            console.log("✅ User configuration cleared and reset successfully");
+        } catch (error) {
+            console.error("Failed to clear user configuration:", error);
+        }
+    };
+
+    const value: TabLayoutContextValue = {
+        currentLayout,
+        activeTabId,
+        layouts,
+        defaultLayout,
+        userLayouts,
+        setActiveTab: setActiveTabId,
+        addTab,
+        removeTab,
+        updateTab,
+        reorderTabs,
+        createTabWithPrompt,
+        showTabModal,
+        setShowTabModal,
+        saveCurrentLayout,
+        loadLayout,
+        deleteLayout,
+        resetToDefault,
+        clearUserConfiguration,
+        updateTabGridLayout,
+        toggleTabGridLayout,
+        addComponentToTab,
+        removeComponentFromTab,
+        updateComponentInTab,
+        toggleTabEditMode,
+    };
+
+    return (
+        <TabLayoutContext.Provider value={value}>
+            {children}
+            <TabNameModal
+                isOpen={showTabModal}
+                onClose={() => setShowTabModal(false)}
+                onConfirm={handleTabNameConfirm}
+                defaultName={`New Tab ${
+                    currentLayout.tabs.filter(
+                        (t) => t.name && t.name.startsWith("New Tab")
+                    ).length + 1
+                }`}
+            />
+        </TabLayoutContext.Provider>
+    );
 }
