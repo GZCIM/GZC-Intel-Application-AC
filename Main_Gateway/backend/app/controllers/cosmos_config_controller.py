@@ -15,15 +15,15 @@ from app.util.logger import get_logger
 logger = get_logger(__name__)
 
 router = APIRouter(
-    prefix="/cosmos",
+    prefix="/api/cosmos",
     tags=["cosmos-config"],
     responses={404: {"description": "Not found"}},
 )
 
 # Cosmos DB configuration
 COSMOS_ENDPOINT = os.getenv("COSMOS_ENDPOINT", "https://cosmos-research-analytics-prod.documents.azure.com:443/")
-DATABASE_ID = os.getenv("COSMOS_DATABASE", "agent-communication")
-CONTAINER_ID = os.getenv("COSMOS_CONTAINER", "user-memory")
+DATABASE_ID = os.getenv("COSMOS_DATABASE", "gzc-intel-app-config")
+CONTAINER_ID = os.getenv("COSMOS_CONTAINER", "user-configurations")
 
 # Initialize Cosmos client with managed identity - delayed initialization
 container = None
@@ -33,10 +33,31 @@ def get_cosmos_container():
     """Get or initialize Cosmos DB container with managed identity (fallback to key)"""
     global container, cosmos_client
     
-    if container is not None:
+    # Always initialize container to None to prevent undefined errors
+    if container is None:
+        container = None  # Explicit initialization
+    elif container is not None:
         return container
     
-    # Try managed identity first
+    # Try key-based authentication first (more reliable in production)
+    cosmos_key = os.getenv("COSMOS_KEY")
+    if cosmos_key:
+        try:
+            logger.info("Attempting Cosmos DB connection with key authentication")
+            cosmos_client = CosmosClient(COSMOS_ENDPOINT, credential=cosmos_key)
+            database = cosmos_client.get_database_client(DATABASE_ID)
+            container = database.get_container_client(CONTAINER_ID)
+            
+            # Verify connection by reading database properties
+            database.read()
+            logger.info(f"✅ Cosmos DB connected using key authentication for {COSMOS_ENDPOINT}")
+            return container
+        except Exception as key_error:
+            logger.warning(f"Key-based authentication failed: {str(key_error)[:200]}")
+    else:
+        logger.info("No COSMOS_KEY found - trying managed identity")
+    
+    # Fallback to managed identity
     try:
         logger.info(f"Attempting to connect to Cosmos DB at {COSMOS_ENDPOINT} using Managed Identity")
         credential = DefaultAzureCredential()
@@ -51,27 +72,9 @@ def get_cosmos_container():
     except Exception as managed_identity_error:
         logger.warning(f"Managed Identity failed: {str(managed_identity_error)[:200]}")
         
-        # Fallback to key-based authentication if available
-        cosmos_key = os.getenv("COSMOS_KEY")
-        if cosmos_key:
-            try:
-                logger.info("Attempting Cosmos DB connection with key fallback")
-                cosmos_client = CosmosClient(COSMOS_ENDPOINT, credential=cosmos_key)
-                database = cosmos_client.get_database_client(DATABASE_ID)
-                container = database.get_container_client(CONTAINER_ID)
-                
-                # Verify connection
-                database.read()
-                logger.info(f"✅ Cosmos DB connected using key fallback for {COSMOS_ENDPOINT}")
-                return container
-            except Exception as key_error:
-                logger.error(f"❌ Key-based authentication also failed: {str(key_error)[:200]}")
-        else:
-            logger.info("No COSMOS_KEY environment variable found for fallback")
-        
         # Both methods failed
         logger.error(f"❌ Cosmos DB initialization failed completely")
-        logger.info("ℹ️ Ensure: 1) Managed Identity has Cosmos DB access, 2) Container App uses NAT Gateway IP, or 3) COSMOS_KEY is set")
+        logger.info("ℹ️ Ensure: 1) COSMOS_KEY is set, 2) Managed Identity has Cosmos DB access, or 3) Container App uses NAT Gateway IP")
         container = None
         return None
 
@@ -97,27 +100,96 @@ async def get_user_config(payload: Dict = Depends(validate_token)) -> Optional[D
         
     except exceptions.CosmosResourceNotFoundError:
         logger.info(f"No configuration found for user {user_id}, returning default")
-        # Return default configuration for first-time users
+        # Return comprehensive default configuration for first-time users
+        now = datetime.utcnow().isoformat()
         return {
             "id": user_id,
             "userId": user_id,
-            "userEmail": payload.get("preferred_username", ""),
+            "type": "user-config",
+            "version": "1.0.0",
+            
+            # Core configuration
             "tabs": [
                 {
-                    "id": "analytics",
-                    "name": "Analytics",
-                    "icon": "BarChart3",
-                    "type": "analytics",
-                    "components": []
+                    "id": "main",
+                    "name": "Main",
+                    "component": "Analytics",
+                    "type": "dynamic",
+                    "icon": "home",
+                    "closable": False,
+                    "gridLayoutEnabled": True,
+                    "components": [],
+                    "editMode": False,
+                    "position": 0
                 }
             ],
             "layouts": [],
+            "currentLayoutId": "default",
+            "activeTabId": "main",
+            
+            # User preferences
             "preferences": {
-                "theme": "dark",
-                "language": "en"
+                "theme": "gzc-dark",
+                "language": "en",
+                "autoSave": True,
+                "syncAcrossDevices": True,
+                "notifications": {
+                    "enabled": True,
+                    "types": ["system", "component-updates"]
+                },
+                "accessibility": {
+                    "highContrast": False,
+                    "fontSize": "medium",
+                    "animations": True
+                },
+                "performance": {
+                    "enableLazyLoading": True,
+                    "maxComponentsPerTab": 20
+                }
             },
-            "timestamp": datetime.utcnow().isoformat(),
-            "type": "user-config",
+            
+            # State management
+            "componentStates": [],
+            "windowState": {
+                "dimensions": {"width": 1920, "height": 1080},
+                "position": {"x": 0, "y": 0},
+                "maximized": False,
+                "fullscreen": False
+            },
+            
+            # Session and memory
+            "currentSession": {
+                "sessionId": f"session-{int(datetime.utcnow().timestamp() * 1000)}",
+                "deviceInfo": {
+                    "userAgent": "",
+                    "platform": "",
+                    "screenResolution": "",
+                    "timezone": "UTC"
+                },
+                "loginTime": now,
+                "lastActivity": now,
+                "activeTabIds": ["main"],
+                "openLayouts": ["default"]
+            },
+            "userMemory": [],
+            
+            # Metadata
+            "createdAt": now,
+            "updatedAt": now,
+            "lastSyncAt": now,
+            "deviceId": None,
+            "previousVersions": [],
+            
+            # Feature flags
+            "featureFlags": {
+                "experimentalComponents": False,
+                "advancedGridLayout": True,
+                "cloudSync": True
+            },
+            
+            # Legacy compatibility
+            "userEmail": payload.get("preferred_username", ""),
+            "timestamp": now,
             "isDefault": True
         }
     except Exception as e:
@@ -154,19 +226,81 @@ async def save_user_config(
             else:
                 logger.warning(f"Removing duplicate tab {tab.get('id')} for user {user_id}")
         
-        # Prepare document with enhanced memory
+        # Prepare comprehensive document
+        now = datetime.utcnow().isoformat()
+        
+        # Get existing document for versioning
+        existing_doc = None
+        try:
+            existing_doc = container.read_item(item=user_id, partition_key=user_id)
+        except exceptions.CosmosResourceNotFoundError:
+            pass
+        
+        # Preserve previous versions (keep last 5)
+        previous_versions = []
+        if existing_doc:
+            previous_versions = existing_doc.get("previousVersions", [])[-4:]  # Keep last 4
+            previous_versions.append({
+                "version": existing_doc.get("version", "1.0.0"),
+                "data": {
+                    "tabs": existing_doc.get("tabs", []),
+                    "preferences": existing_doc.get("preferences", {}),
+                    "activeTabId": existing_doc.get("activeTabId")
+                },
+                "timestamp": existing_doc.get("updatedAt", now)
+            })
+        
         document = {
             "id": user_id,
             "userId": user_id,
-            "userEmail": user_email,
+            "type": "user-config",
+            "version": config.get("version", "1.0.0"),
+            
+            # Core configuration
             "tabs": unique_tabs,
             "layouts": config.get("layouts", []),
+            "currentLayoutId": config.get("currentLayoutId", "default"),
+            "activeTabId": config.get("activeTabId", unique_tabs[0]["id"] if unique_tabs else "main"),
+            
+            # User preferences
             "preferences": config.get("preferences", {}),
-            "componentStates": config.get("componentStates", {}),
-            "sessionData": config.get("sessionData", {}),
-            "timestamp": datetime.utcnow().isoformat(),
-            "type": "user-config",
-            "version": config.get("version", "2.1")
+            
+            # State management
+            "componentStates": config.get("componentStates", []),
+            "windowState": config.get("windowState", {
+                "dimensions": {"width": 1920, "height": 1080},
+                "position": {"x": 0, "y": 0},
+                "maximized": False,
+                "fullscreen": False
+            }),
+            
+            # Session and memory
+            "currentSession": {
+                **config.get("currentSession", {}),
+                "lastActivity": now,
+                "sessionId": config.get("currentSession", {}).get("sessionId", f"session-{int(datetime.utcnow().timestamp() * 1000)}")
+            },
+            "userMemory": config.get("userMemory", []),
+            
+            # Metadata
+            "createdAt": existing_doc.get("createdAt", now) if existing_doc else now,
+            "updatedAt": now,
+            "lastSyncAt": now,
+            "deviceId": config.get("deviceId"),
+            "previousVersions": previous_versions,
+            
+            # Feature flags
+            "featureFlags": config.get("featureFlags", {
+                "experimentalComponents": False,
+                "advancedGridLayout": True,
+                "cloudSync": True
+            }),
+            
+            # Legacy compatibility
+            "userEmail": user_email,
+            "timestamp": now,
+            "componentStates": config.get("componentStates", {}),  # Backward compatibility
+            "sessionData": config.get("sessionData", {})  # Backward compatibility
         }
         
         # Upsert the document

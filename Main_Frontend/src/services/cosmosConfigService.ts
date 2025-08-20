@@ -103,9 +103,9 @@ class CosmosConfigService {
           backend: this.backendUrl
         })
         
-        // Add timeout to prevent hanging
+        // Add timeout to prevent hanging (increased for comprehensive data)
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout for comprehensive config
         
         const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
           method: 'POST',
@@ -161,9 +161,9 @@ class CosmosConfigService {
         const token = await this.getAccessToken()
         console.log('✅ Token acquired, making Cosmos DB request')
         
-        // Add timeout to prevent hanging
+        // Add timeout to prevent hanging (increased for comprehensive data)
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout for comprehensive config
         
         const response = await fetch(`${this.backendUrl}/api/cosmos/config`, {
           method: 'GET',

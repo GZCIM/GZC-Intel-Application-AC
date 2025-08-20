@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GZC Intel Tab Debug Tool</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .debug-section {
+            background: #2d2d2d;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #404040;
+        }
+        .debug-title {
+            color: #4fc3f7;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .step {
+            background: #1e1e1e;
+            border-left: 4px solid #4fc3f7;
+            padding: 10px 15px;
+            margin: 10px 0;
+        }
+        .step.active {
+            border-left-color: #4caf50;
+            background: #1e2e1e;
+        }
+        .step.error {
+            border-left-color: #f44336;
+            background: #2e1e1e;
+        }
+        .code {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        button {
+            background: #4fc3f7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #29b6f6;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error-msg {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .logs {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        .log-entry {
+            margin: 2px 0;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 11px;
+        }
+        .log-info { color: #58a6ff; }
+        .log-warn { color: #f1c40f; }
+        .log-error { color: #f85149; }
+    </style>
+</head>
+<body>
+    <h1>🔍 GZC Intel Application - Tab Debug Tool</h1>
+    
+    <div class="warning">
+        <strong>Instructions:</strong> 
+        <ol>
+            <li>Open the GZC Intel Application in another tab: <a href="https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io" target="_blank">https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainerapps.io</a></li>
+            <li>Open browser dev tools (F12) on that tab</li>
+            <li>Use this debug tool to inject debugging code</li>
+            <li>Follow the steps to reproduce the tab loading issue</li>
+        </ol>
+    </div>
+
+    <div class="debug-section">
+        <div class="debug-title">📋 Step 1: Inject Debug Code</div>
+        <p>This will add debugging hooks to monitor tab changes during login.</p>
+        <button onclick="generateDebugCode()">Generate Debug Code</button>
+        
+        <div id="debug-code-section" style="display:none;">
+            <p><strong>Copy and paste this code into the console of the GZC Intel Application tab:</strong></p>
+            <div class="code" id="debug-code"></div>
+            <button onclick="copyToClipboard('debug-code')">📋 Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <div class="debug-title">🔐 Step 2: Monitor Authentication Flow</div>
+        <p>Use these console commands to track authentication and tab loading:</p>
+        
+        <div class="step">
+            <strong>1. Check Initial State (Before Login):</strong>
+            <div class="code">
+// Run in console BEFORE clicking login
+console.log('=== BEFORE LOGIN STATE ===');
+const beforeTabs = Array.from(document.querySelectorAll('nav button, [role="tab"]'))
+    .map(t => ({ text: t.textContent?.trim(), visible: t.offsetParent !== null }));
+console.log('Tabs before login:', beforeTabs);
+window.debugState = { beforeTabs };
+            </div>
+        </div>
+
+        <div class="step">
+            <strong>2. Monitor Login Click:</strong>
+            <div class="code">
+// Add event listeners to catch login
+document.addEventListener('click', function(e) {
+    const target = e.target;
+    if (target && target.tagName === 'BUTTON') {
+        const text = target.textContent?.toLowerCase() || '';
+        if (text.includes('sign') || text.includes('login') || text.includes('microsoft')) {
+            console.log('🔐 LOGIN BUTTON CLICKED:', text);
+            setTimeout(() => {
+                console.log('Auth state after click:', {
+                    msalAccounts: window.msalInstance?.getAllAccounts?.()?.length || 0,
+                    url: window.location.href
+                });
+            }, 1000);
+        }
+    }
+});
+            </div>
+        </div>
+
+        <div class="step">
+            <strong>3. Check State After Authentication:</strong>
+            <div class="code">
+// Run in console AFTER completing login
+console.log('=== AFTER LOGIN STATE ===');
+const afterTabs = Array.from(document.querySelectorAll('nav button, [role="tab"]'))
+    .map(t => ({ text: t.textContent?.trim(), visible: t.offsetParent !== null }));
+console.log('Tabs after login:', afterTabs);
+console.log('Comparison:', {
+    before: window.debugState?.beforeTabs?.map(t => t.text) || [],
+    after: afterTabs.map(t => t.text),
+    changed: JSON.stringify(window.debugState?.beforeTabs) !== JSON.stringify(afterTabs)
+});
+
+// Check what's in memory
+console.log('Memory state:', {
+    localStorage: Object.keys(localStorage).filter(k => k.includes('gzc') || k.includes('tab')),
+    sessionStorage: Object.keys(sessionStorage).filter(k => k.includes('gzc') || k.includes('tab')),
+    msalAccounts: window.msalInstance?.getAllAccounts?.()?.length || 0
+});
+            </div>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <div class="debug-title">🌐 Step 3: Network Monitoring</div>
+        <p>Monitor API calls that might be loading the "memory" tabs:</p>
+        
+        <div class="step">
+            <strong>Network Monitor Code:</strong>
+            <div class="code">
+// Intercept fetch to monitor Cosmos DB calls
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+    const url = args[0];
+    if (typeof url === 'string' && url.includes('cosmos')) {
+        console.log('🌐 COSMOS DB API CALL:', url);
+        return originalFetch.apply(this, args).then(response => {
+            if (url.includes('/config')) {
+                response.clone().json().then(data => {
+                    console.log('📊 COSMOS CONFIG LOADED:', {
+                        tabCount: data?.tabs?.length || 0,
+                        tabs: data?.tabs?.map(t => ({ id: t.id, name: t.name })) || [],
+                        timestamp: data?.timestamp
+                    });
+                }).catch(() => {});
+            }
+            return response;
+        });
+    }
+    return originalFetch.apply(this, args);
+};
+            </div>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <div class="debug-title">🔧 Step 4: Live Tab Inspector</div>
+        <p>Real-time tab monitoring:</p>
+        
+        <button onclick="generateTabInspector()">Generate Tab Inspector</button>
+        
+        <div id="tab-inspector-section" style="display:none;">
+            <div class="code" id="tab-inspector"></div>
+            <button onclick="copyToClipboard('tab-inspector')">📋 Copy Inspector Code</button>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <div class="debug-title">📝 Expected Findings</div>
+        <div class="step">
+            <strong>What You Should See:</strong>
+            <ul>
+                <li><strong>Before Login:</strong> Default tabs (Analytics, Documentation) or "Tab 1, Tab 2, etc."</li>
+                <li><strong>During Login:</strong> API call to <code>/api/cosmos/config</code></li>
+                <li><strong>After Login:</strong> Different tabs loaded from Cosmos DB (the "memory ones")</li>
+                <li><strong>Console Logs:</strong> "TabLayoutManager: Successfully loaded X tabs from Cosmos DB"</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Root Cause Confirmation:</strong>
+            <p>If you see the pattern above, it confirms that:</p>
+            <ol>
+                <li>The authentication state change triggers tab loading from Cosmos DB</li>
+                <li>The "memory ones" are previously saved user tabs</li>
+                <li>They override the default tabs after login</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <div class="debug-title">🎯 Quick Fix Test</div>
+        <p>Test if clearing the saved configuration resolves the issue:</p>
+        
+        <div class="step">
+            <strong>Clear Cosmos Configuration:</strong>
+            <div class="code">
+// WARNING: This will clear your saved tabs
+// Run in the GZC Intel Application console
+fetch('/api/cosmos/config', { 
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + (await window.msalInstance.acquireTokenSilent({scopes: ['User.Read'], account: window.msalInstance.getAllAccounts()[0]})).accessToken }
+}).then(r => {
+    console.log('Config cleared, refresh the page to test');
+    // Optionally refresh: location.reload()
+});
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateDebugCode() {
+            const code = `
+// GZC Intel Tab Debug Monitor
+console.log('🔍 Tab Debug Monitor Activated');
+
+// Monitor tab changes
+let lastTabState = [];
+const monitorTabs = () => {
+    const currentTabs = Array.from(document.querySelectorAll('nav button, [role="tab"]'))
+        .map(t => ({ 
+            text: t.textContent?.trim(), 
+            visible: t.offsetParent !== null,
+            className: t.className 
+        }));
+    
+    if (JSON.stringify(currentTabs) !== JSON.stringify(lastTabState)) {
+        console.log('📋 TABS CHANGED:', {
+            timestamp: new Date().toISOString(),
+            from: lastTabState.map(t => t.text),
+            to: currentTabs.map(t => t.text),
+            count: currentTabs.length
+        });
+        lastTabState = [...currentTabs];
+    }
+};
+
+// Monitor every 500ms
+const tabMonitor = setInterval(monitorTabs, 500);
+
+// Monitor authentication state changes  
+let lastAuthState = false;
+const monitorAuth = () => {
+    const isAuth = window.msalInstance?.getAllAccounts?.()?.length > 0;
+    if (isAuth !== lastAuthState) {
+        console.log('🔐 AUTH STATE CHANGED:', {
+            timestamp: new Date().toISOString(),
+            from: lastAuthState,
+            to: isAuth,
+            accounts: window.msalInstance?.getAllAccounts?.()?.length || 0
+        });
+        lastAuthState = isAuth;
+    }
+};
+
+const authMonitor = setInterval(monitorAuth, 1000);
+
+// Stop monitoring after 5 minutes
+setTimeout(() => {
+    clearInterval(tabMonitor);
+    clearInterval(authMonitor);
+    console.log('🔍 Debug monitoring stopped');
+}, 300000);
+
+console.log('✅ Debug monitors started - watch for tab and auth changes');
+            `;
+            
+            document.getElementById('debug-code').textContent = code;
+            document.getElementById('debug-code-section').style.display = 'block';
+        }
+
+        function generateTabInspector() {
+            const code = `
+// Real-time Tab Inspector
+const inspectTabs = () => {
+    console.log('=== CURRENT TAB STATE ===');
+    
+    // Find all tab elements
+    const tabs = Array.from(document.querySelectorAll('nav button, [role="tab"]'));
+    console.log('Found', tabs.length, 'tab elements');
+    
+    tabs.forEach((tab, i) => {
+        console.log(\`Tab \${i+1}:\`, {
+            text: tab.textContent?.trim(),
+            visible: tab.offsetParent !== null,
+            className: tab.className,
+            id: tab.id,
+            attributes: Array.from(tab.attributes).map(a => \`\${a.name}="\${a.value}"\`)
+        });
+    });
+    
+    // Check React/state info if available
+    if (window.React) {
+        console.log('React detected - checking for state');
+    }
+    
+    console.log('=========================');
+};
+
+// Run inspection
+inspectTabs();
+
+// Make it available globally
+window.inspectTabs = inspectTabs;
+console.log('✅ Tab inspector ready - run inspectTabs() anytime');
+            `;
+            
+            document.getElementById('tab-inspector').textContent = code;
+            document.getElementById('tab-inspector-section').style.display = 'block';
+        }
+
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = '✅ Copied!';
+                button.style.background = '#4caf50';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#4fc3f7';
+                }, 2000);
+            });
+        }
+
+        // Auto-generate debug code on load
+        generateDebugCode();
+        generateTabInspector();
+    </script>
+</body>
+</html>

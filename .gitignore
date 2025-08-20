@@ -41,4 +41,4 @@ Thumbs.db
 *.tmp
 *.temp
 temp/
-tmp/
+tmp/container-app-config.yaml

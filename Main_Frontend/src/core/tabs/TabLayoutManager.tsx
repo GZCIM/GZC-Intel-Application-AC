@@ -9,6 +9,7 @@ import { useUser } from '../../hooks/useUser'
 import { databaseService } from '../../services/databaseService'
 import { cosmosConfigService } from '../../services/cosmosConfigService'
 import { configSyncService } from '../../services/configSyncService'
+import { enhancedConfigService } from '../../services/enhancedConfigService'
 
 // Component in tab configuration for dynamic tabs
 export interface ComponentInTab {
@@ -71,6 +72,7 @@ interface TabLayoutContextValue {
   loadLayout: (layoutId: string) => void
   deleteLayout: (layoutId: string) => void
   resetToDefault: () => void
+  clearUserConfiguration: () => void
 
   // Grid layout actions
   updateTabGridLayout: (tabId: string, gridLayout: any[]) => void
@@ -88,26 +90,16 @@ interface TabLayoutContextValue {
 // Default tabs configuration with hybrid types
 const DEFAULT_TABS: TabConfig[] = [
   {
-    id: 'analytics',
-    name: 'Analytics',
+    id: 'main',
+    name: 'Main',
     component: 'Analytics',
     type: 'dynamic',
-    icon: 'bar-chart-2',
-    closable: true,  // Changed to true so Edit button appears
+    icon: 'home',
+    closable: false,  // Main tab should not be closable
     gridLayoutEnabled: true,
     components: [],
-    editMode: false,  // Initialize editMode to false
+    editMode: false,
     memoryStrategy: 'hybrid'
-  },
-  {
-    id: 'documentation',
-    name: 'Documentation',
-    component: 'Documentation',
-    type: 'static',
-    icon: 'book-open',
-    closable: false,
-    gridLayoutEnabled: false,
-    memoryStrategy: 'local'
   }
 ]
 
@@ -168,7 +160,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
   const [layouts, setLayouts] = useState<TabLayout[]>([DEFAULT_LAYOUT])
   const [currentLayout, setCurrentLayout] = useState<TabLayout>(DEFAULT_LAYOUT)
-  const [activeTabId, setActiveTabId] = useState<string>('analytics')
+  const [activeTabId, setActiveTabId] = useState<string>('main')
   const [showTabModal, setShowTabModal] = useState(false)
   const { saveTabOrder, saveActiveTab, saveLayout } = useViewMemory()
   
@@ -210,26 +202,22 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
   // Load saved layouts from PostgreSQL when user changes
   useEffect(() => {
+    // Set initial default layout immediately to prevent frozen UI
+    if (!currentLayout || currentLayout.tabs.length === 0) {
+      console.log('TabLayoutManager: Setting initial default layout to prevent freeze')
+      setCurrentLayout(DEFAULT_LAYOUT)
+      setLayouts([DEFAULT_LAYOUT])
+      setActiveTabId('main')
+    }
+
     const checkAuthAndLoad = async () => {
-      // CRITICAL FIX: Better MSAL availability check with retry logic
+      // CRITICAL FIX: Non-blocking MSAL check
       let msalInstance = (window as any).msalInstance;
-      let retryCount = 0;
-      const maxRetries = 5;
       
-      // Wait for MSAL to be properly initialized with retry logic
-      while ((!msalInstance || !msalInstance.getConfiguration) && retryCount < maxRetries) {
-        console.log(`TabLayoutManager: MSAL not available yet, retry ${retryCount + 1}/${maxRetries}...`)
-        await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1))); // Progressive delay
-        msalInstance = (window as any).msalInstance;
-        retryCount++;
-      }
-      
-      // If MSAL still not available after retries, proceed with defaults
+      // Simple check without blocking loops
       if (!msalInstance || !msalInstance.getConfiguration) {
-        console.log('TabLayoutManager: MSAL not available after retries, using defaults')
-        setCurrentLayout(DEFAULT_LAYOUT)
-        setLayouts([DEFAULT_LAYOUT])
-        setActiveTabId('analytics')
+        console.log('TabLayoutManager: MSAL not available, using defaults')
+        // Default already set above
         return
       }
       
@@ -270,22 +258,43 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
             return true
           }).map(t => ({
             ...t,
-            editMode: false // Always start with edit mode OFF when loading
+            editMode: false, // Always start with edit mode OFF when loading
+            // Ensure tabs have proper names - fix the "memory ones" issue
+            name: t.name || `Tab ${t.id}` || 'Unnamed Tab',
+            // Ensure tabs have valid component types
+            component: t.component || (t.type === 'dynamic' ? 'UserTabContainer' : 'Analytics'),
+            // Ensure type is valid
+            type: t.type === 'static' || t.type === 'dynamic' ? t.type : 'dynamic',
+            // Initialize components array if missing
+            components: t.components || []
           }))
           
-          console.log(`✅ TabLayoutManager: Successfully loaded ${uniqueTabs.length} unique tabs from Cosmos DB`)
-          const cosmosLayout = { 
-            ...DEFAULT_LAYOUT,
-            tabs: uniqueTabs,
-            id: 'cosmos-layout',
-            name: 'Cosmos Layout'
-          }
-          setCurrentLayout(cosmosLayout)
-          setLayouts([DEFAULT_LAYOUT, cosmosLayout])
+          // Check if these are valid tabs or just placeholder/memory tabs
+          const hasValidTabs = uniqueTabs.some(tab => 
+            tab.name && 
+            !tab.name.startsWith('user-memory-') && 
+            tab.name !== 'Loading...' &&
+            tab.component !== 'placeholder'
+          )
           
-          const activeTabId = uniqueTabs[0]?.id || 'analytics'
-          setActiveTabId(activeTabId)
-          return // Cosmos DB is source of truth
+          if (hasValidTabs) {
+            console.log(`✅ TabLayoutManager: Successfully loaded ${uniqueTabs.length} valid tabs from Cosmos DB`)
+            const cosmosLayout = { 
+              ...DEFAULT_LAYOUT,
+              tabs: uniqueTabs,
+              id: 'cosmos-layout',
+              name: 'User Saved Layout'
+            }
+            setCurrentLayout(cosmosLayout)
+            setLayouts([DEFAULT_LAYOUT, cosmosLayout])
+            
+            const activeTabId = uniqueTabs[0]?.id || 'main'
+            setActiveTabId(activeTabId)
+            return // Cosmos DB is source of truth
+          } else {
+            console.log('TabLayoutManager: Cosmos DB returned placeholder/memory tabs, using defaults instead')
+            // Fall through to use default tabs
+          }
         } else {
           console.log('TabLayoutManager: Cosmos DB returned empty or invalid config, trying fallbacks')
         }
@@ -306,7 +315,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
             setCurrentLayout(dbLayout)
             setLayouts([DEFAULT_LAYOUT, dbLayout])
             
-            const activeTabId = savedTabs[0]?.id || 'analytics'
+            const activeTabId = savedTabs[0]?.id || 'main'
             setActiveTabId(activeTabId)
             return // Database is source of truth
           }
@@ -355,7 +364,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
           setLayouts([DEFAULT_LAYOUT, parsedLayout])
           
           // Set active tab from saved layout
-          const activeTabId = parsedLayout.tabs?.[0]?.id || 'analytics'
+          const activeTabId = parsedLayout.tabs?.[0]?.id || 'main'
           setActiveTabId(activeTabId)
           return // Don't fall back to defaults if we found saved data
         } catch (e) {
@@ -367,7 +376,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
       console.log('⚠️ No saved layout found anywhere, using default layout')
       setCurrentLayout(DEFAULT_LAYOUT)
       setLayouts([DEFAULT_LAYOUT])
-      setActiveTabId('analytics')
+      setActiveTabId('main')
     }
     
     checkAuthAndLoad()
@@ -451,6 +460,10 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
           layouts: layouts  // Keep layouts for saved presets
         })
         console.log('New tab saved to Cosmos DB')
+        
+        // Save complete configuration with all user settings
+        await enhancedConfigService.saveCompleteConfiguration()
+        console.log('Complete configuration saved with enhanced service')
       } catch (error) {
         console.error('Failed to save to Cosmos DB:', error)
       }
@@ -538,6 +551,10 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
             }
           })
           console.log('Tab removed, layout saved to Cosmos DB')
+          
+          // Save complete configuration with all user settings
+          await enhancedConfigService.saveCompleteConfiguration()
+          console.log('Complete configuration saved after tab removal')
         } catch (error) {
           console.error('Failed to save to Cosmos DB after removing tab:', error)
         }
@@ -706,9 +723,38 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     }
   }
 
-  const resetToDefault = () => {
+  const resetToDefault = async () => {
+    console.log('Resetting to default configuration...')
+    
+    // Clear all local storage first
+    localStorage.clear()
+    sessionStorage.clear()
+    
+    // Set default layout in memory
     setCurrentLayout(defaultLayout)
     setActiveTabId(defaultLayout.tabs[0]?.id || '')
+    
+    // Save default layout to Cosmos DB
+    try {
+      const cleanConfig = {
+        tabs: defaultLayout.tabs.map(tab => ({
+          ...tab,
+          component: tab.component || 'dashboard', // Ensure component is never empty
+          editMode: false,
+          components: [] // Clear any broken components
+        })),
+        layouts: [],
+        preferences: {
+          theme: 'dark',
+          language: 'en'
+        }
+      }
+      
+      await cosmosConfigService.saveConfiguration(cleanConfig)
+      console.log('Default configuration saved to Cosmos DB')
+    } catch (error) {
+      console.error('Error saving default config to Cosmos DB:', error)
+    }
   }
 
   const reorderTabs = (newTabs: TabConfig[]) => {
@@ -767,7 +813,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
   const handleTabNameConfirm = (tabName: string) => {
     // Check for duplicate names
-    const existingTab = currentLayout.tabs.find(t => t.name.toLowerCase() === tabName.toLowerCase())
+    const existingTab = currentLayout.tabs.find(t => t.name && t.name.toLowerCase() === tabName.toLowerCase())
     if (existingTab) {
       alert(`Tab name "${tabName}" already exists. Please choose a different name.`)
       return
@@ -935,6 +981,66 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     }
   }
 
+  // Clear user configuration and reset to defaults
+  const clearUserConfiguration = async () => {
+    try {
+      console.log('Clearing user configuration from Cosmos DB and localStorage...')
+      
+      // Clear ALL localStorage and sessionStorage completely
+      localStorage.clear()
+      sessionStorage.clear()
+      
+      // Clear from Cosmos DB first
+      try {
+        await cosmosConfigService.deleteConfiguration()
+        console.log('Deleted old configuration from Cosmos DB')
+      } catch (e) {
+        console.log('No existing config to delete or delete failed:', e)
+      }
+      
+      // Create a clean default configuration with valid component types
+      const cleanDefaultConfig = {
+        tabs: [
+          {
+            id: 'analytics',
+            name: 'Analytics',
+            component: 'Analytics',  // Valid component type
+            type: 'dynamic' as const,
+            icon: 'bar-chart-2',
+            closable: true,
+            gridLayoutEnabled: true,
+            components: [],
+            editMode: false,
+            memoryStrategy: 'hybrid'
+          }
+        ],
+        layouts: [],
+        preferences: {
+          theme: 'dark',
+          language: 'en'
+        }
+      }
+      
+      // Save the clean default to Cosmos DB
+      try {
+        await cosmosConfigService.saveConfiguration(cleanDefaultConfig)
+        console.log('Clean default configuration saved to Cosmos DB')
+      } catch (e) {
+        console.error('Failed to save clean config to Cosmos DB:', e)
+      }
+      
+      // Reset to default layout
+      console.log('Resetting to default layout...')
+      setCurrentLayout(DEFAULT_LAYOUT)
+      setLayouts([DEFAULT_LAYOUT])
+      setActiveTabId('main')
+      
+      console.log('✅ User configuration cleared and reset successfully')
+    } catch (error) {
+      console.error('Failed to clear user configuration:', error)
+    }
+  }
+
   const value: TabLayoutContextValue = {
     currentLayout,
     activeTabId,
@@ -953,6 +1059,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     loadLayout,
     deleteLayout,
     resetToDefault,
+    clearUserConfiguration,
     updateTabGridLayout,
     toggleTabGridLayout,
     addComponentToTab,

@@ -7,7 +7,6 @@ from app.controllers import (
     portfolio_controller,
     transactions_controller,
     preferences_controller,
-    user_memory_controller,
     cosmos_config_controller,
     proxy_controller,
 )
@@ -121,7 +120,6 @@ app.include_router(historical_quotes_controller.router)
 app.include_router(portfolio_controller.router)
 app.include_router(transactions_controller.router)
 app.include_router(preferences_controller.router)
-app.include_router(user_memory_controller.router)
 app.include_router(proxy_controller.router)
 app.include_router(cosmos_config_controller.router)
 
