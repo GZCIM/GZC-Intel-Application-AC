@@ -37,7 +37,7 @@ def determine_device_type(
 ) -> str:
     """
     Determine device type based on screen dimensions and user agent
-    Returns: 'mobile', 'laptop', or 'desktop'
+    Returns: 'mobile', 'laptop', or 'bigscreen'
     """
     # Mobile detection
     mobile_keywords = [
@@ -57,165 +57,70 @@ def determine_device_type(
     elif screen_width <= 1366:  # Typical laptop resolution
         return "laptop"
     else:  # Large screens, external monitors
-        return "desktop"
+        return "bigscreen"
 
 
-def get_device_specific_config(device_type: str, base_config: dict) -> dict:
+async def get_device_specific_config(
+    device_type: str, base_config: dict, user_id: str
+) -> dict:
     """
-    Generate device-specific configuration based on device type
+    Get user-specific device configuration from Cosmos DB
+    Returns empty template if not found
     """
-    if device_type == "mobile":
-        return {
+    container = get_cosmos_container()
+    if not container:
+        logger.warning("Cosmos DB not available, returning empty device config")
+        return get_empty_device_config(device_type, base_config, user_id)
+
+    try:
+        # User-specific device config ID format: "{device_type}_{user_id}"
+        device_config_id = f"{device_type}_{user_id}"
+
+        logger.info(f"Looking for user device config: {device_config_id}")
+
+        # Try to read user-specific device configuration
+        device_config_doc = container.read_item(
+            item=device_config_id, partition_key=device_config_id
+        )
+
+        logger.info(
+            f"Found existing {device_type} device configuration for user {user_id}"
+        )
+
+        # Merge with base config
+        merged_config = {
             **base_config,
-            # Mobile-optimized configuration
-            "tabs": [
-                {
-                    "id": "main",
-                    "name": "Dashboard",
-                    "component": "Analytics",
-                    "type": "dynamic",
-                    "icon": "smartphone",
-                    "closable": False,
-                    "gridLayoutEnabled": True,
-                    "components": [],
-                    "editMode": False,
-                    "position": 0,
-                }
-            ],
-            "preferences": {
-                **base_config.get("preferences", {}),
-                "accessibility": {
-                    "highContrast": False,
-                    "fontSize": "large",  # Larger font for mobile
-                    "animations": False,  # Reduce animations for performance
-                },
-                "performance": {
-                    "enableLazyLoading": True,
-                    "maxComponentsPerTab": 5,  # Fewer components for mobile
-                },
-            },
-            "windowState": {
-                "dimensions": {"width": 375, "height": 667},  # iPhone-like dimensions
-                "position": {"x": 0, "y": 0},
-                "maximized": True,  # Always maximized on mobile
-                "fullscreen": False,
-            },
+            **device_config_doc.get("config", {}),
+            "deviceType": device_type,
+            "userId": user_id,
         }
 
-    elif device_type == "laptop":
-        return {
-            **base_config,
-            # Laptop-optimized configuration
-            "tabs": [
-                {
-                    "id": "main",
-                    "name": "Analytics",
-                    "component": "Analytics",
-                    "type": "dynamic",
-                    "icon": "laptop",
-                    "closable": False,
-                    "gridLayoutEnabled": True,
-                    "components": [],
-                    "editMode": False,
-                    "position": 0,
-                },
-                {
-                    "id": "portfolio",
-                    "name": "Portfolio",
-                    "component": "Portfolio",
-                    "type": "dynamic",
-                    "icon": "briefcase",
-                    "closable": True,
-                    "gridLayoutEnabled": True,
-                    "components": [],
-                    "editMode": False,
-                    "position": 1,
-                },
-            ],
-            "preferences": {
-                **base_config.get("preferences", {}),
-                "accessibility": {
-                    "highContrast": False,
-                    "fontSize": "medium",
-                    "animations": True,
-                },
-                "performance": {
-                    "enableLazyLoading": True,
-                    "maxComponentsPerTab": 12,  # Moderate number for laptop
-                },
-            },
-            "windowState": {
-                "dimensions": {
-                    "width": 1366,
-                    "height": 768,
-                },  # Typical laptop resolution
-                "position": {"x": 0, "y": 0},
-                "maximized": False,
-                "fullscreen": False,
-            },
-        }
+        return merged_config
 
-    else:  # desktop
-        return {
-            **base_config,
-            # Desktop-optimized configuration (big screen)
-            "tabs": [
-                {
-                    "id": "main",
-                    "name": "Analytics Hub",
-                    "component": "Analytics",
-                    "type": "dynamic",
-                    "icon": "monitor",
-                    "closable": False,
-                    "gridLayoutEnabled": True,
-                    "components": [],
-                    "editMode": False,
-                    "position": 0,
-                },
-                {
-                    "id": "portfolio",
-                    "name": "Portfolio",
-                    "component": "Portfolio",
-                    "type": "dynamic",
-                    "icon": "briefcase",
-                    "closable": True,
-                    "gridLayoutEnabled": True,
-                    "components": [],
-                    "editMode": False,
-                    "position": 1,
-                },
-                {
-                    "id": "trading",
-                    "name": "Trading",
-                    "component": "Trading",
-                    "type": "dynamic",
-                    "icon": "trending-up",
-                    "closable": True,
-                    "gridLayoutEnabled": True,
-                    "components": [],
-                    "editMode": False,
-                    "position": 2,
-                },
-            ],
-            "preferences": {
-                **base_config.get("preferences", {}),
-                "accessibility": {
-                    "highContrast": False,
-                    "fontSize": "medium",
-                    "animations": True,
-                },
-                "performance": {
-                    "enableLazyLoading": False,  # No lazy loading on powerful desktop
-                    "maxComponentsPerTab": 25,  # More components for large screen
-                },
-            },
-            "windowState": {
-                "dimensions": {"width": 1920, "height": 1080},  # Full HD or larger
-                "position": {"x": 0, "y": 0},
-                "maximized": False,
-                "fullscreen": False,
-            },
-        }
+    except exceptions.CosmosResourceNotFoundError:
+        logger.info(
+            f"No device configuration found for {device_type}_{user_id}, returning empty template"
+        )
+        return get_empty_device_config(device_type, base_config, user_id)
+    except Exception as e:
+        logger.error(f"Error loading device config for {device_type}_{user_id}: {e}")
+        return get_empty_device_config(device_type, base_config, user_id)
+
+
+def get_empty_device_config(device_type: str, base_config: dict, user_id: str) -> dict:
+    """
+    Return empty device configuration template for specific user
+    """
+    return {
+        **base_config,
+        "deviceType": device_type,
+        "userId": user_id,
+        "tabs": [],  # Empty - user will create their own
+        "preferences": base_config.get("preferences", {}),
+        "windowState": base_config.get("windowState", {}),
+        "isEmpty": True,  # Flag to indicate this is an empty template
+        "message": f"No {device_type} configuration found for {user_id}. Create your custom {device_type} layout.",
+    }
 
 
 def get_cosmos_container():
@@ -321,7 +226,7 @@ async def get_user_config(
         )
 
         # Get device info from request headers or payload
-        device_info = payload.get("deviceInfo", {})
+        device_info = payload.get("deviceInfo", {}) or {}
         screen_width = device_info.get("screenWidth", 1920)
         screen_height = device_info.get("screenHeight", 1080)
         user_agent = device_info.get("userAgent", "")
@@ -404,7 +309,9 @@ async def get_user_config(
         }
 
         # Generate device-specific configuration
-        device_config = get_device_specific_config(device_type, base_config)
+        device_config = await get_device_specific_config(
+            device_type, base_config, user_id
+        )
         return device_config
     except Exception as e:
         logger.error(f"Error reading configuration: {e}")
@@ -532,7 +439,9 @@ async def get_device_config(
         }
 
         # Generate device-specific configuration
-        device_config = get_device_specific_config(device_type, base_config)
+        device_config = await get_device_specific_config(
+            device_type, base_config, user_id
+        )
 
         # Save the new configuration
         saved_config = container.upsert_item(body=device_config)
@@ -917,6 +826,197 @@ async def delete_user_config(payload: Dict = Depends(validate_token)) -> Dict[st
         raise HTTPException(status_code=500, detail="Failed to delete configuration")
 
 
+@router.post("/migrate-user-id")
+async def migrate_user_id(
+    migration_request: Dict[str, Any], payload: Dict = Depends(validate_token)
+) -> Dict[str, Any]:
+    """
+    Migrate user configuration from old ID to new email-based ID
+    """
+    container = get_cosmos_container()
+    if not container:
+        raise HTTPException(status_code=503, detail="Cosmos DB not available")
+
+    try:
+        # Get current user email from token
+        user_email = payload.get("preferred_username") or payload.get("email", "")
+        user_oid = payload.get("oid", "")
+
+        if not user_email:
+            raise HTTPException(status_code=400, detail="No email found in token")
+
+        new_user_id = user_email.lower()
+        old_user_id = migration_request.get("oldUserId")
+
+        if not old_user_id:
+            raise HTTPException(status_code=400, detail="oldUserId required")
+
+        logger.info(f"Migrating configuration: {old_user_id} → {new_user_id}")
+
+        # Check if old config exists
+        try:
+            old_config = container.read_item(
+                item=old_user_id, partition_key=old_user_id
+            )
+            logger.info(
+                f"Found old configuration with {len(old_config.get('tabs', []))} tabs"
+            )
+        except exceptions.CosmosResourceNotFoundError:
+            raise HTTPException(
+                status_code=404, detail=f"No configuration found for {old_user_id}"
+            )
+
+        # Clean up the old configuration before migration
+        cleaned_tabs = []
+        valid_tab_names = set()
+
+        for tab in old_config.get("tabs", []):
+            # Skip duplicate "New Tab 1" entries
+            if isinstance(tab, dict):
+                tab_name = tab.get("title") or tab.get("name", "")
+
+                # Only keep tabs with meaningful names or the last one of each type
+                if tab_name and tab_name != "New Tab 1":
+                    if tab_name not in valid_tab_names:
+                        valid_tab_names.add(tab_name)
+                        # Convert old format to new format
+                        clean_tab = {
+                            "id": tab.get("tab_id")
+                            or tab.get("id", f"tab-{len(cleaned_tabs)}"),
+                            "name": tab_name,
+                            "component": "UserTabContainer",
+                            "type": "dynamic",
+                            "icon": tab.get("icon", "grid"),
+                            "closable": True,
+                            "gridLayoutEnabled": True,
+                            "components": tab.get("component_ids", []),
+                            "editMode": False,
+                            "position": len(cleaned_tabs),
+                        }
+                        cleaned_tabs.append(clean_tab)
+
+        # If no valid tabs found, create a default one
+        if not cleaned_tabs:
+            cleaned_tabs = [
+                {
+                    "id": "main",
+                    "name": "Analytics",
+                    "component": "Analytics",
+                    "type": "dynamic",
+                    "icon": "home",
+                    "closable": False,
+                    "gridLayoutEnabled": True,
+                    "components": [],
+                    "editMode": False,
+                    "position": 0,
+                }
+            ]
+
+        logger.info(
+            f"Cleaned tabs: {len(old_config.get('tabs', []))} → {len(cleaned_tabs)}"
+        )
+
+        # Create new configuration with email-based ID
+        now = datetime.utcnow().isoformat()
+
+        # Determine device type based on window state or default to desktop
+        window_state = old_config.get("windowState", {})
+        screen_width = window_state.get("dimensions", {}).get("width", 1920)
+        screen_height = window_state.get("dimensions", {}).get("height", 1080)
+        device_type = determine_device_type(screen_width, screen_height, "")
+
+        new_config = {
+            "id": new_user_id,
+            "userId": new_user_id,
+            "name": f"Migrated {device_type.title()} Config for {new_user_id}",
+            "type": "user-config",
+            "version": "2.0.0",  # Incremented version for migration
+            "deviceType": device_type,
+            "targetScreenSize": {"width": screen_width, "height": screen_height},
+            # Use cleaned tabs
+            "tabs": cleaned_tabs,
+            "layouts": old_config.get("layouts", []),
+            "currentLayoutId": old_config.get("currentLayoutId", "default"),
+            "activeTabId": cleaned_tabs[0]["id"] if cleaned_tabs else "main",
+            # Preserve preferences
+            "preferences": old_config.get(
+                "preferences",
+                {
+                    "theme": "gzc-dark",
+                    "language": "en",
+                    "autoSave": True,
+                    "syncAcrossDevices": True,
+                },
+            ),
+            # Reset state management
+            "componentStates": [],
+            "windowState": {
+                "dimensions": {"width": screen_width, "height": screen_height},
+                "position": {"x": 0, "y": 0},
+                "maximized": False,
+                "fullscreen": False,
+            },
+            # New session info
+            "currentSession": {
+                "sessionId": f"session-{int(datetime.utcnow().timestamp() * 1000)}",
+                "deviceInfo": {
+                    "userAgent": "",
+                    "platform": "",
+                    "screenResolution": f"{screen_width}x{screen_height}",
+                    "timezone": "UTC",
+                    "lastSyncBrowser": "Migration",
+                    "lastSyncTime": now,
+                },
+                "loginTime": now,
+                "lastActivity": now,
+                "activeTabIds": [cleaned_tabs[0]["id"]] if cleaned_tabs else ["main"],
+                "openLayouts": ["default"],
+            },
+            "userMemory": old_config.get("userMemory", []),
+            # Metadata
+            "createdAt": old_config.get("createdAt", now),
+            "updatedAt": now,
+            "lastSyncAt": now,
+            "deviceId": None,
+            "previousVersions": [],  # Start fresh - no version history bloat
+            # Feature flags
+            "featureFlags": {
+                "experimentalComponents": False,
+                "advancedGridLayout": True,
+                "cloudSync": True,
+            },
+            # Migration info
+            "migratedFrom": old_user_id,
+            "migrationDate": now,
+            "userEmail": user_email,
+            "timestamp": now,
+        }
+
+        # Save new configuration
+        new_item = container.upsert_item(body=new_config)
+        logger.info(f"✅ Migrated configuration saved for {new_user_id}")
+
+        # Optionally delete old configuration (commented out for safety)
+        # container.delete_item(item=old_user_id, partition_key=old_user_id)
+        # logger.info(f"🗑️ Deleted old configuration {old_user_id}")
+
+        return {
+            "message": f"Configuration migrated successfully from {old_user_id} to {new_user_id}",
+            "oldUserId": old_user_id,
+            "newUserId": new_user_id,
+            "cleanedTabs": len(cleaned_tabs),
+            "originalTabs": len(old_config.get("tabs", [])),
+            "deviceType": device_type,
+            "configName": new_config["name"],
+        }
+
+    except Exception as e:
+        logger.error(f"Error migrating configuration: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to migrate configuration: {str(e)}"
+        )
+
+
 @router.post("/cleanup")
 async def cleanup_user_config(
     payload: Dict = Depends(validate_token),
@@ -975,6 +1075,259 @@ async def cleanup_user_config(
     except Exception as e:
         logger.error(f"Error cleaning configuration: {e}")
         raise HTTPException(status_code=500, detail="Failed to clean configuration")
+
+
+@router.get("/device-config/{device_type}")
+async def get_device_configuration(
+    device_type: str, payload: Dict = Depends(validate_token)
+) -> Dict[str, Any]:
+    """
+    Get user-specific device configuration template (laptop, mobile, bigscreen)
+    Returns empty template if not found
+    """
+    if device_type not in ["laptop", "mobile", "bigscreen"]:
+        raise HTTPException(
+            status_code=400, detail="Device type must be laptop, mobile, or bigscreen"
+        )
+
+    container = get_cosmos_container()
+    if not container:
+        raise HTTPException(status_code=503, detail="Cosmos DB not available")
+
+    try:
+        # Get user ID consistently
+        user_email = payload.get("preferred_username") or payload.get("email", "")
+        user_oid = payload.get("oid", "")
+        user_sub = payload.get("sub", "")
+
+        if user_email:
+            user_id = user_email.lower()
+        elif user_oid:
+            user_id = f"oid_{user_oid}"
+        else:
+            user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
+
+        # User-specific device config ID format: "{device_type}_{user_id}"
+        device_config_id = f"{device_type}_{user_id}"
+
+        try:
+            # Try to get existing user device configuration
+            device_config_doc = container.read_item(
+                item=device_config_id, partition_key=device_config_id
+            )
+            logger.info(
+                f"Found existing {device_type} device configuration for user {user_id}"
+            )
+            return device_config_doc
+
+        except exceptions.CosmosResourceNotFoundError:
+            logger.info(
+                f"No device configuration found for {device_config_id}, returning empty template"
+            )
+
+            # Return empty template
+            now = datetime.utcnow().isoformat()
+            empty_template = {
+                "id": device_config_id,
+                "name": f"{device_type.title()} Configuration for {user_id}",
+                "type": "user-device-config",
+                "deviceType": device_type,
+                "userId": user_id,
+                "version": "1.0.0",
+                "config": {
+                    "tabs": [],
+                    "preferences": {},
+                    "windowState": {},
+                    "componentStates": [],
+                    "layouts": [],
+                },
+                "createdAt": now,
+                "updatedAt": now,
+                "isEmpty": True,
+                "message": f"No {device_type} configuration found for {user_id}. Create your custom {device_type} layout.",
+            }
+
+            return empty_template
+
+    except Exception as e:
+        logger.error(f"Error getting device config for {device_type}: {e}")
+        raise HTTPException(
+            status_code=500, detail="Failed to get device configuration"
+        )
+
+
+@router.post("/device-config/{device_type}")
+async def save_device_configuration(
+    device_type: str,
+    config_data: Dict[str, Any],
+    payload: Dict = Depends(validate_token),
+) -> Dict[str, Any]:
+    """
+    Save device-specific configuration (laptop, mobile, bigscreen)
+    """
+    if device_type not in ["laptop", "mobile", "bigscreen"]:
+        raise HTTPException(
+            status_code=400, detail="Device type must be laptop, mobile, or bigscreen"
+        )
+
+    container = get_cosmos_container()
+    if not container:
+        raise HTTPException(status_code=503, detail="Cosmos DB not available")
+
+    try:
+        # Get user info for logging
+        user_email = payload.get("preferred_username") or payload.get("email", "")
+        user_id = user_email.lower() if user_email else "unknown"
+
+        # User-specific device config ID format: "{device_type}_{user_id}"
+        device_config_id = f"{device_type}_{user_id}"
+        now = datetime.utcnow().isoformat()
+
+        # Prepare user device configuration document
+        device_config_doc = {
+            "id": device_config_id,
+            "name": f"{device_type.title()} Configuration for {user_id}",
+            "type": "user-device-config",
+            "deviceType": device_type,
+            "userId": user_id,
+            "version": config_data.get("version", "1.0.0"),
+            "config": {
+                "tabs": config_data.get("tabs", []),
+                "preferences": config_data.get("preferences", {}),
+                "windowState": config_data.get("windowState", {}),
+                "componentStates": config_data.get("componentStates", []),
+                "layouts": config_data.get("layouts", []),
+            },
+            "createdBy": user_id,
+            "updatedBy": user_id,
+            "createdAt": config_data.get("createdAt", now),
+            "updatedAt": now,
+            "lastModified": now,
+        }
+
+        # Save the device configuration
+        saved_doc = container.upsert_item(body=device_config_doc)
+        logger.info(
+            f"Device configuration '{device_config_doc['name']}' saved by {user_id}"
+        )
+
+        return {
+            "message": f"{device_type.title()} configuration saved successfully",
+            "deviceType": device_type,
+            "configName": device_config_doc["name"],
+            "savedBy": user_id,
+            "config": saved_doc,
+        }
+
+    except Exception as e:
+        logger.error(f"Error saving device config for {device_type}: {e}")
+        raise HTTPException(
+            status_code=500, detail="Failed to save device configuration"
+        )
+
+
+@router.delete("/device-config/{device_type}")
+async def delete_device_configuration(
+    device_type: str, payload: Dict = Depends(validate_token)
+) -> Dict[str, str]:
+    """
+    Delete device-specific configuration
+    """
+    if device_type not in ["laptop", "mobile", "bigscreen"]:
+        raise HTTPException(
+            status_code=400, detail="Device type must be laptop, mobile, or bigscreen"
+        )
+
+    container = get_cosmos_container()
+    if not container:
+        raise HTTPException(status_code=503, detail="Cosmos DB not available")
+
+    try:
+        # Get user info for logging
+        user_email = payload.get("preferred_username") or payload.get("email", "")
+        user_id = user_email.lower() if user_email else "unknown"
+
+        # User-specific device config ID format: "{device_type}_{user_id}"
+        device_config_id = f"{device_type}_{user_id}"
+
+        # Delete the device configuration
+        container.delete_item(item=device_config_id, partition_key=device_config_id)
+        logger.info(f"Device configuration {device_type} deleted by {user_id}")
+
+        return {"message": f"{device_type.title()} configuration deleted successfully"}
+
+    except exceptions.CosmosResourceNotFoundError:
+        return {"message": f"No {device_type} configuration to delete"}
+    except Exception as e:
+        logger.error(f"Error deleting device config for {device_type}: {e}")
+        raise HTTPException(
+            status_code=500, detail="Failed to delete device configuration"
+        )
+
+
+@router.get("/device-configs")
+async def list_user_device_configurations(
+    payload: Dict = Depends(validate_token),
+) -> Dict[str, Any]:
+    """
+    List user's device configurations
+    """
+    container = get_cosmos_container()
+    if not container:
+        raise HTTPException(status_code=503, detail="Cosmos DB not available")
+
+    try:
+        # Get user ID consistently
+        user_email = payload.get("preferred_username") or payload.get("email", "")
+        user_oid = payload.get("oid", "")
+        user_sub = payload.get("sub", "")
+
+        if user_email:
+            user_id = user_email.lower()
+        elif user_oid:
+            user_id = f"oid_{user_oid}"
+        else:
+            user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
+
+        # Query for user's device configurations
+        query = f"SELECT * FROM c WHERE c.type = 'user-device-config' AND c.userId = '{user_id}'"
+        device_configs = list(
+            container.query_items(query=query, enable_cross_partition_query=True)
+        )
+
+        configs_summary = []
+        for config in device_configs:
+            configs_summary.append(
+                {
+                    "deviceType": config.get("deviceType"),
+                    "name": config.get("name"),
+                    "version": config.get("version"),
+                    "lastUpdated": config.get("updatedAt"),
+                    "createdBy": config.get("createdBy"),
+                    "userId": config.get("userId"),
+                    "isEmpty": len(config.get("config", {}).get("tabs", [])) == 0,
+                }
+            )
+
+        # Check which device types are missing
+        existing_types = {config.get("deviceType") for config in device_configs}
+        all_types = {"laptop", "mobile", "bigscreen"}
+        missing_types = all_types - existing_types
+
+        return {
+            "deviceConfigurations": configs_summary,
+            "total": len(configs_summary),
+            "userId": user_id,
+            "availableTypes": ["laptop", "mobile", "bigscreen"],
+            "existingTypes": list(existing_types),
+            "missingTypes": list(missing_types),
+        }
+
+    except Exception as e:
+        logger.error(f"Error listing device configs: {e}")
+        raise HTTPException(
+            status_code=500, detail="Failed to list device configurations"
+        )
 
 
 @router.get("/health")
