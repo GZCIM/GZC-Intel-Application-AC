@@ -392,13 +392,46 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
             console.log(`TabLayoutManager: Loading layouts for user ${userId}`);
 
-            // Try Cosmos DB FIRST (works without backend!) - SINGLE ATTEMPT, NO RETRIES
+            // Try Device-Specific Config FIRST - load appropriate config for current device
             try {
                 console.log(
-                    "TabLayoutManager: Attempting to load from Cosmos DB (single attempt)"
+                    "TabLayoutManager: Attempting to load device-specific configuration"
                 );
-                const cosmosConfig =
-                    await cosmosConfigService.loadConfiguration();
+
+                // Detect current device type and load appropriate config
+                const currentDeviceType =
+                    deviceConfigService.detectDeviceType();
+                console.log(
+                    `TabLayoutManager: Detected device type: ${currentDeviceType}`
+                );
+
+                const response = await fetch(
+                    `${
+                        import.meta.env.VITE_API_BASE_URL ||
+                        "http://localhost:8080"
+                    }/api/cosmos/device-config/${currentDeviceType}`,
+                    {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+
+                let cosmosConfig = null;
+                if (response.ok) {
+                    const deviceConfig = await response.json();
+                    console.log(
+                        `TabLayoutManager: Loaded ${currentDeviceType} config:`,
+                        deviceConfig.name
+                    );
+                    cosmosConfig = deviceConfig.config; // Extract the actual config from device config
+                } else {
+                    console.log(
+                        `TabLayoutManager: No ${currentDeviceType} config found, will use default`
+                    );
+                }
 
                 if (cosmosConfig?.tabs && cosmosConfig.tabs.length > 0) {
                     // Deduplicate tabs when loading and ensure editMode is false
@@ -667,11 +700,37 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     return true;
                 });
 
-                await cosmosConfigService.saveConfiguration({
-                    tabs: uniqueTabs,
-                    layouts: layouts, // Keep layouts for saved presets
-                });
-                console.log("New tab saved to Cosmos DB");
+                // Save to device-specific config instead of general user config
+                const currentDeviceType =
+                    deviceConfigService.detectDeviceType();
+                const response = await fetch(
+                    `${
+                        import.meta.env.VITE_API_BASE_URL ||
+                        "http://localhost:8080"
+                    }/api/cosmos/device-config/${currentDeviceType}`,
+                    {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            tabs: uniqueTabs,
+                            layouts: layouts, // Keep layouts for saved presets
+                        }),
+                    }
+                );
+
+                if (response.ok) {
+                    console.log(
+                        `New tab saved to ${currentDeviceType} device config`
+                    );
+                } else {
+                    console.error(
+                        `Failed to save to ${currentDeviceType} device config:`,
+                        await response.text()
+                    );
+                }
 
                 // Save complete configuration with all user settings
                 await enhancedConfigService.saveCompleteConfiguration();
