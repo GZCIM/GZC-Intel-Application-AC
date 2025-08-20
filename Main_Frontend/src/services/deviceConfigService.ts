@@ -22,7 +22,7 @@ interface DeviceConfigRequest {
     deviceId?: string;
 }
 
-export type DeviceType = "mobile" | "laptop" | "desktop";
+export type DeviceType = "mobile" | "laptop" | "bigscreen";
 
 class DeviceConfigService {
     private currentDeviceType: DeviceType | null = null;
@@ -58,7 +58,7 @@ class DeviceConfigService {
             return "laptop";
         } else {
             // Large screens, external monitors
-            return "desktop";
+            return "bigscreen";
         }
     }
 
@@ -150,7 +150,7 @@ class DeviceConfigService {
         const mediaQueries = [
             window.matchMedia("(max-width: 768px)"), // Mobile
             window.matchMedia("(max-width: 1366px)"), // Laptop
-            window.matchMedia("(min-width: 1367px)"), // Desktop
+            window.matchMedia("(min-width: 1367px)"), // Bigscreen
         ];
 
         mediaQueries.forEach((mq) => {
@@ -183,16 +183,32 @@ class DeviceConfigService {
     }
 
     /**
-     * Get auth token - placeholder implementation
-     * This should be replaced with your actual auth system integration
+     * Get auth token from MSAL
      */
-    private async getAuthToken(): Promise<string> {
-        // TODO: Implement based on your MSAL setup
-        // For now, return a placeholder
-        console.warn(
-            "⚠️ getAuthToken() needs to be implemented for your auth system"
-        );
-        return "placeholder-token";
+    async getAuthToken(): Promise<string> {
+        try {
+            // Import MSAL instance dynamically to avoid circular dependencies
+            const { msalInstance } = await import("../hooks/useAuth");
+            const accounts = msalInstance.getAllAccounts();
+
+            if (accounts.length > 0) {
+                const response = await msalInstance.acquireTokenSilent({
+                    scopes: [
+                        "User.Read",
+                        "api://a873f2d7-2ab9-4d59-a54c-90859226bf2e/access_as_user",
+                    ],
+                    account: accounts[0],
+                });
+                return response.accessToken;
+            }
+
+            throw new Error("No authenticated accounts found");
+        } catch (error) {
+            console.error("Failed to get auth token:", error);
+            throw new Error(
+                "Authentication required for device config requests"
+            );
+        }
     }
 
     /**

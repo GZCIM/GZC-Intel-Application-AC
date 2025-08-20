@@ -29,6 +29,8 @@ export const ProfessionalHeader = () => {
         setActiveTab,
         createTabWithPrompt,
         updateTab,
+        currentDeviceType,
+        isDeviceSwitching,
     } = useTabLayout();
 
     const { currentTheme: theme } = useTheme();
@@ -310,6 +312,38 @@ export const ProfessionalHeader = () => {
                                 : "#E0E0E0" // Slightly less bright light grey for dark themes
                         }
                     />
+
+                    {/* Device switching indicator */}
+                    {isDeviceSwitching && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                backgroundColor: theme.background,
+                                border: `1px solid ${theme.border}`,
+                                borderRadius: "8px",
+                                padding: "4px 8px",
+                                fontSize: "12px",
+                                color: theme.textSecondary,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: "12px",
+                                    height: "12px",
+                                    borderRadius: "50%",
+                                    backgroundColor: theme.primary,
+                                    animation: "pulse 2s infinite",
+                                }}
+                            />
+                            Switching to {currentDeviceType}...
+                        </motion.div>
+                    )}
+
                     <div style={{ width: "20px" }} />
                 </motion.div>
 
