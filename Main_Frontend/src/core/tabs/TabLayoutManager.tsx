@@ -15,6 +15,7 @@ import { useUser } from "../../hooks/useUser";
 import { databaseService } from "../../services/databaseService";
 import { cosmosConfigService } from "../../services/cosmosConfigService";
 import { configSyncService } from "../../services/configSyncService";
+import { deviceConfigService } from "../../services/deviceConfigService";
 import { enhancedConfigService } from "../../services/enhancedConfigService";
 
 // Component in tab configuration for dynamic tabs
@@ -55,6 +56,10 @@ interface TabLayoutContextValue {
     // Current state
     currentLayout: TabLayout | null;
     activeTabId: string | null;
+
+    // Device responsiveness
+    currentDeviceType: string | null;
+    isDeviceSwitching: boolean;
 
     // Layout management
     layouts: TabLayout[];
@@ -184,6 +189,10 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         useState<TabLayout>(DEFAULT_LAYOUT);
     const [activeTabId, setActiveTabId] = useState<string>("main");
     const [showTabModal, setShowTabModal] = useState(false);
+    const [currentDeviceType, setCurrentDeviceType] = useState<string | null>(
+        null
+    );
+    const [isDeviceSwitching, setIsDeviceSwitching] = useState(false);
     const { saveTabOrder, saveActiveTab, saveLayout } = useViewMemory();
 
     // Start config sync when component mounts
@@ -211,6 +220,112 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
             configSyncService.stopAutoSync();
         };
     }, []);
+
+    // Device monitoring for automatic config switching
+    useEffect(() => {
+        if (!user?.email) return;
+
+        // Initialize current device type
+        const initialDeviceType = deviceConfigService.detectDeviceType();
+        setCurrentDeviceType(initialDeviceType);
+        console.log(`🖥️ Initial device type detected: ${initialDeviceType}`);
+
+        // Start monitoring for device changes
+        deviceConfigService.startDeviceMonitoring(async (newDeviceType) => {
+            console.log(
+                `📱 Device type changed: ${currentDeviceType} → ${newDeviceType}`
+            );
+
+            setIsDeviceSwitching(true);
+            setCurrentDeviceType(newDeviceType);
+
+            try {
+                // Show loading indicator
+                console.log(`🔄 Loading ${newDeviceType} configuration...`);
+
+                // Load device-specific configuration from backend
+                const response = await fetch(
+                    `${
+                        import.meta.env.VITE_API_BASE_URL ||
+                        "http://localhost:8080"
+                    }/api/cosmos/device-config/${newDeviceType}`,
+                    {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+
+                if (response.ok) {
+                    const deviceConfig = await response.json();
+                    console.log(
+                        `✅ Loaded ${newDeviceType} configuration:`,
+                        deviceConfig.name
+                    );
+
+                    // Apply device configuration to current layout
+                    if (
+                        deviceConfig.config?.tabs &&
+                        deviceConfig.config.tabs.length > 0
+                    ) {
+                        const deduplicatedTabs = deduplicateTabs(
+                            deviceConfig.config.tabs
+                        );
+                        setCurrentLayout((prev) => ({
+                            ...prev,
+                            tabs: deduplicatedTabs,
+                            currentLayoutId:
+                                deviceConfig.id || prev.currentLayoutId,
+                            name:
+                                deviceConfig.name ||
+                                `${
+                                    newDeviceType.charAt(0).toUpperCase() +
+                                    newDeviceType.slice(1)
+                                } Layout`,
+                        }));
+
+                        // Set active tab to first tab or main
+                        const firstTab = deduplicatedTabs[0];
+                        if (firstTab) {
+                            setActiveTabId(firstTab.id);
+                        }
+
+                        // Show success notification
+                        console.log(
+                            `🎉 Switched to ${newDeviceType} configuration with ${deduplicatedTabs.length} tabs`
+                        );
+                    } else {
+                        console.log(
+                            `📋 ${newDeviceType} configuration is empty - keeping current tabs`
+                        );
+                        // If device config is empty, keep current tabs but update device type
+                    }
+                } else {
+                    const errorText = await response.text();
+                    console.error(
+                        `❌ Failed to load ${newDeviceType} configuration:`,
+                        errorText
+                    );
+                    // Keep current configuration on error
+                }
+            } catch (error) {
+                console.error(
+                    `💥 Error switching to ${newDeviceType} configuration:`,
+                    error
+                );
+                // Keep current configuration on error
+            } finally {
+                setIsDeviceSwitching(false);
+            }
+        });
+
+        return () => {
+            // Device monitoring cleanup is handled by the service itself
+            console.log("🧹 Device monitoring cleanup completed");
+        };
+    }, [user?.email, currentDeviceType]);
 
     // Helper function to deduplicate tabs
     const deduplicateTabs = (tabs: TabConfig[]) => {
@@ -1251,6 +1366,8 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     const value: TabLayoutContextValue = {
         currentLayout,
         activeTabId,
+        currentDeviceType,
+        isDeviceSwitching,
         layouts,
         defaultLayout,
         userLayouts,
