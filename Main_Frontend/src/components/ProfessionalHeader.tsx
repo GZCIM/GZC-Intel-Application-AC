@@ -11,6 +11,7 @@ import { UserProfile } from './UserProfile'
 import { ToolsMenu } from './ToolsMenu'
 import { DraggableWindow } from './DraggableWindow'
 import { AuthDebugWindow } from './AuthDebugWindow'
+import { useAuth } from '../hooks/useAuth'
 
 interface Tab {
   id: string
@@ -28,6 +29,7 @@ export const ProfessionalHeader = () => {
   } = useTabLayout()
   
   const { currentTheme: theme } = useTheme()
+  const { isAuthenticated } = useAuth()
 
   const [tabs, setTabs] = useState<Tab[]>([])
   const [activeTab, setActiveTabLocal] = useState('')
@@ -43,18 +45,51 @@ export const ProfessionalHeader = () => {
   const [componentPortalTabId, setComponentPortalTabId] = useState<string>('')
 
   useEffect(() => {
-    if (currentLayout) {
-      const mappedTabs = currentLayout.tabs.map(tab => ({
-        id: tab.id,
-        name: tab.name,
-        path: `/${tab.id}`
-      }))
-      setTabs(mappedTabs)
-      setActiveTabLocal(activeTabId || '')
+    console.log('ProfessionalHeader: State changed:', { 
+      hasCurrentLayout: !!currentLayout, 
+      isAuthenticated, 
+      tabsCount: currentLayout?.tabs?.length || 0 
+    })
+    
+    if (!isAuthenticated) {
+      console.log('ProfessionalHeader: User not authenticated, showing fallback tabs')
+      // Show fallback tabs for unauthenticated users
+      setTabs([
+        { id: 'login-required', name: 'Please Login', path: '/' }
+      ])
+      setActiveTabLocal('login-required')
+      return
     }
-  }, [currentLayout, activeTabId])
+    
+    if (currentLayout) {
+      console.log('ProfessionalHeader: Processing authenticated layout with tabs:', currentLayout.tabs)
+      const mappedTabs = currentLayout.tabs.map(tab => {
+        console.log('ProfessionalHeader: mapping tab:', { id: tab.id, name: tab.name, hasName: !!tab.name })
+        return {
+          id: tab.id,
+          name: tab.name || `Tab ${tab.id}` || 'Unnamed Tab', // Fallback names
+          path: `/${tab.id}`
+        }
+      })
+      console.log('ProfessionalHeader: mappedTabs:', mappedTabs)
+      setTabs(mappedTabs)
+      setActiveTabLocal(activeTabId || mappedTabs[0]?.id || '')
+    } else {
+      console.log('ProfessionalHeader: No currentLayout, showing loading tabs')
+      setTabs([
+        { id: 'loading', name: 'Loading...', path: '/' }
+      ])
+      setActiveTabLocal('loading')
+    }
+  }, [currentLayout, activeTabId, isAuthenticated])
 
   const handleTabClick = (tab: Tab) => {
+    // Don't try to activate special tabs
+    if (tab.id === 'login-required' || tab.id === 'loading') {
+      console.log('ProfessionalHeader: Ignoring click on special tab:', tab.id)
+      return
+    }
+    
     setActiveTab(tab.id)
     setActiveTabLocal(tab.id)
   }
@@ -282,7 +317,9 @@ export const ProfessionalHeader = () => {
                     }
                   }}
                 >
-                  {tab.name}
+                  {/* DEBUG: Log tab info for empty names */}
+                  {!tab.name && console.log('Empty tab name detected:', tab)}
+                  {tab.name || `Tab ${tab.id}` || 'Unnamed Tab'}
                   
                   {/* Tab Type Indicator */}
                   <div style={{

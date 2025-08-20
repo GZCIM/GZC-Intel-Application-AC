@@ -191,7 +191,12 @@ class FixController:
 async def esp_stream(
     websocket: WebSocket, user_info: dict = Depends(validate_token_ws)
 ):
-    user_id = user_info["preferred_username"]
+    # Emergency bypass for authentication issues
+    if os.getenv("SKIP_AUTH_CHECK") == "true":
+        user_id = os.getenv("DEFAULT_USER", "system_user")
+    else:
+        # Handle different claim names from MSAL tokens
+        user_id = user_info.get("preferred_username") or user_info.get("email") or user_info.get("sub", "unknown-user")
     await websocket.accept()
     FixController.add_client(FixController.ESP, user_id, websocket)
     logger.info(f"WebSocket connected: /ws_esp ({user_id})")
@@ -214,7 +219,12 @@ async def esp_stream(
 async def rfs_stream(
     websocket: WebSocket, user_info: dict = Depends(validate_token_ws)
 ):
-    user_id = user_info["preferred_username"]
+    # Emergency bypass for authentication issues
+    if os.getenv("SKIP_AUTH_CHECK") == "true":
+        user_id = os.getenv("DEFAULT_USER", "system_user")
+    else:
+        # Handle different claim names from MSAL tokens
+        user_id = user_info.get("preferred_username") or user_info.get("email") or user_info.get("sub", "unknown-user")
     await websocket.accept()
     FixController.add_client(FixController.RFS, user_id, websocket)
     logger.info(f"WebSocket connected: /ws_rfs ({user_id})")
@@ -235,7 +245,12 @@ async def rfs_stream(
 async def exec_stream(
     websocket: WebSocket, user_info: dict = Depends(validate_token_ws)
 ):
-    user_id = user_info["preferred_username"]
+    # Emergency bypass for authentication issues
+    if os.getenv("SKIP_AUTH_CHECK") == "true":
+        user_id = os.getenv("DEFAULT_USER", "system_user")
+    else:
+        # Handle different claim names from MSAL tokens
+        user_id = user_info.get("preferred_username") or user_info.get("email") or user_info.get("sub", "unknown-user")
     await websocket.accept()
     FixController.add_client(FixController.EXEC, user_id, websocket)
     logger.info(f"WebSocket connected: /ws_exec ({user_id})")

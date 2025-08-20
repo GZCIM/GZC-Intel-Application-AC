@@ -63,7 +63,7 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
     if (newName.trim() && newName !== tab.name) {
       // Check for duplicate names
       const existingTab = currentLayout?.tabs.find(t => 
-        t.id !== tabId && t.name.toLowerCase() === newName.toLowerCase()
+        t.id !== tabId && t.name && t.name.toLowerCase() === newName.toLowerCase()
       )
       if (existingTab) {
         alert(`Tab name "${newName}" already exists. Please choose a different name.`)
