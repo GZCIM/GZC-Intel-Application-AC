@@ -549,7 +549,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     style={{
                         height: "100%",
                         width: "100%",
-                        padding: "4px",
+                        padding: "2px",
                         overflow: "hidden",
                     }}
                 >
