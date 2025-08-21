@@ -359,10 +359,9 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
             // Simple check without blocking loops
             if (!msalInstance || !msalInstance.getConfiguration) {
                 console.log(
-                    "TabLayoutManager: MSAL not available, using defaults"
+                    "TabLayoutManager: MSAL not ready yet; will attempt token retries while loading"
                 );
-                // Default already set above
-                return;
+                // Don't return; we will try to get a token with retries below
             }
 
             // Try to get accounts safely with better error handling
@@ -405,6 +404,21 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     `TabLayoutManager: Detected device type: ${currentDeviceType}`
                 );
 
+                // Acquire auth token with short retry to cover hard reload timing
+                const getTokenWithRetry = async (): Promise<string> => {
+                    const attempts = 4;
+                    for (let i = 0; i < attempts; i++) {
+                        try {
+                            return await deviceConfigService.getAuthToken();
+                        } catch (e) {
+                            await new Promise((r) => setTimeout(r, 500));
+                        }
+                    }
+                    throw new Error("Auth token not available after retries");
+                };
+
+                const token = await getTokenWithRetry();
+
                 const response = await fetch(
                     `${
                         import.meta.env.VITE_API_BASE_URL ||
@@ -413,7 +427,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     {
                         method: "GET",
                         headers: {
-                            Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                            Authorization: `Bearer ${token}`,
                             "Content-Type": "application/json",
                         },
                     }
@@ -511,6 +525,114 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     console.log(
                         "TabLayoutManager: Cosmos DB returned empty or invalid config, trying fallbacks"
                     );
+
+                    // Fallback: try other device types that might have saved tabs
+                    const tryOrder =
+                        currentDeviceType === "laptop"
+                            ? ["bigscreen", "mobile"]
+                            : currentDeviceType === "bigscreen"
+                            ? ["laptop", "mobile"]
+                            : ["laptop", "bigscreen"];
+
+                    for (const altType of tryOrder) {
+                        try {
+                            const altResp = await fetch(
+                                `${
+                                    import.meta.env.VITE_API_BASE_URL ||
+                                    (import.meta.env.PROD
+                                        ? ""
+                                        : "http://localhost:8080")
+                                }/api/cosmos/device-config/${altType}`,
+                                {
+                                    method: "GET",
+                                    headers: {
+                                        Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                                        "Content-Type": "application/json",
+                                    },
+                                }
+                            );
+
+                            if (altResp.ok) {
+                                const altDoc = await altResp.json();
+                                const altConfig = altDoc?.config;
+                                if (
+                                    altConfig?.tabs &&
+                                    altConfig.tabs.length > 0
+                                ) {
+                                    console.log(
+                                        `TabLayoutManager: Falling back to ${altType} config with ${altConfig.tabs.length} tabs`
+                                    );
+
+                                    // Reuse the same normalization pipeline
+                                    const tabIds = new Set<string>();
+                                    const uniqueTabs = altConfig.tabs
+                                        .filter((t: any) => {
+                                            if (tabIds.has(t.id)) {
+                                                return false;
+                                            }
+                                            tabIds.add(t.id);
+                                            return true;
+                                        })
+                                        .map((t: any) => ({
+                                            ...t,
+                                            editMode: false,
+                                            name:
+                                                t.name ||
+                                                `Tab ${t.id}` ||
+                                                "Unnamed Tab",
+                                            component:
+                                                t.component ||
+                                                (t.type === "dynamic"
+                                                    ? "UserTabContainer"
+                                                    : "Analytics"),
+                                            type:
+                                                t.type === "static" ||
+                                                t.type === "dynamic"
+                                                    ? t.type
+                                                    : "dynamic",
+                                            components: t.components || [],
+                                        }));
+
+                                    const validTabs = uniqueTabs.filter(
+                                        (tab: any) =>
+                                            tab.name &&
+                                            !tab.name.startsWith(
+                                                "user-memory-"
+                                            ) &&
+                                            !tab.name.startsWith("Tab ") &&
+                                            tab.name !== "Loading..." &&
+                                            tab.name !== "Unnamed Tab" &&
+                                            tab.component !== "placeholder" &&
+                                            tab.id !== "main"
+                                    );
+
+                                    if (validTabs.length > 0) {
+                                        const cosmosLayout = {
+                                            ...DEFAULT_LAYOUT,
+                                            tabs: [
+                                                DEFAULT_LAYOUT.tabs[0],
+                                                ...validTabs,
+                                            ],
+                                            id: "cosmos-layout",
+                                            name: "User Saved Layout",
+                                        };
+                                        setCurrentLayout(cosmosLayout);
+                                        setLayouts([
+                                            DEFAULT_LAYOUT,
+                                            cosmosLayout,
+                                        ]);
+                                        setActiveTabId(validTabs[0].id);
+                                        return; // Use fallback config
+                                    }
+                                }
+                            }
+                        } catch (altErr) {
+                            console.warn(
+                                `TabLayoutManager: Failed to load fallback device type ${altType}:`,
+                                (altErr as any)?.message || altErr
+                            );
+                        }
+                    }
                 }
             } catch (e) {
                 console.log(
