@@ -203,10 +203,7 @@ class DeviceConfigService {
                     const accounts = importedMsal.getAllAccounts();
                     if (accounts.length > 0) {
                         const response = await importedMsal.acquireTokenSilent({
-                            scopes: [
-                                "User.Read",
-                                "api://a873f2d7-2ab9-4d59-a54c-90859226bf2e/access_as_user",
-                            ],
+                            scopes: ["User.Read"],
                             account: accounts[0],
                         });
                         return response.accessToken;
@@ -220,10 +217,7 @@ class DeviceConfigService {
             const accounts = msalInstance.getAllAccounts();
             if (accounts.length > 0) {
                 const response = await msalInstance.acquireTokenSilent({
-                    scopes: [
-                        "User.Read",
-                        "api://a873f2d7-2ab9-4d59-a54c-90859226bf2e/access_as_user",
-                    ],
+                    scopes: ["User.Read"],
                     account: accounts[0],
                 });
                 return response.accessToken;
