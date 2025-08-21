@@ -5,6 +5,7 @@
 
 import { PublicClientApplication } from "@azure/msal-browser";
 import { toastManager } from "../components/Toast";
+import { editingLockService } from "./editingLockService";
 
 interface UserConfiguration {
     id: string;
@@ -149,6 +150,7 @@ class CosmosConfigService {
                         headers: {
                             Authorization: `Bearer ${token}`,
                             "Content-Type": "application/json",
+                            ...editingLockService.getLockHeaders(),
                         },
                         body: JSON.stringify(config),
                         signal: controller.signal,
@@ -367,6 +369,7 @@ class CosmosConfigService {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
+                        ...editingLockService.getLockHeaders(),
                     },
                     body: JSON.stringify(updates),
                 }
