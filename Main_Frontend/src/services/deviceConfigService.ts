@@ -187,10 +187,37 @@ class DeviceConfigService {
      */
     async getAuthToken(): Promise<string> {
         try {
-            // Import MSAL instance dynamically to avoid circular dependencies
-            const { msalInstance } = await import("../hooks/useAuth");
-            const accounts = msalInstance.getAllAccounts();
+            // Get MSAL instance from window (more reliable)
+            const msalInstance = (window as any).msalInstance;
 
+            if (!msalInstance) {
+                console.warn("MSAL not initialized yet, trying fallback");
+                // Try importing as fallback
+                try {
+                    const { msalInstance: importedMsal } = await import(
+                        "../hooks/useAuth"
+                    );
+                    if (!importedMsal) {
+                        throw new Error("MSAL not available");
+                    }
+                    const accounts = importedMsal.getAllAccounts();
+                    if (accounts.length > 0) {
+                        const response = await importedMsal.acquireTokenSilent({
+                            scopes: [
+                                "User.Read",
+                                "api://a873f2d7-2ab9-4d59-a54c-90859226bf2e/access_as_user",
+                            ],
+                            account: accounts[0],
+                        });
+                        return response.accessToken;
+                    }
+                } catch (importError) {
+                    console.error("MSAL import failed:", importError);
+                }
+                throw new Error("MSAL not initialized - please login first");
+            }
+
+            const accounts = msalInstance.getAllAccounts();
             if (accounts.length > 0) {
                 const response = await msalInstance.acquireTokenSilent({
                     scopes: [
@@ -202,7 +229,7 @@ class DeviceConfigService {
                 return response.accessToken;
             }
 
-            throw new Error("No authenticated accounts found");
+            throw new Error("No authenticated accounts found - please login");
         } catch (error) {
             console.error("Failed to get auth token:", error);
             throw new Error(
