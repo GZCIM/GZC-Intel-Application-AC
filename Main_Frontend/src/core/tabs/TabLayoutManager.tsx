@@ -817,18 +817,37 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                         return true;
                     });
 
-                    await cosmosConfigService.saveConfiguration({
-                        tabs: uniqueTabs,
-                        layouts: layouts, // Keep layouts for saved presets
-                        preferences: {
-                            theme:
-                                document.documentElement.getAttribute(
-                                    "data-theme"
-                                ) || "dark",
-                            language: "en",
-                        },
-                    });
-                    console.log("Tab removed, layout saved to Cosmos DB");
+                    // Save to device-specific config instead of general user config
+                    const currentDeviceType =
+                        deviceConfigService.detectDeviceType();
+                    const response = await fetch(
+                        `${
+                            import.meta.env.VITE_API_BASE_URL ||
+                            "http://localhost:8080"
+                        }/api/cosmos/device-config/${currentDeviceType}`,
+                        {
+                            method: "POST",
+                            headers: {
+                                Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                tabs: uniqueTabs,
+                                layouts: layouts, // Keep layouts for saved presets
+                            }),
+                        }
+                    );
+
+                    if (response.ok) {
+                        console.log(
+                            `Tab removed, layout saved to ${currentDeviceType} device config`
+                        );
+                    } else {
+                        console.error(
+                            `Failed to save to ${currentDeviceType} device config after removing tab:`,
+                            await response.text()
+                        );
+                    }
 
                     // Save complete configuration with all user settings
                     await enhancedConfigService.saveCompleteConfiguration();
@@ -933,22 +952,43 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     return true;
                 });
 
-                console.log("🚀 Sending to Cosmos DB...");
-                await cosmosConfigService.saveConfiguration({
-                    tabs: uniqueTabs,
-                    layouts: layouts,
-                    preferences: {
-                        theme:
-                            document.documentElement.getAttribute(
-                                "data-theme"
-                            ) || "dark",
-                        language: "en",
-                    },
-                });
                 console.log(
-                    "Tab updated in Cosmos DB with components:",
-                    uniqueTabs.find((t) => t.id === tabId)?.components?.length
+                    "🚀 Sending to device-specific Cosmos DB config..."
                 );
+
+                // Save to device-specific config instead of general user config
+                const currentDeviceType =
+                    deviceConfigService.detectDeviceType();
+                const response = await fetch(
+                    `${
+                        import.meta.env.VITE_API_BASE_URL ||
+                        "http://localhost:8080"
+                    }/api/cosmos/device-config/${currentDeviceType}`,
+                    {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            tabs: uniqueTabs,
+                            layouts: layouts, // Keep layouts for saved presets
+                        }),
+                    }
+                );
+
+                if (response.ok) {
+                    console.log(
+                        `Tab updated in ${currentDeviceType} device config with components:`,
+                        uniqueTabs.find((t) => t.id === tabId)?.components
+                            ?.length
+                    );
+                } else {
+                    console.error(
+                        `Failed to save updated tab to ${currentDeviceType} device config:`,
+                        await response.text()
+                    );
+                }
             } catch (error) {
                 console.error("Failed to save to Cosmos DB:", error);
             }
@@ -1045,24 +1085,44 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         setCurrentLayout(defaultLayout);
         setActiveTabId(defaultLayout.tabs[0]?.id || "");
 
-        // Save default layout to Cosmos DB
+        // Save default layout to device-specific Cosmos DB config
         try {
-            const cleanConfig = {
-                tabs: defaultLayout.tabs.map((tab) => ({
-                    ...tab,
-                    component: tab.component || "dashboard", // Ensure component is never empty
-                    editMode: false,
-                    components: [], // Clear any broken components
-                })),
-                layouts: [],
-                preferences: {
-                    theme: "dark",
-                    language: "en",
-                },
-            };
+            const cleanTabs = defaultLayout.tabs.map((tab) => ({
+                ...tab,
+                component: tab.component || "dashboard", // Ensure component is never empty
+                editMode: false,
+                components: [], // Clear any broken components
+            }));
 
-            await cosmosConfigService.saveConfiguration(cleanConfig);
-            console.log("Default configuration saved to Cosmos DB");
+            // Save to device-specific config instead of general user config
+            const currentDeviceType = deviceConfigService.detectDeviceType();
+            const response = await fetch(
+                `${
+                    import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+                }/api/cosmos/device-config/${currentDeviceType}`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        tabs: cleanTabs,
+                        layouts: [], // Reset layouts as well
+                    }),
+                }
+            );
+
+            if (response.ok) {
+                console.log(
+                    `Default configuration saved to ${currentDeviceType} device config`
+                );
+            } else {
+                console.error(
+                    `Failed to save default config to ${currentDeviceType} device config:`,
+                    await response.text()
+                );
+            }
         } catch (error) {
             console.error("Error saving default config to Cosmos DB:", error);
         }
@@ -1368,44 +1428,88 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
             localStorage.clear();
             sessionStorage.clear();
 
-            // Clear from Cosmos DB first
+            // Clear from device-specific Cosmos DB configs
             try {
-                await cosmosConfigService.deleteConfiguration();
-                console.log("Deleted old configuration from Cosmos DB");
+                const deviceTypes = ["mobile", "laptop", "bigscreen"];
+                for (const deviceType of deviceTypes) {
+                    try {
+                        const deleteResponse = await fetch(
+                            `${
+                                import.meta.env.VITE_API_BASE_URL ||
+                                "http://localhost:8080"
+                            }/api/cosmos/device-config/${deviceType}`,
+                            {
+                                method: "DELETE",
+                                headers: {
+                                    Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                                    "Content-Type": "application/json",
+                                },
+                            }
+                        );
+                        if (deleteResponse.ok) {
+                            console.log(
+                                `Deleted ${deviceType} configuration from Cosmos DB`
+                            );
+                        }
+                    } catch (e) {
+                        console.log(
+                            `No existing ${deviceType} config to delete or delete failed:`,
+                            e
+                        );
+                    }
+                }
             } catch (e) {
-                console.log(
-                    "No existing config to delete or delete failed:",
-                    e
-                );
+                console.log("Error during device config cleanup:", e);
             }
 
             // Create a clean default configuration with valid component types
-            const cleanDefaultConfig = {
-                tabs: [
-                    {
-                        id: "analytics",
-                        name: "Analytics",
-                        component: "Analytics", // Valid component type
-                        type: "dynamic" as const,
-                        icon: "bar-chart-2",
-                        closable: true,
-                        gridLayoutEnabled: true,
-                        components: [],
-                        editMode: false,
-                        memoryStrategy: "hybrid",
-                    },
-                ],
-                layouts: [],
-                preferences: {
-                    theme: "dark",
-                    language: "en",
+            const cleanDefaultTabs = [
+                {
+                    id: "analytics",
+                    name: "Analytics",
+                    component: "Analytics", // Valid component type
+                    type: "dynamic" as const,
+                    icon: "bar-chart-2",
+                    closable: true,
+                    gridLayoutEnabled: true,
+                    components: [],
+                    editMode: false,
+                    memoryStrategy: "hybrid",
                 },
-            };
+            ];
 
-            // Save the clean default to Cosmos DB
+            // Save the clean default to current device-specific config
             try {
-                await cosmosConfigService.saveConfiguration(cleanDefaultConfig);
-                console.log("Clean default configuration saved to Cosmos DB");
+                const currentDeviceType =
+                    deviceConfigService.detectDeviceType();
+                const response = await fetch(
+                    `${
+                        import.meta.env.VITE_API_BASE_URL ||
+                        "http://localhost:8080"
+                    }/api/cosmos/device-config/${currentDeviceType}`,
+                    {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            tabs: cleanDefaultTabs,
+                            layouts: [],
+                        }),
+                    }
+                );
+
+                if (response.ok) {
+                    console.log(
+                        `Clean default configuration saved to ${currentDeviceType} device config`
+                    );
+                } else {
+                    console.error(
+                        `Failed to save clean config to ${currentDeviceType} device config:`,
+                        await response.text()
+                    );
+                }
             } catch (e) {
                 console.error("Failed to save clean config to Cosmos DB:", e);
             }
