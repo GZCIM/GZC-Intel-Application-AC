@@ -838,7 +838,6 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                         },
                         body: JSON.stringify({
                             tabs: uniqueTabs,
-                            layouts: layouts, // Keep layouts for saved presets
                         }),
                     }
                 );
@@ -955,7 +954,6 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                             },
                             body: JSON.stringify({
                                 tabs: uniqueTabs,
-                                layouts: layouts, // Keep layouts for saved presets
                             }),
                         }
                     );
@@ -1094,7 +1092,6 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                         },
                         body: JSON.stringify({
                             tabs: uniqueTabs,
-                            layouts: layouts, // Keep layouts for saved presets
                         }),
                     }
                 );
