@@ -38,8 +38,10 @@ def determine_device_type(
     """
     Determine device type based on screen dimensions and user agent
     Returns: 'mobile', 'laptop', or 'bigscreen'
+
+    Enhanced detection logic matching frontend implementation
     """
-    # Mobile detection
+    # Enhanced mobile detection with more sophisticated logic
     mobile_keywords = [
         "Mobile",
         "Android",
@@ -48,16 +50,37 @@ def determine_device_type(
         "iPod",
         "BlackBerry",
         "Windows Phone",
+        "Mobile Safari",
     ]
+
+    # Check if it's actually a mobile device
     is_mobile_ua = any(keyword in user_agent for keyword in mobile_keywords)
 
-    # Screen size thresholds
-    if screen_width <= 768 or is_mobile_ua:
-        return "mobile"
-    elif screen_width <= 1366:  # Typical laptop resolution
-        return "laptop"
-    else:  # Large screens, external monitors
-        return "bigscreen"
+    # Enhanced detection logic - more sophisticated than simple width check
+    # Only classify as mobile if both small screen AND mobile indicators are present
+    is_small_screen = screen_width <= 768
+
+    # Enhanced mobile detection logic
+    if is_small_screen and is_mobile_ua:
+        # Mobile: small screen AND mobile user agent
+        device_type = "mobile"
+    elif screen_width <= 1366:
+        # Laptop: medium screen size
+        device_type = "laptop"
+    else:
+        # Bigscreen: large screens, external monitors
+        device_type = "bigscreen"
+
+    # Log device detection details for debugging
+    logger.info(
+        f"Device detection: {screen_width}x{screen_height}, "
+        f"UA: {user_agent[:50]}..., "
+        f"Mobile UA: {is_mobile_ua}, "
+        f"Small screen: {is_small_screen}, "
+        f"Result: {device_type}"
+    )
+
+    return device_type
 
 
 async def get_device_specific_config(
