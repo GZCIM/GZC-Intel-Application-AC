@@ -180,435 +180,438 @@ def get_cosmos_container():
         container = None
         return None
 
+    # COMMENTED OUT - USE DEVICE-SPECIFIC ENDPOINTS ONLY
+    # @router.get("/config")
+    # async def get_user_config(
+    #     payload: Dict = Depends(validate_token),
+    #     device_info: Optional[Dict[str, Any]] = None,
+    # ) -> Optional[Dict[str, Any]]:
+    #     """
+    #     Get user configuration from Cosmos DB
+    #     """
+    #     container = get_cosmos_container()
+    #     if not container:
+    #         raise HTTPException(
+    #             status_code=503,
+    #             detail="Cosmos DB not available - check NAT Gateway IP whitelisting",
+    #         )
+    #
+    #     try:
+    #         # FIXED: Use consistent user identification across all browsers
+    #         user_email = payload.get("preferred_username") or payload.get("email", "")
+    #         user_oid = payload.get(
+    #             "oid", ""
+    #         )  # Azure AD Object ID - consistent across browsers
+    #         user_sub = payload.get("sub", "")
+    #
+    #         # Priority: email > oid > sub (email is most consistent for sync)
+    #         if user_email:
+    #             user_id = user_email.lower()  # Normalize email case
+    #         elif user_oid:
+    #             user_id = f"oid_{user_oid}"
+    #         else:
+    #             user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
+    #
+    #         logger.info(
+    #             f"Loading configuration for user {user_id} (email: {user_email}, oid: {user_oid[:8]}...)"
+    #         )
+    #
+    #         # Try to read the document
+    #         item = container.read_item(item=user_id, partition_key=user_id)
+    #         return item
+    #
+    #     except exceptions.CosmosResourceNotFoundError:
+    #         logger.info(
+    #             f"No configuration found for user {user_id}, returning device-specific default"
+    #         )
+    #
+    #         # Get device info from request headers or payload
+    #         device_info = payload.get("deviceInfo", {}) or {}
+    #         screen_width = device_info.get("screenWidth", 1920)
+    #         screen_height = device_info.get("screenHeight", 1080)
+    #         user_agent = device_info.get("userAgent", "")
+    #
+    #         # Determine device type based on screen size and user agent
+    #         device_type = determine_device_type(screen_width, screen_height, user_agent)
+    #         logger.info(
+    #             f"Creating {device_type} default config for user {user_id} (screen: {screen_width}x{screen_height})"
+    #         )
+    #
+    #         # Create base configuration structure
+    #         now = datetime.utcnow().isoformat()
+    #         base_config = {
+    #             "id": user_id,
+    #             "userId": user_id,
+    #             "name": f"Default {device_type.title()} Config for {user_id}",
+    #             "type": "user-config",
+    #             "version": "1.0.0",
+    #             "deviceType": device_type,
+    #             "targetScreenSize": {"width": screen_width, "height": screen_height},
+    #             "layouts": [],
+    #             "currentLayoutId": "default",
+    #             "activeTabId": "main",
+    #             # Base preferences that will be overridden by device-specific config
+    #             "preferences": {
+    #                 "theme": "gzc-dark",
+    #                 "language": "en",
+    #                 "autoSave": True,
+    #                 "syncAcrossDevices": True,
+    #                 "notifications": {
+    #                     "enabled": True,
+    #                     "types": ["system", "component-updates"],
+    #                 },
+    #                 "accessibility": {
+    #                     "highContrast": False,
+    #                     "fontSize": "medium",
+    #                     "animations": True,
+    #                 },
+    #                 "performance": {"enableLazyLoading": True, "maxComponentsPerTab": 20},
+    #             },
+    #             # State management
+    #             "componentStates": [],
+    #             "windowState": {
+    #                 "dimensions": {"width": screen_width, "height": screen_height},
+    #                 "position": {"x": 0, "y": 0},
+    #                 "maximized": False,
+    #                 "fullscreen": False,
+    #             },
+    #             # Session and memory
+    #             "currentSession": {
+    #                 "sessionId": f"session-{int(datetime.utcnow().timestamp() * 1000)}",
+    #                 "deviceInfo": {
+    #                     "userAgent": user_agent,
+    #                     "platform": device_info.get("platform", ""),
+    #                     "screenResolution": f"{screen_width}x{screen_height}",
+    #                     "timezone": device_info.get("timezone", "UTC"),
+    #                 },
+    #                 "loginTime": now,
+    #                 "lastActivity": now,
+    #                 "activeTabIds": ["main"],
+    #                 "openLayouts": ["default"],
+    #             },
+    #             "userMemory": [],
+    #             # Metadata
+    #             "createdAt": now,
+    #             "updatedAt": now,
+    #             "lastSyncAt": now,
+    #             "deviceId": device_info.get("deviceId"),
+    #             "previousVersions": [],
+    #             # Feature flags
+    #             "featureFlags": {
+    #                 "experimentalComponents": False,
+    #                 "advancedGridLayout": True,
+    #                 "cloudSync": True,
+    #             },
+    #             # Legacy compatibility
+    #             "userEmail": payload.get("preferred_username", ""),
+    #             "timestamp": now,
+    #             "isDefault": True,
+    #         }
+    #
+    #         # Generate device-specific configuration
+    #         device_config = await get_device_specific_config(
+    #             device_type, base_config, user_id
+    #         )
+    #         return device_config
+    #     except Exception as e:
+    #         logger.error(f"Error reading configuration: {e}")
+    #         raise HTTPException(status_code=500, detail="Failed to load configuration")
 
-@router.get("/config")
-async def get_user_config(
-    payload: Dict = Depends(validate_token),
-    device_info: Optional[Dict[str, Any]] = None,
-) -> Optional[Dict[str, Any]]:
-    """
-    Get user configuration from Cosmos DB
-    """
-    container = get_cosmos_container()
-    if not container:
-        raise HTTPException(
-            status_code=503,
-            detail="Cosmos DB not available - check NAT Gateway IP whitelisting",
-        )
-
-    try:
-        # FIXED: Use consistent user identification across all browsers
-        user_email = payload.get("preferred_username") or payload.get("email", "")
-        user_oid = payload.get(
-            "oid", ""
-        )  # Azure AD Object ID - consistent across browsers
-        user_sub = payload.get("sub", "")
-
-        # Priority: email > oid > sub (email is most consistent for sync)
-        if user_email:
-            user_id = user_email.lower()  # Normalize email case
-        elif user_oid:
-            user_id = f"oid_{user_oid}"
-        else:
-            user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
-
-        logger.info(
-            f"Loading configuration for user {user_id} (email: {user_email}, oid: {user_oid[:8]}...)"
-        )
-
-        # Try to read the document
-        item = container.read_item(item=user_id, partition_key=user_id)
-        return item
-
-    except exceptions.CosmosResourceNotFoundError:
-        logger.info(
-            f"No configuration found for user {user_id}, returning device-specific default"
-        )
-
-        # Get device info from request headers or payload
-        device_info = payload.get("deviceInfo", {}) or {}
-        screen_width = device_info.get("screenWidth", 1920)
-        screen_height = device_info.get("screenHeight", 1080)
-        user_agent = device_info.get("userAgent", "")
-
-        # Determine device type based on screen size and user agent
-        device_type = determine_device_type(screen_width, screen_height, user_agent)
-        logger.info(
-            f"Creating {device_type} default config for user {user_id} (screen: {screen_width}x{screen_height})"
-        )
-
-        # Create base configuration structure
-        now = datetime.utcnow().isoformat()
-        base_config = {
-            "id": user_id,
-            "userId": user_id,
-            "name": f"Default {device_type.title()} Config for {user_id}",
-            "type": "user-config",
-            "version": "1.0.0",
-            "deviceType": device_type,
-            "targetScreenSize": {"width": screen_width, "height": screen_height},
-            "layouts": [],
-            "currentLayoutId": "default",
-            "activeTabId": "main",
-            # Base preferences that will be overridden by device-specific config
-            "preferences": {
-                "theme": "gzc-dark",
-                "language": "en",
-                "autoSave": True,
-                "syncAcrossDevices": True,
-                "notifications": {
-                    "enabled": True,
-                    "types": ["system", "component-updates"],
-                },
-                "accessibility": {
-                    "highContrast": False,
-                    "fontSize": "medium",
-                    "animations": True,
-                },
-                "performance": {"enableLazyLoading": True, "maxComponentsPerTab": 20},
-            },
-            # State management
-            "componentStates": [],
-            "windowState": {
-                "dimensions": {"width": screen_width, "height": screen_height},
-                "position": {"x": 0, "y": 0},
-                "maximized": False,
-                "fullscreen": False,
-            },
-            # Session and memory
-            "currentSession": {
-                "sessionId": f"session-{int(datetime.utcnow().timestamp() * 1000)}",
-                "deviceInfo": {
-                    "userAgent": user_agent,
-                    "platform": device_info.get("platform", ""),
-                    "screenResolution": f"{screen_width}x{screen_height}",
-                    "timezone": device_info.get("timezone", "UTC"),
-                },
-                "loginTime": now,
-                "lastActivity": now,
-                "activeTabIds": ["main"],
-                "openLayouts": ["default"],
-            },
-            "userMemory": [],
-            # Metadata
-            "createdAt": now,
-            "updatedAt": now,
-            "lastSyncAt": now,
-            "deviceId": device_info.get("deviceId"),
-            "previousVersions": [],
-            # Feature flags
-            "featureFlags": {
-                "experimentalComponents": False,
-                "advancedGridLayout": True,
-                "cloudSync": True,
-            },
-            # Legacy compatibility
-            "userEmail": payload.get("preferred_username", ""),
-            "timestamp": now,
-            "isDefault": True,
-        }
-
-        # Generate device-specific configuration
-        device_config = await get_device_specific_config(
-            device_type, base_config, user_id
-        )
-        return device_config
-    except Exception as e:
-        logger.error(f"Error reading configuration: {e}")
-        raise HTTPException(status_code=500, detail="Failed to load configuration")
-
-
-@router.post("/config/device")
-async def get_device_config(
-    device_request: Dict[str, Any], payload: Dict = Depends(validate_token)
-) -> Optional[Dict[str, Any]]:
-    """
-    Get device-specific configuration based on screen size and device info
-    """
-    container = get_cosmos_container()
-    if not container:
-        raise HTTPException(
-            status_code=503,
-            detail="Cosmos DB not available - check NAT Gateway IP whitelisting",
-        )
-
-    try:
-        # Get consistent user ID
-        user_email = payload.get("preferred_username") or payload.get("email", "")
-        user_oid = payload.get("oid", "")
-        user_sub = payload.get("sub", "")
-
-        if user_email:
-            user_id = user_email.lower()
-        elif user_oid:
-            user_id = f"oid_{user_oid}"
-        else:
-            user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
-
-        # Extract device information
-        screen_width = device_request.get("screenWidth", 1920)
-        screen_height = device_request.get("screenHeight", 1080)
-        user_agent = device_request.get("userAgent", "")
-        device_type = determine_device_type(screen_width, screen_height, user_agent)
-
-        logger.info(
-            f"Device config request for user {user_id}: {device_type} ({screen_width}x{screen_height})"
-        )
-
-        # Try to get existing configuration
-        try:
-            existing_config = container.read_item(item=user_id, partition_key=user_id)
-
-            # Check if existing config matches current device type
-            if existing_config.get("deviceType") == device_type:
-                logger.info(
-                    f"Returning existing {device_type} config for user {user_id}"
-                )
-                return existing_config
-            else:
-                logger.info(
-                    f"Device type changed from {existing_config.get('deviceType', 'unknown')} to {device_type}"
-                )
-
-        except exceptions.CosmosResourceNotFoundError:
-            logger.info(f"No existing config found for user {user_id}")
-
-        # Create new device-specific configuration
-        now = datetime.utcnow().isoformat()
-        base_config = {
-            "id": user_id,
-            "userId": user_id,
-            "name": f"Auto {device_type.title()} Config for {user_id}",
-            "type": "user-config",
-            "version": "1.0.0",
-            "deviceType": device_type,
-            "targetScreenSize": {"width": screen_width, "height": screen_height},
-            "layouts": [],
-            "currentLayoutId": "default",
-            "activeTabId": "main",
-            "preferences": {
-                "theme": "gzc-dark",
-                "language": "en",
-                "autoSave": True,
-                "syncAcrossDevices": True,
-                "notifications": {
-                    "enabled": True,
-                    "types": ["system", "component-updates"],
-                },
-                "accessibility": {
-                    "highContrast": False,
-                    "fontSize": "medium",
-                    "animations": True,
-                },
-                "performance": {"enableLazyLoading": True, "maxComponentsPerTab": 20},
-            },
-            "componentStates": [],
-            "windowState": {
-                "dimensions": {"width": screen_width, "height": screen_height},
-                "position": {"x": 0, "y": 0},
-                "maximized": False,
-                "fullscreen": False,
-            },
-            "currentSession": {
-                "sessionId": f"session-{int(datetime.utcnow().timestamp() * 1000)}",
-                "deviceInfo": {
-                    "userAgent": user_agent,
-                    "platform": device_request.get("platform", ""),
-                    "screenResolution": f"{screen_width}x{screen_height}",
-                    "timezone": device_request.get("timezone", "UTC"),
-                },
-                "loginTime": now,
-                "lastActivity": now,
-                "activeTabIds": ["main"],
-                "openLayouts": ["default"],
-            },
-            "userMemory": [],
-            "createdAt": now,
-            "updatedAt": now,
-            "lastSyncAt": now,
-            "deviceId": device_request.get("deviceId"),
-            "previousVersions": [],
-            "featureFlags": {
-                "experimentalComponents": False,
-                "advancedGridLayout": True,
-                "cloudSync": True,
-            },
-            "userEmail": user_email,
-            "timestamp": now,
-            "autoGenerated": True,
-        }
-
-        # Generate device-specific configuration
-        device_config = await get_device_specific_config(
-            device_type, base_config, user_id
-        )
-
-        # Save the new configuration
-        saved_config = container.upsert_item(body=device_config)
-        logger.info(f"Created and saved new {device_type} config for user {user_id}")
-
-        return saved_config
-
-    except Exception as e:
-        logger.error(f"Error getting device config: {e}")
-        raise HTTPException(
-            status_code=500, detail="Failed to get device configuration"
-        )
+    # COMMENTED OUT - THIS CREATES WRONG DOCUMENT TYPE "user-config"
+    # @router.post("/config/device")
+    # async def get_device_config(
+    #     device_request: Dict[str, Any], payload: Dict = Depends(validate_token)
+    # ) -> Optional[Dict[str, Any]]:
 
 
-@router.post("/config")
-async def save_user_config(
-    config: Dict[str, Any], payload: Dict = Depends(validate_token)
-) -> Dict[str, Any]:
-    """
-    Save user configuration to Cosmos DB
-    """
-    container = get_cosmos_container()
-    if not container:
-        raise HTTPException(
-            status_code=503,
-            detail="Cosmos DB not available - check NAT Gateway IP whitelisting",
-        )
+#     """
+#     Get device-specific configuration based on screen size and device info
+#     """
+#     container = get_cosmos_container()
+#     if not container:
+#         raise HTTPException(
+#             status_code=503,
+#             detail="Cosmos DB not available - check NAT Gateway IP whitelisting",
+#         )
+#
+#     try:
+#         # Get consistent user ID
+#         user_email = payload.get("preferred_username") or payload.get("email", "")
+#         user_oid = payload.get("oid", "")
+#         user_sub = payload.get("sub", "")
+#
+#         if user_email:
+#             user_id = user_email.lower()
+#         elif user_oid:
+#             user_id = f"oid_{user_oid}"
+#         else:
+#             user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
+#
+#         # Extract device information
+#         screen_width = device_request.get("screenWidth", 1920)
+#         screen_height = device_request.get("screenHeight", 1080)
+#         user_agent = device_request.get("userAgent", "")
+#         device_type = determine_device_type(screen_width, screen_height, user_agent)
+#
+#         logger.info(
+#             f"Device config request for user {user_id}: {device_type} ({screen_width}x{screen_height})"
+#         )
+#
+#         # Try to get existing configuration
+#         try:
+#             existing_config = container.read_item(item=user_id, partition_key=user_id)
+#
+#             # Check if existing config matches current device type
+#             if existing_config.get("deviceType") == device_type:
+#                 logger.info(
+#                     f"Returning existing {device_type} config for user {user_id}"
+#                 )
+#                 return existing_config
+#             else:
+#                 logger.info(
+#                     f"Device type changed from {existing_config.get('deviceType', 'unknown')} to {device_type}"
+#                 )
+#
+#         except exceptions.CosmosResourceNotFoundError:
+#             logger.info(f"No existing config found for user {user_id}")
+#
+#         # Create new device-specific configuration
+#         now = datetime.utcnow().isoformat()
+#         base_config = {
+#             "id": user_id,
+#             "userId": user_id,
+#             "name": f"Auto {device_type.title()} Config for {user_id}",
+#             "type": "user-config",
+#             "version": "1.0.0",
+#             "deviceType": device_type,
+#             "targetScreenSize": {"width": screen_width, "height": screen_height},
+#             "layouts": [],
+#             "currentLayoutId": "default",
+#             "activeTabId": "main",
+#             "preferences": {
+#                 "theme": "gzc-dark",
+#                 "language": "en",
+#                 "autoSave": True,
+#                 "syncAcrossDevices": True,
+#                 "notifications": {
+#                     "enabled": True,
+#                     "types": ["system", "component-updates"],
+#                 },
+#                 "accessibility": {
+#                     "highContrast": False,
+#                     "fontSize": "medium",
+#                     "animations": True,
+#                 },
+#                 "performance": {"enableLazyLoading": True, "maxComponentsPerTab": 20},
+#             },
+#             "componentStates": [],
+#             "windowState": {
+#                 "dimensions": {"width": screen_width, "height": screen_height},
+#                 "position": {"x": 0, "y": 0},
+#                 "maximized": False,
+#                 "fullscreen": False,
+#             },
+#             "currentSession": {
+#                 "sessionId": f"session-{int(datetime.utcnow().timestamp() * 1000)}",
+#                 "deviceInfo": {
+#                     "userAgent": user_agent,
+#                     "platform": device_request.get("platform", ""),
+#                     "screenResolution": f"{screen_width}x{screen_height}",
+#                     "timezone": device_request.get("timezone", "UTC"),
+#                 },
+#                 "loginTime": now,
+#                 "lastActivity": now,
+#                 "activeTabIds": ["main"],
+#                 "openLayouts": ["default"],
+#             },
+#             "userMemory": [],
+#             "createdAt": now,
+#             "updatedAt": now,
+#             "lastSyncAt": now,
+#             "deviceId": device_request.get("deviceId"),
+#             "previousVersions": [],
+#             "featureFlags": {
+#                 "experimentalComponents": False,
+#                 "advancedGridLayout": True,
+#                 "cloudSync": True,
+#             },
+#             "userEmail": user_email,
+#             "timestamp": now,
+#             "autoGenerated": True,
+#         }
+#
+#         # Generate device-specific configuration
+#         device_config = await get_device_specific_config(
+#             device_type, base_config, user_id
+#         )
+#
+#         # Save the new configuration
+#         saved_config = container.upsert_item(body=device_config)
+#         logger.info(f"Created and saved new {device_type} config for user {user_id}")
+#
+#         return saved_config
+#
+#     except Exception as e:
+#         logger.error(f"Error getting device config: {e}")
+#         raise HTTPException(
+#             status_code=500, detail="Failed to get device configuration"
+#         )
 
-    try:
-        # FIXED: Use consistent user identification across all browsers
-        user_email = payload.get("preferred_username") or payload.get("email", "")
-        user_oid = payload.get(
-            "oid", ""
-        )  # Azure AD Object ID - consistent across browsers
-        user_sub = payload.get("sub", "")
 
-        # Priority: email > oid > sub (email is most consistent for sync)
-        if user_email:
-            user_id = user_email.lower()  # Normalize email case
-        elif user_oid:
-            user_id = f"oid_{user_oid}"
-        else:
-            user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
-
-        logger.info(
-            f"Saving configuration for user {user_id} (email: {user_email}, oid: {user_oid[:8]}...)"
-        )
-
-        # Deduplicate tabs before saving
-        tabs = config.get("tabs", [])
-        seen_tab_ids = set()
-        unique_tabs = []
-        for tab in tabs:
-            if tab.get("id") not in seen_tab_ids:
-                seen_tab_ids.add(tab.get("id"))
-                unique_tabs.append(tab)
-            else:
-                logger.warning(
-                    f"Removing duplicate tab {tab.get('id')} for user {user_id}"
-                )
-
-        # Prepare comprehensive document
-        now = datetime.utcnow().isoformat()
-
-        # Get existing document for versioning
-        existing_doc = None
-        try:
-            existing_doc = container.read_item(item=user_id, partition_key=user_id)
-        except exceptions.CosmosResourceNotFoundError:
-            pass
-
-        # FIXED: Limit version history to prevent bloat (keep only last 2 versions)
-        previous_versions = []
-        if existing_doc:
-            # Only keep last 1 version to prevent config bloat
-            previous_versions = existing_doc.get("previousVersions", [])[-1:]
-
-            # Only save minimal data - exclude large tab arrays
-            current_tab_count = len(existing_doc.get("tabs", []))
-            if current_tab_count > 0:  # Only save if there are meaningful changes
-                previous_versions.append(
-                    {
-                        "version": existing_doc.get("version", "1.0.0"),
-                        "data": {
-                            "tabCount": current_tab_count,  # Just count, not full data
-                            "preferences": existing_doc.get("preferences", {}),
-                            "activeTabId": existing_doc.get("activeTabId"),
-                            "lastActivity": existing_doc.get("updatedAt", now),
-                        },
-                        "timestamp": existing_doc.get("updatedAt", now),
-                    }
-                )
-
-        document = {
-            "id": user_id,
-            "userId": user_id,
-            "name": f"Config for {user_id}",  # ADDED: Human-readable config name
-            "type": "user-config",
-            "version": config.get("version", "1.0.0"),
-            # Core configuration
-            "tabs": unique_tabs,
-            "layouts": config.get("layouts", []),
-            "currentLayoutId": config.get("currentLayoutId", "default"),
-            "activeTabId": config.get(
-                "activeTabId", unique_tabs[0]["id"] if unique_tabs else "main"
-            ),
-            # User preferences
-            "preferences": config.get("preferences", {}),
-            # State management
-            "componentStates": config.get("componentStates", []),
-            "windowState": config.get(
-                "windowState",
-                {
-                    "dimensions": {"width": 1920, "height": 1080},
-                    "position": {"x": 0, "y": 0},
-                    "maximized": False,
-                    "fullscreen": False,
-                },
-            ),
-            # ENHANCED: Session tracking with device info for better sync
-            "currentSession": {
-                **config.get("currentSession", {}),
-                "lastActivity": now,
-                "sessionId": config.get("currentSession", {}).get(
-                    "sessionId", f"session-{int(datetime.utcnow().timestamp() * 1000)}"
-                ),
-                "deviceInfo": {
-                    **config.get("currentSession", {}).get("deviceInfo", {}),
-                    "lastSyncBrowser": config.get("currentSession", {})
-                    .get("deviceInfo", {})
-                    .get("userAgent", "Unknown"),
-                    "lastSyncTime": now,
-                },
-            },
-            "userMemory": config.get("userMemory", []),
-            # Metadata
-            "createdAt": existing_doc.get("createdAt", now) if existing_doc else now,
-            "updatedAt": now,
-            "lastSyncAt": now,
-            "deviceId": config.get("deviceId"),
-            "previousVersions": previous_versions,
-            # Feature flags
-            "featureFlags": config.get(
-                "featureFlags",
-                {
-                    "experimentalComponents": False,
-                    "advancedGridLayout": True,
-                    "cloudSync": True,
-                },
-            ),
-            # Legacy compatibility
-            "userEmail": user_email,
-            "timestamp": now,
-            "componentStates": config.get(
-                "componentStates", {}
-            ),  # Backward compatibility
-            "sessionData": config.get("sessionData", {}),  # Backward compatibility
-        }
-
-        # Upsert the document
-        item = container.upsert_item(body=document)
-        logger.info(f"Configuration '{document['name']}' saved for user {user_id}")
-        return item
-
-    except Exception as e:
-        logger.error(f"Error saving configuration: {e}")
-        raise HTTPException(status_code=500, detail="Failed to save configuration")
+# COMMENTED OUT - USE DEVICE-SPECIFIC ENDPOINTS ONLY
+# @router.post("/config")
+# async def save_user_config(
+#     config: Dict[str, Any], payload: Dict = Depends(validate_token)
+# ) -> Dict[str, Any]:
+#     """
+#     Save user configuration to Cosmos DB
+#     """
+#     container = get_cosmos_container()
+#     if not container:
+#         raise HTTPException(
+#             status_code=503,
+#             detail="Cosmos DB not available - check NAT Gateway IP whitelisting",
+#         )
+#
+#     try:
+#         # FIXED: Use consistent user identification across all browsers
+#         user_email = payload.get("preferred_username") or payload.get("email", "")
+#         user_oid = payload.get(
+#             "oid", ""
+#         )  # Azure AD Object ID - consistent across browsers
+#         user_sub = payload.get("sub", "")
+#
+#         # Priority: email > oid > sub (email is most consistent for sync)
+#         if user_email:
+#             user_id = user_email.lower()  # Normalize email case
+#         elif user_oid:
+#             user_id = f"oid_{user_oid}"
+#         else:
+#             user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
+#
+#         logger.info(
+#             f"Saving configuration for user {user_id} (email: {user_email}, oid: {user_oid[:8]}...)"
+#         )
+#
+#         # Deduplicate tabs before saving
+#         tabs = config.get("tabs", [])
+#         seen_tab_ids = set()
+#         unique_tabs = []
+#         for tab in tabs:
+#             if tab.get("id") not in seen_tab_ids:
+#                 seen_tab_ids.add(tab.get("id"))
+#                 unique_tabs.append(tab)
+#             else:
+#                 logger.warning(
+#                     f"Removing duplicate tab {tab.get('id')} for user {user_id}"
+#                 )
+#
+#         # Prepare comprehensive document
+#         now = datetime.utcnow().isoformat()
+#
+#         # Get existing document for versioning
+#         existing_doc = None
+#         try:
+#             existing_doc = container.read_item(item=user_id, partition_key=user_id)
+#         except exceptions.CosmosResourceNotFoundError:
+#             pass
+#
+#         # FIXED: Limit version history to prevent bloat (keep only last 2 versions)
+#         previous_versions = []
+#         if existing_doc:
+#             # Only keep last 1 version to prevent config bloat
+#             previous_versions = existing_doc.get("previousVersions", [])[-1:]
+#
+#             # Only save minimal data - exclude large tab arrays
+#             current_tab_count = len(existing_doc.get("tabs", []))
+#             if current_tab_count > 0:  # Only save if there are meaningful changes
+#                 previous_versions.append(
+#                     {
+#                         "version": existing_doc.get("version", "1.0.0"),
+#                         "data": {
+#                             "tabCount": current_tab_count,  # Just count, not full data
+#                             "preferences": existing_doc.get("preferences", {}),
+#                             "activeTabId": existing_doc.get("activeTabId"),
+#                             "lastActivity": existing_doc.get("updatedAt", now),
+#                         },
+#                         "timestamp": existing_doc.get("updatedAt", now),
+#                     }
+#                 )
+#
+#         document = {
+#             "id": user_id,
+#             "userId": user_id,
+#             "name": f"Config for {user_id}",  # ADDED: Human-readable config name
+#             "type": "user-config",
+#             "version": config.get("version", "1.0.0"),
+#             # Core configuration
+#             "tabs": unique_tabs,
+#             "layouts": config.get("layouts", []),
+#             "currentLayoutId": config.get("currentLayoutId", "default"),
+#             "activeTabId": config.get(
+#                 "activeTabId", unique_tabs[0]["id"] if unique_tabs else "main"
+#             ),
+#             # User preferences
+#             "preferences": config.get("preferences", {}),
+#             # State management
+#             "componentStates": config.get("componentStates", []),
+#             "windowState": config.get(
+#                 "windowState",
+#                 {
+#                     "dimensions": {"width": 1920, "height": 1080},
+#                     "position": {"x": 0, "y": 0},
+#                     "maximized": False,
+#                     "fullscreen": False,
+#                 },
+#             ),
+#             # ENHANCED: Session tracking with device info for better sync
+#             "currentSession": {
+#                 **config.get("currentSession", {}),
+#                 "lastActivity": now,
+#                 "sessionId": config.get("currentSession", {}).get(
+#                     "sessionId", f"session-{int(datetime.utcnow().timestamp() * 1000)}"
+#                 ),
+#                 "deviceInfo": {
+#                     **config.get("currentSession", {}).get("deviceInfo", {}),
+#                     "lastSyncBrowser": config.get("currentSession", {})
+#                     .get("deviceInfo", {})
+#                     .get("userAgent", "Unknown"),
+#                     "lastSyncTime": now,
+#                 },
+#             },
+#             "userMemory": config.get("userMemory", []),
+#             # Metadata
+#             "createdAt": existing_doc.get("createdAt", now) if existing_doc else now,
+#             "updatedAt": now,
+#             "lastSyncAt": now,
+#             "deviceId": config.get("deviceId"),
+#             "previousVersions": previous_versions,
+#             # Feature flags
+#             "featureFlags": config.get(
+#                 "featureFlags",
+#                 {
+#                     "experimentalComponents": False,
+#                     "advancedGridLayout": True,
+#                     "cloudSync": True,
+#                 },
+#             ),
+#             # Legacy compatibility
+#             "userEmail": user_email,
+#             "timestamp": now,
+#             "componentStates": config.get(
+#                 "componentStates", {}
+#             ),  # Backward compatibility
+#             "sessionData": config.get("sessionData", {}),  # Backward compatibility
+#         }
+#
+#         # Upsert the document
+#         item = container.upsert_item(body=document)
+#         logger.info(f"Configuration '{document['name']}' saved for user {user_id}")
+#         return item
+#
+#     except Exception as e:
+#         logger.error(f"Error saving configuration: {e}")
+#         raise HTTPException(status_code=500, detail="Failed to save configuration")
 
 
 @router.post("/user-memory")
@@ -722,11 +725,11 @@ async def load_user_memory(
         logger.error(f"Error loading user memory: {e}")
         raise HTTPException(status_code=500, detail="Failed to load memory")
 
-
-@router.put("/config")
-async def update_user_config(
-    updates: Dict[str, Any], payload: Dict = Depends(validate_token)
-) -> Dict[str, Any]:
+    # COMMENTED OUT - USE DEVICE-SPECIFIC ENDPOINTS ONLY
+    # @router.put("/config")
+    # async def update_user_config(
+    #     updates: Dict[str, Any], payload: Dict = Depends(validate_token)
+    # ) -> Dict[str, Any]:
     """
     Update specific fields in user configuration
     """
@@ -788,9 +791,9 @@ async def update_user_config(
         logger.error(f"Error updating configuration: {e}")
         raise HTTPException(status_code=500, detail="Failed to update configuration")
 
-
-@router.delete("/config")
-async def delete_user_config(payload: Dict = Depends(validate_token)) -> Dict[str, str]:
+    # COMMENTED OUT - USE DEVICE-SPECIFIC ENDPOINTS ONLY
+    # @router.delete("/config")
+    # async def delete_user_config(payload: Dict = Depends(validate_token)) -> Dict[str, str]:
     """
     Delete user configuration from Cosmos DB
     """
