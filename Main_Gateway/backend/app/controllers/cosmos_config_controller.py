@@ -1176,13 +1176,57 @@ async def save_device_configuration(
         raise HTTPException(status_code=503, detail="Cosmos DB not available")
 
     try:
-        # Get user info for logging
-        user_email = payload.get("preferred_username") or payload.get("email", "")
-        user_id = user_email.lower() if user_email else "unknown"
+        # Get user info from validated token - FIXED: Use all available fields
+        user_email = (
+            payload.get("preferred_username")
+            or payload.get("email", "")
+            or payload.get("upn", "")
+        )
+        user_oid = payload.get("oid", "")
+        user_sub = payload.get("sub", "")
+        user_name = payload.get("name", "")
+
+        # Log what we got from the token for debugging
+        logger.info(
+            f"Save device config - Token payload contains: email={user_email}, oid={user_oid[:8] if user_oid else 'None'}..., sub={user_sub[:8] if user_sub else 'None'}..., name={user_name}"
+        )
+
+        # Priority: email > oid > sub > name (email is most consistent for sync)
+        if user_email:
+            user_id = user_email.lower()  # Normalize email case
+        elif user_oid:
+            user_id = f"oid_{user_oid}"
+        elif user_name:
+            user_id = user_name.lower().replace(" ", "_")
+        else:
+            user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
 
         # User-specific device config ID format: "{device_type}_{user_id}"
         device_config_id = f"{device_type}_{user_id}"
         now = datetime.utcnow().isoformat()
+
+        # Clean the tabs data - remove PostgreSQL format and keep only new format
+        clean_tabs = []
+        raw_tabs = config_data.get("tabs", [])
+
+        for tab in raw_tabs:
+            # Skip old PostgreSQL format tabs (they have 'user_id', 'tab_id', 'created_at' fields)
+            if isinstance(tab, dict) and any(
+                key in tab for key in ["user_id", "created_at", "updated_at"]
+            ):
+                logger.info(
+                    f"Skipping old PostgreSQL format tab: {tab.get('title', 'unnamed')}"
+                )
+                continue
+
+            # Only keep new format tabs (they have 'name', 'component', 'type' fields)
+            if isinstance(tab, dict) and "name" in tab and "component" in tab:
+                clean_tabs.append(tab)
+                logger.info(f"Keeping new format tab: {tab.get('name', 'unnamed')}")
+
+        logger.info(
+            f"Cleaned tabs: {len(raw_tabs)} → {len(clean_tabs)} (removed old PostgreSQL format)"
+        )
 
         # Prepare user device configuration document
         device_config_doc = {
@@ -1193,11 +1237,11 @@ async def save_device_configuration(
             "userId": user_id,
             "version": config_data.get("version", "1.0.0"),
             "config": {
-                "tabs": config_data.get("tabs", []),
+                "tabs": clean_tabs,  # Use cleaned tabs only
                 "preferences": config_data.get("preferences", {}),
                 "windowState": config_data.get("windowState", {}),
                 "componentStates": config_data.get("componentStates", []),
-                "layouts": config_data.get("layouts", []),
+                "layouts": [],  # Don't save layouts to prevent bloat - only keep current tabs
             },
             "createdBy": user_id,
             "updatedBy": user_id,
