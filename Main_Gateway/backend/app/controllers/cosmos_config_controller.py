@@ -317,12 +317,11 @@ def get_cosmos_container():
     #         logger.error(f"Error reading configuration: {e}")
     #         raise HTTPException(status_code=500, detail="Failed to load configuration")
 
-    @router.post("/config/device")
+
+@router.post("/config/device")
 async def get_device_config(
     device_request: Dict[str, Any], payload: Dict = Depends(validate_token)
 ) -> Optional[Dict[str, Any]]:
-
-
     """
     Get device-specific configuration based on screen size and device info
     """
@@ -357,6 +356,7 @@ async def get_device_config(
         )
 
         # Try to get existing configuration
+        existing_config = None
         try:
             existing_config = container.read_item(item=user_id, partition_key=user_id)
 
@@ -370,7 +370,6 @@ async def get_device_config(
                 logger.info(
                     f"Device type changed from {existing_config.get('deviceType', 'unknown')} to {device_type}"
                 )
-
         except exceptions.CosmosResourceNotFoundError:
             logger.info(f"No existing config found for user {user_id}")
 
