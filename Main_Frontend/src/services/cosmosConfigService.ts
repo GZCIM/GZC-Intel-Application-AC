@@ -108,6 +108,24 @@ class CosmosConfigService {
                 return;
             }
 
+            // Protect against overwriting with empty payloads
+            const hasTabs =
+                Array.isArray(config.tabs) && config.tabs.length > 0;
+            const hasLayouts =
+                Array.isArray(config.layouts) && config.layouts.length > 0;
+            const hasPrefs =
+                !!config.preferences &&
+                Object.keys(config.preferences || {}).length > 0;
+            const hasComponentStates =
+                !!config.componentStates &&
+                Object.keys(config.componentStates || {}).length > 0;
+            if (!hasTabs && !hasLayouts && !hasPrefs && !hasComponentStates) {
+                console.warn(
+                    "⏭️ Skipping cloud save: empty payload (prevents wiping tabs/layouts)"
+                );
+                return;
+            }
+
             try {
                 const token = await this.getAccessToken();
 
@@ -153,7 +171,7 @@ class CosmosConfigService {
             } catch (tokenError) {
                 console.error(
                     "Token/Network error, cannot save to Cosmos DB:",
-                    tokenError.message
+                    (tokenError as any).message || tokenError
                 );
                 toastManager.show(
                     "❌ Configuration not saved - cloud unavailable",
@@ -321,6 +339,24 @@ class CosmosConfigService {
     ): Promise<void> {
         try {
             const token = await this.getAccessToken();
+
+            // Prevent overwriting with empty updates
+            const hasTabs =
+                Array.isArray(updates.tabs) && updates.tabs.length > 0;
+            const hasLayouts =
+                Array.isArray(updates.layouts) && updates.layouts.length > 0;
+            const hasPrefs =
+                !!updates.preferences &&
+                Object.keys(updates.preferences || {}).length > 0;
+            const hasComponentStates = updates.componentStates !== undefined; // allow setting empty object explicitly
+            const hasAny =
+                hasTabs || hasLayouts || hasPrefs || hasComponentStates;
+            if (!hasAny) {
+                console.warn(
+                    "⏭️ Skipping cloud update: no meaningful fields provided"
+                );
+                return;
+            }
 
             // Detect device type and use device-specific endpoint
             const deviceType = this.detectDeviceType();

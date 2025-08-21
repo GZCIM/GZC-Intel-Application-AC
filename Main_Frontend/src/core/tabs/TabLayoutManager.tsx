@@ -13,7 +13,7 @@ import { TabNameModal } from "../../components/TabNameModal";
 import { stateManager } from "../../services/StateManager";
 import { useUser } from "../../hooks/useUser";
 import { databaseService } from "../../services/databaseService";
-// import { cosmosConfigService } from "../../services/cosmosConfigService"; // REMOVED - using device-specific endpoints only
+import { cosmosConfigService } from "../../services/cosmosConfigService";
 import { configSyncService } from "../../services/configSyncService";
 import { deviceConfigService } from "../../services/deviceConfigService";
 import { enhancedConfigService } from "../../services/enhancedConfigService";
@@ -455,10 +455,27 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     );
                 }
 
-                if (cosmosConfig?.tabs && cosmosConfig.tabs.length > 0) {
+                // Also load via service as a secondary source and pick the richer config
+                let serviceConfig = null;
+                try {
+                    serviceConfig =
+                        await cosmosConfigService.loadConfiguration();
+                } catch (svcErr) {
+                    console.warn(
+                        "TabLayoutManager: cosmosConfigService.loadConfiguration failed:",
+                        (svcErr as any)?.message || svcErr
+                    );
+                }
+
+                const directCount = cosmosConfig?.tabs?.length || 0;
+                const serviceCount = serviceConfig?.tabs?.length || 0;
+                const bestConfig =
+                    serviceCount > directCount ? serviceConfig : cosmosConfig;
+
+                if (bestConfig?.tabs && bestConfig.tabs.length > 0) {
                     // Deduplicate tabs when loading and ensure editMode is false
                     const tabIds = new Set<string>();
-                    const uniqueTabs = cosmosConfig.tabs
+                    const uniqueTabs = bestConfig.tabs
                         .filter((t) => {
                             if (tabIds.has(t.id)) {
                                 console.warn(
@@ -502,7 +519,13 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     );
 
                     console.log(
-                        `TabLayoutManager: Filtered ${uniqueTabs.length} loaded tabs down to ${validTabs.length} valid user tabs`
+                        `TabLayoutManager: Selected ${
+                            serviceCount > directCount ? "service" : "direct"
+                        } config. Filtered ${
+                            uniqueTabs.length
+                        } loaded tabs down to ${
+                            validTabs.length
+                        } valid user tabs`
                     );
 
                     const hasValidTabs = validTabs.length > 0;
