@@ -1752,7 +1752,7 @@ export function VolatilityAnalysis({
                         minWidth: "300px",
                         display: "flex",
                         flexDirection: "column",
-                        gap: "2px",
+                        gap: "1px",
                         overflow: "hidden",
                     }}
                 >
@@ -1784,7 +1784,7 @@ export function VolatilityAnalysis({
                         <div
                             style={{
                                 display: "flex",
-                                gap: "2px",
+                                gap: "1px",
                                 marginBottom: "8px",
                                 flexWrap: "wrap",
                             }}
@@ -1908,7 +1908,7 @@ export function VolatilityAnalysis({
                         <div
                             style={{
                                 display: "flex",
-                                gap: "2px",
+                                gap: "1px",
                                 marginBottom: "8px",
                                 flexWrap: "wrap",
                             }}
