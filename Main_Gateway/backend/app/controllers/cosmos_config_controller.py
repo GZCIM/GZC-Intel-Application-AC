@@ -317,145 +317,144 @@ def get_cosmos_container():
     #         logger.error(f"Error reading configuration: {e}")
     #         raise HTTPException(status_code=500, detail="Failed to load configuration")
 
-    # COMMENTED OUT - THIS CREATES WRONG DOCUMENT TYPE "user-config"
-    # @router.post("/config/device")
-    # async def get_device_config(
-    #     device_request: Dict[str, Any], payload: Dict = Depends(validate_token)
-    # ) -> Optional[Dict[str, Any]]:
+    @router.post("/config/device")
+async def get_device_config(
+    device_request: Dict[str, Any], payload: Dict = Depends(validate_token)
+) -> Optional[Dict[str, Any]]:
 
 
-#     """
-#     Get device-specific configuration based on screen size and device info
-#     """
-#     container = get_cosmos_container()
-#     if not container:
-#         raise HTTPException(
-#             status_code=503,
-#             detail="Cosmos DB not available - check NAT Gateway IP whitelisting",
-#         )
-#
-#     try:
-#         # Get consistent user ID
-#         user_email = payload.get("preferred_username") or payload.get("email", "")
-#         user_oid = payload.get("oid", "")
-#         user_sub = payload.get("sub", "")
-#
-#         if user_email:
-#             user_id = user_email.lower()
-#         elif user_oid:
-#             user_id = f"oid_{user_oid}"
-#         else:
-#             user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
-#
-#         # Extract device information
-#         screen_width = device_request.get("screenWidth", 1920)
-#         screen_height = device_request.get("screenHeight", 1080)
-#         user_agent = device_request.get("userAgent", "")
-#         device_type = determine_device_type(screen_width, screen_height, user_agent)
-#
-#         logger.info(
-#             f"Device config request for user {user_id}: {device_type} ({screen_width}x{screen_height})"
-#         )
-#
-#         # Try to get existing configuration
-#         try:
-#             existing_config = container.read_item(item=user_id, partition_key=user_id)
-#
-#             # Check if existing config matches current device type
-#             if existing_config.get("deviceType") == device_type:
-#                 logger.info(
-#                     f"Returning existing {device_type} config for user {user_id}"
-#                 )
-#                 return existing_config
-#             else:
-#                 logger.info(
-#                     f"Device type changed from {existing_config.get('deviceType', 'unknown')} to {device_type}"
-#                 )
-#
-#         except exceptions.CosmosResourceNotFoundError:
-#             logger.info(f"No existing config found for user {user_id}")
-#
-#         # Create new device-specific configuration
-#         now = datetime.utcnow().isoformat()
-#         base_config = {
-#             "id": user_id,
-#             "userId": user_id,
-#             "name": f"Auto {device_type.title()} Config for {user_id}",
-#             "type": "user-config",
-#             "version": "1.0.0",
-#             "deviceType": device_type,
-#             "targetScreenSize": {"width": screen_width, "height": screen_height},
-#             "layouts": [],
-#             "currentLayoutId": "default",
-#             "activeTabId": "main",
-#             "preferences": {
-#                 "theme": "gzc-dark",
-#                 "language": "en",
-#                 "autoSave": True,
-#                 "syncAcrossDevices": True,
-#                 "notifications": {
-#                     "enabled": True,
-#                     "types": ["system", "component-updates"],
-#                 },
-#                 "accessibility": {
-#                     "highContrast": False,
-#                     "fontSize": "medium",
-#                     "animations": True,
-#                 },
-#                 "performance": {"enableLazyLoading": True, "maxComponentsPerTab": 20},
-#             },
-#             "componentStates": [],
-#             "windowState": {
-#                 "dimensions": {"width": screen_width, "height": screen_height},
-#                 "position": {"x": 0, "y": 0},
-#                 "maximized": False,
-#                 "fullscreen": False,
-#             },
-#             "currentSession": {
-#                 "sessionId": f"session-{int(datetime.utcnow().timestamp() * 1000)}",
-#                 "deviceInfo": {
-#                     "userAgent": user_agent,
-#                     "platform": device_request.get("platform", ""),
-#                     "screenResolution": f"{screen_width}x{screen_height}",
-#                     "timezone": device_request.get("timezone", "UTC"),
-#                 },
-#                 "loginTime": now,
-#                 "lastActivity": now,
-#                 "activeTabIds": ["main"],
-#                 "openLayouts": ["default"],
-#             },
-#             "userMemory": [],
-#             "createdAt": now,
-#             "updatedAt": now,
-#             "lastSyncAt": now,
-#             "deviceId": device_request.get("deviceId"),
-#             "previousVersions": [],
-#             "featureFlags": {
-#                 "experimentalComponents": False,
-#                 "advancedGridLayout": True,
-#                 "cloudSync": True,
-#             },
-#             "userEmail": user_email,
-#             "timestamp": now,
-#             "autoGenerated": True,
-#         }
-#
-#         # Generate device-specific configuration
-#         device_config = await get_device_specific_config(
-#             device_type, base_config, user_id
-#         )
-#
-#         # Save the new configuration
-#         saved_config = container.upsert_item(body=device_config)
-#         logger.info(f"Created and saved new {device_type} config for user {user_id}")
-#
-#         return saved_config
-#
-#     except Exception as e:
-#         logger.error(f"Error getting device config: {e}")
-#         raise HTTPException(
-#             status_code=500, detail="Failed to get device configuration"
-#         )
+    """
+    Get device-specific configuration based on screen size and device info
+    """
+    container = get_cosmos_container()
+    if not container:
+        raise HTTPException(
+            status_code=503,
+            detail="Cosmos DB not available - check NAT Gateway IP whitelisting",
+        )
+
+    try:
+        # Get consistent user ID
+        user_email = payload.get("preferred_username") or payload.get("email", "")
+        user_oid = payload.get("oid", "")
+        user_sub = payload.get("sub", "")
+
+        if user_email:
+            user_id = user_email.lower()
+        elif user_oid:
+            user_id = f"oid_{user_oid}"
+        else:
+            user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
+
+        # Extract device information
+        screen_width = device_request.get("screenWidth", 1920)
+        screen_height = device_request.get("screenHeight", 1080)
+        user_agent = device_request.get("userAgent", "")
+        device_type = determine_device_type(screen_width, screen_height, user_agent)
+
+        logger.info(
+            f"Device config request for user {user_id}: {device_type} ({screen_width}x{screen_height})"
+        )
+
+        # Try to get existing configuration
+        try:
+            existing_config = container.read_item(item=user_id, partition_key=user_id)
+
+            # Check if existing config matches current device type
+            if existing_config.get("deviceType") == device_type:
+                logger.info(
+                    f"Returning existing {device_type} config for user {user_id}"
+                )
+                return existing_config
+            else:
+                logger.info(
+                    f"Device type changed from {existing_config.get('deviceType', 'unknown')} to {device_type}"
+                )
+
+        except exceptions.CosmosResourceNotFoundError:
+            logger.info(f"No existing config found for user {user_id}")
+
+        # Create new device-specific configuration
+        now = datetime.utcnow().isoformat()
+        base_config = {
+            "id": user_id,
+            "userId": user_id,
+            "name": f"Auto {device_type.title()} Config for {user_id}",
+            "type": "user-config",
+            "version": "1.0.0",
+            "deviceType": device_type,
+            "targetScreenSize": {"width": screen_width, "height": screen_height},
+            "layouts": [],
+            "currentLayoutId": "default",
+            "activeTabId": "main",
+            "preferences": {
+                "theme": "gzc-dark",
+                "language": "en",
+                "autoSave": True,
+                "syncAcrossDevices": True,
+                "notifications": {
+                    "enabled": True,
+                    "types": ["system", "component-updates"],
+                },
+                "accessibility": {
+                    "highContrast": False,
+                    "fontSize": "medium",
+                    "animations": True,
+                },
+                "performance": {"enableLazyLoading": True, "maxComponentsPerTab": 20},
+            },
+            "componentStates": [],
+            "windowState": {
+                "dimensions": {"width": screen_width, "height": screen_height},
+                "position": {"x": 0, "y": 0},
+                "maximized": False,
+                "fullscreen": False,
+            },
+            "currentSession": {
+                "sessionId": f"session-{int(datetime.utcnow().timestamp() * 1000)}",
+                "deviceInfo": {
+                    "userAgent": user_agent,
+                    "platform": device_request.get("platform", ""),
+                    "screenResolution": f"{screen_width}x{screen_height}",
+                    "timezone": device_request.get("timezone", "UTC"),
+                },
+                "loginTime": now,
+                "lastActivity": now,
+                "activeTabIds": ["main"],
+                "openLayouts": ["default"],
+            },
+            "userMemory": [],
+            "createdAt": now,
+            "updatedAt": now,
+            "lastSyncAt": now,
+            "deviceId": device_request.get("deviceId"),
+            "previousVersions": [],
+            "featureFlags": {
+                "experimentalComponents": False,
+                "advancedGridLayout": True,
+                "cloudSync": True,
+            },
+            "userEmail": user_email,
+            "timestamp": now,
+            "autoGenerated": True,
+        }
+
+        # Generate device-specific configuration
+        device_config = await get_device_specific_config(
+            device_type, base_config, user_id
+        )
+
+        # Save the new configuration
+        saved_config = container.upsert_item(body=device_config)
+        logger.info(f"Created and saved new {device_type} config for user {user_id}")
+
+        return saved_config
+
+    except Exception as e:
+        logger.error(f"Error getting device config: {e}")
+        raise HTTPException(
+            status_code=500, detail="Failed to get device configuration"
+        )
 
 
 # COMMENTED OUT - USE DEVICE-SPECIFIC ENDPOINTS ONLY

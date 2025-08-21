@@ -13,7 +13,7 @@ import { TabNameModal } from "../../components/TabNameModal";
 import { stateManager } from "../../services/StateManager";
 import { useUser } from "../../hooks/useUser";
 import { databaseService } from "../../services/databaseService";
-import { cosmosConfigService } from "../../services/cosmosConfigService";
+// import { cosmosConfigService } from "../../services/cosmosConfigService"; // REMOVED - using device-specific endpoints only
 import { configSyncService } from "../../services/configSyncService";
 import { deviceConfigService } from "../../services/deviceConfigService";
 import { enhancedConfigService } from "../../services/enhancedConfigService";
