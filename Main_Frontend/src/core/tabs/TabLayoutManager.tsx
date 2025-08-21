@@ -226,7 +226,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         if (!user?.email) return;
 
         // Initialize current device type
-        const initialDeviceType = deviceConfigService.detectDeviceType();
+        const initialDeviceType = deviceConfigService.getCurrentDeviceType(); // Use enhanced detection with override support
         setCurrentDeviceType(initialDeviceType);
         console.log(`🖥️ Initial device type detected: ${initialDeviceType}`);
 
@@ -235,6 +235,14 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
             console.log(
                 `📱 Device type changed: ${currentDeviceType} → ${newDeviceType}`
             );
+
+            // Validate the new device type
+            if (!deviceConfigService.validateDeviceType(newDeviceType)) {
+                console.error(
+                    `❌ Invalid device type detected: ${newDeviceType}`
+                );
+                return;
+            }
 
             setIsDeviceSwitching(true);
             setCurrentDeviceType(newDeviceType);
