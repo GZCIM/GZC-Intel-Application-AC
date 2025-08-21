@@ -1279,8 +1279,23 @@ async def save_device_configuration(
             existing_doc = container.read_item(
                 item=device_config_id, partition_key=device_config_id
             )
+            logger.info(
+                f"Loaded existing device config with pk=/id for {device_config_id}"
+            )
         except exceptions.CosmosResourceNotFoundError:
-            existing_doc = None
+            # Retry with userId partition key
+            try:
+                existing_doc = container.read_item(
+                    item=device_config_id, partition_key=user_id
+                )
+                logger.info(
+                    f"Loaded existing device config with pk=/userId for {device_config_id}"
+                )
+            except exceptions.CosmosResourceNotFoundError:
+                existing_doc = None
+                logger.info(
+                    f"No existing device config found for {device_config_id} with either pk"
+                )
 
         existing_config = (existing_doc or {}).get("config", {})
 
