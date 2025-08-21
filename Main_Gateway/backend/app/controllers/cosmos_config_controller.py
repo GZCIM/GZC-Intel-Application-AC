@@ -1096,15 +1096,22 @@ async def get_device_configuration(
         raise HTTPException(status_code=503, detail="Cosmos DB not available")
 
     try:
-        # Get user ID consistently
-        user_email = payload.get("preferred_username") or payload.get("email", "")
+        # Get user ID consistently (email > oid > name > sub > unknown)
+        user_email = (
+            payload.get("preferred_username")
+            or payload.get("email", "")
+            or payload.get("upn", "")
+        )
         user_oid = payload.get("oid", "")
         user_sub = payload.get("sub", "")
+        user_name = payload.get("name", "")
 
         if user_email:
             user_id = user_email.lower()
         elif user_oid:
             user_id = f"oid_{user_oid}"
+        elif user_name:
+            user_id = user_name.lower().replace(" ", "_")
         else:
             user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
 
@@ -1201,32 +1208,67 @@ async def save_device_configuration(
         else:
             user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
 
+        # Reject saving when identity is unknown to avoid stray docs
+        if user_id.startswith("unknown"):
+            logger.error("Rejecting save: no user identity present in token")
+            raise HTTPException(status_code=401, detail="No user identity in token")
+
         # User-specific device config ID format: "{device_type}_{user_id}"
         device_config_id = f"{device_type}_{user_id}"
         now = datetime.utcnow().isoformat()
 
         # Clean the tabs data - remove PostgreSQL format and keep only new format
         clean_tabs = []
-        raw_tabs = config_data.get("tabs", [])
+        raw_tabs = config_data.get("tabs", None)
 
-        for tab in raw_tabs:
-            # Skip old PostgreSQL format tabs (they have 'user_id', 'tab_id', 'created_at' fields)
-            if isinstance(tab, dict) and any(
-                key in tab for key in ["user_id", "created_at", "updated_at"]
-            ):
-                logger.info(
-                    f"Skipping old PostgreSQL format tab: {tab.get('title', 'unnamed')}"
-                )
-                continue
+        if isinstance(raw_tabs, list):
+            for tab in raw_tabs:
+                # Skip old PostgreSQL format tabs (they have 'user_id', 'tab_id', 'created_at' fields)
+                if isinstance(tab, dict) and any(
+                    key in tab for key in ["user_id", "created_at", "updated_at"]
+                ):
+                    logger.info(
+                        f"Skipping old PostgreSQL format tab: {tab.get('title', 'unnamed')}"
+                    )
+                    continue
 
-            # Only keep new format tabs (they have 'name', 'component', 'type' fields)
-            if isinstance(tab, dict) and "name" in tab and "component" in tab:
-                clean_tabs.append(tab)
-                logger.info(f"Keeping new format tab: {tab.get('name', 'unnamed')}")
+                # Only keep new format tabs (they have 'name', 'component', 'type' fields)
+                if isinstance(tab, dict) and "name" in tab and "component" in tab:
+                    clean_tabs.append(tab)
+                    logger.info(f"Keeping new format tab: {tab.get('name', 'unnamed')}")
 
-        logger.info(
-            f"Cleaned tabs: {len(raw_tabs)} → {len(clean_tabs)} (removed old PostgreSQL format)"
-        )
+        # Load existing document to merge partial updates (avoid wiping tabs)
+        existing_doc = None
+        try:
+            existing_doc = container.read_item(
+                item=device_config_id, partition_key=device_config_id
+            )
+        except exceptions.CosmosResourceNotFoundError:
+            existing_doc = None
+
+        existing_config = (existing_doc or {}).get("config", {})
+
+        # Merge logic: only replace arrays when explicitly provided with non-empty arrays
+        incoming_prefs = config_data.get("preferences") or {}
+        incoming_ws = config_data.get("windowState") or {}
+        incoming_cs = config_data.get("componentStates")
+        incoming_layouts = config_data.get("layouts")
+
+        merged_config = {
+            "tabs": clean_tabs
+            if len(clean_tabs) > 0
+            else existing_config.get("tabs", []),
+            "preferences": {**existing_config.get("preferences", {}), **incoming_prefs},
+            "windowState": {**existing_config.get("windowState", {}), **incoming_ws},
+            "componentStates": incoming_cs
+            if incoming_cs is not None
+            else existing_config.get("componentStates", []),
+            "layouts": (
+                incoming_layouts
+                if isinstance(incoming_layouts, list) and len(incoming_layouts) > 0
+                else existing_config.get("layouts", [])
+            ),
+        }
 
         # Prepare user device configuration document
         device_config_doc = {
@@ -1235,17 +1277,13 @@ async def save_device_configuration(
             "type": "user-device-config",
             "deviceType": device_type,
             "userId": user_id,
-            "version": config_data.get("version", "1.0.0"),
-            "config": {
-                "tabs": clean_tabs,  # Use cleaned tabs only
-                "preferences": config_data.get("preferences", {}),
-                "windowState": config_data.get("windowState", {}),
-                "componentStates": config_data.get("componentStates", []),
-                "layouts": [],  # Don't save layouts to prevent bloat - only keep current tabs
-            },
-            "createdBy": user_id,
+            "version": config_data.get(
+                "version", (existing_doc or {}).get("version", "1.0.0")
+            ),
+            "config": merged_config,
+            "createdBy": (existing_doc or {}).get("createdBy", user_id),
             "updatedBy": user_id,
-            "createdAt": config_data.get("createdAt", now),
+            "createdAt": (existing_doc or {}).get("createdAt", now),
             "updatedAt": now,
             "lastModified": now,
         }
@@ -1288,9 +1326,22 @@ async def delete_device_configuration(
         raise HTTPException(status_code=503, detail="Cosmos DB not available")
 
     try:
-        # Get user info for logging
-        user_email = payload.get("preferred_username") or payload.get("email", "")
-        user_id = user_email.lower() if user_email else "unknown"
+        # Get user info for logging (email > oid > name > unknown)
+        user_email = (
+            payload.get("preferred_username")
+            or payload.get("email", "")
+            or payload.get("upn", "")
+        )
+        user_oid = payload.get("oid", "")
+        user_name = payload.get("name", "")
+        if user_email:
+            user_id = user_email.lower()
+        elif user_oid:
+            user_id = f"oid_{user_oid}"
+        elif user_name:
+            user_id = user_name.lower().replace(" ", "_")
+        else:
+            user_id = "unknown_user"
 
         # User-specific device config ID format: "{device_type}_{user_id}"
         device_config_id = f"{device_type}_{user_id}"
