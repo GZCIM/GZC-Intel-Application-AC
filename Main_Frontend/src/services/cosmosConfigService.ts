@@ -172,20 +172,67 @@ class CosmosConfigService {
      * Detect device type based on screen size
      */
     private detectDeviceType(): string {
-        const width = window.screen.width;
-        const height = window.screen.height;
-        const isMobile =
-            /Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(
-                navigator.userAgent
-            );
+        // Use multiple detection methods for accuracy
+        const screenWidth = window.screen.width;
+        const screenHeight = window.screen.height;
+        const innerWidth = window.innerWidth;
+        const innerHeight = window.innerHeight;
+        const userAgent = navigator.userAgent;
+        const platform = navigator.platform;
 
-        if (width <= 768 || isMobile) {
-            return "mobile";
-        } else if (width <= 1366) {
-            return "laptop";
+        console.log(`🔍 CosmosConfigService Device Detection:`);
+        console.log(`  - Screen: ${screenWidth}x${screenHeight}`);
+        console.log(`  - Inner: ${innerWidth}x${innerHeight}`);
+        console.log(`  - User Agent: ${userAgent}`);
+        console.log(`  - Platform: ${platform}`);
+
+        // More sophisticated mobile detection
+        const mobileKeywords = [
+            "Mobile",
+            "Android",
+            "iPhone",
+            "iPad",
+            "iPod",
+            "BlackBerry",
+            "Windows Phone",
+            "Mobile Safari",
+        ];
+
+        // Check if it's actually a mobile device
+        const isMobileUA = mobileKeywords.some((keyword) =>
+            userAgent.includes(keyword)
+        );
+
+        // Check if it's a touch device (more reliable than UA)
+        const isTouchDevice =
+            "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
+        // Check if it's a small screen device
+        const isSmallScreen = screenWidth <= 768 || innerWidth <= 768;
+
+        console.log(`  - Mobile UA detected: ${isMobileUA}`);
+        console.log(`  - Touch Device: ${isTouchDevice}`);
+        console.log(`  - Small Screen: ${isSmallScreen}`);
+
+        // Enhanced detection logic
+        let deviceType: string;
+
+        if ((isSmallScreen && isMobileUA) || (isTouchDevice && isSmallScreen)) {
+            deviceType = "mobile";
+        } else if (screenWidth <= 1366 || innerWidth <= 1366) {
+            deviceType = "laptop";
         } else {
-            return "bigscreen";
+            deviceType = "bigscreen";
         }
+
+        console.log(`  - Final device type: ${deviceType}`);
+        console.log(
+            `  - Threshold checks: screenWidth <= 768 = ${
+                screenWidth <= 768
+            }, innerWidth <= 768 = ${innerWidth <= 768}`
+        );
+
+        return deviceType;
     }
 
     /**
