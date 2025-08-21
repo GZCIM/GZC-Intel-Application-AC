@@ -247,7 +247,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                 const response = await fetch(
                     `${
                         import.meta.env.VITE_API_BASE_URL ||
-                        "http://localhost:8080"
+                        (import.meta.env.PROD ? "" : "http://localhost:8080")
                     }/api/cosmos/device-config/${newDeviceType}`,
                     {
                         method: "GET",
@@ -408,7 +408,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                 const response = await fetch(
                     `${
                         import.meta.env.VITE_API_BASE_URL ||
-                        "http://localhost:8080"
+                        (import.meta.env.PROD ? "" : "http://localhost:8080")
                     }/api/cosmos/device-config/${currentDeviceType}`,
                     {
                         method: "GET",
@@ -706,7 +706,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                 const response = await fetch(
                     `${
                         import.meta.env.VITE_API_BASE_URL ||
-                        "http://localhost:8080"
+                        (import.meta.env.PROD ? "" : "http://localhost:8080")
                     }/api/cosmos/device-config/${currentDeviceType}`,
                     {
                         method: "POST",
@@ -962,7 +962,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                 const response = await fetch(
                     `${
                         import.meta.env.VITE_API_BASE_URL ||
-                        "http://localhost:8080"
+                        (import.meta.env.PROD ? "" : "http://localhost:8080")
                     }/api/cosmos/device-config/${currentDeviceType}`,
                     {
                         method: "POST",
@@ -1485,7 +1485,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                 const response = await fetch(
                     `${
                         import.meta.env.VITE_API_BASE_URL ||
-                        "http://localhost:8080"
+                        (import.meta.env.PROD ? "" : "http://localhost:8080")
                     }/api/cosmos/device-config/${currentDeviceType}`,
                     {
                         method: "POST",

@@ -90,7 +90,8 @@ class DeviceConfigService {
 
             // Get backend URL from environment
             const backendUrl =
-                import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+                import.meta.env.VITE_API_BASE_URL ||
+                (import.meta.env.PROD ? "" : "http://localhost:8080");
             const configUrl = `${backendUrl}/api/cosmos/config/device`;
 
             // Get auth token (this would need to be implemented based on your auth system)
