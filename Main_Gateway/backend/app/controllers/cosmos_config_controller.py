@@ -1142,19 +1142,32 @@ async def get_device_configuration(
         device_config_id = f"{device_type}_{user_id}"
 
         try:
-            # Try to get existing user device configuration
+            # Try to get existing user device configuration (assumes PK = /id)
             device_config_doc = container.read_item(
                 item=device_config_id, partition_key=device_config_id
             )
             logger.info(
-                f"Found existing {device_type} device configuration for user {user_id}"
+                f"Found existing {device_type} device configuration for user {user_id} using pk=/id"
             )
             return device_config_doc
 
         except exceptions.CosmosResourceNotFoundError:
             logger.info(
-                f"No device configuration found for {device_config_id}, returning empty template"
+                f"{device_config_id} not found with pk=/id. Retrying with pk=/userId ({user_id})"
             )
+            # Retry assuming PK = /userId
+            try:
+                device_config_doc = container.read_item(
+                    item=device_config_id, partition_key=user_id
+                )
+                logger.info(
+                    f"Found existing {device_type} device configuration for user {user_id} using pk=/userId"
+                )
+                return device_config_doc
+            except exceptions.CosmosResourceNotFoundError:
+                logger.info(
+                    f"No device configuration found for {device_config_id} with either pk, returning empty template"
+                )
 
             # Return empty template
             now = datetime.utcnow().isoformat()
