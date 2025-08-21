@@ -84,6 +84,13 @@ class CosmosConfigService {
      */
     async saveConfiguration(config: Partial<UserConfiguration>): Promise<void> {
         try {
+            // Do not allow writes when locked
+            if (!editingLockService.isUnlocked()) {
+                console.warn(
+                    "⏭️ Skipping save to Cosmos DB: editing is locked"
+                );
+                return;
+            }
             // Check if user is authenticated first
             const msal = this.msalInstance;
             if (!msal) {
@@ -340,6 +347,13 @@ class CosmosConfigService {
         updates: Partial<UserConfiguration>
     ): Promise<void> {
         try {
+            // Do not allow writes when locked
+            if (!editingLockService.isUnlocked()) {
+                console.warn(
+                    "⏭️ Skipping update to Cosmos DB: editing is locked"
+                );
+                return;
+            }
             const token = await this.getAccessToken();
 
             // Prevent overwriting with empty updates

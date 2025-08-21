@@ -17,6 +17,7 @@ import { cosmosConfigService } from "../../services/cosmosConfigService";
 import { configSyncService } from "../../services/configSyncService";
 import { deviceConfigService } from "../../services/deviceConfigService";
 import { enhancedConfigService } from "../../services/enhancedConfigService";
+import { editingLockService } from "../../services/editingLockService";
 
 // Component in tab configuration for dynamic tabs
 export interface ComponentInTab {
@@ -839,6 +840,10 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
         // Save to Cosmos DB (works without backend!)
         const saveToCosmosDB = async () => {
+            if (!editingLockService.isUnlocked()) {
+                console.warn("⏭️ Skipping save (addTab): editing locked");
+                return;
+            }
             try {
                 // Deduplicate tabs before saving
                 const tabIds = new Set<string>();
@@ -866,6 +871,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                         headers: {
                             Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
                             "Content-Type": "application/json",
+                            ...editingLockService.getLockHeaders(),
                         },
                         body: JSON.stringify({
                             tabs: uniqueTabs,
@@ -895,7 +901,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         };
 
         // Save to PostgreSQL only if authenticated (legacy - for backward compatibility)
-        if (isAuthenticated) {
+        if (isAuthenticated && editingLockService.isUnlocked()) {
             const saveToDatabase = async () => {
                 try {
                     await databaseService.saveTab(userId, {
@@ -953,8 +959,14 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         setCurrentLayout(updatedLayout);
 
         // Save updated layout to Cosmos DB
-        if (isAuthenticated) {
+        if (isAuthenticated && editingLockService.isUnlocked()) {
             const saveToCosmosDB = async () => {
+                if (!editingLockService.isUnlocked()) {
+                    console.warn(
+                        "⏭️ Skipping save (removeTab): editing locked"
+                    );
+                    return;
+                }
                 try {
                     // Deduplicate tabs before saving (should already be unique after filter, but double-check)
                     const tabIds = new Set<string>();
@@ -982,6 +994,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                             headers: {
                                 Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
                                 "Content-Type": "application/json",
+                                ...editingLockService.getLockHeaders(),
                             },
                             body: JSON.stringify({
                                 tabs: uniqueTabs,
@@ -1089,6 +1102,10 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
         // Save to Cosmos DB (primary storage)
         const saveToCosmosDB = async () => {
+            if (!editingLockService.isUnlocked()) {
+                console.warn("⏭️ Skipping save (updateTab): editing locked");
+                return;
+            }
             try {
                 // Deduplicate tabs before saving
                 const tabIds = new Set<string>();
@@ -1120,6 +1137,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                         headers: {
                             Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
                             "Content-Type": "application/json",
+                            ...editingLockService.getLockHeaders(),
                         },
                         body: JSON.stringify({
                             tabs: uniqueTabs,
