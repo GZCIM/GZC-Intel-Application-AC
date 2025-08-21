@@ -1601,7 +1601,7 @@ export function VolatilityAnalysis({
             {/* Header */}
             <div
                 style={{
-                    padding: "16px",
+                    padding: "8px",
                     borderBottom: `1px solid ${currentTheme.border}`,
                     display: "flex",
                     gap: "16px",
@@ -1738,9 +1738,9 @@ export function VolatilityAnalysis({
             <div
                 style={{
                     display: "flex",
-                    gap: "2px",
+                    gap: "1px",
                     backgroundColor: currentTheme.border,
-                    height: "calc(100% - 80px)",
+                    height: "calc(100% - 64px)",
                     position: "relative",
                     overflow: "hidden",
                 }}
