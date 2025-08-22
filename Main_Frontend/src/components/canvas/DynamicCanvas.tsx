@@ -635,7 +635,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 isResizable={true} // Always allow resizing
                                 useCSSTransforms={true} // 6x faster paint performance
                                 transformScale={1} // Important for smooth scaling
-                                margin={[0.5, 0.5]}
+                                margin={[2, 2]}
                                 containerPadding={[0, 0]}
                                 rowHeight={60}
                                 cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
