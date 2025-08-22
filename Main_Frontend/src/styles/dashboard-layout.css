@@ -1,16 +1,20 @@
 /* Fixed Dashboard Layout Styles - Safe Version */
 
-/* Don't force body constraints that could cause render loops */
+/* Prevent body and html from scrolling */
+html,
 body {
     margin: 0;
     padding: 0;
+    overflow: hidden; /* Prevent main page scrolling */
+    height: 100vh; /* Full viewport height */
 }
 
 /* Main app container - safer approach */
 .dashboard-container {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh; /* Fixed height to viewport */
+    overflow: hidden; /* Prevent container scrolling */
 }
 
 /* Header - fixed at top */
@@ -24,14 +28,18 @@ body {
 .dashboard-body {
     display: flex;
     flex: 1;
+    overflow: hidden; /* Prevent main body from scrolling */
 }
 
-/* Left panel - Market Intel - width now controlled by React component */
+/* Left panel - Market Intel - independent scrolling */
 .dashboard-left-panel {
     flex-shrink: 0;
     /* width removed - controlled by MarketIntelPanel component */
     position: relative;
     z-index: 10;
+    overflow-y: auto; /* Enable independent vertical scrolling */
+    overflow-x: hidden;
+    max-height: 100vh; /* Limit height to viewport */
 }
 
 /* Scrollbar styling for left panel */
@@ -52,12 +60,12 @@ body {
     background: rgba(0, 0, 0, 0.5);
 }
 
-/* Main content area - scrollable */
+/* Main content area - independent scrolling */
 .dashboard-content {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: auto; /* Enable independent vertical scrolling */
     overflow-x: hidden;
-    height: 100%;
+    height: 100vh; /* Fixed height to viewport */
     position: relative;
 }
 
@@ -97,9 +105,10 @@ body {
 
 /* Canvas container within scrollable area */
 .canvas-scroll-container {
-    min-height: 100%;
+    height: 100%;
     padding: 8px;
     position: relative;
+    overflow: hidden; /* Let parent handle scrolling */
 }
 
 /* Toast notification animation */
