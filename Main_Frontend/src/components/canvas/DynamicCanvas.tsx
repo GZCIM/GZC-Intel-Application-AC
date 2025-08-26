@@ -1,16 +1,8 @@
-import React, {
-    useState,
-    useEffect,
-    useMemo,
-    useCallback,
-    useRef,
-} from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Responsive, WidthProvider, Layout } from "react-grid-layout";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useTabLayout } from "../../core/tabs/TabLayoutManager";
 import { useViewMemory } from "../../hooks/useViewMemory";
-import { useDebouncedUserMemory } from "../../hooks/useUserMemory";
 import {
     componentInventory,
     ComponentMeta,
@@ -37,8 +29,8 @@ interface ComponentInstance {
     y: number;
     w: number;
     h: number;
-    props?: Record<string, any>; // Component-specific props
-    component?: React.ComponentType<any>;
+    props?: Record<string, unknown>; // Component-specific props
+    component?: React.ComponentType<unknown>;
     displayMode?: DisplayMode; // runtime-only display mode
     originalW: number; // Store original dimensions
     originalH: number;
@@ -49,7 +41,6 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     const { currentLayout, updateTab } = useTabLayout();
     const { saveLayout: saveToMemory, getLayout: loadFromMemory } =
         useViewMemory();
-    const { saveLayout: saveLayoutDebounced } = useDebouncedUserMemory();
     const [components, setComponents] = useState<ComponentInstance[]>([]);
     const [layouts, setLayouts] = useState<{ [key: string]: Layout[] }>({});
     const [isDragging, setIsDragging] = useState(false);
@@ -421,6 +412,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     const generateLayout = useMemo((): Layout[] => {
         return components.map((comp) => {
             const meta = componentInventory.getComponent(comp.componentId);
+            console.log(
+                `🔧 Generating layout for ${comp.id}: mode=${comp.displayMode}, w=${comp.w}, originalW=${comp.originalW}`
+            );
             return {
                 i: comp.id,
                 x: comp.x,
@@ -429,11 +423,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 w:
                     comp.displayMode === "thumbnail"
                         ? Math.max(2, comp.w)
-                        : Math.max(2, comp.originalW || comp.w),
+                        : Math.max(2, comp.originalW), // Always use originalW for medium mode
                 h:
                     comp.displayMode === "thumbnail"
                         ? Math.max(1, comp.h)
-                        : Math.max(1, comp.originalH || comp.h),
+                        : Math.max(1, comp.originalH), // Always use originalH for medium mode
                 minW: meta?.minSize?.w || 2,
                 minH: meta?.minSize?.h || 2,
                 maxW: meta?.maxSize?.w || 12,
