@@ -66,6 +66,16 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     );
     const isEditMode = editingLockService.isUnlocked();
 
+    // When entering edit (unlocked), force medium mode for all and exit full
+    useEffect(() => {
+        if (isEditMode) {
+            setFullScreenId(null);
+            setComponents((prev) =>
+                prev.map((c) => ({ ...c, displayMode: "medium" }))
+            );
+        }
+    }, [isEditMode]);
+
     // Load components from tab configuration (prioritize tab over memory for live updates)
     useEffect(() => {
         if (tab?.components && tab.components.length > 0) {
@@ -357,7 +367,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             >
                                 {title}
                             </span>
-                            {isEditMode && (
+                            {!isEditMode && (
                                 <div style={{ display: "flex", gap: 6 }}>
                                     <button
                                         className="no-drag"
@@ -380,7 +390,32 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             cursor: "pointer",
                                         }}
                                     >
-                                        Thumb
+                                        {/* thumbnail pictogram */}
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 14 14"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1.2"
+                                        >
+                                            <rect
+                                                x="2"
+                                                y="3"
+                                                width="10"
+                                                height="8"
+                                                rx="2"
+                                            />
+                                            <rect
+                                                x="3.5"
+                                                y="4.5"
+                                                width="4"
+                                                height="3"
+                                                rx="1"
+                                                fill="currentColor"
+                                                stroke="none"
+                                            />
+                                        </svg>
                                     </button>
                                     <button
                                         className="no-drag"
@@ -404,7 +439,40 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             cursor: "pointer",
                                         }}
                                     >
-                                        Medium
+                                        {/* grid pictogram */}
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 14 14"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1.2"
+                                        >
+                                            <rect
+                                                x="2"
+                                                y="2"
+                                                width="4"
+                                                height="4"
+                                            />
+                                            <rect
+                                                x="8"
+                                                y="2"
+                                                width="4"
+                                                height="4"
+                                            />
+                                            <rect
+                                                x="2"
+                                                y="8"
+                                                width="4"
+                                                height="4"
+                                            />
+                                            <rect
+                                                x="8"
+                                                y="8"
+                                                width="4"
+                                                height="4"
+                                            />
+                                        </svg>
                                     </button>
                                     <button
                                         className="no-drag"
@@ -425,7 +493,20 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             cursor: "pointer",
                                         }}
                                     >
-                                        Full
+                                        {/* expand pictogram */}
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 14 14"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1.2"
+                                        >
+                                            <path d="M5 1H1v4" />
+                                            <path d="M9 13h4V9" />
+                                            <path d="M13 5V1H9" />
+                                            <path d="M1 9v4h4" />
+                                        </svg>
                                     </button>
                                 </div>
                             )}
@@ -818,6 +899,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         "thumbnail"
                                                     )
                                                 }
+                                                title="Thumbnail"
                                                 style={{
                                                     fontSize: 11,
                                                     padding: "2px 6px",
@@ -827,12 +909,37 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     cursor: "pointer",
                                                 }}
                                             >
-                                                Thumb
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <rect
+                                                        x="2"
+                                                        y="3"
+                                                        width="10"
+                                                        height="8"
+                                                        rx="2"
+                                                    />
+                                                    <rect
+                                                        x="3.5"
+                                                        y="4.5"
+                                                        width="4"
+                                                        height="3"
+                                                        rx="1"
+                                                        fill="currentColor"
+                                                        stroke="none"
+                                                    />
+                                                </svg>
                                             </button>
                                             <button
                                                 onClick={() =>
                                                     setFullScreenId(null)
                                                 }
+                                                title="Exit Full"
                                                 style={{
                                                     fontSize: 11,
                                                     padding: "2px 8px",
@@ -844,7 +951,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     cursor: "pointer",
                                                 }}
                                             >
-                                                Exit Full
+                                                ⛶
                                             </button>
                                         </div>
                                     </div>
