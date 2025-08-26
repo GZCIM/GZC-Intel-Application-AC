@@ -253,11 +253,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
     // Resize handlers - prevent state updates during resize
     const handleResizeStart = useCallback(() => {
+        console.log("🟡 Resize start");
         setIsResizing(true);
     }, []);
 
     const handleResizeStop = useCallback(
         (layout: Layout[]) => {
+            console.log("🟢 Resize stop - layout items:", layout?.length);
             setIsResizing(false);
 
             // Update positions and save immediately for better UX
@@ -267,7 +269,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 updateComponentPositions(layout);
 
                 // Save the resize immediately so it persists
-                setTimeout(() => saveLayoutToTab(layout), 100);
+                setTimeout(() => {
+                    console.log("💾 Saving after resize");
+                    saveLayoutToTab(layout);
+                }, 100);
             }
         },
         [isEditMode, updateComponentPositions, saveLayoutToTab]
