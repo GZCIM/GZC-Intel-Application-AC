@@ -7,13 +7,14 @@
    - Enter a name (e.g., "My Portfolio")
    - Select **"Dynamic"** (Full drag & drop components)
 
-2. **Enter Edit Mode**:
-   - Look for the **"Edit"** button (top-right of the tab content area)
-   - Click it to enter edit mode (button changes to "Save")
+2. **Unlock Editing (Global)**:
+   - Click **Tools** in the header
+   - Click **Unlock Editing** (shows session info)
 
 3. **Add Component**:
-   - In edit mode, look for **"➕ Add Component"** button (top-right)
-   - Click it to open the Component Portal
+   - Use the tab context menu (right-click the tab) → **Add Component**
+   - Or click **Tools** → **Add Component**
+   - Component Portal opens
 
 4. **Find Portfolio**:
    - In the Component Portal, you should see "Portfolio Dashboard"
@@ -42,7 +43,7 @@
    - Should show "portfolio" in the component list
    - Should show total components count
 
-### Console Commands to Debug:
+## Console Commands to Debug:
 
 ```javascript
 // Check if portfolio is in inventory

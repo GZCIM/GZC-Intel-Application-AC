@@ -15,6 +15,7 @@ import { ToolsMenu } from "./ToolsMenu";
 import { DraggableWindow } from "./DraggableWindow";
 import { AuthDebugWindow } from "./AuthDebugWindow";
 import { useAuth } from "../hooks/useAuth";
+import { editingLockService } from "../services/editingLockService";
 
 interface Tab {
     id: string;
@@ -184,6 +185,10 @@ export const ProfessionalHeader = () => {
     };
 
     const handleRequestAddComponent = (tabId: string) => {
+        if (!editingLockService.isUnlocked()) {
+            alert("Unlock editing from Tools to add components.");
+            return;
+        }
         console.log(
             "ProfessionalHeader: handleRequestAddComponent called for tab:",
             tabId
@@ -208,7 +213,6 @@ export const ProfessionalHeader = () => {
             console.error("Tab not found for ID:", componentPortalTabId);
             return;
         }
-        console.log("Current tab editMode:", tab.editMode);
 
         const currentComponents = tab.components || [];
 
@@ -239,30 +243,11 @@ export const ProfessionalHeader = () => {
             props: componentMeta.defaultProps || {},
         };
 
-        // Update tab with new component, preserving editMode
-        // CRITICAL: Only update components, NOT editMode - let it stay as is
-        console.log("Updating tab with:", {
-            tabId: componentPortalTabId,
-            componentsCount: currentComponents.length + 1,
-            currentEditMode: tab.editMode,
-            newComponent,
-        });
-
-        // Only update components, don't touch editMode at all
-        console.log("BEFORE UPDATE - Tab state:", tab);
-        console.log("BEFORE UPDATE - Components to set:", [
-            ...currentComponents,
-            newComponent,
-        ]);
-
-        // CRITICAL: Preserve editMode by explicitly passing it
-        // This prevents any default value from overriding current state
+        // Only update components
         updateTab(componentPortalTabId, {
             components: [...currentComponents, newComponent],
-            editMode: tab.editMode, // Explicitly preserve current edit mode
         });
 
-        console.log("AFTER UPDATE CALL - Modal will close now");
         setShowComponentPortal(false);
         setComponentPortalTabId("");
     };

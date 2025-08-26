@@ -204,9 +204,9 @@ https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainer
 
 ### Current Production Version
 - **Tag**: v20250814-042941
-- **Status**: STABLE ✅ 
+- **Status**: STABLE ✅
 - **Last Deploy**: 2025-08-14 04:29:41
-- **Critical Fixes**: 
+- **Critical Fixes**:
   - Safari compatibility (redirect auth instead of popup)
   - Performance optimizations (debounced panel toggle, React.memo)
   - Memory persistence reliability across Chrome and Safari
@@ -238,21 +238,16 @@ https://gzc-intel-application-ac.delightfulground-653e61be.eastus.azurecontainer
 ## 🎯 Current Features
 
 ### Context Menu (Right-click/Two-finger tap)
-- Not in edit mode → Enter edit mode
-- In edit mode → Add Component, Save & Exit Edit, Rename Tab
+- When unlocked (Tools → Unlock): Add Component
+- Always: Remove (for closable tabs)
 
-### Edit Mode
+### Editing (Global Unlock)
+- Use Tools → Unlock to enable editing capabilities
 - Drag to reposition components
 - Resize from corners
 - Click ✕ to remove components
 - Changes auto-save to localStorage
-- **FIXED (2025-01-08)**: Edit mode now persists when adding components
-
-### Component Portal
-- Local components from ComponentInventory
-- Import from port 3200 (disabled)
-- Add to canvas with default size
-- **FIXED (2025-01-08)**: Components no longer disappear after being added
+- Components can be added via Tools → Add Component or tab context menu when unlocked
 
 ## ⚠️ Known Issues & Solutions
 
@@ -441,12 +436,12 @@ az containerapp revision list \
 #### 🍎 Safari Compatibility Fix (v20250814-041444)
 **Problem**: Safari was crashing due to aggressive popup blocking of MSAL authentication
 **Solution**: Browser-specific authentication strategy
-- **Safari**: Uses `loginRedirect()` and `acquireTokenRedirect()` 
+- **Safari**: Uses `loginRedirect()` and `acquireTokenRedirect()`
 - **Chrome**: Continues using `loginPopup()` and `acquireTokenPopup()`
 - **Files Modified**: `useAuth.ts`, `UserContext.tsx`, `databaseService.ts`, `UnifiedProvider.tsx`
 - **Result**: Safari users get smooth redirect authentication, no more crashes
 
-#### ⚡ Performance Optimization Fix (v20250814-042941)  
+#### ⚡ Performance Optimization Fix (v20250814-042941)
 **Problem**: Component flashing/flickering during panel toggle
 **Solution**: Debounced rendering with React optimizations
 - **Debounced Panel Toggle**: Single update after 400ms instead of 6 rapid updates
@@ -455,12 +450,12 @@ az containerapp revision list \
 - **Files Modified**: `DynamicCanvas.tsx`, `ResponsiveVolatilityAnalysis.tsx`, `ComponentRenderer.tsx`
 - **Result**: Smooth panel animations, no flickering, better performance
 
-#### 🔒 Memory Persistence Reliability  
+#### 🔒 Memory Persistence Reliability
 **Problem**: Inconsistent component persistence between Chrome and Safari
 **Solution**: Enhanced fallback chain and cross-browser user ID consistency
 - **Cosmos DB First**: Primary persistence with retry logic
 - **PostgreSQL Fallback**: Legacy support for backward compatibility
-- **localStorage Fallback**: Multiple key search strategy  
+- **localStorage Fallback**: Multiple key search strategy
 - **Cross-browser**: Consistent user ID detection via MSAL accounts
 - **Result**: Components persist reliably across sessions and browsers
 
