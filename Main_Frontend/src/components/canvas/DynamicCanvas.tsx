@@ -456,29 +456,39 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                         className="grid-item" // Better control class
                         data-grid-key={`${instance.id}-${instance.displayMode}`}
                         data-display-mode={instance.displayMode}
-                        style={{
-                            background: currentTheme.surface,
-                            border: isEditMode
-                                ? `1px solid ${currentTheme.primary}`
-                                : `1px solid ${currentTheme.border}`,
-                            borderRadius: "4px",
-                            overflow: isThumb ? "hidden" : "visible", // Hide overflow in thumbnail mode
-                            transition:
-                                isDragging || isResizing
-                                    ? "none"
-                                    : "all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)",
-                            boxShadow: isEditMode
-                                ? `0 2px 8px ${currentTheme.primary}20`
-                                : `0 1px 4px rgba(0,0,0,0.04)`,
-                            transform: isEditMode ? "scale(1.01)" : "scale(1)",
-                            willChange: "transform",
-                            cursor: "auto", // Normal cursor - drag only from handle
-                            pointerEvents: "auto",
-                            display: "flex",
-                            flexDirection: "column",
-                            height: isThumb ? "28px" : "auto", // Force height in thumbnail mode
-                            minHeight: isThumb ? "28px" : "auto", // Force min-height in thumbnail mode
-                        }}
+                        style={
+                            {
+                                background: currentTheme.surface,
+                                border: isEditMode
+                                    ? `1px solid ${currentTheme.primary}`
+                                    : `1px solid ${currentTheme.border}`,
+                                borderRadius: "4px",
+                                overflow: isThumb ? "hidden" : "visible", // Hide overflow in thumbnail mode
+                                transition:
+                                    isDragging || isResizing
+                                        ? "none"
+                                        : "all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)",
+                                boxShadow: isEditMode
+                                    ? `0 2px 8px ${currentTheme.primary}20`
+                                    : `0 1px 4px rgba(0,0,0,0.04)`,
+                                transform: isEditMode
+                                    ? "scale(1.01)"
+                                    : "scale(1)",
+                                willChange: "transform",
+                                cursor: "auto", // Normal cursor - drag only from handle
+                                pointerEvents: "auto",
+                                display: "flex",
+                                flexDirection: "column",
+                                height: isThumb ? "28px" : "auto", // Force height in thumbnail mode
+                                minHeight: isThumb ? "28px" : "auto", // Force min-height in thumbnail mode
+                                // Force width using CSS variable
+                                "--grid-item-width": isThumb
+                                    ? "auto"
+                                    : `calc(${instance.originalW} * (100% / 12))`,
+                            } as React.CSSProperties & {
+                                "--grid-item-width": string;
+                            }
+                        }
                     >
                         {/* Header / title + controls (when unlocked) */}
                         <div
@@ -799,13 +809,29 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           opacity: 0.8 !important;
         }
 
-        /* Force thumbnail mode to be header-only */
-        .react-grid-item[data-display-mode="thumbnail"] {
-          height: 28px !important;
-          min-height: 28px !important;
-          max-height: 28px !important;
-          overflow: hidden !important;
-        }
+                 /* Force thumbnail mode to be header-only */
+         .react-grid-item[data-display-mode="thumbnail"] {
+           height: 28px !important;
+           min-height: 28px !important;
+           max-height: 28px !important;
+           overflow: hidden !important;
+         }
+
+         /* Force medium mode to use full width */
+         .react-grid-item[data-display-mode="medium"] {
+           width: calc(8 * (100% / 12)) !important;
+           min-width: calc(8 * (100% / 12)) !important;
+           max-width: calc(8 * (100% / 12)) !important;
+         }
+
+         /* Force ALL grid items to use their specified width */
+         .react-grid-item {
+           width: var(--grid-item-width, auto) !important;
+           min-width: var(--grid-item-width, auto) !important;
+           max-width: var(--grid-item-width, auto) !important;
+         }
+
+
 
         /* Additional thumbnail enforcement */
         .react-grid-item[data-display-mode="thumbnail"] .grid-item {
@@ -956,6 +982,21 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             ? layouts
                                             : { lg: generateLayout }
                                     }
+                                    onBreakpointChange={(breakpoint) => {
+                                        console.log(
+                                            `🔍 Breakpoint changed to: ${breakpoint}, cols: ${
+                                                breakpoint === "lg"
+                                                    ? 12
+                                                    : breakpoint === "md"
+                                                    ? 10
+                                                    : breakpoint === "sm"
+                                                    ? 6
+                                                    : breakpoint === "xs"
+                                                    ? 4
+                                                    : 2
+                                            }`
+                                        );
+                                    }}
                                     onLayoutChange={handleLayoutChange}
                                     onDragStart={handleDragStart}
                                     onDragStop={handleDragStop}
@@ -976,7 +1017,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         xxs: 2,
                                     }}
                                     breakpoints={{
-                                        lg: 1200,
+                                        lg: 1000, // Lowered from 1200 to accommodate your 1054px container
                                         md: 996,
                                         sm: 768,
                                         xs: 480,
