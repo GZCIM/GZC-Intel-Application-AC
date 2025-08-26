@@ -7,11 +7,13 @@ import { editingLockService } from "../services/editingLockService";
 interface ToolsMenuProps {
     onOpenAuthDebugger: () => void;
     onRequestAddComponent?: (tabId: string) => void;
+    trigger?: React.ReactNode; // optional custom trigger (e.g., gear icon)
 }
 
 export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     onOpenAuthDebugger,
     onRequestAddComponent,
+    trigger,
 }) => {
     const { currentTheme: theme } = useTheme();
     const { activeTabId, resetToDefault, clearUserConfiguration } =
@@ -435,52 +437,64 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
 
     return (
         <div ref={menuRef} style={{ position: "relative" }}>
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    padding: "6px 12px",
-                    backgroundColor: "transparent",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    fontSize: "13px",
-                    color: theme.textSecondary,
-                    transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = `${theme.primary}10`;
-                    e.currentTarget.style.color = theme.text;
-                }}
-                onMouseLeave={(e) => {
-                    if (!isOpen) {
-                        e.currentTarget.style.backgroundColor = "transparent";
-                        e.currentTarget.style.color = theme.textSecondary;
-                    }
-                }}
-            >
-                <span>Tools</span>
-                <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
+            {trigger ? (
+                <div
+                    onClick={() => setIsOpen(!isOpen)}
+                    style={{ cursor: "pointer" }}
+                >
+                    {trigger}
+                </div>
+            ) : (
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
                     style={{
-                        transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-                        transition: "transform 0.2s ease",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        padding: "6px 12px",
+                        backgroundColor: "transparent",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontSize: "13px",
+                        color: theme.textSecondary,
+                        transition: "all 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = `${theme.primary}10`;
+                        e.currentTarget.style.color = theme.text;
+                    }}
+                    onMouseLeave={(e) => {
+                        if (!isOpen) {
+                            e.currentTarget.style.backgroundColor =
+                                "transparent";
+                            e.currentTarget.style.color = theme.textSecondary;
+                        }
                     }}
                 >
-                    <path
-                        d="M3 4.5L6 7.5L9 4.5"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                </svg>
-            </button>
+                    <span>Tools</span>
+                    <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        style={{
+                            transform: isOpen
+                                ? "rotate(180deg)"
+                                : "rotate(0deg)",
+                            transition: "transform 0.2s ease",
+                        }}
+                    >
+                        <path
+                            d="M3 4.5L6 7.5L9 4.5"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </svg>
+                </button>
+            )}
 
             <AnimatePresence>
                 {isOpen && (

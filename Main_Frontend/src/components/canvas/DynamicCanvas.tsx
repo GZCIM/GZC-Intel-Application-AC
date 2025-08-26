@@ -518,30 +518,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     position: "relative",
                 }}
             >
-                {/* Edit Mode Indicator */}
-                {isEditMode && (
-                    <div
-                        style={{
-                            position: "absolute",
-                            top: "16px",
-                            left: "16px",
-                            zIndex: 1000,
-                            padding: "8px 16px",
-                            backgroundColor: `${currentTheme.primary}`,
-                            color: "white",
-                            borderRadius: "20px",
-                            fontSize: "12px",
-                            fontWeight: "600",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                            animation: "pulse 2s infinite ease-in-out",
-                        }}
-                    >
-                        ✏️ EDIT MODE
-                    </div>
-                )}
+                {/* Edit mode indicator removed; header tab will reflect unlock state */}
 
                 {/* Removed floating Add Component button - use context menu or tab edit button instead */}
 
