@@ -299,12 +299,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             prev.map((c) => {
                 if (c.id === id) {
                     if (mode === "thumbnail") {
-                        // When switching to thumbnail, store current size and make it smaller
+                        // When switching to thumbnail, make it very compact - just header height
                         return {
                             ...c,
                             displayMode: mode,
                             w: Math.max(2, Math.floor(c.originalW * 0.4)), // 40% of original width
-                            h: Math.max(2, Math.floor(c.originalH * 0.3)), // 30% of original height
+                            h: 1, // Just 1 grid unit height for header only
                         };
                     } else if (mode === "medium") {
                         // When switching back to medium, restore original dimensions
@@ -391,8 +391,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             style={{
                                 height: "28px",
                                 background: `linear-gradient(to right, ${currentTheme.primary}10, transparent)`,
-                                borderBottom: `1px solid ${currentTheme.border}`,
-                                borderRadius: "4px 4px 0 0",
+                                borderBottom: isThumb
+                                    ? "none"
+                                    : `1px solid ${currentTheme.border}`,
+                                borderRadius: isThumb ? "4px" : "4px 4px 0 0",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "space-between",
@@ -555,37 +557,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             )}
                         </div>
 
-                        {/* Component content */}
-                        <div
-                            style={{
-                                flex: 1,
-                                position: "relative",
-                                padding: isThumb ? 8 : 0,
-                            }}
-                        >
-                            {isThumb ? (
-                                <div
-                                    style={{
-                                        height: "100%",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        flexDirection: "column",
-                                        gap: 8,
-                                        color: currentTheme.textSecondary,
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            width: "60%",
-                                            height: 50,
-                                            borderRadius: 6,
-                                            background: `${currentTheme.border}55`,
-                                        }}
-                                    />
-                                    <div style={{ fontSize: 12 }}>{title}</div>
-                                </div>
-                            ) : (
+                        {/* Component content - hidden in thumbnail mode */}
+                        {!isThumb && (
+                            <div
+                                style={{
+                                    flex: 1,
+                                    position: "relative",
+                                }}
+                            >
                                 <ComponentRenderer
                                     componentId={instance.componentId}
                                     instanceId={instance.id}
@@ -614,8 +593,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         );
                                     }}
                                 />
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 );
             }),
