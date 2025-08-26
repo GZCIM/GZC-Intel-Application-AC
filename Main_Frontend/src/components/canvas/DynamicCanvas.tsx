@@ -229,11 +229,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
     // Drag handlers - prevent state updates during drag
     const handleDragStart = useCallback(() => {
+        console.log("🟡 Drag start");
         setIsDragging(true);
     }, []);
 
     const handleDragStop = useCallback(
         (layout: Layout[]) => {
+            console.log("🟢 Drag stop - layout items:", layout?.length);
             setIsDragging(false);
 
             // Update positions and save immediately for better UX
@@ -361,6 +363,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             return c;
                         })
                     );
+                    // Clear any stale RGL layout so it regenerates from component sizes
+                    setLayouts({});
                 }
             }
         } else if (mode === "thumbnail") {
@@ -490,6 +494,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 justifyContent: "space-between",
                                 padding: "0 8px",
                                 userSelect: "none",
+                                cursor: isEditMode ? "move" : "auto",
                             }}
                         >
                             <span
@@ -978,7 +983,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     }}
                                     compactType="vertical"
                                     preventCollision={false}
-                                    // No drag handle restriction - drag from anywhere
+                                    draggableHandle=".drag-handle"
                                     draggableCancel=".no-drag" // Prevent dragging on specific elements like buttons
                                 >
                                     {gridChildren}

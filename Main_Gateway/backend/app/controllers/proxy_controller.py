@@ -13,8 +13,7 @@ import os
 from app.util.logger import get_logger
 
 logger = get_logger(__name__)
-router = APIRouter(prefix="/api/proxy", tags=["proxy"])
-
+router = APIRouter(prefix="/api/proxy", tags=["proxy"])image.png
 # Service routing configuration
 SERVICE_ROUTES = {
     "components": {
@@ -38,10 +37,10 @@ async def proxy_list_components(request: Request):
         service_config = SERVICE_ROUTES.get("components")
         if not service_config:
             raise HTTPException(status_code=404, detail="Service not configured")
-        
+
         # Log the request
         logger.info(f"Proxying component list request from {request.client.host}")
-        
+
         async with httpx.AsyncClient(timeout=service_config["timeout"]) as client:
             # Forward the request
             response = await client.get(
@@ -51,13 +50,13 @@ async def proxy_list_components(request: Request):
                     "X-Gateway-Request": "true"
                 }
             )
-            
+
             # Return the response
             return JSONResponse(
                 content=response.json(),
                 status_code=response.status_code
             )
-            
+
     except httpx.TimeoutException:
         logger.error("Component service timeout")
         raise HTTPException(status_code=504, detail="Component service timeout")
@@ -72,10 +71,10 @@ async def proxy_get_component(component_id: str, request: Request):
         service_config = SERVICE_ROUTES.get("components")
         if not service_config:
             raise HTTPException(status_code=404, detail="Service not configured")
-        
+
         # Log the request
         logger.info(f"Proxying component {component_id} request from {request.client.host}")
-        
+
         async with httpx.AsyncClient(timeout=service_config["timeout"]) as client:
             # Forward the request
             response = await client.get(
@@ -85,13 +84,13 @@ async def proxy_get_component(component_id: str, request: Request):
                     "X-Gateway-Request": "true"
                 }
             )
-            
+
             # Return the response
             return JSONResponse(
                 content=response.json(),
                 status_code=response.status_code
             )
-            
+
     except httpx.TimeoutException:
         logger.error("Component service timeout")
         raise HTTPException(status_code=504, detail="Component service timeout")
@@ -106,15 +105,15 @@ async def proxy_bloomberg_request(path: str, request: Request):
         service_config = SERVICE_ROUTES.get("bloomberg")
         if not service_config:
             raise HTTPException(status_code=404, detail="Service not configured")
-        
+
         # Log the request
         logger.info(f"Proxying Bloomberg request: {request.method} /{path}")
-        
+
         # Get request body if present
         body = None
         if request.method in ["POST", "PUT"]:
             body = await request.body()
-        
+
         async with httpx.AsyncClient(timeout=service_config["timeout"]) as client:
             # Forward the request
             response = await client.request(
@@ -128,14 +127,14 @@ async def proxy_bloomberg_request(path: str, request: Request):
                 content=body,
                 params=dict(request.query_params)
             )
-            
+
             # Return the response
             return Response(
                 content=response.content,
                 status_code=response.status_code,
                 headers=dict(response.headers)
             )
-            
+
     except httpx.TimeoutException:
         logger.error("Bloomberg service timeout")
         raise HTTPException(status_code=504, detail="Bloomberg service timeout")
@@ -147,7 +146,7 @@ async def proxy_bloomberg_request(path: str, request: Request):
 async def proxy_health_check():
     """Check health of all proxied services"""
     health_status = {}
-    
+
     for service_name, config in SERVICE_ROUTES.items():
         try:
             async with httpx.AsyncClient(timeout=5) as client:
@@ -162,10 +161,10 @@ async def proxy_health_check():
                 "url": config['url'],
                 "error": str(e)
             }
-    
+
     # Overall health is healthy only if all services are healthy
     all_healthy = all(s.get("status") == "healthy" for s in health_status.values())
-    
+
     return {
         "overall": "healthy" if all_healthy else "degraded",
         "services": health_status
