@@ -304,7 +304,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             ...c,
                             displayMode: mode,
                             w: Math.max(2, Math.floor(c.originalW * 0.4)), // 40% of original width
-                            h: 1, // Just 1 grid unit height for header only
+                            h: 0.5, // Even smaller height for header only - force compact layout
                         };
                     } else if (mode === "medium") {
                         // When switching back to medium, restore original dimensions
@@ -324,6 +324,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         // Trigger layout update and save after mode change
         setTimeout(() => {
             saveLayoutToTab();
+            // Force grid layout to recalculate
+            window.dispatchEvent(new Event("resize"));
         }, 100);
     };
 
@@ -361,15 +363,17 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 const isThumb = instance.displayMode === "thumbnail";
                 return (
                     <div
-                        key={instance.id}
+                        key={`${instance.id}-${instance.displayMode}`}
                         className="grid-item" // Better control class
+                        data-grid-key={`${instance.id}-${instance.displayMode}`}
+                        data-display-mode={instance.displayMode}
                         style={{
                             background: currentTheme.surface,
                             border: isEditMode
                                 ? `1px solid ${currentTheme.primary}`
                                 : `1px solid ${currentTheme.border}`,
                             borderRadius: "4px",
-                            overflow: "visible", // Allow 3D transforms
+                            overflow: isThumb ? "hidden" : "visible", // Hide overflow in thumbnail mode
                             transition:
                                 isDragging || isResizing
                                     ? "none"
@@ -383,6 +387,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             pointerEvents: "auto",
                             display: "flex",
                             flexDirection: "column",
+                            height: isThumb ? "28px" : "auto", // Force height in thumbnail mode
+                            minHeight: isThumb ? "28px" : "auto", // Force min-height in thumbnail mode
                         }}
                     >
                         {/* Header / title + controls (when unlocked) */}
@@ -700,6 +706,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           border: 2px dashed ${currentTheme.primary}60 !important;
           border-radius: 8px !important;
           opacity: 0.8 !important;
+        }
+
+        /* Force thumbnail mode to be header-only */
+        .react-grid-item[data-display-mode="thumbnail"] {
+          height: 28px !important;
+          min-height: 28px !important;
+          max-height: 28px !important;
+          overflow: hidden !important;
         }
 
         /* In edit mode, disable component interaction except for remove button */
