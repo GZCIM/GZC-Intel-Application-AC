@@ -467,6 +467,24 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 ? `
           .grid-item .react-resizable-handle {
             pointer-events: auto !important;
+            display: block !important;
+            width: 12px !important;
+            height: 12px !important;
+            opacity: 0.9 !important;
+          }
+          .grid-item .react-resizable-handle::after {
+            content: '';
+            position: absolute;
+            right: 2px;
+            bottom: 2px;
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid ${currentTheme.primary};
+            border-bottom: 2px solid ${currentTheme.primary};
+            opacity: 0.8;
+          }
+          .grid-item .react-resizable-handle-se {
+            cursor: se-resize !important;
           }
 
           /* Keep remove button always interactive */
@@ -533,7 +551,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                         height: "100%",
                         width: "100%",
                         padding: "2px",
-                        overflow: "hidden",
+                        overflowX: "hidden",
+                        overflowY: "auto",
                     }}
                 >
                     {components.length === 0 ? (
