@@ -130,6 +130,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             setComponents(loadedComponents);
             // Clear any stale react-grid-layout state so generated layout uses fresh sizes
             setLayouts({});
+            // Force a resize so RGL recalculates widths and breakpoints
+            setTimeout(() => window.dispatchEvent(new Event("resize")), 50);
         } else if (!tab?.components || tab.components.length === 0) {
             // Only load from memory if we don't already have components
             if (components.length === 0) {
@@ -156,7 +158,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 }
             }
         }
-    }, [tabId, tab?.components?.length]);
+    }, [tabId, JSON.stringify(tab?.components || [])]);
 
     // Save current state - MOVED UP to fix temporal dead zone
     const saveLayoutToTab = useCallback(
