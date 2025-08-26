@@ -28,6 +28,8 @@ interface DynamicCanvasProps {
     tabId: string;
 }
 
+type DisplayMode = "medium" | "thumbnail";
+
 interface ComponentInstance {
     id: string; // unique instance ID
     componentId: string; // reference to ComponentMeta
@@ -37,6 +39,7 @@ interface ComponentInstance {
     h: number;
     props?: Record<string, any>; // Component-specific props
     component?: React.ComponentType<any>;
+    displayMode?: DisplayMode; // runtime-only display mode
 }
 
 export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
@@ -55,6 +58,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     const [containerWidth, setContainerWidth] = useState<number | undefined>(
         undefined
     ); // Force width recalculation
+    const [fullScreenId, setFullScreenId] = useState<string | null>(null);
 
     const tab = useMemo(
         () => currentLayout?.tabs.find((t) => t.id === tabId),
@@ -74,6 +78,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 w: comp.position.w,
                 h: comp.position.h,
                 props: comp.props || {},
+                displayMode: "medium",
             }));
             setComponents(loadedComponents);
         } else if (!tab?.components || tab.components.length === 0) {
@@ -90,6 +95,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             w: comp.position.w,
                             h: comp.position.h,
                             props: comp.props || {},
+                            displayMode: "medium",
                         })
                     );
                     setComponents(loadedComponents);
@@ -222,6 +228,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             y: 0,
             w: componentMeta.defaultSize.w,
             h: componentMeta.defaultSize.h,
+            displayMode: "medium",
         };
 
         setComponents((prev) => [...prev, newInstance]);
@@ -260,6 +267,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         setTimeout(() => saveLayoutToTab(), 100);
     };
 
+    // Mode helpers
+    const setDisplayMode = (id: string, mode: DisplayMode) => {
+        setComponents((prev) =>
+            prev.map((c) => (c.id === id ? { ...c, displayMode: mode } : c))
+        );
+    };
+
     // Memoize layout generation to prevent infinite re-renders
     const generateLayout = useMemo((): Layout[] => {
         return components.map((comp) => {
@@ -283,92 +297,211 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     // Memoize grid children to prevent hook order violations
     const gridChildren = useMemo(
         () =>
-            components.map((instance) => (
-                <div
-                    key={instance.id}
-                    className="grid-item" // Better control class
-                    style={{
-                        background: currentTheme.surface,
-                        border: isEditMode
-                            ? `1px solid ${currentTheme.primary}`
-                            : `1px solid ${currentTheme.border}`,
-                        borderRadius: "4px",
-                        overflow: "visible", // Allow 3D transforms
-                        transition:
-                            isDragging || isResizing
-                                ? "none"
-                                : "all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)",
-                        boxShadow: isEditMode
-                            ? `0 2px 8px ${currentTheme.primary}20`
-                            : `0 1px 4px rgba(0,0,0,0.04)`,
-                        transform: isEditMode ? "scale(1.01)" : "scale(1)",
-                        willChange: "transform",
-                        cursor: "auto", // Normal cursor - drag only from handle
-                        pointerEvents: "auto",
-                        display: "flex",
-                        flexDirection: "column",
-                    }}
-                >
-                    {/* Drag handle header - only in edit mode */}
-                    {isEditMode && (
+            components.map((instance) => {
+                if (fullScreenId && instance.id !== fullScreenId) {
+                    // Hide other components while full-screen is active
+                    return null;
+                }
+                const title =
+                    componentInventory.getComponent(instance.componentId)
+                        ?.displayName || "Component";
+                const isThumb = instance.displayMode === "thumbnail";
+                return (
+                    <div
+                        key={instance.id}
+                        className="grid-item" // Better control class
+                        style={{
+                            background: currentTheme.surface,
+                            border: isEditMode
+                                ? `1px solid ${currentTheme.primary}`
+                                : `1px solid ${currentTheme.border}`,
+                            borderRadius: "4px",
+                            overflow: "visible", // Allow 3D transforms
+                            transition:
+                                isDragging || isResizing
+                                    ? "none"
+                                    : "all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)",
+                            boxShadow: isEditMode
+                                ? `0 2px 8px ${currentTheme.primary}20`
+                                : `0 1px 4px rgba(0,0,0,0.04)`,
+                            transform: isEditMode ? "scale(1.01)" : "scale(1)",
+                            willChange: "transform",
+                            cursor: "auto", // Normal cursor - drag only from handle
+                            pointerEvents: "auto",
+                            display: "flex",
+                            flexDirection: "column",
+                        }}
+                    >
+                        {/* Header / title + controls (when unlocked) */}
                         <div
                             className="drag-handle"
                             style={{
-                                height: "24px",
+                                height: "28px",
                                 background: `linear-gradient(to right, ${currentTheme.primary}10, transparent)`,
                                 borderBottom: `1px solid ${currentTheme.border}`,
                                 borderRadius: "4px 4px 0 0",
                                 display: "flex",
                                 alignItems: "center",
+                                justifyContent: "space-between",
                                 padding: "0 8px",
-                                cursor: "move",
                                 userSelect: "none",
                             }}
                         >
                             <span
                                 style={{
                                     fontSize: "12px",
-                                    fontWeight: "600",
+                                    fontWeight: 600,
                                     color: currentTheme.text,
-                                    opacity: 0.7,
+                                    opacity: 0.8,
                                 }}
                             >
-                                {componentInventory.getComponent(
-                                    instance.componentId
-                                )?.displayName || "Component"}
+                                {title}
                             </span>
+                            {isEditMode && (
+                                <div style={{ display: "flex", gap: 6 }}>
+                                    <button
+                                        className="no-drag"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDisplayMode(
+                                                instance.id,
+                                                "thumbnail"
+                                            );
+                                        }}
+                                        title="Thumbnail"
+                                        style={{
+                                            fontSize: 11,
+                                            padding: "2px 6px",
+                                            border: `1px solid ${currentTheme.border}`,
+                                            background: isThumb
+                                                ? `${currentTheme.primary}20`
+                                                : "transparent",
+                                            borderRadius: 4,
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        Thumb
+                                    </button>
+                                    <button
+                                        className="no-drag"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDisplayMode(
+                                                instance.id,
+                                                "medium"
+                                            );
+                                        }}
+                                        title="Medium"
+                                        style={{
+                                            fontSize: 11,
+                                            padding: "2px 6px",
+                                            border: `1px solid ${currentTheme.border}`,
+                                            background:
+                                                !isThumb && !fullScreenId
+                                                    ? `${currentTheme.primary}20`
+                                                    : "transparent",
+                                            borderRadius: 4,
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        Medium
+                                    </button>
+                                    <button
+                                        className="no-drag"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setFullScreenId(instance.id);
+                                        }}
+                                        title="Full"
+                                        style={{
+                                            fontSize: 11,
+                                            padding: "2px 6px",
+                                            border: `1px solid ${currentTheme.border}`,
+                                            background:
+                                                fullScreenId === instance.id
+                                                    ? `${currentTheme.primary}20`
+                                                    : "transparent",
+                                            borderRadius: 4,
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        Full
+                                    </button>
+                                </div>
+                            )}
                         </div>
-                    )}
 
-                    {/* Component content */}
-                    <div style={{ flex: 1, position: "relative" }}>
-                        <ComponentRenderer
-                            componentId={instance.componentId}
-                            instanceId={instance.id}
-                            props={instance.props || {}}
-                            isEditMode={isEditMode}
-                            onRemove={() => removeComponent(instance.id)}
-                            onPropsUpdate={(newProps: Record<string, any>) => {
-                                setComponents((prev) =>
-                                    prev.map((comp) =>
-                                        comp.id === instance.id
-                                            ? { ...comp, props: newProps }
-                                            : comp
-                                    )
-                                );
-                                // Save component props immediately for better UX
-                                setTimeout(() => saveLayoutToTab(), 100);
+                        {/* Component content */}
+                        <div
+                            style={{
+                                flex: 1,
+                                position: "relative",
+                                padding: isThumb ? 8 : 0,
                             }}
-                        />
+                        >
+                            {isThumb ? (
+                                <div
+                                    style={{
+                                        height: "100%",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        flexDirection: "column",
+                                        gap: 8,
+                                        color: currentTheme.textSecondary,
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            width: "60%",
+                                            height: 50,
+                                            borderRadius: 6,
+                                            background: `${currentTheme.border}55`,
+                                        }}
+                                    />
+                                    <div style={{ fontSize: 12 }}>{title}</div>
+                                </div>
+                            ) : (
+                                <ComponentRenderer
+                                    componentId={instance.componentId}
+                                    instanceId={instance.id}
+                                    props={instance.props || {}}
+                                    isEditMode={isEditMode}
+                                    onRemove={() =>
+                                        removeComponent(instance.id)
+                                    }
+                                    onPropsUpdate={(
+                                        newProps: Record<string, any>
+                                    ) => {
+                                        setComponents((prev) =>
+                                            prev.map((comp) =>
+                                                comp.id === instance.id
+                                                    ? {
+                                                          ...comp,
+                                                          props: newProps,
+                                                      }
+                                                    : comp
+                                            )
+                                        );
+                                        // Save component props immediately for better UX
+                                        setTimeout(
+                                            () => saveLayoutToTab(),
+                                            100
+                                        );
+                                    }}
+                                />
+                            )}
+                        </div>
                     </div>
-                </div>
-            )),
+                );
+            }),
         [
             components,
             currentTheme,
             isDragging,
             isResizing,
             isEditMode,
+            fullScreenId,
             removeComponent,
             saveLayoutToTab,
         ]
@@ -439,6 +572,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             );
         };
     }, []);
+
+    const fullScreenInstance = useMemo(
+        () => components.find((c) => c.id === fullScreenId) || null,
+        [components, fullScreenId]
+    );
 
     return (
         <>
@@ -518,10 +656,6 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     position: "relative",
                 }}
             >
-                {/* Edit mode indicator removed; header tab will reflect unlock state */}
-
-                {/* Removed floating Add Component button - use context menu or tab edit button instead */}
-
                 {/* Canvas Area */}
                 <div
                     style={{
@@ -595,43 +729,168 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 minWidth: 0,
                             }}
                         >
-                            <ResponsiveGridLayout
-                                key={`grid-${containerWidth || "auto"}`} // Stable key - only changes when width actually changes
-                                className={`layout ${
-                                    isLayoutReady ? "layout-ready" : ""
-                                }`}
-                                layouts={
-                                    layouts.lg
-                                        ? layouts
-                                        : { lg: generateLayout }
-                                }
-                                onLayoutChange={handleLayoutChange}
-                                onDragStart={handleDragStart}
-                                onDragStop={handleDragStop}
-                                onResizeStart={handleResizeStart}
-                                onResizeStop={handleResizeStop}
-                                isDraggable={true} // Always allow dragging
-                                isResizable={true} // Always allow resizing
-                                useCSSTransforms={true} // 6x faster paint performance
-                                transformScale={1} // Important for smooth scaling
-                                margin={[2, 2]}
-                                containerPadding={[0, 0]}
-                                rowHeight={60}
-                                cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-                                breakpoints={{
-                                    lg: 1200,
-                                    md: 996,
-                                    sm: 768,
-                                    xs: 480,
-                                    xxs: 0,
-                                }}
-                                compactType="vertical"
-                                preventCollision={false}
-                                // No drag handle restriction - drag from anywhere
-                                draggableCancel=".no-drag" // Prevent dragging on specific elements like buttons
-                            >
-                                {gridChildren}
-                            </ResponsiveGridLayout>
+                            {!fullScreenId && (
+                                <ResponsiveGridLayout
+                                    key={`grid-${containerWidth || "auto"}`} // Stable key - only changes when width actually changes
+                                    className={`layout ${
+                                        isLayoutReady ? "layout-ready" : ""
+                                    }`}
+                                    layouts={
+                                        layouts.lg
+                                            ? layouts
+                                            : { lg: generateLayout }
+                                    }
+                                    onLayoutChange={handleLayoutChange}
+                                    onDragStart={handleDragStart}
+                                    onDragStop={handleDragStop}
+                                    onResizeStart={handleResizeStart}
+                                    onResizeStop={handleResizeStop}
+                                    isDraggable={true} // Always allow dragging
+                                    isResizable={true} // Always allow resizing
+                                    useCSSTransforms={true} // 6x faster paint performance
+                                    transformScale={1} // Important for smooth scaling
+                                    margin={[2, 2]}
+                                    containerPadding={[0, 0]}
+                                    rowHeight={60}
+                                    cols={{
+                                        lg: 12,
+                                        md: 10,
+                                        sm: 6,
+                                        xs: 4,
+                                        xxs: 2,
+                                    }}
+                                    breakpoints={{
+                                        lg: 1200,
+                                        md: 996,
+                                        sm: 768,
+                                        xs: 480,
+                                        xxs: 0,
+                                    }}
+                                    compactType="vertical"
+                                    preventCollision={false}
+                                    // No drag handle restriction - drag from anywhere
+                                    draggableCancel=".no-drag" // Prevent dragging on specific elements like buttons
+                                >
+                                    {gridChildren}
+                                </ResponsiveGridLayout>
+                            )}
+
+                            {fullScreenId && fullScreenInstance && (
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        inset: 0,
+                                        background: currentTheme.background,
+                                        border: `1px solid ${currentTheme.border}`,
+                                        borderRadius: 6,
+                                        padding: 6,
+                                        zIndex: 5,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "space-between",
+                                            padding: "4px 6px",
+                                            borderBottom: `1px solid ${currentTheme.border}`,
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                fontSize: 12,
+                                                opacity: 0.8,
+                                            }}
+                                        >
+                                            {componentInventory.getComponent(
+                                                fullScreenInstance.componentId
+                                            )?.displayName || "Component"}
+                                        </div>
+                                        <div
+                                            style={{ display: "flex", gap: 8 }}
+                                        >
+                                            <button
+                                                onClick={() =>
+                                                    setDisplayMode(
+                                                        fullScreenInstance.id,
+                                                        "thumbnail"
+                                                    )
+                                                }
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "2px 6px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    borderRadius: 4,
+                                                    background: "transparent",
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                Thumb
+                                            </button>
+                                            <button
+                                                onClick={() =>
+                                                    setFullScreenId(null)
+                                                }
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "2px 8px",
+                                                    background:
+                                                        currentTheme.primary,
+                                                    color: "#fff",
+                                                    border: "none",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                Exit Full
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style={{
+                                            flex: 1,
+                                            position: "relative",
+                                        }}
+                                    >
+                                        <ComponentRenderer
+                                            componentId={
+                                                fullScreenInstance.componentId
+                                            }
+                                            instanceId={fullScreenInstance.id}
+                                            props={
+                                                fullScreenInstance.props || {}
+                                            }
+                                            isEditMode={isEditMode}
+                                            onRemove={() =>
+                                                removeComponent(
+                                                    fullScreenInstance.id
+                                                )
+                                            }
+                                            onPropsUpdate={(
+                                                newProps: Record<string, any>
+                                            ) => {
+                                                setComponents((prev) =>
+                                                    prev.map((comp) =>
+                                                        comp.id ===
+                                                        fullScreenInstance.id
+                                                            ? {
+                                                                  ...comp,
+                                                                  props: newProps,
+                                                              }
+                                                            : comp
+                                                    )
+                                                );
+                                                setTimeout(
+                                                    () => saveLayoutToTab(),
+                                                    100
+                                                );
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
