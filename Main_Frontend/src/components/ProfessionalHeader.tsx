@@ -379,20 +379,13 @@ export const ProfessionalHeader = () => {
                                         handleTabRightClick(e, tab)
                                     }
                                     style={{
-                                        background:
-                                            activeTab === tab.id
-                                                ? window.localStorage.getItem(
-                                                      "gzc-edit-mode"
-                                                  ) === "unlocked"
-                                                    ? "#7FB36E" // green when unlocked
-                                                    : `${theme.primary}20`
-                                                : "transparent",
+                                        background: "transparent",
                                         color:
                                             activeTab === tab.id
                                                 ? window.localStorage.getItem(
                                                       "gzc-edit-mode"
                                                   ) === "unlocked"
-                                                    ? "#000000"
+                                                    ? "#ff6b6b" // reddish when unlocked
                                                     : theme.primary
                                                 : theme.textSecondary,
                                         border:
@@ -403,7 +396,7 @@ export const ProfessionalHeader = () => {
                                         paddingRight: "20px", // Space for type indicator
                                         fontSize: "12px",
                                         fontWeight: 700,
-                                        borderRadius: "18px",
+                                        borderRadius: "12px",
                                         cursor:
                                             draggedTab !== null
                                                 ? "move"
@@ -507,35 +500,6 @@ export const ProfessionalHeader = () => {
                     fontSize: "13px",
                 }}
             >
-                {/* Tools Menu */}
-                <ToolsMenu
-                    onOpenAuthDebugger={() => setShowAuthDebugger(true)}
-                    onRequestAddComponent={handleRequestAddComponent}
-                    trigger={
-                        <svg
-                            width="18"
-                            height="18"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            style={{ cursor: "pointer" }}
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                            />
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                        </svg>
-                    }
-                />
-
                 {/* User Profile */}
                 <UserProfile />
 
@@ -582,6 +546,35 @@ export const ProfessionalHeader = () => {
                         />
                     </svg>
                 </button>
+
+                {/* Tools Menu on far right */}
+                <ToolsMenu
+                    onOpenAuthDebugger={() => setShowAuthDebugger(true)}
+                    onRequestAddComponent={handleRequestAddComponent}
+                    trigger={
+                        <svg
+                            width="18"
+                            height="18"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            style={{ cursor: "pointer" }}
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                            />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                        </svg>
+                    }
+                />
             </div>
 
             {/* Context Menu */}
