@@ -19,6 +19,7 @@ import { ComponentRenderer } from "./ComponentRenderer";
 import { ComponentPortalModal } from "../ComponentPortalModal";
 import "../../styles/analytics-dashboard.css";
 import "../../styles/dynamic-canvas.css";
+import { editingLockService } from "../../services/editingLockService";
 
 // Memoize WidthProvider for better performance (Context7 recommendation)
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -59,8 +60,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         () => currentLayout?.tabs.find((t) => t.id === tabId),
         [currentLayout?.tabs, tabId]
     );
-    const isEditMode = tab?.editMode || false;
-    const prevEditModeRef = useRef(isEditMode);
+    const isEditMode = editingLockService.isUnlocked();
 
     // Load components from tab configuration (prioritize tab over memory for live updates)
     useEffect(() => {
@@ -211,24 +211,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         [isEditMode, updateComponentPositions, saveLayoutToTab]
     );
 
-    // Save when exiting edit mode
-    useEffect(() => {
-        // If we were in edit mode and now we're not, save the layout
-        if (prevEditModeRef.current && !isEditMode) {
-            console.log("🔄 Exiting edit mode - saving layout to Cosmos DB", {
-                tabId,
-                componentCount: components.length,
-                timestamp: new Date().toISOString(),
-            });
-            saveLayoutToTab();
-
-            // Also force a save to user memory for extra persistence
-            setTimeout(() => {
-                console.log("✅ Layout saved to Cosmos DB successfully");
-            }, 500);
-        }
-        prevEditModeRef.current = isEditMode;
-    }, [isEditMode, saveLayoutToTab]);
+    // Save on explicit actions only (no longer tracking edit mode transitions)
 
     // Add new component to canvas
     const addComponent = (componentMeta: ComponentMeta) => {
@@ -263,7 +246,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             lg: [...(prev.lg || []), newLayoutItem],
         }));
 
-        // Don't save when adding - wait for edit mode exit
+        // Don't save when adding - wait for layout confirmation
     };
 
     // Remove component
@@ -582,7 +565,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             >
                                 {isEditMode
                                     ? 'Click "Add Component" button to add components. Drag and resize to arrange them.'
-                                    : "Click Edit to add and arrange components. Changes auto-save."}
+                                    : "Use Tools → Unlock to add and arrange components. Changes auto-save."}
                             </div>
                             {isEditMode && (
                                 <button
