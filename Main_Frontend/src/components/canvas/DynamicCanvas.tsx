@@ -40,6 +40,8 @@ interface ComponentInstance {
     props?: Record<string, any>; // Component-specific props
     component?: React.ComponentType<any>;
     displayMode?: DisplayMode; // runtime-only display mode
+    originalW: number; // Store original dimensions
+    originalH: number;
 }
 
 export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
@@ -71,7 +73,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         if (isEditMode) {
             setFullScreenId(null);
             setComponents((prev) =>
-                prev.map((c) => ({ ...c, displayMode: "medium" }))
+                prev.map((c) => ({
+                    ...c,
+                    displayMode: "medium",
+                    w: c.originalW, // Restore original dimensions
+                    h: c.originalH,
+                }))
             );
         }
     }, [isEditMode]);
@@ -89,6 +96,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 h: comp.position.h,
                 props: comp.props || {},
                 displayMode: "medium",
+                originalW: comp.position.w, // Store original dimensions
+                originalH: comp.position.h,
             }));
             setComponents(loadedComponents);
         } else if (!tab?.components || tab.components.length === 0) {
@@ -106,6 +115,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             h: comp.position.h,
                             props: comp.props || {},
                             displayMode: "medium",
+                            originalW: comp.position.w, // Store original dimensions
+                            originalH: comp.position.h,
                         })
                     );
                     setComponents(loadedComponents);
@@ -162,6 +173,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                         y: layoutItem.y,
                         w: layoutItem.w,
                         h: layoutItem.h,
+                        // Update original dimensions when resizing to keep thumbnail calculations accurate
+                        originalW: layoutItem.w,
+                        originalH: layoutItem.h,
                     };
                 }
                 return comp;
@@ -239,6 +253,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             w: componentMeta.defaultSize.w,
             h: componentMeta.defaultSize.h,
             displayMode: "medium",
+            originalW: componentMeta.defaultSize.w, // Store original dimensions
+            originalH: componentMeta.defaultSize.h,
         };
 
         setComponents((prev) => [...prev, newInstance]);
@@ -280,8 +296,35 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     // Mode helpers
     const setDisplayMode = (id: string, mode: DisplayMode) => {
         setComponents((prev) =>
-            prev.map((c) => (c.id === id ? { ...c, displayMode: mode } : c))
+            prev.map((c) => {
+                if (c.id === id) {
+                    if (mode === "thumbnail") {
+                        // When switching to thumbnail, store current size and make it smaller
+                        return {
+                            ...c,
+                            displayMode: mode,
+                            w: Math.max(2, Math.floor(c.originalW * 0.4)), // 40% of original width
+                            h: Math.max(2, Math.floor(c.originalH * 0.3)), // 30% of original height
+                        };
+                    } else if (mode === "medium") {
+                        // When switching back to medium, restore original dimensions
+                        return {
+                            ...c,
+                            displayMode: mode,
+                            w: c.originalW,
+                            h: c.originalH,
+                        };
+                    }
+                    return { ...c, displayMode: mode };
+                }
+                return c;
+            })
         );
+
+        // Trigger layout update and save after mode change
+        setTimeout(() => {
+            saveLayoutToTab();
+        }, 100);
     };
 
     // Memoize layout generation to prevent infinite re-renders
