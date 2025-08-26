@@ -217,12 +217,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             // Update layouts for visual feedback
             setLayouts(allLayouts);
 
-            // Only update component positions when NOT actively dragging/resizing
-            if (!isDragging && !isResizing) {
+            // Only update component positions when actively editing
+            if (isEditMode && !isDragging && !isResizing) {
                 updateComponentPositions(layout);
             }
         },
-        [isDragging, isResizing, updateComponentPositions]
+        [isDragging, isResizing, isEditMode, updateComponentPositions]
     );
 
     // Drag handlers - prevent state updates during drag
@@ -412,8 +412,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 i: comp.id,
                 x: comp.x,
                 y: comp.y,
-                w: comp.w,
-                h: comp.h,
+                // Use Cosmos-config dimensions in medium; use current in thumbnail
+                w:
+                    comp.displayMode === "thumbnail"
+                        ? comp.w
+                        : comp.originalW || comp.w,
+                h:
+                    comp.displayMode === "thumbnail"
+                        ? comp.h
+                        : comp.originalH || comp.h,
                 minW: meta?.minSize?.w || 2,
                 minH: meta?.minSize?.h || 2,
                 maxW: meta?.maxSize?.w || 12,
@@ -1013,12 +1020,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             style={{ display: "flex", gap: 8 }}
                                         >
                                             <button
-                                                onClick={() =>
+                                                onClick={() => {
                                                     setDisplayMode(
                                                         fullScreenInstance.id,
                                                         "thumbnail"
-                                                    )
-                                                }
+                                                    );
+                                                    setFullScreenId(null);
+                                                }}
                                                 title="Thumbnail"
                                                 style={{
                                                     fontSize: 11,
