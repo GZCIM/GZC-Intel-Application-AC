@@ -128,6 +128,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 };
             });
             setComponents(loadedComponents);
+            // Clear any stale react-grid-layout state so generated layout uses fresh sizes
+            setLayouts({});
         } else if (!tab?.components || tab.components.length === 0) {
             // Only load from memory if we don't already have components
             if (components.length === 0) {
@@ -412,15 +414,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 i: comp.id,
                 x: comp.x,
                 y: comp.y,
-                // Use Cosmos-config dimensions in medium; use current in thumbnail
+                // Use Cosmos-config dimensions in medium; compact in thumbnail
                 w:
                     comp.displayMode === "thumbnail"
-                        ? comp.w
-                        : comp.originalW || comp.w,
+                        ? Math.max(2, comp.w)
+                        : Math.max(2, comp.originalW || comp.w),
                 h:
                     comp.displayMode === "thumbnail"
-                        ? comp.h
-                        : comp.originalH || comp.h,
+                        ? Math.max(1, comp.h)
+                        : Math.max(1, comp.originalH || comp.h),
                 minW: meta?.minSize?.w || 2,
                 minH: meta?.minSize?.h || 2,
                 maxW: meta?.maxSize?.w || 12,
