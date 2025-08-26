@@ -817,19 +817,32 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            overflow: hidden !important;
          }
 
-         /* Force medium mode to use full width */
-         .react-grid-item[data-display-mode="medium"] {
-           width: calc(8 * (100% / 12)) !important;
-           min-width: calc(8 * (100% / 12)) !important;
-           max-width: calc(8 * (100% / 12)) !important;
-         }
+                   /* Force medium mode to use full width */
+          .react-grid-item[data-display-mode="medium"] {
+            width: calc(8 * (100% / 12)) !important;
+            min-width: calc(8 * (100% / 12)) !important;
+            max-width: calc(8 * (100% / 12)) !important;
+          }
 
-         /* Force ALL grid items to use their specified width */
-         .react-grid-item {
-           width: var(--grid-item-width, auto) !important;
-           min-width: var(--grid-item-width, auto) !important;
-           max-width: var(--grid-item-width, auto) !important;
-         }
+                    /* Force ALL grid items to use their specified width - OVERRIDE ANY GRID CONSTRAINTS */
+          .react-grid-item {
+            width: var(--grid-item-width, auto) !important;
+            min-width: var(--grid-item-width, auto) !important;
+            max-width: var(--grid-item-width, auto) !important;
+          }
+
+          /* Debug: Show grid item dimensions */
+          .react-grid-item::before {
+            content: attr(data-grid-key);
+            position: absolute;
+            top: -20px;
+            left: 0;
+            background: red;
+            color: white;
+            font-size: 10px;
+            padding: 2px;
+            z-index: 1000;
+          }
 
 
 
@@ -982,6 +995,26 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             ? layouts
                                             : { lg: generateLayout }
                                     }
+                                    onLayoutChange={(layout, allLayouts) => {
+                                        console.log(
+                                            "🔍 Layout change detected:",
+                                            {
+                                                layout: layout.map((l) => ({
+                                                    i: l.i,
+                                                    x: l.x,
+                                                    y: l.y,
+                                                    w: l.w,
+                                                    h: l.h,
+                                                })),
+                                                allLayouts:
+                                                    Object.keys(allLayouts),
+                                                currentBreakpoint: allLayouts.lg
+                                                    ? "lg"
+                                                    : "unknown",
+                                            }
+                                        );
+                                        handleLayoutChange(layout, allLayouts);
+                                    }}
                                     onBreakpointChange={(breakpoint) => {
                                         console.log(
                                             `🔍 Breakpoint changed to: ${breakpoint}, cols: ${
@@ -996,8 +1029,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     : 2
                                             }`
                                         );
+                                        // Force immediate layout recalculation
+                                        setTimeout(() => {
+                                            window.dispatchEvent(
+                                                new Event("resize")
+                                            );
+                                        }, 100);
                                     }}
-                                    onLayoutChange={handleLayoutChange}
                                     onDragStart={handleDragStart}
                                     onDragStop={handleDragStop}
                                     onResizeStart={handleResizeStart}
