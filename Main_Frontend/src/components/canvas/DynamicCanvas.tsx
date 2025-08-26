@@ -72,33 +72,61 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     useEffect(() => {
         if (isEditMode) {
             setFullScreenId(null);
-            setComponents((prev) =>
-                prev.map((c) => ({
-                    ...c,
-                    displayMode: "medium",
-                    w: c.originalW, // Restore original dimensions
-                    h: c.originalH,
-                }))
+            console.log(
+                `🔓 Entering edit mode: restoring all components to medium from CosmosDB`
             );
+
+            // Restore all components to their original configuration from CosmosDB
+            if (tab?.components) {
+                setComponents((prev) =>
+                    prev.map((c) => {
+                        const originalComponent = tab.components.find(
+                            (comp) => comp.id === c.id
+                        );
+                        if (originalComponent) {
+                            console.log(
+                                `📥 Restoring ${c.id} to: ${originalComponent.position.w}x${originalComponent.position.h} at (${originalComponent.position.x},${originalComponent.position.y})`
+                            );
+                            return {
+                                ...c,
+                                displayMode: "medium",
+                                x: originalComponent.position.x,
+                                y: originalComponent.position.y,
+                                w: originalComponent.position.w,
+                                h: originalComponent.position.h,
+                                // Update original dimensions to match CosmosDB
+                                originalW: originalComponent.position.w,
+                                originalH: originalComponent.position.h,
+                            };
+                        }
+                        return c;
+                    })
+                );
+            }
         }
-    }, [isEditMode]);
+    }, [isEditMode, tab?.components]);
 
     // Load components from tab configuration (prioritize tab over memory for live updates)
     useEffect(() => {
         if (tab?.components && tab.components.length > 0) {
             // Always use tab configuration when it has components
-            const loadedComponents = tab.components.map((comp) => ({
-                id: comp.id,
-                componentId: comp.type,
-                x: comp.position.x,
-                y: comp.position.y,
-                w: comp.position.w,
-                h: comp.position.h,
-                props: comp.props || {},
-                displayMode: "medium",
-                originalW: comp.position.w, // Store original dimensions
-                originalH: comp.position.h,
-            }));
+            const loadedComponents = tab.components.map((comp) => {
+                console.log(
+                    `📥 Loading component ${comp.id}: ${comp.position.w}x${comp.position.h} at (${comp.position.x},${comp.position.y})`
+                );
+                return {
+                    id: comp.id,
+                    componentId: comp.type,
+                    x: comp.position.x,
+                    y: comp.position.y,
+                    w: comp.position.w,
+                    h: comp.position.h,
+                    props: comp.props || {},
+                    displayMode: "medium",
+                    originalW: comp.position.w, // Store original dimensions
+                    originalH: comp.position.h,
+                };
+            });
             setComponents(loadedComponents);
         } else if (!tab?.components || tab.components.length === 0) {
             // Only load from memory if we don't already have components
@@ -295,37 +323,81 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
     // Mode helpers
     const setDisplayMode = (id: string, mode: DisplayMode) => {
-        setComponents((prev) =>
-            prev.map((c) => {
-                if (c.id === id) {
-                    if (mode === "thumbnail") {
-                        // When switching to thumbnail, make it very compact - just header height
+        console.log(`🔄 Setting display mode for ${id} to ${mode}`);
+
+        if (mode === "medium") {
+            // For medium mode, restore the exact original configuration from CosmosDB
+            console.log(
+                `📐 Medium mode: restoring original configuration from CosmosDB`
+            );
+
+            // Force a complete reload of the component configuration from the tab
+            if (tab?.components) {
+                const originalComponent = tab.components.find(
+                    (comp) => comp.id === id
+                );
+                if (originalComponent) {
+                    console.log(
+                        `📥 Restoring from CosmosDB: ${originalComponent.position.w}x${originalComponent.position.h} at (${originalComponent.position.x},${originalComponent.position.y})`
+                    );
+
+                    setComponents((prev) =>
+                        prev.map((c) => {
+                            if (c.id === id) {
+                                return {
+                                    ...c,
+                                    displayMode: mode,
+                                    x: originalComponent.position.x,
+                                    y: originalComponent.position.y,
+                                    w: originalComponent.position.w,
+                                    h: originalComponent.position.h,
+                                    // Update original dimensions to match CosmosDB
+                                    originalW: originalComponent.position.w,
+                                    originalH: originalComponent.position.h,
+                                };
+                            }
+                            return c;
+                        })
+                    );
+                }
+            }
+        } else if (mode === "thumbnail") {
+            // For thumbnail mode, calculate compact dimensions
+            setComponents((prev) =>
+                prev.map((c) => {
+                    if (c.id === id) {
+                        const newW = Math.max(4, Math.floor(c.originalW * 0.8)); // 80% of original width, minimum 4
+                        const newH = 1; // 1 grid unit height for header only
+                        console.log(
+                            `📱 Thumbnail mode: ${c.originalW}x${c.originalH} -> ${newW}x${newH}`
+                        );
                         return {
                             ...c,
                             displayMode: mode,
-                            w: Math.max(2, Math.floor(c.originalW * 0.4)), // 40% of original width
-                            h: 0.5, // Even smaller height for header only - force compact layout
-                        };
-                    } else if (mode === "medium") {
-                        // When switching back to medium, restore original dimensions
-                        return {
-                            ...c,
-                            displayMode: mode,
-                            w: c.originalW,
-                            h: c.originalH,
+                            w: newW,
+                            h: newH,
                         };
                     }
-                    return { ...c, displayMode: mode };
-                }
-                return c;
-            })
-        );
+                    return c;
+                })
+            );
+        }
 
         // Trigger layout update and save after mode change
         setTimeout(() => {
             saveLayoutToTab();
             // Force grid layout to recalculate
             window.dispatchEvent(new Event("resize"));
+            // Additional force update for grid layout
+            setTimeout(() => {
+                window.dispatchEvent(new Event("resize"));
+                // Force a complete grid refresh
+                const gridElement =
+                    document.querySelector(".react-grid-layout");
+                if (gridElement) {
+                    gridElement.dispatchEvent(new Event("resize"));
+                }
+            }, 200);
         }, 100);
     };
 
@@ -441,7 +513,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             cursor: "pointer",
                                         }}
                                     >
-                                        {/* thumbnail pictogram */}
+                                        {/* thumbnail pictogram - more distinct */}
                                         <svg
                                             width="14"
                                             height="14"
@@ -451,20 +523,20 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             strokeWidth="1.2"
                                         >
                                             <rect
-                                                x="2"
-                                                y="3"
-                                                width="10"
-                                                height="8"
-                                                rx="2"
+                                                x="1"
+                                                y="2"
+                                                width="12"
+                                                height="10"
+                                                rx="1"
                                             />
                                             <rect
-                                                x="3.5"
-                                                y="4.5"
-                                                width="4"
-                                                height="3"
-                                                rx="1"
+                                                x="3"
+                                                y="4"
+                                                width="8"
+                                                height="6"
+                                                rx="0.5"
                                                 fill="currentColor"
-                                                stroke="none"
+                                                opacity="0.7"
                                             />
                                         </svg>
                                     </button>
@@ -710,6 +782,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
         /* Force thumbnail mode to be header-only */
         .react-grid-item[data-display-mode="thumbnail"] {
+          height: 28px !important;
+          min-height: 28px !important;
+          max-height: 28px !important;
+          overflow: hidden !important;
+        }
+
+        /* Additional thumbnail enforcement */
+        .react-grid-item[data-display-mode="thumbnail"] .grid-item {
           height: 28px !important;
           min-height: 28px !important;
           max-height: 28px !important;
