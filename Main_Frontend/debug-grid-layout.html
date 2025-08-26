@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Layout Debug</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .container {
+            width: 1054px;
+            height: 600px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            position: relative;
+        }
+
+        .grid-item {
+            background: #4CAF50;
+            border: 2px solid #45a049;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .debug-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="debug-info">
+        <h3>Grid Debug Info</h3>
+        <div>Container Width: <span id="container-width">-</span>px</div>
+        <div>Expected Component Width: <span id="expected-width">-</span>px</div>
+        <div>Actual Component Width: <span id="actual-width">-</span>px</div>
+        <div>Grid Columns: <span id="grid-cols">-</span></div>
+        <div>Breakpoint: <span id="breakpoint">-</span></div>
+    </div>
+
+    <h1>Grid Layout Debug Test</h1>
+    <p>This test simulates the exact conditions from your app:</p>
+    <ul>
+        <li>Container width: 1054px (same as your app)</li>
+        <li>Component: x=4, w=8, h=15</li>
+        <li>Grid: 12 columns</li>
+    </ul>
+
+    <div class="container" id="grid-container">
+        <div class="grid-item" id="test-component" style="position: absolute; left: 0; top: 0; width: 0; height: 0;">
+            Test Component<br>
+            w=8, h=15<br>
+            x=4, y=0
+        </div>
+    </div>
+
+    <script>
+        function updateDebugInfo() {
+            const container = document.getElementById('grid-container');
+            const component = document.getElementById('test-component');
+
+            const containerWidth = container.clientWidth;
+            const componentWidth = component.clientWidth;
+            const expectedWidth = (8 / 12) * containerWidth;
+
+            document.getElementById('container-width').textContent = containerWidth;
+            document.getElementById('expected-width').textContent = Math.round(expectedWidth);
+            document.getElementById('actual-width').textContent = componentWidth;
+            document.getElementById('grid-cols').textContent = '12';
+
+            // Determine breakpoint
+            let breakpoint = 'lg';
+            if (containerWidth < 480) breakpoint = 'xxs';
+            else if (containerWidth < 768) breakpoint = 'xs';
+            else if (containerWidth < 996) breakpoint = 'sm';
+            else if (containerWidth < 1200) breakpoint = 'md';
+            else breakpoint = 'lg';
+
+            document.getElementById('breakpoint').textContent = breakpoint;
+
+            // Position component correctly
+            const gridUnitWidth = containerWidth / 12;
+            const x = 4 * gridUnitWidth;
+            const y = 0;
+            const w = 8 * gridUnitWidth;
+            const h = 15 * 60; // 60px row height
+
+            component.style.left = x + 'px';
+            component.style.top = y + 'px';
+            component.style.width = w + 'px';
+            component.style.height = h + 'px';
+
+            console.log(`🔍 Debug: Container=${containerWidth}px, Grid Unit=${gridUnitWidth}px, Component=${w}px`);
+        }
+
+        // Update on load and resize
+        window.addEventListener('load', updateDebugInfo);
+        window.addEventListener('resize', updateDebugInfo);
+
+        // Initial update
+        setTimeout(updateDebugInfo, 100);
+    </script>
+</body>
+
+</html>
