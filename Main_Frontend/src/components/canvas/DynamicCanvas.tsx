@@ -496,8 +496,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 pointerEvents: "auto",
                                 display: "flex",
                                 flexDirection: "column",
-                                height: isThumb ? "28px" : "auto", // Force height in thumbnail mode
-                                minHeight: isThumb ? "28px" : "auto", // Force min-height in thumbnail mode
+                                height: isThumb ? "28px" : "100%", // Fill full grid row height in medium mode
+                                minHeight: isThumb ? "28px" : 0, // Allow children to stretch
                                 // Force width using CSS variable - ALWAYS use current w from CosmosDB
                                 "--grid-item-width": isThumb
                                     ? "auto"
@@ -686,6 +686,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             <div
                                 style={{
                                     flex: 1,
+                                    minHeight: 0,
                                     position: "relative",
                                 }}
                             >
