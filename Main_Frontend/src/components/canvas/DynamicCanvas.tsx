@@ -20,7 +20,7 @@ interface DynamicCanvasProps {
     tabId: string;
 }
 
-type DisplayMode = "medium" | "thumbnail";
+type DisplayMode = "medium" | "thumbnail" | "full";
 
 interface ComponentInstance {
     id: string; // unique instance ID
@@ -32,6 +32,7 @@ interface ComponentInstance {
     props?: Record<string, unknown>; // Component-specific props
     component?: React.ComponentType<unknown>;
     displayMode?: DisplayMode; // runtime-only display mode
+    customTitle?: string; // optional custom title for thumbnail
     originalW: number; // Store original dimensions
     originalH: number;
 }
@@ -114,12 +115,24 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     w: comp.position.w,
                     h: comp.position.h,
                     props: comp.props || {},
-                    displayMode: "medium",
+                    displayMode:
+                        (comp.props && (comp.props as any).displayMode) ||
+                        "medium",
+                    customTitle:
+                        (comp.props && (comp.props as any).customTitle) ||
+                        undefined,
                     originalW: comp.position.w, // Store original dimensions
                     originalH: comp.position.h,
                 };
             });
             setComponents(loadedComponents);
+            // Honor any saved full-mode preference (first one wins)
+            const fullPref = loadedComponents.find(
+                (c) => c.displayMode === "full"
+            );
+            if (fullPref) {
+                setFullScreenId(fullPref.id);
+            }
             // Force immediate layout regeneration with new dimensions
             setTimeout(() => {
                 console.log(
@@ -188,7 +201,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                         w: layoutItem?.w || comp.w,
                         h: layoutItem?.h || comp.h,
                     },
-                    props: comp.props || {},
+                    props: {
+                        ...(comp.props || {}),
+                        displayMode: comp.displayMode,
+                        customTitle: comp.customTitle,
+                    },
                     zIndex: 0,
                 };
             });
@@ -406,6 +423,19 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     return c;
                 })
             );
+        } else if (mode === "full") {
+            // Persist full preference and show fullscreen
+            setComponents((prev) =>
+                prev.map((c) =>
+                    c.id === id
+                        ? {
+                              ...c,
+                              displayMode: mode,
+                          }
+                        : c
+                )
+            );
+            setFullScreenId(id);
         }
 
         // Trigger layout update and save after mode change
@@ -596,7 +626,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         opacity: 0.8,
                                     }}
                                 >
-                                    {title}
+                                    {instance.customTitle || title}
                                 </span>
                                 {!isEditMode && (
                                     <div style={{ display: "flex", gap: 4 }}>
@@ -800,6 +830,83 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 <path d="M1 9v4h4" />
                                             </svg>
                                         </button>
+                                    </div>
+                                )}
+                                {/* Edit controls (mode + custom title) visible in edit mode */}
+                                {isEditMode && (
+                                    <div
+                                        className="no-drag"
+                                        style={{
+                                            position: "absolute",
+                                            top: 4,
+                                            right: 8,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 6,
+                                            zIndex: 4,
+                                        }}
+                                    >
+                                        <select
+                                            value={
+                                                instance.displayMode || "medium"
+                                            }
+                                            onChange={(e) => {
+                                                const mode = e.target
+                                                    .value as DisplayMode;
+                                                setDisplayMode(
+                                                    instance.id,
+                                                    mode
+                                                );
+                                                // Persist immediately
+                                                setTimeout(
+                                                    () => saveLayoutToTab(),
+                                                    50
+                                                );
+                                            }}
+                                            style={{ height: 24 }}
+                                        >
+                                            <option value="thumbnail">
+                                                Thumbnail
+                                            </option>
+                                            <option value="medium">
+                                                Medium
+                                            </option>
+                                            <option value="full">Full</option>
+                                        </select>
+                                        {instance.displayMode ===
+                                            "thumbnail" && (
+                                            <input
+                                                type="text"
+                                                placeholder="Custom title"
+                                                defaultValue={
+                                                    instance.customTitle || ""
+                                                }
+                                                onBlur={(e) => {
+                                                    const val =
+                                                        e.target.value.trim();
+                                                    setComponents((prev) =>
+                                                        prev.map((c) =>
+                                                            c.id === instance.id
+                                                                ? {
+                                                                      ...c,
+                                                                      customTitle:
+                                                                          val ||
+                                                                          undefined,
+                                                                  }
+                                                                : c
+                                                        )
+                                                    );
+                                                    setTimeout(
+                                                        () => saveLayoutToTab(),
+                                                        100
+                                                    );
+                                                }}
+                                                style={{
+                                                    height: 22,
+                                                    padding: "0 6px",
+                                                }}
+                                            />
+                                        )}
                                     </div>
                                 )}
                             </>
