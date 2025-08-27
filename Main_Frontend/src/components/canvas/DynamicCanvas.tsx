@@ -137,8 +137,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     gridElement.dispatchEvent(new Event("layoutchange"));
                 }
 
-                // Method 3: Force complete re-render by updating state
-                setComponents((prev) => [...prev]); // Force re-render
+                // Method 3: Force component state refresh (removed to prevent infinite loop)
 
                 // Method 4: Additional timeout to ensure RGL processes the change
                 setTimeout(() => {
@@ -1103,7 +1102,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             w: c.w,
                                             h: c.h,
                                         }))
-                                    )}-${Date.now()}`} // Force re-render when components change + timestamp
+                                    )}`} // Force re-render when components change
                                     className={`layout ${
                                         isLayoutReady ? "layout-ready" : ""
                                     }`}
