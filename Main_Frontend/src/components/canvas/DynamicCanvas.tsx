@@ -651,7 +651,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             position: "absolute",
                                             top: 0, // align with host header row
                                             right: 8,
-                                            height: 32,
+                                            height: 30,
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 6,
@@ -749,7 +749,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     minHeight: 0,
                                     position: "relative",
                                     // Reserve space on the right for medium-mode controls so they don't cover text
-                                    paddingRight: !isEditMode ? 40 : 0,
+                                    paddingRight: !isEditMode ? 56 : 0,
                                 }}
                             >
                                 <ComponentRenderer
