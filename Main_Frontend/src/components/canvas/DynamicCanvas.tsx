@@ -649,8 +649,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         className="no-drag"
                                         style={{
                                             position: "absolute",
-                                            top: 8, // align with typical component header padding
+                                            top: 0, // align with host header row
                                             right: 8,
+                                            height: 32,
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 6,
@@ -1150,19 +1151,19 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         flexDirection: "column",
                                     }}
                                 >
+                                    {/* Absolute controls aligned with host header; remove extra internal header spacing */}
                                     <div
+                                        className="no-drag"
                                         style={{
+                                            position: "absolute",
+                                            top: 0,
+                                            right: 8,
+                                            height: 32,
                                             display: "flex",
                                             alignItems: "center",
-                                            justifyContent: "flex-end",
-                                            padding: "4px 6px",
-                                            height: 28,
-                                            borderBottom: `1px solid ${currentTheme.border}`,
+                                            gap: 8,
                                         }}
                                     >
-                                        <div
-                                            style={{ display: "flex", gap: 8 }}
-                                        >
                                             <button
                                                 onClick={() => {
                                                     setDisplayMode(
