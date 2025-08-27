@@ -254,7 +254,7 @@ export class ComponentInventory {
             description:
                 "Professional FX options volatility surface visualization with smile analysis and term structure. Real-time Bloomberg data.",
             defaultSize: { w: 6, h: 8 },
-            minSize: { w: 4, h: 4 },
+            minSize: { w: 2, h: 4 },
             maxSize: { w: 12, h: 12 },
             tags: [
                 "volatility",
@@ -533,8 +533,8 @@ if (!componentInventory.getComponent("bloomberg-volatility")) {
         subcategory: "volatility",
         description:
             "Professional FX options volatility surface visualization with smile analysis and term structure. Real-time Bloomberg data.",
-        defaultSize: { w: 10, h: 8 },
-        minSize: { w: 8, h: 6 },
+        defaultSize: { w: 6, h: 8 },
+        minSize: { w: 2, h: 4 },
         maxSize: { w: 12, h: 12 },
         tags: [
             "volatility",
