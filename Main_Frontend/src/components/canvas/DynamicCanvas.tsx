@@ -477,6 +477,24 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         });
     }, [components]);
 
+    // Force layout initialization when components change
+    useEffect(() => {
+        if (components.length > 0 && generateLayout.length > 0) {
+            console.log("🔧 Force initializing layout with:", generateLayout);
+            // Force RGL to recognize the initial layout
+            setTimeout(() => {
+                const gridElement =
+                    document.querySelector(".react-grid-layout");
+                if (gridElement) {
+                    // Force layout recalculation
+                    gridElement.dispatchEvent(new Event("resize"));
+                    // Force layout change event
+                    gridElement.dispatchEvent(new Event("layoutchange"));
+                }
+            }, 100);
+        }
+    }, [components, generateLayout]);
+
     // Memoize grid children to prevent hook order violations
     const gridChildren = useMemo(
         () =>
@@ -1102,7 +1120,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             w: c.w,
                                             h: c.h,
                                         }))
-                                    )}`} // Force re-render when components change
+                                    )}-${Date.now()}`} // Force complete re-mount when coordinates change
                                     className={`layout ${
                                         isLayoutReady ? "layout-ready" : ""
                                     }`}
