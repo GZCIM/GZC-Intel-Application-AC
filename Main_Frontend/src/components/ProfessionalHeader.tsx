@@ -50,6 +50,11 @@ export const ProfessionalHeader = () => {
     const [showComponentPortal, setShowComponentPortal] = useState(false);
     const [componentPortalTabId, setComponentPortalTabId] =
         useState<string>("");
+    const [editUnlocked, setEditUnlocked] = useState(
+        typeof window !== "undefined"
+            ? localStorage.getItem("gzc-edit-mode") === "unlocked"
+            : false
+    );
 
     useEffect(() => {
         console.log("ProfessionalHeader: State changed:", {
@@ -112,6 +117,19 @@ export const ProfessionalHeader = () => {
             setActiveTabLocal("loading");
         }
     }, [currentLayout, activeTabId, isAuthenticated]);
+
+    // Listen for edit mode toggle to refresh visual state immediately
+    useEffect(() => {
+        const handler = (e: any) => {
+            const unlocked = !!e?.detail?.unlocked;
+            setEditUnlocked(unlocked);
+            // If toggle was for a different tab, keep active but re-render
+            setActiveTabLocal((prev) => prev);
+        };
+        window.addEventListener("gzc:edit-mode-toggled", handler as any);
+        return () =>
+            window.removeEventListener("gzc:edit-mode-toggled", handler as any);
+    }, []);
 
     const handleTabClick = (tab: Tab) => {
         // Don't try to activate special tabs
@@ -382,9 +400,7 @@ export const ProfessionalHeader = () => {
                                         background: "transparent",
                                         color:
                                             activeTab === tab.id
-                                                ? window.localStorage.getItem(
-                                                      "gzc-edit-mode"
-                                                  ) === "unlocked"
+                                                ? editUnlocked
                                                     ? "#ff6b6b" // reddish when unlocked
                                                     : theme.primary
                                                 : theme.textSecondary,

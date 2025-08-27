@@ -49,6 +49,24 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                     ? `Edit mode UNLOCKED\nSession: ${editingLockService.getSessionId()}\nEdits will write to Cosmos DB.`
                     : "Edit mode LOCKED\nConfiguration is read-only; no writes will be sent.";
                 alert(msg);
+                // Broadcast edit mode change so header/canvas can refresh immediately
+                try {
+                    window.dispatchEvent(
+                        new CustomEvent("gzc:edit-mode-toggled", {
+                            detail: {
+                                unlocked: nowUnlocked,
+                                tabId: activeTabId,
+                            },
+                        })
+                    );
+                    // Nudge layout recalculation
+                    setTimeout(
+                        () => window.dispatchEvent(new Event("resize")),
+                        50
+                    );
+                } catch (e) {
+                    // no-op
+                }
                 setIsOpen(false);
             },
         },
