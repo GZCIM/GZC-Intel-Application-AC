@@ -1164,105 +1164,104 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             gap: 8,
                                         }}
                                     >
-                                            <button
-                                                onClick={() => {
-                                                    setDisplayMode(
-                                                        fullScreenInstance.id,
-                                                        "thumbnail"
-                                                    );
-                                                    setFullScreenId(null);
-                                                }}
-                                                title="Thumbnail"
-                                                style={{
-                                                    fontSize: 11,
-                                                    padding: "2px 6px",
-                                                    border: `1px solid ${currentTheme.border}`,
-                                                    borderRadius: 4,
-                                                    background: "transparent",
-                                                    cursor: "pointer",
-                                                }}
+                                        <button
+                                            onClick={() => {
+                                                setDisplayMode(
+                                                    fullScreenInstance.id,
+                                                    "thumbnail"
+                                                );
+                                                setFullScreenId(null);
+                                            }}
+                                            title="Thumbnail"
+                                            style={{
+                                                fontSize: 11,
+                                                padding: "2px 6px",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                borderRadius: 4,
+                                                background: "transparent",
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 14 14"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.2"
                                             >
-                                                <svg
-                                                    width="14"
-                                                    height="14"
-                                                    viewBox="0 0 14 14"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="1.2"
-                                                >
-                                                    <rect
-                                                        x="1"
-                                                        y="2"
-                                                        width="12"
-                                                        height="10"
-                                                        rx="1"
-                                                    />
-                                                    <rect
-                                                        x="3"
-                                                        y="4"
-                                                        width="8"
-                                                        height="6"
-                                                        rx="0.5"
-                                                        fill="currentColor"
-                                                        opacity="0.7"
-                                                    />
-                                                </svg>
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    // Restore to medium and exit full-screen
-                                                    setDisplayMode(
-                                                        fullScreenInstance.id,
-                                                        "medium"
-                                                    );
-                                                    setFullScreenId(null);
-                                                }}
-                                                title="Medium"
-                                                style={{
-                                                    fontSize: 11,
-                                                    padding: "2px 6px",
-                                                    border: `1px solid ${currentTheme.border}`,
-                                                    borderRadius: 4,
-                                                    background: "transparent",
-                                                    cursor: "pointer",
-                                                }}
+                                                <rect
+                                                    x="1"
+                                                    y="2"
+                                                    width="12"
+                                                    height="10"
+                                                    rx="1"
+                                                />
+                                                <rect
+                                                    x="3"
+                                                    y="4"
+                                                    width="8"
+                                                    height="6"
+                                                    rx="0.5"
+                                                    fill="currentColor"
+                                                    opacity="0.7"
+                                                />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                // Restore to medium and exit full-screen
+                                                setDisplayMode(
+                                                    fullScreenInstance.id,
+                                                    "medium"
+                                                );
+                                                setFullScreenId(null);
+                                            }}
+                                            title="Medium"
+                                            style={{
+                                                fontSize: 11,
+                                                padding: "2px 6px",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                borderRadius: 4,
+                                                background: "transparent",
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            {/* grid pictogram */}
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 14 14"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.2"
                                             >
-                                                {/* grid pictogram */}
-                                                <svg
-                                                    width="14"
-                                                    height="14"
-                                                    viewBox="0 0 14 14"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="1.2"
-                                                >
-                                                    <rect
-                                                        x="2"
-                                                        y="2"
-                                                        width="4"
-                                                        height="4"
-                                                    />
-                                                    <rect
-                                                        x="8"
-                                                        y="2"
-                                                        width="4"
-                                                        height="4"
-                                                    />
-                                                    <rect
-                                                        x="2"
-                                                        y="8"
-                                                        width="4"
-                                                        height="4"
-                                                    />
-                                                    <rect
-                                                        x="8"
-                                                        y="8"
-                                                        width="4"
-                                                        height="4"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </div>
+                                                <rect
+                                                    x="2"
+                                                    y="2"
+                                                    width="4"
+                                                    height="4"
+                                                />
+                                                <rect
+                                                    x="8"
+                                                    y="2"
+                                                    width="4"
+                                                    height="4"
+                                                />
+                                                <rect
+                                                    x="2"
+                                                    y="8"
+                                                    width="4"
+                                                    height="4"
+                                                />
+                                                <rect
+                                                    x="8"
+                                                    y="8"
+                                                    width="4"
+                                                    height="4"
+                                                />
+                                            </svg>
+                                        </button>
                                     </div>
                                     <div
                                         style={{
