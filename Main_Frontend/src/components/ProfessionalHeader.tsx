@@ -127,8 +127,19 @@ export const ProfessionalHeader = () => {
             setActiveTabLocal((prev) => prev);
         };
         window.addEventListener("gzc:edit-mode-toggled", handler as any);
-        return () =>
+        // Fallback: also react to generic resize (we emit one after toggle)
+        const onResize = () => {
+            try {
+                const unlocked =
+                    localStorage.getItem("gzc-edit-mode") === "unlocked";
+                setEditUnlocked(unlocked);
+            } catch {}
+        };
+        window.addEventListener("resize", onResize);
+        return () => {
             window.removeEventListener("gzc:edit-mode-toggled", handler as any);
+            window.removeEventListener("resize", onResize);
+        };
     }, []);
 
     const handleTabClick = (tab: Tab) => {
