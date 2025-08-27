@@ -125,13 +125,25 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 console.log(
                     "🔄 Forcing layout regeneration after tab config change"
                 );
+
+                // Method 1: Force RGL to recalculate
                 window.dispatchEvent(new Event("resize"));
-                // Force grid to recalculate with new component dimensions
+
+                // Method 2: Force layout change event
                 const gridElement =
                     document.querySelector(".react-grid-layout");
                 if (gridElement) {
                     gridElement.dispatchEvent(new Event("resize"));
+                    gridElement.dispatchEvent(new Event("layoutchange"));
                 }
+
+                // Method 3: Force complete re-render by updating state
+                setComponents((prev) => [...prev]); // Force re-render
+
+                // Method 4: Additional timeout to ensure RGL processes the change
+                setTimeout(() => {
+                    window.dispatchEvent(new Event("resize"));
+                }, 200);
             }, 100);
         } else if (!tab?.components || tab.components.length === 0) {
             // Only load from memory if we don't already have components
@@ -1091,7 +1103,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             w: c.w,
                                             h: c.h,
                                         }))
-                                    )}`} // Force re-render when components change
+                                    )}-${Date.now()}`} // Force re-render when components change + timestamp
                                     className={`layout ${
                                         isLayoutReady ? "layout-ready" : ""
                                     }`}
