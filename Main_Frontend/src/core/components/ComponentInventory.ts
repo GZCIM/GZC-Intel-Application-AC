@@ -201,7 +201,7 @@ export class ComponentInventory {
             description:
                 "Professional FX portfolio with trades and positions views, fund filtering, and real-time P&L",
             defaultSize: { w: 6, h: 8 },
-            minSize: { w: 4, h: 4 },
+            minSize: { w: 2, h: 4 },
             maxSize: { w: 12, h: 12 },
             tags: [
                 "portfolio",
