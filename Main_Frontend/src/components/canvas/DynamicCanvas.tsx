@@ -649,13 +649,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         className="no-drag"
                                         style={{
                                             position: "absolute",
-                                            top: 0, // align with host header row
+                                            top: 4, // nudge down to align with header text baseline
                                             right: 8,
                                             height: 30,
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 6,
-                                            zIndex: 2,
+                                            zIndex: 3,
                                         }}
                                     >
                                         <button
@@ -1156,12 +1156,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         className="no-drag"
                                         style={{
                                             position: "absolute",
-                                            top: 0,
+                                            top: 4, // match medium-mode offset
                                             right: 8,
-                                            height: 32,
+                                            height: 30,
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 8,
+                                            zIndex: 3,
                                         }}
                                     >
                                         <button
