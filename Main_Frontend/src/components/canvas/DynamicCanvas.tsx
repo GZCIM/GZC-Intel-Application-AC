@@ -834,12 +834,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            overflow: hidden !important;
          }
 
-                   /* Force medium mode to use full width */
-          .react-grid-item[data-display-mode="medium"] {
-            width: calc(8 * (100% / 12)) !important;
-            min-width: calc(8 * (100% / 12)) !important;
-            max-width: calc(8 * (100% / 12)) !important;
-          }
+                           /* Medium mode width follows layout (no hard-coded width) */
 
                     /* Force ALL grid items to use their specified width - OVERRIDE ANY GRID CONSTRAINTS */
           .react-grid-item {
