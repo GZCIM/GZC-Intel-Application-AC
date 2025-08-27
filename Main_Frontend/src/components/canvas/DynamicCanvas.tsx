@@ -1060,7 +1060,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     layouts={
                                         layouts.lg
                                             ? layouts
-                                            : { lg: generateLayout }
+                                            : {
+                                                  lg: generateLayout,
+                                                  md: generateLayout,
+                                                  sm: generateLayout,
+                                                  xs: generateLayout,
+                                                  xxs: generateLayout,
+                                              }
                                     }
                                     onLayoutChange={(layout, allLayouts) => {
                                         console.log(
