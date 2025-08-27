@@ -502,7 +502,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 const isThumb = instance.displayMode === "thumbnail";
                 return (
                     <div
-                        key={`${instance.id}-${instance.displayMode}`}
+                        key={instance.id}
                         className="grid-item" // Better control class
                         data-grid-key={`${instance.id}-${instance.displayMode}`}
                         data-display-mode={instance.displayMode}
