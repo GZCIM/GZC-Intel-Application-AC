@@ -649,9 +649,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         className="no-drag"
                                         style={{
                                             position: "absolute",
-                                            top: 6,
-                                            right: 6,
+                                            top: 8, // align with typical component header padding
+                                            right: 8,
                                             display: "flex",
+                                            alignItems: "center",
                                             gap: 6,
                                             zIndex: 2,
                                         }}
@@ -1151,21 +1152,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         style={{
                                             display: "flex",
                                             alignItems: "center",
-                                            justifyContent: "space-between",
+                                            justifyContent: "flex-end",
                                             padding: "4px 6px",
                                             borderBottom: `1px solid ${currentTheme.border}`,
                                         }}
                                     >
-                                        <div
-                                            style={{
-                                                fontSize: 12,
-                                                opacity: 0.8,
-                                            }}
-                                        >
-                                            {componentInventory.getComponent(
-                                                fullScreenInstance.componentId
-                                            )?.displayName || "Component"}
-                                        </div>
                                         <div
                                             style={{ display: "flex", gap: 8 }}
                                         >
