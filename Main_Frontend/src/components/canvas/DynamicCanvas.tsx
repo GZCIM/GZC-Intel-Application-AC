@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+    useState,
+    useEffect,
+    useMemo,
+    useCallback,
+    useRef,
+} from "react";
 import { Responsive, WidthProvider, Layout } from "react-grid-layout";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useTabLayout } from "../../core/tabs/TabLayoutManager";
@@ -53,6 +59,32 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         undefined
     ); // Force width recalculation
     const [fullScreenId, setFullScreenId] = useState<string | null>(null);
+    const [editModeVersion, setEditModeVersion] = useState(0); // bump to re-render on edit toggle
+    const resizeTimerRef = useRef<number | null>(null);
+
+    const triggerResize = useCallback(() => {
+        if (resizeTimerRef.current) {
+            clearTimeout(resizeTimerRef.current);
+        }
+        resizeTimerRef.current = window.setTimeout(() => {
+            window.dispatchEvent(new Event("resize"));
+        }, 120);
+    }, []);
+
+    // React immediately to global edit-mode toggles so the canvas switches views without tab change
+    useEffect(() => {
+        const onToggle = (e: any) => {
+            setEditModeVersion((v) => v + 1);
+            triggerResize();
+        };
+        window.addEventListener("gzc:edit-mode-toggled", onToggle as any);
+        return () => {
+            window.removeEventListener(
+                "gzc:edit-mode-toggled",
+                onToggle as any
+            );
+        };
+    }, [triggerResize]);
 
     const tab = useMemo(
         () => currentLayout?.tabs.find((t) => t.id === tabId),
@@ -138,24 +170,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 console.log(
                     "🔄 Forcing layout regeneration after tab config change"
                 );
-
-                // Method 1: Force RGL to recalculate
-                window.dispatchEvent(new Event("resize"));
-
-                // Method 2: Force layout change event
-                const gridElement =
-                    document.querySelector(".react-grid-layout");
-                if (gridElement) {
-                    gridElement.dispatchEvent(new Event("resize"));
-                    gridElement.dispatchEvent(new Event("layoutchange"));
-                }
-
-                // Method 3: Force component state refresh (removed to prevent infinite loop)
-
-                // Method 4: Additional timeout to ensure RGL processes the change
-                setTimeout(() => {
-                    window.dispatchEvent(new Event("resize"));
-                }, 200);
+                triggerResize();
             }, 100);
         } else if (!tab?.components || tab.components.length === 0) {
             // Only load from memory if we don't already have components
@@ -400,7 +415,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                         })
                     );
                     // Force layout regeneration from component sizes
-                    window.dispatchEvent(new Event("resize"));
+                    triggerResize();
                 }
             }
         } else if (mode === "thumbnail") {
@@ -444,18 +459,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             if (isEditMode) {
                 saveLayoutToTab();
             }
-            // Force grid layout to recalculate
-            window.dispatchEvent(new Event("resize"));
-            // Additional force update for grid layout
-            setTimeout(() => {
-                window.dispatchEvent(new Event("resize"));
-                // Force a complete grid refresh
-                const gridElement =
-                    document.querySelector(".react-grid-layout");
-                if (gridElement) {
-                    gridElement.dispatchEvent(new Event("resize"));
-                }
-            }, 200);
+            // Debounced grid layout recalc
+            triggerResize();
         }, 100);
     };
 
@@ -965,6 +970,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             fullScreenId,
             removeComponent,
             saveLayoutToTab,
+            editModeVersion,
         ]
     );
 

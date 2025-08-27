@@ -122,23 +122,12 @@ export const ProfessionalHeader = () => {
     useEffect(() => {
         const handler = (e: any) => {
             const unlocked = !!e?.detail?.unlocked;
+            // Update local state so active tab color updates instantly
             setEditUnlocked(unlocked);
-            // If toggle was for a different tab, keep active but re-render
-            setActiveTabLocal((prev) => prev);
         };
         window.addEventListener("gzc:edit-mode-toggled", handler as any);
-        // Fallback: also react to generic resize (we emit one after toggle)
-        const onResize = () => {
-            try {
-                const unlocked =
-                    localStorage.getItem("gzc-edit-mode") === "unlocked";
-                setEditUnlocked(unlocked);
-            } catch {}
-        };
-        window.addEventListener("resize", onResize);
         return () => {
             window.removeEventListener("gzc:edit-mode-toggled", handler as any);
-            window.removeEventListener("resize", onResize);
         };
     }, []);
 
@@ -411,7 +400,8 @@ export const ProfessionalHeader = () => {
                                         background: "transparent",
                                         color:
                                             activeTab === tab.id
-                                                ? editUnlocked
+                                                ? editUnlocked ||
+                                                  editingLockService.isUnlocked()
                                                     ? "#ff6b6b" // reddish when unlocked
                                                     : theme.primary
                                                 : theme.textSecondary,
