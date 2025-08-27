@@ -496,14 +496,23 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 pointerEvents: "auto",
                                 display: "flex",
                                 flexDirection: "column",
-                                height: isThumb ? "28px" : "100%", // Fill full grid row height in medium mode
-                                minHeight: isThumb ? "28px" : 0, // Allow children to stretch
+                                height: isThumb
+                                    ? "28px"
+                                    : `${instance.h * 60}px`, // Use exact CosmosDB height
+                                minHeight: isThumb
+                                    ? "28px"
+                                    : `${instance.h * 60}px`, // Force exact height from CosmosDB
                                 // Force width using CSS variable - ALWAYS use current w from CosmosDB
                                 "--grid-item-width": isThumb
                                     ? "auto"
                                     : `calc(${instance.w} * (100% / 12))`,
+                                // Force height using CSS variable - ALWAYS use current h from CosmosDB
+                                "--grid-item-height": isThumb
+                                    ? "28px"
+                                    : `${instance.h * 60}px`,
                             } as React.CSSProperties & {
                                 "--grid-item-width": string;
+                                "--grid-item-height": string;
                             }
                         }
                     >
@@ -895,6 +904,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            min-height: 28px !important;
            max-height: 28px !important;
            overflow: hidden !important;
+         }
+
+         /* Force medium and full modes to respect CosmosDB height */
+         .react-grid-item[data-display-mode="medium"],
+         .react-grid-item[data-display-mode="full"] {
+           height: var(--grid-item-height, auto) !important;
+           min-height: var(--grid-item-height, auto) !important;
+           max-height: var(--grid-item-height, auto) !important;
          }
 
                            /* Medium mode width follows layout (no hard-coded width) */
