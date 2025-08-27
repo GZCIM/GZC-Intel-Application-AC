@@ -747,6 +747,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     flex: 1,
                                     minHeight: 0,
                                     position: "relative",
+                                    // Reserve space on the right for medium-mode controls so they don't cover text
+                                    paddingRight: !isEditMode ? 40 : 0,
                                 }}
                             >
                                 <ComponentRenderer
@@ -1154,6 +1156,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             alignItems: "center",
                                             justifyContent: "flex-end",
                                             padding: "4px 6px",
+                                            height: 28,
                                             borderBottom: `1px solid ${currentTheme.border}`,
                                         }}
                                     >
