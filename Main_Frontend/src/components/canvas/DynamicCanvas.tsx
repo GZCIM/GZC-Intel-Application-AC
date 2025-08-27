@@ -1128,8 +1128,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         xs: 480,
                                         xxs: 0,
                                     }}
-                                    compactType="vertical"
-                                    preventCollision={false}
+                                    compactType={null} // disable compaction; honor CosmosDB x,y,h exactly
+                                    preventCollision={true}
                                     draggableHandle=".drag-handle"
                                     draggableCancel=".no-drag" // Prevent dragging on specific elements like buttons
                                 >
