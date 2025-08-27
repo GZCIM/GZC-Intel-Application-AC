@@ -101,6 +101,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     useEffect(() => {
         if (tab?.components && tab.components.length > 0) {
             // Always use tab configuration when it has components
+            console.log("📥 Loading tab components:", tab.components);
             const loadedComponents = tab.components.map((comp) => {
                 console.log(
                     `📥 Loading component ${comp.id}: ${comp.position.w}x${comp.position.h} at (${comp.position.x},${comp.position.y})`
@@ -119,8 +120,6 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 };
             });
             setComponents(loadedComponents);
-            // Clear any stale react-grid-layout state so generated layout uses fresh sizes
-            setLayouts({});
             // Force immediate layout regeneration with new dimensions
             setTimeout(() => {
                 console.log(
@@ -372,8 +371,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             return c;
                         })
                     );
-                    // Clear any stale RGL layout so it regenerates from component sizes
-                    setLayouts({});
+                    // Force layout regeneration from component sizes
+                    window.dispatchEvent(new Event("resize"));
                 }
             }
         } else if (mode === "thumbnail") {
@@ -421,10 +420,22 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
     // Memoize layout generation to prevent infinite re-renders
     const generateLayout = useMemo((): Layout[] => {
+        console.log(
+            "🔧 Generating layout for components:",
+            components.map((c) => ({
+                id: c.id,
+                x: c.x,
+                y: c.y,
+                w: c.w,
+                h: c.h,
+                mode: c.displayMode,
+            }))
+        );
+
         return components.map((comp) => {
             const meta = componentInventory.getComponent(comp.componentId);
             console.log(
-                `🔧 Generating layout for ${comp.id}: mode=${comp.displayMode}, w=${comp.w}, originalW=${comp.originalW}`
+                `🔧 Generating layout for ${comp.id}: mode=${comp.displayMode}, x=${comp.x}, y=${comp.y}, w=${comp.w}, h=${comp.h}`
             );
 
             // ALWAYS use the current component dimensions (which come from CosmosDB)
@@ -1070,21 +1081,27 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                         >
                             {!fullScreenId && (
                                 <ResponsiveGridLayout
-                                    key={`grid-${containerWidth || "auto"}`} // Stable key - only changes when width actually changes
+                                    key={`grid-${containerWidth || "auto"}-${
+                                        components.length
+                                    }-${JSON.stringify(
+                                        components.map((c) => ({
+                                            id: c.id,
+                                            x: c.x,
+                                            y: c.y,
+                                            w: c.w,
+                                            h: c.h,
+                                        }))
+                                    )}`} // Force re-render when components change
                                     className={`layout ${
                                         isLayoutReady ? "layout-ready" : ""
                                     }`}
-                                    layouts={
-                                        layouts.lg
-                                            ? layouts
-                                            : {
-                                                  lg: generateLayout,
-                                                  md: generateLayout,
-                                                  sm: generateLayout,
-                                                  xs: generateLayout,
-                                                  xxs: generateLayout,
-                                              }
-                                    }
+                                    layouts={{
+                                        lg: generateLayout,
+                                        md: generateLayout,
+                                        sm: generateLayout,
+                                        xs: generateLayout,
+                                        xxs: generateLayout,
+                                    }}
                                     onLayoutChange={(layout, allLayouts) => {
                                         console.log(
                                             "🔍 Layout change detected:",
