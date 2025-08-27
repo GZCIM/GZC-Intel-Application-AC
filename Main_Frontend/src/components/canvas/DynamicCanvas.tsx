@@ -442,6 +442,24 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 mode: c.displayMode,
             }))
         );
+        // Precompute thumbnail stacking order and viewport-based rows
+        const rowHeightPx = 60;
+        const viewportHeight =
+            typeof window !== "undefined" && window.innerHeight
+                ? window.innerHeight
+                : 900;
+        const rowsPerColumn = Math.max(
+            1,
+            Math.floor(viewportHeight / rowHeightPx)
+        );
+        // Fixed thumbnail width (4 columns → up to 3 columns in 12-col grid)
+        const thumbnailGridWidth = 4;
+        // Map component id → thumbnail index
+        const thumbnailIds = components
+            .filter((c) => c.displayMode === "thumbnail")
+            .map((c) => c.id);
+        const thumbnailIndexById = new Map<string, number>();
+        thumbnailIds.forEach((id, idx) => thumbnailIndexById.set(id, idx));
 
         return components.map((comp) => {
             const meta = componentInventory.getComponent(comp.componentId);
@@ -449,22 +467,26 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 `🔧 Generating layout for ${comp.id}: mode=${comp.displayMode}, x=${comp.x}, y=${comp.y}, w=${comp.w}, h=${comp.h}`
             );
 
-            // ALWAYS use the current component dimensions (which come from CosmosDB)
-            // This ensures that when tab config changes, the component immediately reflects the new size
-            const finalWidth =
-                comp.displayMode === "thumbnail"
-                    ? Math.max(2, comp.w) // For thumbnail, use current w
-                    : comp.w; // For medium, ALWAYS use current w (from CosmosDB)
+            // Calculate final size and position
+            let finalX = comp.x;
+            let finalY = comp.y;
+            let finalWidth = comp.w;
+            let finalHeight = comp.h;
 
-            const finalHeight =
-                comp.displayMode === "thumbnail"
-                    ? Math.max(1, comp.h) // For thumbnail, use current h
-                    : comp.h; // For medium, ALWAYS use current h (from CosmosDB)
+            if (comp.displayMode === "thumbnail") {
+                const tIndex = thumbnailIndexById.get(comp.id) ?? 0;
+                const column = Math.floor(tIndex / rowsPerColumn);
+                const row = tIndex % rowsPerColumn;
+                finalX = column * thumbnailGridWidth;
+                finalY = row; // each thumbnail is 1 row tall
+                finalWidth = thumbnailGridWidth;
+                finalHeight = 1;
+            }
 
             return {
                 i: comp.id,
-                x: comp.x,
-                y: comp.y,
+                x: finalX,
+                y: finalY,
                 w: finalWidth,
                 h: finalHeight,
                 minW: meta?.minSize?.w || 2,
