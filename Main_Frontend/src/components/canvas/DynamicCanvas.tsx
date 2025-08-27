@@ -121,8 +121,19 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             setComponents(loadedComponents);
             // Clear any stale react-grid-layout state so generated layout uses fresh sizes
             setLayouts({});
-            // Force a resize so RGL recalculates widths and breakpoints
-            setTimeout(() => window.dispatchEvent(new Event("resize")), 50);
+            // Force immediate layout regeneration with new dimensions
+            setTimeout(() => {
+                console.log(
+                    "🔄 Forcing layout regeneration after tab config change"
+                );
+                window.dispatchEvent(new Event("resize"));
+                // Force grid to recalculate with new component dimensions
+                const gridElement =
+                    document.querySelector(".react-grid-layout");
+                if (gridElement) {
+                    gridElement.dispatchEvent(new Event("resize"));
+                }
+            }, 100);
         } else if (!tab?.components || tab.components.length === 0) {
             // Only load from memory if we don't already have components
             if (components.length === 0) {
@@ -415,19 +426,25 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             console.log(
                 `🔧 Generating layout for ${comp.id}: mode=${comp.displayMode}, w=${comp.w}, originalW=${comp.originalW}`
             );
+
+            // ALWAYS use the current component dimensions (which come from CosmosDB)
+            // This ensures that when tab config changes, the component immediately reflects the new size
+            const finalWidth =
+                comp.displayMode === "thumbnail"
+                    ? Math.max(2, comp.w) // For thumbnail, use current w
+                    : comp.w; // For medium, ALWAYS use current w (from CosmosDB)
+
+            const finalHeight =
+                comp.displayMode === "thumbnail"
+                    ? Math.max(1, comp.h) // For thumbnail, use current h
+                    : comp.h; // For medium, ALWAYS use current h (from CosmosDB)
+
             return {
                 i: comp.id,
                 x: comp.x,
                 y: comp.y,
-                // Use Cosmos-config dimensions in medium; compact in thumbnail
-                w:
-                    comp.displayMode === "thumbnail"
-                        ? Math.max(2, comp.w)
-                        : Math.max(2, comp.originalW), // Always use originalW for medium mode
-                h:
-                    comp.displayMode === "thumbnail"
-                        ? Math.max(1, comp.h)
-                        : Math.max(1, comp.originalH), // Always use originalH for medium mode
+                w: finalWidth,
+                h: finalHeight,
                 minW: meta?.minSize?.w || 2,
                 minH: meta?.minSize?.h || 2,
                 maxW: meta?.maxSize?.w || 12,
@@ -481,10 +498,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 flexDirection: "column",
                                 height: isThumb ? "28px" : "auto", // Force height in thumbnail mode
                                 minHeight: isThumb ? "28px" : "auto", // Force min-height in thumbnail mode
-                                // Force width using CSS variable
+                                // Force width using CSS variable - ALWAYS use current w from CosmosDB
                                 "--grid-item-width": isThumb
                                     ? "auto"
-                                    : `calc(${instance.originalW} * (100% / 12))`,
+                                    : `calc(${instance.w} * (100% / 12))`,
                             } as React.CSSProperties & {
                                 "--grid-item-width": string;
                             }
@@ -831,17 +848,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             max-width: var(--grid-item-width, auto) !important;
           }
 
-          /* Debug: Show grid item dimensions */
+          /* Debug: Show grid item dimensions - HIDDEN */
           .react-grid-item::before {
-            content: attr(data-grid-key);
-            position: absolute;
-            top: -20px;
-            left: 0;
-            background: red;
-            color: white;
-            font-size: 10px;
-            padding: 2px;
-            z-index: 1000;
+            display: none;
           }
 
 
