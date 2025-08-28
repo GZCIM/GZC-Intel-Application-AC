@@ -536,8 +536,6 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             // Recalc layout and persist while locked
             setTimeout(() => {
                 triggerResize();
-                // Persist displayMode immediately for this component so reload honors it
-                saveDisplayModeFor(id, mode);
             }, 50);
             return;
         }
