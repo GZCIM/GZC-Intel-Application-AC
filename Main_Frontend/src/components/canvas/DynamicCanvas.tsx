@@ -264,24 +264,52 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         [components, layouts, tabId, updateTab, saveToMemory]
     );
 
+    // Persist to CosmosDB when user LOCKS editing from ToolsMenu
+    useEffect(() => {
+        const onToggleAndMaybeSave = (e: any) => {
+            try {
+                const unlocked = !!e?.detail?.unlocked;
+                if (!unlocked) {
+                    console.log(
+                        "💾 Locking edit mode - saving current layout to CosmosDB"
+                    );
+                    saveLayoutToTab();
+                }
+            } catch {}
+        };
+        window.addEventListener(
+            "gzc:edit-mode-toggled",
+            onToggleAndMaybeSave as any
+        );
+        return () =>
+            window.removeEventListener(
+                "gzc:edit-mode-toggled",
+                onToggleAndMaybeSave as any
+            );
+    }, [saveLayoutToTab]);
+
     // Update component positions based on layout
     const updateComponentPositions = useCallback((layout: Layout[]) => {
         setComponents((prev) =>
             prev.map((comp) => {
                 const layoutItem = layout.find((l) => l.i === comp.id);
-                if (layoutItem) {
-                    return {
-                        ...comp,
-                        x: layoutItem.x,
-                        y: layoutItem.y,
-                        w: layoutItem.w,
-                        h: layoutItem.h,
-                        // Update original dimensions when resizing to keep thumbnail calculations accurate
-                        originalW: layoutItem.w,
-                        originalH: layoutItem.h,
-                    };
-                }
-                return comp;
+                if (!layoutItem) return comp;
+
+                // Do not overwrite original dimensions while in thumbnail mode.
+                // Thumbnail is a compact, header-only view and should not reset the
+                // remembered medium/full dimensions that we restore later.
+                const isThumbnail =
+                    (comp.displayMode || "medium") === "thumbnail";
+
+                return {
+                    ...comp,
+                    x: layoutItem.x,
+                    y: layoutItem.y,
+                    w: layoutItem.w,
+                    h: layoutItem.h,
+                    originalW: isThumbnail ? comp.originalW : layoutItem.w,
+                    originalH: isThumbnail ? comp.originalH : layoutItem.h,
+                };
             })
         );
     }, []);
