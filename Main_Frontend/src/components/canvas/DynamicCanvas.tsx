@@ -54,6 +54,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     const [isResizing, setIsResizing] = useState(false);
     const [showComponentPortal, setShowComponentPortal] = useState(false);
     const [isLayoutReady, setIsLayoutReady] = useState(false);
+    // Local changes during edit mode (not persisted until lock)
+    const [localChanges, setLocalChanges] = useState<{
+        components: ComponentInstance[];
+        layouts: { [key: string]: Layout[] };
+    }>({ components: [], layouts: {} });
+    
     // View-only overrides for display mode while LOCKED (not persisted)
     const [lockedViewMode, setLockedViewMode] = useState<
         Record<string, DisplayMode>
