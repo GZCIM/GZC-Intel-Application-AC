@@ -313,7 +313,46 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     console.log(
                         "💾 Locking edit mode - saving current layout to CosmosDB"
                     );
-                    saveLayoutToTab();
+                    // Merge locked view overrides to persisted payload (persist 4x1 for thumbnails)
+                    const currentLayout = layouts.lg || [];
+                    const thumbnailGridWidth = 4;
+                    const tabComponents = components.map((comp) => {
+                        const overrideMode = lockedViewMode[comp.id];
+                        const finalMode = overrideMode || comp.displayMode;
+                        const layoutItem = currentLayout.find(
+                            (l) => l.i === comp.id
+                        );
+                        const persistW =
+                            finalMode === "thumbnail"
+                                ? thumbnailGridWidth
+                                : layoutItem?.w || comp.w;
+                        const persistH =
+                            finalMode === "thumbnail"
+                                ? 1
+                                : layoutItem?.h || comp.h;
+                        return {
+                            id: comp.id,
+                            type: comp.componentId,
+                            position: {
+                                x: layoutItem?.x || comp.x,
+                                y: layoutItem?.y || comp.y,
+                                w: persistW,
+                                h: persistH,
+                            },
+                            props: {
+                                ...(comp.props || {}),
+                                displayMode: finalMode,
+                                customTitle: comp.customTitle,
+                            },
+                            zIndex: 0,
+                        };
+                    });
+                    updateTab(tabId, { components: tabComponents });
+                    saveToMemory(`dynamic-canvas-${tabId}`, {
+                        components: tabComponents,
+                        layouts: layouts,
+                    });
+                    setLockedViewMode({});
                 }
             } catch {}
         };
@@ -326,7 +365,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 "gzc:edit-mode-toggled",
                 onToggleAndMaybeSave as any
             );
-    }, [saveLayoutToTab]);
+    }, [components, layouts, lockedViewMode, tabId, updateTab, saveToMemory]);
 
     // Update component positions based on layout
     const updateComponentPositions = useCallback((layout: Layout[]) => {
