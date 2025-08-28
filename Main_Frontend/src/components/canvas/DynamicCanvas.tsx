@@ -962,45 +962,157 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 zIndex: 5,
                                             }}
                                         >
-                                            <select
-                                                value={
-                                                    instance.displayMode ||
-                                                    "medium"
-                                                }
-                                                onChange={(e) => {
-                                                    const mode = e.target
-                                                        .value as DisplayMode;
+                                            {/* Thumbnail */}
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
                                                     setDisplayMode(
                                                         instance.id,
-                                                        mode
-                                                    );
-                                                    // Persist immediately
-                                                    setTimeout(
-                                                        () => saveLayoutToTab(),
-                                                        50
+                                                        "thumbnail"
                                                     );
                                                 }}
+                                                title="Thumbnail"
                                                 style={{
                                                     height: 24,
-                                                    background:
-                                                        currentTheme.background,
-                                                    color: currentTheme.text,
+                                                    padding: "2px 6px",
                                                     border: `1px solid ${currentTheme.border}`,
+                                                    background:
+                                                        (instance.displayMode ||
+                                                            "medium") ===
+                                                        "thumbnail"
+                                                            ? `${currentTheme.primary}20`
+                                                            : currentTheme.background,
+                                                    color: currentTheme.text,
                                                     borderRadius: 4,
-                                                    outline: "none",
-                                                    padding: "0 6px",
+                                                    cursor: "pointer",
                                                 }}
                                             >
-                                                <option value="thumbnail">
-                                                    Thumbnail
-                                                </option>
-                                                <option value="medium">
-                                                    Medium
-                                                </option>
-                                                <option value="full">
-                                                    Full
-                                                </option>
-                                            </select>
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <rect
+                                                        x="1"
+                                                        y="2"
+                                                        width="12"
+                                                        height="10"
+                                                        rx="1"
+                                                    />
+                                                    <rect
+                                                        x="3"
+                                                        y="4"
+                                                        width="8"
+                                                        height="6"
+                                                        rx="0.5"
+                                                        fill="currentColor"
+                                                        opacity="0.7"
+                                                    />
+                                                </svg>
+                                            </button>
+                                            {/* Medium */}
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "medium"
+                                                    );
+                                                }}
+                                                title="Medium"
+                                                style={{
+                                                    height: 24,
+                                                    padding: "2px 6px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background:
+                                                        (instance.displayMode ||
+                                                            "medium") ===
+                                                        "medium"
+                                                            ? `${currentTheme.primary}20`
+                                                            : currentTheme.background,
+                                                    color: currentTheme.text,
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <rect
+                                                        x="2"
+                                                        y="2"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                    <rect
+                                                        x="8"
+                                                        y="2"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                    <rect
+                                                        x="2"
+                                                        y="8"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                    <rect
+                                                        x="8"
+                                                        y="8"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                </svg>
+                                            </button>
+                                            {/* Full */}
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "full"
+                                                    );
+                                                }}
+                                                title="Full"
+                                                style={{
+                                                    height: 24,
+                                                    padding: "2px 6px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background:
+                                                        (instance.displayMode ||
+                                                            "medium") === "full"
+                                                            ? `${currentTheme.primary}20`
+                                                            : currentTheme.background,
+                                                    color: currentTheme.text,
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <path d="M5 1H1v4" />
+                                                    <path d="M9 13h4V9" />
+                                                    <path d="M13 5V1H9" />
+                                                    <path d="M1 9v4h4" />
+                                                </svg>
+                                            </button>
                                             <input
                                                 type="text"
                                                 placeholder="Custom title (used in Thumbnail)"
