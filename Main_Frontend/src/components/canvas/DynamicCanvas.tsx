@@ -91,44 +91,45 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         [currentLayout?.tabs, tabId]
     );
     const isEditMode = editingLockService.isUnlocked();
+    const prevIsEditModeRef = useRef<boolean>(isEditMode);
 
-    // When entering edit (unlocked), force medium mode for all and exit full
+    // When entering edit (unlocked) for the first time, normalize to medium once
     useEffect(() => {
-        if (isEditMode) {
-            setFullScreenId(null);
-            console.log(
-                `🔓 Entering edit mode: restoring all components to medium from CosmosDB`
-            );
+        const justEnteredEdit = isEditMode && !prevIsEditModeRef.current;
+        prevIsEditModeRef.current = isEditMode;
+        if (!justEnteredEdit) return;
 
-            // Restore all components to their original configuration from CosmosDB
-            if (tab?.components) {
-                setComponents((prev) =>
-                    prev.map((c) => {
-                        const originalComponent = tab.components.find(
-                            (comp) => comp.id === c.id
+        setFullScreenId(null);
+        console.log(
+            `🔓 Entering edit mode: restoring all components to medium from CosmosDB`
+        );
+
+        if (tab?.components) {
+            setComponents((prev) =>
+                prev.map((c) => {
+                    const originalComponent = tab.components!.find(
+                        (comp) => comp.id === c.id
+                    );
+                    if (originalComponent) {
+                        console.log(
+                            `📥 Restoring ${c.id} to: ${originalComponent.position.w}x${originalComponent.position.h} at (${originalComponent.position.x},${originalComponent.position.y})`
                         );
-                        if (originalComponent) {
-                            console.log(
-                                `📥 Restoring ${c.id} to: ${originalComponent.position.w}x${originalComponent.position.h} at (${originalComponent.position.x},${originalComponent.position.y})`
-                            );
-                            return {
-                                ...c,
-                                displayMode: "medium",
-                                x: originalComponent.position.x,
-                                y: originalComponent.position.y,
-                                w: originalComponent.position.w,
-                                h: originalComponent.position.h,
-                                // Update original dimensions to match CosmosDB
-                                originalW: originalComponent.position.w,
-                                originalH: originalComponent.position.h,
-                            };
-                        }
-                        return c;
-                    })
-                );
-            }
+                        return {
+                            ...c,
+                            displayMode: "medium",
+                            x: originalComponent.position.x,
+                            y: originalComponent.position.y,
+                            w: originalComponent.position.w,
+                            h: originalComponent.position.h,
+                            originalW: originalComponent.position.w,
+                            originalH: originalComponent.position.h,
+                        };
+                    }
+                    return c;
+                })
+            );
         }
-    }, [isEditMode, tab?.components]);
+    }, [isEditMode]);
 
     // Load components from tab configuration (prioritize tab over memory for live updates)
     useEffect(() => {
@@ -844,7 +845,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         style={{
                                             position: "absolute",
                                             top: 4,
-                                            right: 16,
+                                            right: 56,
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 6,
@@ -939,7 +940,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     minHeight: 0,
                                     position: "relative",
                                     // Reserve space on the right for medium-mode controls so they don't cover text
-                                    paddingRight: !isEditMode ? 56 : 0,
+                                    paddingRight: isEditMode ? 96 : 56,
                                 }}
                             >
                                 <ComponentRenderer
