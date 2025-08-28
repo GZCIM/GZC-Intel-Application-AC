@@ -54,6 +54,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     const [isResizing, setIsResizing] = useState(false);
     const [showComponentPortal, setShowComponentPortal] = useState(false);
     const [isLayoutReady, setIsLayoutReady] = useState(false);
+    // View-only overrides for display mode while LOCKED (not persisted)
+    const [lockedViewMode, setLockedViewMode] = useState<
+        Record<string, DisplayMode>
+    >({});
     // Removed gridKey - using containerWidth and debounced updates instead for smoother rendering
     const [containerWidth, setContainerWidth] = useState<number | undefined>(
         undefined
@@ -136,6 +140,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         if (tab?.components && tab.components.length > 0) {
             // Always use tab configuration when it has components
             console.log("📥 Loading tab components:", tab.components);
+            // Clear view-only overrides on fresh load
+            setLockedViewMode({});
             const loadedComponents = tab.components.map((comp) => {
                 console.log(
                     `📥 Loading component ${comp.id}: ${comp.position.w}x${comp.position.h} at (${comp.position.x},${comp.position.y})`
@@ -381,6 +387,19 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     const setDisplayMode = (id: string, mode: DisplayMode) => {
         console.log(`🔄 Setting display mode for ${id} to ${mode}`);
 
+        // If we're LOCKED, treat mode changes as view-only and do not mutate saved state
+        if (!isEditMode) {
+            setLockedViewMode((prev) => ({ ...prev, [id]: mode }));
+            if (mode === "full") {
+                setFullScreenId(id);
+            } else if (fullScreenId === id) {
+                setFullScreenId(null);
+            }
+            // Recalc layout only
+            setTimeout(() => triggerResize(), 50);
+            return;
+        }
+
         if (mode === "medium") {
             // For medium mode, restore the exact original configuration from CosmosDB
             console.log(
@@ -456,10 +475,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
         // Trigger layout update and save after mode change
         setTimeout(() => {
-            // Persist only in edit mode; view-mode toggles shouldn't overwrite Cosmos config
-            if (isEditMode) {
-                saveLayoutToTab();
-            }
+            // Persist only in edit mode
+            saveLayoutToTab();
             // Debounced grid layout recalc
             triggerResize();
         }, 100);
@@ -497,10 +514,18 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         const thumbnailIndexById = new Map<string, number>();
         thumbnailIds.forEach((id, idx) => thumbnailIndexById.set(id, idx));
 
+        // Helper to compute effective mode in locked vs edit
+        const getEffectiveMode = (compId: string, savedMode?: DisplayMode) => {
+            if (!isEditMode && lockedViewMode[compId])
+                return lockedViewMode[compId];
+            return savedMode;
+        };
+
         return components.map((comp) => {
             const meta = componentInventory.getComponent(comp.componentId);
+            const effectiveMode = getEffectiveMode(comp.id, comp.displayMode);
             console.log(
-                `🔧 Generating layout for ${comp.id}: mode=${comp.displayMode}, x=${comp.x}, y=${comp.y}, w=${comp.w}, h=${comp.h}`
+                `🔧 Generating layout for ${comp.id}: mode=${effectiveMode}, x=${comp.x}, y=${comp.y}, w=${comp.w}, h=${comp.h}`
             );
 
             // Calculate final size and position
@@ -509,7 +534,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             let finalWidth = comp.w;
             let finalHeight = comp.h;
 
-            if (comp.displayMode === "thumbnail") {
+            if (effectiveMode === "thumbnail") {
                 const tIndex = thumbnailIndexById.get(comp.id) ?? 0;
                 const column = Math.floor(tIndex / rowsPerColumn);
                 const row = tIndex % rowsPerColumn;
@@ -533,7 +558,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 isResizable: true, // Allow resizing in all modes
             };
         });
-    }, [components]);
+    }, [components, isEditMode, lockedViewMode]);
 
     // Force layout initialization when components change (simplified to prevent infinite loops)
     useEffect(() => {
@@ -840,91 +865,127 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         </button>
                                     </div>
                                 )}
-                                {/* Edit controls (mode + custom title) visible in edit mode */}
+                                {/* Edit controls (remove + mode + custom title) visible in edit mode */}
                                 {isEditMode && (
-                                    <div
-                                        className="no-drag"
-                                        style={{
-                                            position: "absolute",
-                                            top: 4,
-                                            right: 140,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 6,
-                                            zIndex: 5,
-                                        }}
-                                    >
-                                        <select
-                                            value={
-                                                instance.displayMode || "medium"
-                                            }
-                                            onChange={(e) => {
-                                                const mode = e.target
-                                                    .value as DisplayMode;
-                                                setDisplayMode(
-                                                    instance.id,
-                                                    mode
-                                                );
-                                                // Persist immediately
-                                                setTimeout(
-                                                    () => saveLayoutToTab(),
-                                                    50
-                                                );
+                                    <>
+                                        {/* Remove button pinned to top-right */}
+                                        <button
+                                            className="no-drag remove-component"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeComponent(instance.id);
                                             }}
+                                            title="Remove"
                                             style={{
+                                                position: "absolute",
+                                                top: 4,
+                                                right: 8,
+                                                width: 24,
                                                 height: 24,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                border: `1px solid ${currentTheme.border}`,
                                                 background:
                                                     currentTheme.background,
                                                 color: currentTheme.text,
-                                                border: `1px solid ${currentTheme.border}`,
                                                 borderRadius: 4,
-                                                outline: "none",
-                                                padding: "0 6px",
+                                                cursor: "pointer",
+                                                zIndex: 6,
                                             }}
                                         >
-                                            <option value="thumbnail">
-                                                Thumbnail
-                                            </option>
-                                            <option value="medium">
-                                                Medium
-                                            </option>
-                                            <option value="full">Full</option>
-                                        </select>
-                                        <input
-                                            type="text"
-                                            placeholder="Custom title (used in Thumbnail)"
-                                            value={instance.customTitle || ""}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setComponents((prev) =>
-                                                    prev.map((c) =>
-                                                        c.id === instance.id
-                                                            ? {
-                                                                  ...c,
-                                                                  customTitle:
-                                                                      val,
-                                                              }
-                                                            : c
-                                                    )
-                                                );
-                                            }}
-                                            onBlur={() => {
-                                                setTimeout(
-                                                    () => saveLayoutToTab(),
-                                                    100
-                                                );
-                                            }}
+                                            ✕
+                                        </button>
+
+                                        <div
+                                            className="no-drag"
                                             style={{
-                                                height: 22,
-                                                padding: "0 6px",
-                                                background:
-                                                    currentTheme.background,
-                                                color: currentTheme.text,
-                                                border: `1px solid ${currentTheme.border}`,
-                                                borderRadius: 4,
+                                                position: "absolute",
+                                                top: 4,
+                                                right: 140,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 6,
+                                                zIndex: 5,
                                             }}
-                                        />
-                                    </div>
+                                        >
+                                            <select
+                                                value={
+                                                    instance.displayMode ||
+                                                    "medium"
+                                                }
+                                                onChange={(e) => {
+                                                    const mode = e.target
+                                                        .value as DisplayMode;
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        mode
+                                                    );
+                                                    // Persist immediately
+                                                    setTimeout(
+                                                        () => saveLayoutToTab(),
+                                                        50
+                                                    );
+                                                }}
+                                                style={{
+                                                    height: 24,
+                                                    background:
+                                                        currentTheme.background,
+                                                    color: currentTheme.text,
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    borderRadius: 4,
+                                                    outline: "none",
+                                                    padding: "0 6px",
+                                                }}
+                                            >
+                                                <option value="thumbnail">
+                                                    Thumbnail
+                                                </option>
+                                                <option value="medium">
+                                                    Medium
+                                                </option>
+                                                <option value="full">
+                                                    Full
+                                                </option>
+                                            </select>
+                                            <input
+                                                type="text"
+                                                placeholder="Custom title (used in Thumbnail)"
+                                                value={
+                                                    instance.customTitle || ""
+                                                }
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setComponents((prev) =>
+                                                        prev.map((c) =>
+                                                            c.id === instance.id
+                                                                ? {
+                                                                      ...c,
+                                                                      customTitle:
+                                                                          val,
+                                                                  }
+                                                                : c
+                                                        )
+                                                    );
+                                                }}
+                                                onBlur={() => {
+                                                    setTimeout(
+                                                        () => saveLayoutToTab(),
+                                                        100
+                                                    );
+                                                }}
+                                                style={{
+                                                    height: 22,
+                                                    padding: "0 6px",
+                                                    background:
+                                                        currentTheme.background,
+                                                    color: currentTheme.text,
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    borderRadius: 4,
+                                                }}
+                                            />
+                                        </div>
+                                    </>
                                 )}
                             </>
                         )}
