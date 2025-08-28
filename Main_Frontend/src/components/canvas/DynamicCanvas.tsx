@@ -661,6 +661,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     !isEditMode && lockedViewMode[instance.id]
                         ? lockedViewMode[instance.id]
                         : instance.displayMode || "medium";
+                const meta = componentInventory.getComponent(
+                    instance.componentId
+                );
 
                 if (fullScreenId && instance.id !== fullScreenId) {
                     // Hide other components while full-screen is active
@@ -670,6 +673,21 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     componentInventory.getComponent(instance.componentId)
                         ?.displayName || "Component";
                 const isThumb = effectiveMode === "thumbnail";
+                // Derive rows/cols for visual sizing so locked-mode medium doesn't stick at 1
+                const visualRows = isThumb
+                    ? 1
+                    : instance.h > 1
+                    ? instance.h
+                    : instance.originalH > 1
+                    ? instance.originalH
+                    : meta?.defaultSize?.h || 5;
+                const visualCols = isThumb
+                    ? instance.w
+                    : instance.w > 1
+                    ? instance.w
+                    : instance.originalW > 1
+                    ? instance.originalW
+                    : meta?.defaultSize?.w || 6;
                 return (
                     <div
                         key={instance.id}
@@ -701,18 +719,18 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 flexDirection: "column",
                                 height: isThumb
                                     ? "28px"
-                                    : `${instance.h * 60}px`, // Use exact CosmosDB height
+                                    : `${visualRows * 60}px`,
                                 minHeight: isThumb
                                     ? "28px"
-                                    : `${instance.h * 60}px`, // Force exact height from CosmosDB
+                                    : `${visualRows * 60}px`,
                                 // Force width using CSS variable - ALWAYS use current w from CosmosDB
                                 "--grid-item-width": isThumb
                                     ? "auto"
-                                    : `calc(${instance.w} * (100% / 12))`,
+                                    : `calc(${visualCols} * (100% / 12))`,
                                 // Force height using CSS variable - ALWAYS use current h from CosmosDB
                                 "--grid-item-height": isThumb
                                     ? "28px"
-                                    : `${instance.h * 60}px`,
+                                    : `${visualRows * 60}px`,
                             } as React.CSSProperties & {
                                 "--grid-item-width": string;
                                 "--grid-item-height": string;
