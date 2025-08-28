@@ -1719,6 +1719,58 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         toggleTabEditMode,
     };
 
+    // Persist ALL tabs on lock so changes across tabs are saved consistently
+    useEffect(() => {
+        const onEditToggle = async (e: any) => {
+            try {
+                const unlocked = !!e?.detail?.unlocked;
+                if (!unlocked) {
+                    // Locking now – save the entire tabs array to device-config
+                    const tabIds = new Set<string>();
+                    const uniqueTabs = currentLayout.tabs.filter((t) => {
+                        if (tabIds.has(t.id)) return false;
+                        tabIds.add(t.id);
+                        return true;
+                    });
+
+                    const currentDeviceType =
+                        deviceConfigService.detectDeviceType();
+                    await fetch(
+                        `${
+                            import.meta.env.VITE_API_BASE_URL ||
+                            (import.meta.env.PROD
+                                ? ""
+                                : "http://localhost:8080")
+                        }/api/cosmos/device-config/${currentDeviceType}`,
+                        {
+                            method: "POST",
+                            headers: {
+                                Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                                "Content-Type": "application/json",
+                                ...editingLockService.getLockHeaders(),
+                            },
+                            body: JSON.stringify({ tabs: uniqueTabs }),
+                        }
+                    );
+                }
+            } catch (err) {
+                console.warn(
+                    "Failed to save all tabs on lock:",
+                    (err as any)?.message || err
+                );
+            }
+        };
+        window.addEventListener(
+            "gzc:edit-mode-toggled" as any,
+            onEditToggle as any
+        );
+        return () =>
+            window.removeEventListener(
+                "gzc:edit-mode-toggled" as any,
+                onEditToggle as any
+            );
+    }, [currentLayout.tabs]);
+
     return (
         <TabLayoutContext.Provider value={value}>
             {children}
