@@ -436,22 +436,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     setComponents((prev) =>
                         prev.map((c) => {
                             if (c.id === id) {
-                                const savedMode = (originalComponent as any)
-                                    .props?.displayMode as
-                                    | DisplayMode
-                                    | undefined;
-                                const mediumW =
-                                    savedMode === "thumbnail"
-                                        ? meta?.defaultSize?.w ||
-                                          c.originalW ||
-                                          6
-                                        : originalComponent.position.w;
-                                const mediumH =
-                                    savedMode === "thumbnail"
-                                        ? meta?.defaultSize?.h ||
-                                          c.originalH ||
-                                          5
-                                        : originalComponent.position.h;
+                                // Always use the original CosmosDB dimensions for medium mode
+                                // Don't check saved displayMode - just restore the position dimensions
+                                const mediumW = originalComponent.position.w;
+                                const mediumH = originalComponent.position.h;
+
+                                console.log(
+                                    `📐 Restoring ${c.id} to medium: ${mediumW}x${mediumH} from CosmosDB position`
+                                );
+
                                 return {
                                     ...c,
                                     displayMode: mode,
@@ -491,6 +484,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     return c;
                 })
             );
+            // Immediately save the thumbnail mode change to persist it
+            setTimeout(() => saveLayoutToTab(), 50);
         } else if (mode === "full") {
             // Persist full preference and show fullscreen
             setComponents((prev) =>
@@ -504,6 +499,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 )
             );
             setFullScreenId(id);
+            // Immediately save the full mode change to persist it
+            setTimeout(() => saveLayoutToTab(), 50);
         }
 
         // Trigger layout update and save after mode change
@@ -582,11 +579,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 finalWidth = thumbnailGridWidth;
                 finalHeight = 1;
             } else if (effectiveMode === "medium") {
-                // If the saved/layout height is thumbnail-like (h=1), fall back to sensible defaults
-                if (finalHeight <= 1) {
-                    finalWidth = meta?.defaultSize?.w || 6;
-                    finalHeight = meta?.defaultSize?.h || 5;
-                }
+                // For medium mode, always use the original CosmosDB dimensions
+                // This ensures that even if the component was saved as thumbnail, medium mode shows proper size
+                finalWidth = comp.originalW;
+                finalHeight = comp.originalH;
+                console.log(
+                    `📐 Medium mode layout: ${comp.id} using original dimensions ${finalWidth}x${finalHeight}`
+                );
             }
 
             return {
