@@ -230,6 +230,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     // Save current state - MOVED UP to fix temporal dead zone
     const saveLayoutToTab = useCallback(
         (layout?: Layout[]) => {
+            // Do not persist while editing is unlocked. We only save on LOCK.
+            if (editingLockService.isUnlocked()) {
+                console.log("⏭️ Skipping save while in edit (unlocked) mode");
+                return;
+            }
             const currentLayout = layout || layouts.lg || [];
 
             const tabComponents = components.map((comp) => {
@@ -437,14 +442,28 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
         // If we're LOCKED, treat mode changes as view-only and do not mutate saved state
         if (!isEditMode) {
+            // View change in locked mode should also persist displayMode so it survives reloads
             setLockedViewMode((prev) => ({ ...prev, [id]: mode }));
+            setComponents((prev) =>
+                prev.map((c) =>
+                    c.id === id
+                        ? {
+                              ...c,
+                              displayMode: mode,
+                          }
+                        : c
+                )
+            );
             if (mode === "full") {
                 setFullScreenId(id);
             } else if (fullScreenId === id) {
                 setFullScreenId(null);
             }
-            // Recalc layout only
-            setTimeout(() => triggerResize(), 50);
+            // Recalc layout and persist while locked
+            setTimeout(() => {
+                triggerResize();
+                saveLayoutToTab();
+            }, 50);
             return;
         }
 
