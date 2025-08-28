@@ -737,7 +737,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             top: 0,
                                             left: 0,
                                             // Leave space on the right for edit controls
-                                            right: 140,
+                                            right: 240,
                                             height: 20,
                                             cursor: "move",
                                             opacity: 0,
@@ -847,7 +847,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         style={{
                                             position: "absolute",
                                             top: 4,
-                                            right: 56,
+                                            right: 140,
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 6,
@@ -941,8 +941,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     flex: 1,
                                     minHeight: 0,
                                     position: "relative",
-                                    // Reserve space on the right for medium-mode controls so they don't cover text
-                                    paddingRight: isEditMode ? 120 : 56,
+                                    // Reserve space on the right for edit controls
+                                    paddingRight: isEditMode ? 240 : 56,
                                     userSelect:
                                         isDragging || isResizing
                                             ? "none"
@@ -1127,10 +1127,19 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           overflow: hidden !important;
         }
 
-        /* In edit mode, disable component interaction except for remove button */
+        /* In edit mode, restrict internal interactions to edit UI only */
         ${
             isEditMode
                 ? `
+          .grid-item * { pointer-events: none !important; }
+          .grid-item .no-drag,
+          .grid-item .drag-handle,
+          .grid-item select,
+          .grid-item button,
+          .grid-item input,
+          .grid-item .react-resizable-handle,
+          .grid-item button.remove-component { pointer-events: auto !important; }
+
           .grid-item .react-resizable-handle {
             pointer-events: auto !important;
             display: block !important;
@@ -1151,11 +1160,6 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           }
           .grid-item .react-resizable-handle-se {
             cursor: se-resize !important;
-          }
-
-          /* Keep remove button always interactive */
-          .grid-item button.remove-component {
-            pointer-events: auto !important;
           }
         `
                 : `
