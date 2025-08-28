@@ -115,18 +115,32 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                         (comp) => comp.id === c.id
                     );
                     if (originalComponent) {
+                        const meta = componentInventory.getComponent(
+                            originalComponent.type
+                        );
                         console.log(
                             `📥 Restoring ${c.id} to: ${originalComponent.position.w}x${originalComponent.position.h} at (${originalComponent.position.x},${originalComponent.position.y})`
                         );
+                        // If the saved state was thumbnail (h=1), fall back to sensible medium defaults
+                        const savedMode = (originalComponent as any).props
+                            ?.displayMode as DisplayMode | undefined;
+                        const mediumW =
+                            savedMode === "thumbnail"
+                                ? meta?.defaultSize?.w || c.originalW || 6
+                                : originalComponent.position.w;
+                        const mediumH =
+                            savedMode === "thumbnail"
+                                ? meta?.defaultSize?.h || c.originalH || 5
+                                : originalComponent.position.h;
                         return {
                             ...c,
                             displayMode: "medium",
                             x: originalComponent.position.x,
                             y: originalComponent.position.y,
-                            w: originalComponent.position.w,
-                            h: originalComponent.position.h,
-                            originalW: originalComponent.position.w,
-                            originalH: originalComponent.position.h,
+                            w: mediumW,
+                            h: mediumH,
+                            originalW: mediumW,
+                            originalH: mediumH,
                         };
                     }
                     return c;
@@ -412,6 +426,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     (comp) => comp.id === id
                 );
                 if (originalComponent) {
+                    const meta = componentInventory.getComponent(
+                        originalComponent.type
+                    );
                     console.log(
                         `📥 Restoring from CosmosDB: ${originalComponent.position.w}x${originalComponent.position.h} at (${originalComponent.position.x},${originalComponent.position.y})`
                     );
@@ -419,16 +436,32 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     setComponents((prev) =>
                         prev.map((c) => {
                             if (c.id === id) {
+                                const savedMode = (originalComponent as any)
+                                    .props?.displayMode as
+                                    | DisplayMode
+                                    | undefined;
+                                const mediumW =
+                                    savedMode === "thumbnail"
+                                        ? meta?.defaultSize?.w ||
+                                          c.originalW ||
+                                          6
+                                        : originalComponent.position.w;
+                                const mediumH =
+                                    savedMode === "thumbnail"
+                                        ? meta?.defaultSize?.h ||
+                                          c.originalH ||
+                                          5
+                                        : originalComponent.position.h;
                                 return {
                                     ...c,
                                     displayMode: mode,
                                     x: originalComponent.position.x,
                                     y: originalComponent.position.y,
-                                    w: originalComponent.position.w,
-                                    h: originalComponent.position.h,
+                                    w: mediumW,
+                                    h: mediumH,
                                     // Update original dimensions to match CosmosDB
-                                    originalW: originalComponent.position.w,
-                                    originalH: originalComponent.position.h,
+                                    originalW: mediumW,
+                                    originalH: mediumH,
                                 };
                             }
                             return c;
@@ -548,6 +581,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 finalY = row; // each thumbnail is 1 row tall
                 finalWidth = thumbnailGridWidth;
                 finalHeight = 1;
+            } else if (effectiveMode === "medium") {
+                // If the saved/layout height is thumbnail-like (h=1), fall back to sensible defaults
+                if (finalHeight <= 1) {
+                    finalWidth = meta?.defaultSize?.w || 6;
+                    finalHeight = meta?.defaultSize?.h || 5;
+                }
             }
 
             return {
@@ -581,6 +620,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     const gridChildren = useMemo(
         () =>
             components.map((instance) => {
+                const effectiveMode =
+                    !isEditMode && lockedViewMode[instance.id]
+                        ? lockedViewMode[instance.id]
+                        : instance.displayMode || "medium";
+
                 if (fullScreenId && instance.id !== fullScreenId) {
                     // Hide other components while full-screen is active
                     return null;
@@ -588,13 +632,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 const title =
                     componentInventory.getComponent(instance.componentId)
                         ?.displayName || "Component";
-                const isThumb = instance.displayMode === "thumbnail";
+                const isThumb = effectiveMode === "thumbnail";
                 return (
                     <div
                         key={instance.id}
                         className="grid-item" // Better control class
-                        data-grid-key={`${instance.id}-${instance.displayMode}`}
-                        data-display-mode={instance.displayMode}
+                        data-grid-key={`${instance.id}-${effectiveMode}`}
+                        data-display-mode={effectiveMode}
                         style={
                             {
                                 background: currentTheme.surface,
@@ -840,7 +884,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             className="no-drag"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                setFullScreenId(instance.id);
+                                                setDisplayMode(
+                                                    instance.id,
+                                                    "full"
+                                                );
                                             }}
                                             title="Full"
                                             style={{
