@@ -59,7 +59,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         components: ComponentInstance[];
         layouts: { [key: string]: Layout[] };
     }>({ components: [], layouts: {} });
-    
+
     // View-only overrides for display mode while LOCKED (not persisted)
     const [lockedViewMode, setLockedViewMode] = useState<
         Record<string, DisplayMode>
