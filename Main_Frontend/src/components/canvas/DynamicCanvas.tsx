@@ -269,6 +269,41 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         [components, layouts, tabId, updateTab, saveToMemory]
     );
 
+    // Persist only displayMode (and customTitle) for a specific component ID immediately
+    const saveDisplayModeFor = useCallback(
+        (componentId: string, mode: DisplayMode) => {
+            if (editingLockService.isUnlocked()) return; // only when locked
+            const currentLayout = layouts.lg || [];
+            const tabComponents = components.map((comp) => {
+                const layoutItem = currentLayout.find((l) => l.i === comp.id);
+                const nextMode =
+                    comp.id === componentId ? mode : comp.displayMode;
+                return {
+                    id: comp.id,
+                    type: comp.componentId,
+                    position: {
+                        x: layoutItem?.x || comp.x,
+                        y: layoutItem?.y || comp.y,
+                        w: layoutItem?.w || comp.w,
+                        h: layoutItem?.h || comp.h,
+                    },
+                    props: {
+                        ...(comp.props || {}),
+                        displayMode: nextMode,
+                        customTitle: comp.customTitle,
+                    },
+                    zIndex: 0,
+                };
+            });
+            updateTab(tabId, { components: tabComponents });
+            saveToMemory(`dynamic-canvas-${tabId}`, {
+                components: tabComponents,
+                layouts: layouts,
+            });
+        },
+        [components, layouts, tabId, updateTab, saveToMemory]
+    );
+
     // Persist to CosmosDB when user LOCKS editing from ToolsMenu
     useEffect(() => {
         const onToggleAndMaybeSave = (e: any) => {
@@ -462,7 +497,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             // Recalc layout and persist while locked
             setTimeout(() => {
                 triggerResize();
-                saveLayoutToTab();
+                // Persist displayMode immediately for this component so reload honors it
+                saveDisplayModeFor(id, mode);
             }, 50);
             return;
         }
