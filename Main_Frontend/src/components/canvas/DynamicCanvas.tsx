@@ -613,10 +613,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 finalWidth = thumbnailGridWidth;
                 finalHeight = 1;
             } else if (effectiveMode === "medium") {
-                // For medium mode, always use the original CosmosDB dimensions
-                // This ensures that even if the component was saved as thumbnail, medium mode shows proper size
+                // Prefer original CosmosDB dimensions; if invalid (e.g., saved as thumbnail h=1),
+                // fall back to component defaults for a sensible medium size.
                 finalWidth = comp.originalW;
                 finalHeight = comp.originalH;
+                if (finalHeight <= 1) {
+                    finalWidth = meta?.defaultSize?.w || 6;
+                    finalHeight = meta?.defaultSize?.h || 5;
+                }
                 console.log(
                     `📐 Medium mode layout: ${comp.id} using original dimensions ${finalWidth}x${finalHeight}`
                 );
