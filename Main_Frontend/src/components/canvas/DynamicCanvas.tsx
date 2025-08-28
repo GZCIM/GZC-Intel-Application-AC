@@ -509,7 +509,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         const thumbnailGridWidth = 4;
         // Map component id → thumbnail index
         const thumbnailIds = components
-            .filter((c) => c.displayMode === "thumbnail")
+            .filter((c) => {
+                const mode =
+                    !isEditMode && lockedViewMode[c.id]
+                        ? lockedViewMode[c.id]
+                        : c.displayMode;
+                return mode === "thumbnail";
+            })
             .map((c) => c.id);
         const thumbnailIndexById = new Map<string, number>();
         thumbnailIds.forEach((id, idx) => thumbnailIndexById.set(id, idx));
