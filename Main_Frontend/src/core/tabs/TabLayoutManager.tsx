@@ -1102,13 +1102,6 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
         // Save to Cosmos DB (primary storage)
         const saveToCosmosDB = async () => {
-            // Save ONLY when editing is LOCKED. Skip during unlocked edit sessions.
-            if (editingLockService.isUnlocked()) {
-                console.warn(
-                    "⏭️ Skipping save (updateTab): editing is unlocked"
-                );
-                return;
-            }
             try {
                 // Deduplicate tabs before saving
                 const tabIds = new Set<string>();
