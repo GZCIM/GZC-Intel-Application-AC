@@ -736,10 +736,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             position: "absolute",
                                             top: 0,
                                             left: 0,
-                                            right: 0,
-                                            height: 24,
+                                            // Leave space on the right for edit controls
+                                            right: 140,
+                                            height: 20,
                                             cursor: "move",
                                             opacity: 0,
+                                            zIndex: 1,
                                         }}
                                     />
                                 )}
@@ -849,7 +851,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 6,
-                                            zIndex: 4,
+                                            zIndex: 5,
                                         }}
                                     >
                                         <select
@@ -940,7 +942,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     minHeight: 0,
                                     position: "relative",
                                     // Reserve space on the right for medium-mode controls so they don't cover text
-                                    paddingRight: isEditMode ? 96 : 56,
+                                    paddingRight: isEditMode ? 120 : 56,
+                                    userSelect:
+                                        isDragging || isResizing
+                                            ? "none"
+                                            : "auto",
                                 }}
                             >
                                 <ComponentRenderer
