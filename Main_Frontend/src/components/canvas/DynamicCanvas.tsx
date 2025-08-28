@@ -890,45 +890,40 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             </option>
                                             <option value="full">Full</option>
                                         </select>
-                                        {instance.displayMode ===
-                                            "thumbnail" && (
-                                            <input
-                                                type="text"
-                                                placeholder="Custom title"
-                                                value={
-                                                    instance.customTitle || ""
-                                                }
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    setComponents((prev) =>
-                                                        prev.map((c) =>
-                                                            c.id === instance.id
-                                                                ? {
-                                                                      ...c,
-                                                                      customTitle:
-                                                                          val,
-                                                                  }
-                                                                : c
-                                                        )
-                                                    );
-                                                }}
-                                                onBlur={() => {
-                                                    setTimeout(
-                                                        () => saveLayoutToTab(),
-                                                        100
-                                                    );
-                                                }}
-                                                style={{
-                                                    height: 22,
-                                                    padding: "0 6px",
-                                                    background:
-                                                        currentTheme.background,
-                                                    color: currentTheme.text,
-                                                    border: `1px solid ${currentTheme.border}`,
-                                                    borderRadius: 4,
-                                                }}
-                                            />
-                                        )}
+                                        <input
+                                            type="text"
+                                            placeholder="Custom title (used in Thumbnail)"
+                                            value={instance.customTitle || ""}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setComponents((prev) =>
+                                                    prev.map((c) =>
+                                                        c.id === instance.id
+                                                            ? {
+                                                                  ...c,
+                                                                  customTitle:
+                                                                      val,
+                                                              }
+                                                            : c
+                                                    )
+                                                );
+                                            }}
+                                            onBlur={() => {
+                                                setTimeout(
+                                                    () => saveLayoutToTab(),
+                                                    100
+                                                );
+                                            }}
+                                            style={{
+                                                height: 22,
+                                                padding: "0 6px",
+                                                background:
+                                                    currentTheme.background,
+                                                color: currentTheme.text,
+                                                border: `1px solid ${currentTheme.border}`,
+                                                borderRadius: 4,
+                                            }}
+                                        />
                                     </div>
                                 )}
                             </>
@@ -977,6 +972,38 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         );
                                     }}
                                 />
+
+                                {/* Explicit resize handles to avoid selecting inner UI while resizing */}
+                                {isEditMode && (
+                                    <>
+                                        <div
+                                            className="react-resizable-handle react-resizable-handle-e"
+                                            style={{
+                                                position: "absolute",
+                                                top: 0,
+                                                right: 0,
+                                                width: 14,
+                                                height: "100%",
+                                                cursor: "e-resize",
+                                                zIndex: 10,
+                                                pointerEvents: "auto",
+                                            }}
+                                        />
+                                        <div
+                                            className="react-resizable-handle react-resizable-handle-s"
+                                            style={{
+                                                position: "absolute",
+                                                left: 0,
+                                                bottom: 0,
+                                                width: "100%",
+                                                height: 14,
+                                                cursor: "s-resize",
+                                                zIndex: 10,
+                                                pointerEvents: "auto",
+                                            }}
+                                        />
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
@@ -1139,6 +1166,18 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           .grid-item input,
           .grid-item .react-resizable-handle,
           .grid-item button.remove-component { pointer-events: auto !important; }
+
+          /* Make side/bottom resize handles larger and clickable */
+          .react-grid-item > .react-resizable-handle-e,
+          .react-grid-item > .react-resizable-handle-s,
+          .react-grid-item > .react-resizable-handle-se {
+            width: 14px !important;
+            height: 14px !important;
+            opacity: 0.9 !important;
+          }
+          .react-grid-item > .react-resizable-handle-e { right: 0; top: 50%; margin-top: -7px; cursor: e-resize; }
+          .react-grid-item > .react-resizable-handle-s { bottom: 0; left: 50%; margin-left: -7px; cursor: s-resize; }
+          .react-grid-item > .react-resizable-handle-se { right: 0; bottom: 0; cursor: se-resize; }
 
           .grid-item .react-resizable-handle {
             pointer-events: auto !important;
@@ -1332,6 +1371,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     isDraggable={true} // Always allow dragging
                                     isResizable={true} // Always allow resizing
                                     useCSSTransforms={true} // 6x faster paint performance
+                                    resizeHandles={["e", "s", "se"]}
                                     transformScale={1} // Important for smooth scaling
                                     margin={[2, 2]}
                                     containerPadding={[0, 0]}
