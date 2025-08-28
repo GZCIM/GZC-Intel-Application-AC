@@ -844,7 +844,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         style={{
                                             position: "absolute",
                                             top: 4,
-                                            right: 8,
+                                            right: 16,
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 6,
@@ -868,7 +868,16 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     50
                                                 );
                                             }}
-                                            style={{ height: 24 }}
+                                            style={{
+                                                height: 24,
+                                                background:
+                                                    currentTheme.background,
+                                                color: currentTheme.text,
+                                                border: `1px solid ${currentTheme.border}`,
+                                                borderRadius: 4,
+                                                outline: "none",
+                                                padding: "0 6px",
+                                            }}
                                         >
                                             <option value="thumbnail">
                                                 Thumbnail
@@ -883,24 +892,24 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             <input
                                                 type="text"
                                                 placeholder="Custom title"
-                                                defaultValue={
+                                                value={
                                                     instance.customTitle || ""
                                                 }
-                                                onBlur={(e) => {
-                                                    const val =
-                                                        e.target.value.trim();
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
                                                     setComponents((prev) =>
                                                         prev.map((c) =>
                                                             c.id === instance.id
                                                                 ? {
                                                                       ...c,
                                                                       customTitle:
-                                                                          val ||
-                                                                          undefined,
+                                                                          val,
                                                                   }
                                                                 : c
                                                         )
                                                     );
+                                                }}
+                                                onBlur={() => {
                                                     setTimeout(
                                                         () => saveLayoutToTab(),
                                                         100
@@ -909,6 +918,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 style={{
                                                     height: 22,
                                                     padding: "0 6px",
+                                                    background:
+                                                        currentTheme.background,
+                                                    color: currentTheme.text,
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    borderRadius: 4,
                                                 }}
                                             />
                                         )}
