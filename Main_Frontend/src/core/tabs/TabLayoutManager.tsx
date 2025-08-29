@@ -1923,23 +1923,89 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
                         const currentDeviceType =
                             deviceConfigService.detectDeviceType();
-                        await fetch(
-                            `${
-                                import.meta.env.VITE_API_BASE_URL ||
-                                (import.meta.env.PROD
-                                    ? ""
-                                    : "http://localhost:8080")
-                            }/api/cosmos/device-config/${currentDeviceType}`,
-                            {
+                        const baseUrl =
+                            import.meta.env.VITE_API_BASE_URL ||
+                            (import.meta.env.PROD
+                                ? ""
+                                : "http://localhost:8080");
+                        const url = `${baseUrl}/api/cosmos/device-config/${currentDeviceType}`;
+
+                        const auth = await deviceConfigService.getAuthToken();
+                        const lockHeaders = editingLockService.getLockHeaders();
+
+                        const normalize = (tabs: any[]) =>
+                            [...tabs]
+                                .map((t: any) => ({
+                                    id: t.id,
+                                    components: (t.components || []).map(
+                                        (c: any) => ({
+                                            id: c.id,
+                                            pos: c.position,
+                                            mode: c.props?.displayMode,
+                                        })
+                                    ),
+                                }))
+                                .sort((a, b) =>
+                                    (a.id || "").localeCompare(b.id || "")
+                                );
+
+                        const desired = normalize(uniqueTabs as any);
+
+                        for (let attempt = 1; attempt <= 2; attempt++) {
+                            await fetch(url, {
                                 method: "POST",
                                 headers: {
-                                    Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                                    Authorization: `Bearer ${auth}`,
                                     "Content-Type": "application/json",
-                                    ...editingLockService.getLockHeaders(),
+                                    ...lockHeaders,
                                 },
                                 body: JSON.stringify({ tabs: uniqueTabs }),
+                            });
+
+                            // Verify
+                            const verifyResp = await fetch(url, {
+                                method: "GET",
+                                headers: {
+                                    Authorization: `Bearer ${auth}`,
+                                    "Content-Type": "application/json",
+                                },
+                            });
+                            if (verifyResp.ok) {
+                                const verifyJson = await verifyResp.json();
+                                const remoteTabs =
+                                    verifyJson?.config?.tabs ||
+                                    verifyJson?.config?.config?.tabs ||
+                                    [];
+                                const got = normalize(remoteTabs);
+                                if (
+                                    JSON.stringify(desired) ===
+                                    JSON.stringify(got)
+                                ) {
+                                    console.log(
+                                        "✅ Global save on lock verified (attempt",
+                                        attempt,
+                                        ")"
+                                    );
+                                    break;
+                                }
+                                if (attempt === 2) {
+                                    console.warn(
+                                        "⚠️ Global save verification mismatch after retry"
+                                    );
+                                } else {
+                                    await new Promise((r) =>
+                                        setTimeout(r, 250)
+                                    );
+                                }
+                            } else {
+                                console.warn(
+                                    "⚠️ Global save verification GET failed:",
+                                    await verifyResp.text()
+                                );
+                                if (attempt === 2) break;
+                                await new Promise((r) => setTimeout(r, 250));
                             }
-                        );
+                        }
                     }, 250);
                 }
             } catch (err) {
