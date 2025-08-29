@@ -146,8 +146,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 displayMode: "thumbnail",
                                 x: originalComponent.position.x,
                                 y: originalComponent.position.y,
-                                // Slightly wider in edit mode so controls are fully visible
-                                w: 8,
+                                // Wider in edit mode so controls are fully visible
+                                w: 10,
                                 h: 1,
                                 originalW: preservedW,
                                 originalH: preservedH,
@@ -977,27 +977,42 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     />
                                 )}
                                 {isEditMode &&
-                                    instance.displayMode === "thumbnail" && (
+                                    instance.displayMode === "thumbnail" &&
+                                    (console.log(
+                                        "🎯 Rendering thumbnail controls for:",
+                                        instance.id,
+                                        "at position:",
+                                        instance.x,
+                                        instance.y,
+                                        "size:",
+                                        instance.w,
+                                        "x",
+                                        instance.h
+                                    ),
+                                    (
                                         <div
                                             className="no-drag"
                                             style={{
                                                 position: "absolute",
                                                 top: 2,
-                                                right: 6,
+                                                right: 8,
                                                 display: "flex",
                                                 alignItems: "center",
-                                                gap: 6,
-                                                zIndex: 1000,
+                                                gap: 4,
+                                                zIndex: 9999,
                                                 pointerEvents: "auto",
                                                 background:
                                                     currentTheme.background,
                                                 color: currentTheme.text,
-                                                padding: "2px 4px",
+                                                padding: "4px 6px",
                                                 borderRadius: 6,
-                                                boxShadow: `0 1px 3px ${
+                                                border: `1px solid ${currentTheme.border}`,
+                                                boxShadow: `0 2px 8px ${
                                                     currentTheme.shadow ||
-                                                    "#00000040"
+                                                    "#00000060"
                                                 }`,
+                                                minWidth: "200px",
+                                                justifyContent: "space-between",
                                             }}
                                         >
                                             <button
@@ -1011,12 +1026,16 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 }}
                                                 title="Thumbnail"
                                                 style={{
-                                                    fontSize: 11,
-                                                    padding: "1px 4px",
+                                                    fontSize: 12,
+                                                    padding: "3px 6px",
                                                     border: `1px solid ${currentTheme.border}`,
-                                                    background: "transparent",
+                                                    background:
+                                                        currentTheme.primary,
+                                                    color: "white",
                                                     borderRadius: 4,
                                                     cursor: "pointer",
+                                                    fontWeight: "500",
+                                                    minWidth: "32px",
                                                 }}
                                             >
                                                 <svg
@@ -1056,12 +1075,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 }}
                                                 title="Medium"
                                                 style={{
-                                                    fontSize: 11,
-                                                    padding: "1px 4px",
+                                                    fontSize: 12,
+                                                    padding: "3px 6px",
                                                     border: `1px solid ${currentTheme.border}`,
                                                     background: "transparent",
+                                                    color: currentTheme.text,
                                                     borderRadius: 4,
                                                     cursor: "pointer",
+                                                    fontWeight: "500",
+                                                    minWidth: "32px",
                                                 }}
                                             >
                                                 <svg
@@ -1108,12 +1130,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 }}
                                                 title="Fullscreen"
                                                 style={{
-                                                    fontSize: 11,
-                                                    padding: "1px 4px",
+                                                    fontSize: 12,
+                                                    padding: "3px 6px",
                                                     border: `1px solid ${currentTheme.border}`,
                                                     background: "transparent",
+                                                    color: currentTheme.text,
                                                     borderRadius: 4,
                                                     cursor: "pointer",
+                                                    fontWeight: "500",
+                                                    minWidth: "32px",
                                                 }}
                                             >
                                                 <svg
@@ -1141,12 +1166,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 }}
                                                 title="Remove"
                                                 style={{
-                                                    fontSize: 11,
-                                                    padding: "1px 6px",
+                                                    fontSize: 12,
+                                                    padding: "3px 6px",
                                                     border: `1px solid ${currentTheme.border}`,
-                                                    background: "transparent",
+                                                    background: "#dc3545",
+                                                    color: "white",
                                                     borderRadius: 4,
                                                     cursor: "pointer",
+                                                    fontWeight: "500",
+                                                    minWidth: "32px",
                                                 }}
                                             >
                                                 ✕
@@ -1180,18 +1208,21 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 }}
                                                 title="Edit Title"
                                                 style={{
-                                                    fontSize: 11,
-                                                    padding: "1px 6px",
+                                                    fontSize: 12,
+                                                    padding: "3px 6px",
                                                     border: `1px solid ${currentTheme.border}`,
-                                                    background: "transparent",
+                                                    background: "#17a2b8",
+                                                    color: "white",
                                                     borderRadius: 4,
                                                     cursor: "pointer",
+                                                    fontWeight: "500",
+                                                    minWidth: "32px",
                                                 }}
                                             >
                                                 ✎
                                             </button>
                                         </div>
-                                    )}
+                                    ))}
                                 {/* Floating controls in top-right for medium mode */}
                                 {!isEditMode && (
                                     <div
