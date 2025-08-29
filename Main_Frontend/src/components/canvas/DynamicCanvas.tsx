@@ -760,1463 +760,881 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     // Memoize grid children to prevent hook order violations
     const gridChildren = useMemo(
         () =>
-            components.map((instance) => {
-                const effectiveMode =
-                    !isEditMode && lockedViewMode[instance.id]
-                        ? lockedViewMode[instance.id]
-                        : instance.displayMode || "medium";
-                const meta = componentInventory.getComponent(
-                    instance.componentId
-                );
-
-                if (fullScreenId && instance.id !== fullScreenId) {
-                    // Hide other components while full-screen is active
-                    return null;
-                }
-                const title =
-                    componentInventory.getComponent(instance.componentId)
-                        ?.displayName || "Component";
-                const isThumb = effectiveMode === "thumbnail";
-                // Derive rows/cols for visual sizing so locked-mode medium doesn't stick at 1
-                const visualRows = isThumb
-                    ? 1
-                    : instance.h > 1
-                    ? instance.h
-                    : instance.originalH > 1
-                    ? instance.originalH
-                    : meta?.defaultSize?.h || 5;
-                const visualCols = isThumb
-                    ? instance.w
-                    : instance.w > 1
-                    ? instance.w
-                    : instance.originalW > 1
-                    ? instance.originalW
-                    : meta?.defaultSize?.w || 6;
-                return (
-                    <div
-                        key={instance.id}
-                        className="grid-item" // Better control class
-                        data-grid-key={`${instance.id}-${effectiveMode}`}
-                        data-display-mode={effectiveMode}
-                        data-edit-mode={isEditMode}
-                        style={
-                            {
-                                background: currentTheme.surface,
-                                border: isEditMode
-                                    ? `1px solid ${currentTheme.primary}`
-                                    : `1px solid ${currentTheme.border}`,
-                                borderRadius: "4px",
-                                overflow: isThumb ? "hidden" : "visible", // Hide overflow in thumbnail mode
-                                transition:
-                                    isDragging || isResizing
-                                        ? "none"
-                                        : "all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)",
-                                boxShadow: isEditMode
-                                    ? `0 2px 8px ${currentTheme.primary}20`
-                                    : `0 1px 4px rgba(0,0,0,0.04)`,
-                                transform: isEditMode
-                                    ? "scale(1.01)"
-                                    : "scale(1)",
-                                willChange: "transform",
-                                cursor: "auto", // Normal cursor - drag only from handle
-                                pointerEvents: "auto",
-                                display: "flex",
-                                flexDirection: "column",
-                                height: isThumb
-                                    ? "28px" // Standard thumbnail height (1 grid unit) - same in edit and non-edit mode
-                                    : `${visualRows * 60}px`,
-                                minHeight: isThumb
-                                    ? "28px" // Standard thumbnail height (1 grid unit) - same in edit and non-edit mode
-                                    : `${visualRows * 60}px`,
-                                // Force width using CSS variable - ALWAYS use current w from CosmosDB
-                                "--grid-item-width": isThumb
-                                    ? `calc(4 * (100% / 12))` // Standard thumbnail width (4 grid units) - same in edit and non-edit mode
-                                    : `calc(${visualCols} * (100% / 12))`,
-                                // Force height using CSS variable - ALWAYS use current h from CosmosDB
-                                "--grid-item-height": isThumb
-                                    ? "28px" // Standard thumbnail height (1 grid unit) - same in edit and non-edit mode
-                                    : `${visualRows * 60}px`,
-                            } as React.CSSProperties & {
-                                "--grid-item-width": string;
-                                "--grid-item-height": string;
-                            }
-                        }
-                    >
-                        {/* Header: only visible in thumbnail mode; in medium we float controls */}
-                        {isThumb ? (
-                            <div
-                                className="drag-handle"
-                                style={{
-                                    height: "28px", // Standard thumbnail height (1 grid unit) - same in edit and non-edit mode
-                                    background: `linear-gradient(to right, ${currentTheme.primary}10, transparent)`,
-                                    borderBottom: "none",
-                                    borderRadius: "4px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    padding: "0 8px",
-                                    userSelect: "none",
-                                    cursor: isEditMode ? "move" : "auto",
-                                }}
-                            >
-                                {/* Title field for thumbnail components - editable in edit mode, read-only when locked */}
-                                {isEditMode ? (
-                                    <input
-                                        type="text"
-                                        value={instance.customTitle || title}
-                                        onChange={(e) => {
-                                            const newTitle = e.target.value;
-                                            setComponents((prev) =>
-                                                prev.map((comp) =>
-                                                    comp.id === instance.id
-                                                        ? {
-                                                              ...comp,
-                                                              customTitle:
-                                                                  newTitle,
-                                                          }
-                                                        : comp
-                                                )
-                                            );
-                                            // Save component props immediately for better UX
-                                            setTimeout(
-                                                () => saveLayoutToTab(),
-                                                100
-                                            );
-                                        }}
-                                        style={{
-                                            fontSize: "12px",
-                                            fontWeight: 600,
-                                            color: currentTheme.text,
-                                            background: "transparent",
-                                            border: "none",
-                                            outline: "none",
-                                            padding: "4px 8px",
-                                            borderRadius: "4px",
-                                            minWidth: "120px",
-                                            maxWidth: "200px",
-                                        }}
-                                        placeholder="Enter title..."
-                                    />
-                                ) : (
-                                    <span
-                                        style={{
-                                            fontSize: "12px",
-                                            fontWeight: 600,
-                                            color: currentTheme.text,
-                                            opacity: 0.8,
-                                            padding: "4px 8px",
-                                            minWidth: "120px",
-                                        }}
-                                    >
-                                        {instance.customTitle || title}
-                                    </span>
-                                )}
-                                {/* T, M, F controls - smart display based on edit mode */}
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        gap: 4,
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    {/* Thumbnail mode button - show all in edit mode, smart in locked mode */}
-                                    {(isEditMode || effectiveMode !== "thumbnail") && (
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setDisplayMode(
-                                                    instance.id,
-                                                    "thumbnail"
-                                                );
-                                            }}
-                                            title="Thumbnail"
-                                            style={{
-                                                height: 24,
-                                                padding: "2px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background: "transparent",
-                                                color: currentTheme.text,
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                                fontSize: "11px",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <rect
-                                                    x="1"
-                                                    y="2"
-                                                    width="12"
-                                                    height="10"
-                                                    rx="1"
-                                                />
-                                                <rect
-                                                    x="3"
-                                                    y="4"
-                                                    width="8"
-                                                    height="6"
-                                                    rx="0.5"
-                                                    fill="currentColor"
-                                                    opacity="0.7"
-                                                />
-                                            </svg>
-                                        </button>
-                                    )}
-                                    {/* Medium mode button - show all in edit mode, smart in locked mode */}
-                                    {(isEditMode || effectiveMode !== "medium") && (
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setDisplayMode(
-                                                    instance.id,
-                                                    "medium"
-                                                );
-                                            }}
-                                            title="Medium"
-                                            style={{
-                                                height: 24,
-                                                padding: "2px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background: "transparent",
-                                                color: currentTheme.text,
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                                fontSize: "11px",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <rect
-                                                    x="2"
-                                                    y="2"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="8"
-                                                    y="2"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="2"
-                                                    y="8"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="8"
-                                                    y="8"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                            </svg>
-                                        </button>
-                                    )}
-                                    {/* Fullscreen button - show all in edit mode, smart in locked mode */}
-                                    {(isEditMode || effectiveMode !== "full") && (
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setFullScreenId(instance.id);
-                                            }}
-                                            title="Fullscreen"
-                                            style={{
-                                                height: 24,
-                                                padding: "2px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background: "transparent",
-                                                color: currentTheme.text,
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                                fontSize: "11px",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <path d="M5 1H1v4" />
-                                                <path d="M9 13h4V9" />
-                                                <path d="M13 5V1H9" />
-                                                <path d="M1 9v4h4" />
-                                            </svg>
-                                        </button>
-                                    )}
-
-                                    {/* Remove button - only visible in edit mode */}
-                                    {isEditMode && (
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                removeComponent(instance.id);
-                                            }}
-                                            title="Remove"
-                                            style={{
-                                                fontSize: 10,
-                                                padding: "1px 3px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background: "#dc3545",
-                                                color: "white",
-                                                borderRadius: 3,
-                                                cursor: "pointer",
-                                                minWidth: "28px",
-                                            }}
-                                        >
-                                            ✕
-                                        </button>
-                                    )}
-                                </div>
-                            ) : (
-                                    <div style={{ display: "flex", gap: 4 }}>
-                                        {/* Switch to medium */}
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setDisplayMode(
-                                                    instance.id,
-                                                    "medium"
-                                                );
-                                            }}
-                                            title="Medium"
-                                            style={{
-                                                fontSize: 11,
-                                                padding: "2px 4px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background: "transparent",
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <rect
-                                                    x="2"
-                                                    y="2"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="8"
-                                                    y="2"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="2"
-                                                    y="8"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="8"
-                                                    y="8"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setFullScreenId(instance.id);
-                                            }}
-                                            title="Full"
-                                            style={{
-                                                fontSize: 11,
-                                                padding: "2px 4px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background:
-                                                    fullScreenId === instance.id
-                                                        ? `${currentTheme.primary}20`
-                                                        : "transparent",
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <path d="M5 1H1v4" />
-                                                <path d="M9 13h4V9" />
-                                                <path d="M13 5V1H9" />
-                                                <path d="M1 9v4h4" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <>
-                                {/* Invisible drag handle for edit mode when header hidden */}
-                                {isEditMode && (
-                                    <div
-                                        className="drag-handle"
-                                        style={{
-                                            position: "absolute",
-                                            top: 0,
-                                            left: 0,
-                                            // Leave space on the right for edit controls
-                                            right: 240,
-                                            height: 20,
-                                            cursor: "move",
-                                            opacity: 0,
-                                            zIndex: 1,
-                                        }}
-                                    />
-                                )}
-
-                                {/* Floating controls in top-right for medium mode */}
-                                {!isEditMode ? (
-                                    <div
-                                        className="no-drag"
-                                        style={{
-                                            position: "absolute",
-                                            top: 4, // nudge down to align with header text baseline
-                                            right: 8,
-                                            height: 30,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 6,
-                                            zIndex: 3,
-                                        }}
-                                    >
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setDisplayMode(
-                                                    instance.id,
-                                                    "thumbnail"
-                                                );
-                                            }}
-                                            title="Thumbnail"
-                                            style={{
-                                                fontSize: 11,
-                                                padding: "2px 4px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background: "transparent",
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <rect
-                                                    x="1"
-                                                    y="2"
-                                                    width="12"
-                                                    height="10"
-                                                    rx="1"
-                                                />
-                                                <rect
-                                                    x="3"
-                                                    y="4"
-                                                    width="8"
-                                                    height="6"
-                                                    rx="0.5"
-                                                    fill="currentColor"
-                                                    opacity="0.7"
-                                                />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setDisplayMode(
-                                                    instance.id,
-                                                    "full"
-                                                );
-                                            }}
-                                            title="Full"
-                                            style={{
-                                                fontSize: 11,
-                                                padding: "2px 4px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background:
-                                                    fullScreenId === instance.id
-                                                        ? `${currentTheme.primary}20`
-                                                        : "transparent",
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <path d="M5 1H1v4" />
-                                                <path d="M9 13h4V9" />
-                                                <path d="M13 5V1H9" />
-                                                <path d="M1 9v4h4" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                ) : (
-                                    /* Edit mode controls for medium components */
-                                    <div
-                                        className="no-drag"
-                                        style={{
-                                            position: "absolute",
-                                            top: 4,
-                                            right: 8,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 6,
-                                            zIndex: 5,
-                                        }}
-                                    >
-                                        {/* Thumbnail */}
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setDisplayMode(
-                                                    instance.id,
-                                                    "thumbnail"
-                                                );
-                                            }}
-                                            title="Thumbnail"
-                                            style={{
-                                                height: 24,
-                                                padding: "2px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background:
-                                                    (instance.displayMode ||
-                                                        "medium") ===
-                                                    "thumbnail"
-                                                        ? `${currentTheme.primary}20`
-                                                        : currentTheme.background,
-                                                color: currentTheme.text,
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <rect
-                                                    x="1"
-                                                    y="2"
-                                                    width="12"
-                                                    height="10"
-                                                    rx="1"
-                                                />
-                                                <rect
-                                                    x="3"
-                                                    y="4"
-                                                    width="8"
-                                                    height="6"
-                                                    rx="0.5"
-                                                    fill="currentColor"
-                                                    opacity="0.7"
-                                                />
-                                            </svg>
-                                        </button>
-                                        {/* Medium */}
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setDisplayMode(
-                                                    instance.id,
-                                                    "medium"
-                                                );
-                                            }}
-                                            title="Medium"
-                                            style={{
-                                                height: 24,
-                                                padding: "2px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background:
-                                                    (instance.displayMode ||
-                                                        "medium") === "medium"
-                                                        ? `${currentTheme.primary}20`
-                                                        : currentTheme.background,
-                                                color: currentTheme.text,
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <rect
-                                                    x="2"
-                                                    y="2"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="8"
-                                                    y="2"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="2"
-                                                    y="8"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="8"
-                                                    y="8"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                            </svg>
-                                        </button>
-                                        {/* Fullscreen */}
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setDisplayMode(
-                                                    instance.id,
-                                                    "full"
-                                                );
-                                            }}
-                                            title="Fullscreen"
-                                            style={{
-                                                height: 24,
-                                                padding: "2px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background:
-                                                    (instance.displayMode ||
-                                                        "medium") === "full"
-                                                        ? `${currentTheme.primary}20`
-                                                        : currentTheme.background,
-                                                color: currentTheme.text,
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <path d="M5 1H1v4" />
-                                                <path d="M9 13h4V9" />
-                                                <path d="M13 5V1H9" />
-                                                <path d="M1 9v4h4" />
-                                            </svg>
-                                        </button>
-                                        {/* Edit title input field - positioned just left of thumbnail control */}
-                                        <input
-                                            type="text"
-                                            data-component-id={instance.id}
-                                            placeholder="Edit title..."
-                                            value={instance.customTitle || ""}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setComponents((prev) =>
-                                                    prev.map((c) =>
-                                                        c.id === instance.id
-                                                            ? {
-                                                                  ...c,
-                                                                  customTitle:
-                                                                      val,
-                                                              }
-                                                            : c
-                                                    )
-                                                );
-                                            }}
-                                            onBlur={() => {
-                                                setTimeout(
-                                                    () => saveLayoutToTab(),
-                                                    100
-                                                );
-                                            }}
-                                            style={{
-                                                height: 24,
-                                                padding: "0 6px",
-                                                background:
-                                                    currentTheme.background,
-                                                color: currentTheme.text,
-                                                border: `1px solid ${currentTheme.border}`,
-                                                borderRadius: 4,
-                                                minWidth: "120px",
-                                                fontSize: "11px",
-                                            }}
-                                        />
-                                        {/* Remove button - positioned after size controls */}
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                removeComponent(instance.id);
-                                            }}
-                                            title="Remove"
-                                            style={{
-                                                height: 24,
-                                                padding: "2px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background: "#dc3545",
-                                                color: "white",
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                                fontWeight: "500",
-                                                minWidth: "32px",
-                                            }}
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                )}
-                            </>
-                        )}
-
-                        {/* Component content - hidden in thumbnail mode */}
-                        {!isThumb && (
-                            <div
-                                style={{
-                                    flex: 1,
-                                    minHeight: 0,
-                                    position: "relative",
-                                    // Reserve space on the right for edit controls
-                                    paddingRight: isEditMode ? 240 : 56,
-                                    userSelect:
-                                        isDragging || isResizing
-                                            ? "none"
-                                            : "auto",
-                                }}
-                            >
-                                <ComponentRenderer
-                                    componentId={instance.componentId}
-                                    instanceId={instance.id}
-                                    props={instance.props || {}}
-                                    isEditMode={isEditMode}
-                                    onRemove={() =>
-                                        removeComponent(instance.id)
-                                    }
-                                    onPropsUpdate={(
-                                        newProps: Record<string, any>
-                                    ) => {
-                                        setComponents((prev) =>
-                                            prev.map((comp) =>
-                                                comp.id === instance.id
-                                                    ? {
-                                                          ...comp,
-                                                          props: newProps,
-                                                      }
-                                                    : comp
-                                            )
-                                        );
-                                        // Save component props immediately for better UX
-                                        setTimeout(
-                                            () => saveLayoutToTab(),
-                                            100
-                                        );
-                                    }}
-                                />
-
-                                {/* Explicit resize handles to avoid selecting inner UI while resizing */}
-                                {isEditMode && (
-                                    <>
-                                        <div
-                                            className="react-resizable-handle react-resizable-handle-e"
-                                            style={{
-                                                position: "absolute",
-                                                top: 0,
-                                                right: 0,
-                                                width: 14,
-                                                height: "100%",
-                                                cursor: "e-resize",
-                                                zIndex: 10,
-                                                pointerEvents: "auto",
-                                            }}
-                                        />
-                                        <div
-                                            className="react-resizable-handle react-resizable-handle-s"
-                                            style={{
-                                                position: "absolute",
-                                                left: 0,
-                                                bottom: 0,
-                                                width: "100%",
-                                                height: 14,
-                                                cursor: "s-resize",
-                                                zIndex: 10,
-                                                pointerEvents: "auto",
-                                            }}
-                                        />
-                                    </>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                );
-            }),
-        [
-            components,
-            currentTheme,
-            isDragging,
-            isResizing,
-            isEditMode,
-            fullScreenId,
-            removeComponent,
-            saveLayoutToTab,
-            editModeVersion,
-        ]
-    );
-
-    // Set layout ready after initial render and measure initial container width
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLayoutReady(true);
-            // Measure initial container width
-            const dashboardContent =
-                document.querySelector(".dashboard-content");
-            if (dashboardContent) {
-                const initialWidth = dashboardContent.clientWidth;
-                console.log("📏 Initial container width:", initialWidth);
-                setContainerWidth(initialWidth);
-            }
-        }, 100);
-        return () => clearTimeout(timer);
-    }, [components.length]);
-
-    // Force re-render when window resizes (includes left panel toggle)
-    useEffect(() => {
-        const handleResize = () => {
-            // Let ResponsiveGridLayout handle resize naturally
-            console.log("🔄 Window resize detected");
-        };
-
-        // Listen for resize events
-        window.addEventListener("resize", handleResize);
-
-        // Debounced panel toggle handler to prevent flashing
-        let panelToggleTimeout: NodeJS.Timeout | null = null;
-
-        const handlePanelToggle = () => {
-            console.log("🔄 Panel toggle detected - using debounced update");
-
-            // Clear any existing timeout to prevent multiple updates
-            if (panelToggleTimeout) {
-                clearTimeout(panelToggleTimeout);
-            }
-
-            // Single, debounced update after animation completes
-            panelToggleTimeout = setTimeout(() => {
-                const dashboardContent =
-                    document.querySelector(".dashboard-content");
-                if (dashboardContent) {
-                    const newWidth = dashboardContent.clientWidth;
-                    console.log(
-                        "📏 Final container width measurement:",
-                        newWidth
+            components
+                .map((instance) => {
+                    const effectiveMode =
+                        !isEditMode && lockedViewMode[instance.id]
+                            ? lockedViewMode[instance.id]
+                            : instance.displayMode || "medium";
+                    const meta = componentInventory.getComponent(
+                        instance.componentId
                     );
 
-                    // Single update instead of multiple
-                    setContainerWidth(newWidth);
-                    // Only trigger resize event, let ResponsiveGridLayout handle it naturally
-                    window.dispatchEvent(new Event("resize"));
-                }
-            }, 400); // Wait for CSS animation to complete (350ms + buffer)
-        };
-        window.addEventListener("panel-toggled", handlePanelToggle as any);
-
-        return () => {
-            window.removeEventListener("resize", handleResize);
-            window.removeEventListener(
-                "panel-toggled",
-                handlePanelToggle as any
-            );
-        };
-    }, []);
-
-    const fullScreenInstance = useMemo(
-        () => components.find((c) => c.id === fullScreenId) || null,
-        [components, fullScreenId]
-    );
-
-    return (
-        <>
-            {/* CSS Animations for smooth component transitions */}
-            <style>{`
-        @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.8; }
-          100% { opacity: 1; }
-        }
-
-        .react-grid-item {
-          transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
-        }
-
-        .react-grid-item.react-grid-placeholder {
-          background: ${currentTheme.primary}20 !important;
-          border: 2px dashed ${currentTheme.primary}60 !important;
-          border-radius: 8px !important;
-          opacity: 0.8 !important;
-        }
-
-                 /* Force thumbnail mode to be header-only - 1 grid unit height */
-         .react-grid-item[data-display-mode="thumbnail"] {
-           height: 28px !important; /* 1 grid unit = 28px */
-           min-height: 28px !important;
-           max-height: 28px !important;
-           overflow: hidden !important;
-         }
-
-         /* In edit mode, thumbnails maintain standard height - HIGHER SPECIFICITY */
-         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] {
-           height: 28px !important; /* Standard thumbnail height (1 grid unit) - same in edit and non-edit mode */
-           min-height: 28px !important;
-           max-height: 28px !important;
-           overflow: visible !important;
-         }
-
-         /* Force thumbnail sizing in edit mode - EVEN HIGHER SPECIFICITY */
-         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] .grid-item {
-           height: 28px !important; /* Standard thumbnail height (1 grid unit) - same in edit and non-edit mode */
-           min-height: 28px !important;
-           max-height: 28px !important;
-           overflow: visible !important;
-         }
-
-         /* ULTIMATE OVERRIDE for thumbnail edit mode */
-         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"],
-         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] * {
-           height: 28px !important; /* Standard thumbnail height (1 grid unit) - same in edit and non-edit mode */
-           min-height: 28px !important;
-           max-height: 28px !important;
-         }
-
-         /* Ensure thumbnail controls are visible in edit mode */
-         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] .no-drag {
-           display: flex !important;
-           visibility: visible !important;
-           opacity: 1 !important;
-           z-index: 9999 !important;
-         }
-
-         /* Force medium and full modes to respect CosmosDB height */
-         .react-grid-item[data-display-mode="medium"],
-         .react-grid-item[data-display-mode="full"] {
-           height: var(--grid-item-height, auto) !important;
-           min-height: var(--grid-item-height, auto) !important;
-           max-height: var(--grid-item-height, auto) !important;
-         }
-
-                           /* Medium mode width follows layout (no hard-coded width) */
-
-                    /* Force ALL grid items to use their specified width - OVERRIDE ANY GRID CONSTRAINTS */
-          .react-grid-item {
-            width: var(--grid-item-width, auto) !important;
-            min-width: var(--grid-item-width, auto) !important;
-            max-width: var(--grid-item-width, auto) !important;
-          }
-
-          /* Debug: Show grid item dimensions - HIDDEN */
-          .react-grid-item::before {
-            display: none;
-          }
-
-
-
-
-
-        /* In edit mode, restrict internal interactions to edit UI only */
-        ${
-            isEditMode
-                ? `
-          .grid-item * { pointer-events: none !important; }
-          .grid-item .no-drag,
-          .grid-item .drag-handle,
-          .grid-item select,
-          .grid-item button,
-          .grid-item input,
-          .grid-item .react-resizable-handle,
-          .grid-item button.remove-component { pointer-events: auto !important; }
-
-          /* Make side/bottom resize handles larger and clickable */
-          .react-grid-item > .react-resizable-handle-e,
-          .react-grid-item > .react-resizable-handle-s,
-          .react-grid-item > .react-resizable-handle-se {
-            width: 14px !important;
-            height: 14px !important;
-            opacity: 0.9 !important;
-          }
-          .react-grid-item > .react-resizable-handle-e { right: 0; top: 50%; margin-top: -7px; cursor: e-resize; }
-          .react-grid-item > .react-resizable-handle-s { bottom: 0; left: 50%; margin-left: -7px; cursor: s-resize; }
-          .react-grid-item > .react-resizable-handle-se { right: 0; bottom: 0; cursor: se-resize; }
-
-          .grid-item .react-resizable-handle {
-            pointer-events: auto !important;
-            display: block !important;
-            width: 12px !important;
-            height: 12px !important;
-            opacity: 0.9 !important;
-          }
-          .grid-item .react-resizable-handle::after {
-            content: '';
-            position: absolute;
-            right: 2px;
-            bottom: 2px;
-            width: 8px;
-            height: 8px;
-            border-right: 2px solid ${currentTheme.primary};
-            border-bottom: 2px solid ${currentTheme.primary};
-            opacity: 0.8;
-          }
-          .grid-item .react-resizable-handle-se {
-            cursor: se-resize !important;
-          }
-        `
-                : `
-          /* In normal mode, ensure all component interactions work */
-          .grid-item {
-            pointer-events: auto !important;
-          }
-
-          .grid-item * {
-            pointer-events: auto !important;
-          }
-
-          /* Disable grid drag handle in normal mode */
-          .react-grid-item > .react-resizable-handle {
-            display: none !important;
-          }
-        `
-        }
-      `}</style>
-
-            <div
-                style={{
-                    height: "100%",
-                    width: "100%",
-                    backgroundColor: currentTheme.background,
-                    position: "relative",
-                }}
-            >
-                {/* Canvas Area */}
-                <div
-                    style={{
-                        height: "100%",
-                        width: "100%",
-                        padding: "2px",
-                        overflowX: "hidden",
-                        overflowY: "auto",
-                    }}
-                >
-                    {components.length === 0 ? (
+                    if (fullScreenId && instance.id !== fullScreenId) {
+                        // Hide other components while full-screen is active
+                        return null;
+                    }
+                    const title =
+                        componentInventory.getComponent(instance.componentId)
+                            ?.displayName || "Component";
+                    const isThumb = effectiveMode === "thumbnail";
+                    // Derive rows/cols for visual sizing so locked-mode medium doesn't stick at 1
+                    const visualRows = isThumb
+                        ? 1
+                        : instance.h > 1
+                        ? instance.h
+                        : instance.originalH > 1
+                        ? instance.originalH
+                        : meta?.defaultSize?.h || 5;
+                    const visualCols = isThumb
+                        ? instance.w
+                        : instance.w > 1
+                        ? instance.w
+                        : instance.originalW > 1
+                        ? instance.originalW
+                        : meta?.defaultSize?.w || 6;
+                    return (
                         <div
-                            style={{
-                                height: "100%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexDirection: "column",
-                                gap: "16px",
-                                color: currentTheme.textSecondary,
-                            }}
+                            key={instance.id}
+                            className="grid-item" // Better control class
+                            data-grid-key={`${instance.id}-${effectiveMode}`}
+                            data-display-mode={effectiveMode}
+                            data-edit-mode={isEditMode}
+                            style={
+                                {
+                                    background: currentTheme.surface,
+                                    border: isEditMode
+                                        ? `1px solid ${currentTheme.primary}`
+                                        : `1px solid ${currentTheme.border}`,
+                                    borderRadius: "4px",
+                                    overflow: isThumb ? "hidden" : "visible", // Hide overflow in thumbnail mode
+                                    transition:
+                                        isDragging || isResizing
+                                            ? "none"
+                                            : "all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)",
+                                    boxShadow: isEditMode
+                                        ? `0 2px 8px ${currentTheme.primary}20`
+                                        : `0 1px 4px rgba(0,0,0,0.04)`,
+                                    transform: isEditMode
+                                        ? "scale(1.01)"
+                                        : "scale(1)",
+                                    willChange: "transform",
+                                    cursor: "auto", // Normal cursor - drag only from handle
+                                    pointerEvents: "auto",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    height: isThumb
+                                        ? "28px" // Standard thumbnail height (1 grid unit) - same in edit and non-edit mode
+                                        : `${visualRows * 60}px`,
+                                    minHeight: isThumb
+                                        ? "28px" // Standard thumbnail height (1 grid unit) - same in edit and non-edit mode
+                                        : `${visualRows * 60}px`,
+                                    // Force width using CSS variable - ALWAYS use current w from CosmosDB
+                                    "--grid-item-width": isThumb
+                                        ? `calc(4 * (100% / 12))` // Standard thumbnail width (4 grid units) - same in edit and non-edit mode
+                                        : `calc(${visualCols} * (100% / 12))`,
+                                    // Force height using CSS variable - ALWAYS use current h from CosmosDB
+                                    "--grid-item-height": isThumb
+                                        ? "28px" // Standard thumbnail height (1 grid unit) - same in edit and non-edit mode
+                                        : `${visualRows * 60}px`,
+                                } as React.CSSProperties & {
+                                    "--grid-item-width": string;
+                                    "--grid-item-height": string;
+                                }
+                            }
                         >
-                            <div style={{ fontSize: "48px", opacity: 0.3 }}>
-                                📊
-                            </div>
-                            <div
-                                style={{ fontSize: "16px", fontWeight: "500" }}
-                            >
-                                Dynamic Canvas
-                            </div>
-                            <div
-                                style={{
-                                    fontSize: "12px",
-                                    textAlign: "center",
-                                    maxWidth: "300px",
-                                }}
-                            >
-                                {isEditMode
-                                    ? 'Click "Add Component" button to add components. Drag and resize to arrange them.'
-                                    : "Use Tools → Unlock to add and arrange components. Changes auto-save."}
-                            </div>
-                            {isEditMode && (
-                                <button
-                                    onClick={() => setShowComponentPortal(true)}
+                            {/* Header: only visible in thumbnail mode; in medium we float controls */}
+                            {isThumb ? (
+                                <div
+                                    className="drag-handle"
                                     style={{
-                                        marginTop: "16px",
-                                        padding: "10px 20px",
-                                        backgroundColor: currentTheme.primary,
-                                        color: "white",
-                                        border: "none",
-                                        borderRadius: "6px",
-                                        fontSize: "13px",
-                                        cursor: "pointer",
+                                        height: "28px", // Standard thumbnail height (1 grid unit) - same in edit and non-edit mode
+                                        background: `linear-gradient(to right, ${currentTheme.primary}10, transparent)`,
+                                        borderBottom: "none",
+                                        borderRadius: "4px",
                                         display: "flex",
                                         alignItems: "center",
-                                        gap: "8px",
+                                        justifyContent: "space-between",
+                                        padding: "0 8px",
+                                        userSelect: "none",
+                                        cursor: isEditMode ? "move" : "auto",
                                     }}
                                 >
-                                    <span>➕</span> Add Your First Component
-                                </button>
-                            )}
-                        </div>
-                    ) : (
-                        <div
-                            key={`container-${containerWidth || "auto"}`} // Stable key based on width only
-                            style={{
-                                height: "100%",
-                                width: "100%",
-                                position: "relative",
-                                // Force layout recalculation
-                                minWidth: 0,
-                            }}
-                        >
-                            {!fullScreenId && (
-                                <ResponsiveGridLayout
-                                    key={`grid-${containerWidth || "auto"}-${
-                                        components.length
-                                    }-${JSON.stringify(
-                                        components.map((c) => ({
-                                            id: c.id,
-                                            x: c.x,
-                                            y: c.y,
-                                            w: c.w,
-                                            h: c.h,
-                                        }))
-                                    )}`} // Force re-render when components change
-                                    className={`layout ${
-                                        isLayoutReady ? "layout-ready" : ""
-                                    }`}
-                                    layouts={{
-                                        lg: generateLayout,
-                                        md: generateLayout,
-                                        sm: generateLayout,
-                                        xs: generateLayout,
-                                        xxs: generateLayout,
-                                    }}
-                                    onLayoutChange={(layout, allLayouts) => {
-                                        console.log(
-                                            "🔍 Layout change detected:",
-                                            {
-                                                layout: layout.map((l) => ({
-                                                    i: l.i,
-                                                    x: l.x,
-                                                    y: l.y,
-                                                    w: l.w,
-                                                    h: l.h,
-                                                })),
-                                                allLayouts:
-                                                    Object.keys(allLayouts),
-                                                currentBreakpoint: allLayouts.lg
-                                                    ? "lg"
-                                                    : "unknown",
+                                    {/* Title field for thumbnail components - editable in edit mode, read-only when locked */}
+                                    {isEditMode ? (
+                                        <input
+                                            type="text"
+                                            value={
+                                                instance.customTitle || title
                                             }
-                                        );
-                                        handleLayoutChange(layout, allLayouts);
-                                    }}
-                                    onBreakpointChange={(breakpoint) => {
-                                        console.log(
-                                            `🔍 Breakpoint changed to: ${breakpoint}, cols: ${
-                                                breakpoint === "lg"
-                                                    ? 12
-                                                    : breakpoint === "md"
-                                                    ? 10
-                                                    : breakpoint === "sm"
-                                                    ? 6
-                                                    : breakpoint === "xs"
-                                                    ? 4
-                                                    : 2
-                                            }`
-                                        );
-                                        // Force immediate layout recalculation
-                                        setTimeout(() => {
-                                            window.dispatchEvent(
-                                                new Event("resize")
-                                            );
-                                        }, 100);
-                                    }}
-                                    onDragStart={handleDragStart}
-                                    onDragStop={handleDragStop}
-                                    onResizeStart={handleResizeStart}
-                                    onResizeStop={handleResizeStop}
-                                    isDraggable={true} // Always allow dragging
-                                    isResizable={true} // Always allow resizing
-                                    useCSSTransforms={true} // 6x faster paint performance
-                                    resizeHandles={["e", "s", "se"]}
-                                    transformScale={1} // Important for smooth scaling
-                                    margin={[2, 2]}
-                                    containerPadding={[0, 0]}
-                                    rowHeight={60}
-                                    cols={{
-                                        lg: 12,
-                                        md: 10,
-                                        sm: 6,
-                                        xs: 4,
-                                        xxs: 2,
-                                    }}
-                                    breakpoints={{
-                                        lg: 1000, // Lowered from 1200 to accommodate your 1054px container
-                                        md: 996,
-                                        sm: 768,
-                                        xs: 480,
-                                        xxs: 0,
-                                    }}
-                                    compactType={null} // disable compaction; honor CosmosDB x,y,h exactly
-                                    preventCollision={true}
-                                    draggableHandle=".drag-handle"
-                                    draggableCancel=".no-drag" // Prevent dragging on specific elements like buttons
-                                >
-                                    {gridChildren}
-                                </ResponsiveGridLayout>
-                            )}
-
-                            {fullScreenId && fullScreenInstance && (
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        inset: 0,
-                                        background: currentTheme.background,
-                                        border: `1px solid ${currentTheme.border}`,
-                                        borderRadius: 6,
-                                        padding: 6,
-                                        zIndex: 5,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                    }}
-                                >
-                                    {/* Absolute controls aligned with host header; remove extra internal header spacing */}
-                                    <div
-                                        className="no-drag"
-                                        style={{
-                                            position: "absolute",
-                                            top: 4, // match medium-mode offset
-                                            right: 8,
-                                            height: 30,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 8,
-                                            zIndex: 3,
-                                        }}
-                                    >
-                                        <button
-                                            onClick={() => {
-                                                setDisplayMode(
-                                                    fullScreenInstance.id,
-                                                    "thumbnail"
-                                                );
-                                                setFullScreenId(null);
-                                            }}
-                                            title="Thumbnail"
-                                            style={{
-                                                fontSize: 11,
-                                                padding: "2px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                borderRadius: 4,
-                                                background: "transparent",
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <rect
-                                                    x="1"
-                                                    y="2"
-                                                    width="12"
-                                                    height="10"
-                                                    rx="1"
-                                                />
-                                                <rect
-                                                    x="3"
-                                                    y="4"
-                                                    width="8"
-                                                    height="6"
-                                                    rx="0.5"
-                                                    fill="currentColor"
-                                                    opacity="0.7"
-                                                />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                // Restore to medium and exit full-screen
-                                                setDisplayMode(
-                                                    fullScreenInstance.id,
-                                                    "medium"
-                                                );
-                                                setFullScreenId(null);
-                                            }}
-                                            title="Medium"
-                                            style={{
-                                                fontSize: 11,
-                                                padding: "2px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                borderRadius: 4,
-                                                background: "transparent",
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            {/* grid pictogram */}
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <rect
-                                                    x="2"
-                                                    y="2"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="8"
-                                                    y="2"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="2"
-                                                    y="8"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="8"
-                                                    y="8"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <div
-                                        style={{
-                                            flex: 1,
-                                            position: "relative",
-                                        }}
-                                    >
-                                        <ComponentRenderer
-                                            componentId={
-                                                fullScreenInstance.componentId
-                                            }
-                                            instanceId={fullScreenInstance.id}
-                                            props={
-                                                fullScreenInstance.props || {}
-                                            }
-                                            isEditMode={isEditMode}
-                                            onRemove={() =>
-                                                removeComponent(
-                                                    fullScreenInstance.id
-                                                )
-                                            }
-                                            onPropsUpdate={(
-                                                newProps: Record<string, any>
-                                            ) => {
+                                            onChange={(e) => {
+                                                const newTitle = e.target.value;
                                                 setComponents((prev) =>
                                                     prev.map((comp) =>
-                                                        comp.id ===
-                                                        fullScreenInstance.id
+                                                        comp.id === instance.id
                                                             ? {
                                                                   ...comp,
-                                                                  props: newProps,
+                                                                  customTitle:
+                                                                      newTitle,
                                                               }
                                                             : comp
                                                     )
                                                 );
+                                                // Save component props immediately for better UX
                                                 setTimeout(
                                                     () => saveLayoutToTab(),
                                                     100
                                                 );
                                             }}
+                                            style={{
+                                                fontSize: "12px",
+                                                fontWeight: 600,
+                                                color: currentTheme.text,
+                                                background: "transparent",
+                                                border: "none",
+                                                outline: "none",
+                                                padding: "4px 8px",
+                                                borderRadius: "4px",
+                                                minWidth: "120px",
+                                                maxWidth: "200px",
+                                            }}
+                                            placeholder="Enter title..."
                                         />
+                                    ) : (
+                                        <span
+                                            style={{
+                                                fontSize: "12px",
+                                                fontWeight: 600,
+                                                color: currentTheme.text,
+                                                opacity: 0.8,
+                                                padding: "4px 8px",
+                                                minWidth: "120px",
+                                            }}
+                                        >
+                                            {instance.customTitle || title}
+                                        </span>
+                                    )}
+                                    {/* T, M, F controls - smart display based on edit mode */}
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            gap: 4,
+                                            alignItems: "center",
+                                        }}
+                                    >
+                                        {/* Thumbnail mode button - show all in edit mode, smart in locked mode */}
+                                        {(isEditMode ||
+                                            effectiveMode !== "thumbnail") && (
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "thumbnail"
+                                                    );
+                                                }}
+                                                title="Thumbnail"
+                                                style={{
+                                                    height: 24,
+                                                    padding: "2px 6px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    color: currentTheme.text,
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                    fontSize: "11px",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <rect
+                                                        x="1"
+                                                        y="2"
+                                                        width="12"
+                                                        height="10"
+                                                        rx="1"
+                                                    />
+                                                    <rect
+                                                        x="3"
+                                                        y="4"
+                                                        width="8"
+                                                        height="6"
+                                                        rx="0.5"
+                                                        fill="currentColor"
+                                                        opacity="0.7"
+                                                    />
+                                                </svg>
+                                            </button>
+                                        )}
+                                        {/* Medium mode button - show all in edit mode, smart in locked mode */}
+                                        {(isEditMode ||
+                                            effectiveMode !== "medium") && (
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "medium"
+                                                    );
+                                                }}
+                                                title="Medium"
+                                                style={{
+                                                    height: 24,
+                                                    padding: "2px 6px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    color: currentTheme.text,
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                    fontSize: "11px",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <rect
+                                                        x="2"
+                                                        y="2"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                    <rect
+                                                        x="8"
+                                                        y="2"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                    <rect
+                                                        x="2"
+                                                        y="8"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                    <rect
+                                                        x="8"
+                                                        y="8"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                </svg>
+                                            </button>
+                                        )}
+                                        {/* Fullscreen button - show all in edit mode, smart in locked mode */}
+                                        {(isEditMode ||
+                                            effectiveMode !== "full") && (
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setFullScreenId(
+                                                        instance.id
+                                                    );
+                                                }}
+                                                title="Fullscreen"
+                                                style={{
+                                                    height: 24,
+                                                    padding: "2px 6px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    color: currentTheme.text,
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                    fontSize: "11px",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <path d="M5 1H1v4" />
+                                                    <path d="M9 13h4V9" />
+                                                    <path d="M13 5V1H9" />
+                                                    <path d="M1 9v4h4" />
+                                                </svg>
+                                            </button>
+                                        )}
+
+                                        {/* Remove button - only visible in edit mode */}
+                                        {isEditMode && (
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    removeComponent(
+                                                        instance.id
+                                                    );
+                                                }}
+                                                title="Remove"
+                                                style={{
+                                                    fontSize: 10,
+                                                    padding: "1px 3px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "#dc3545",
+                                                    color: "white",
+                                                    borderRadius: 3,
+                                                    cursor: "pointer",
+                                                    minWidth: "28px",
+                                                }}
+                                            >
+                                                ✕
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
+                            ) : (
+                                <>
+                                    {/* Invisible drag handle for edit mode when header hidden */}
+                                    {isEditMode && (
+                                        <div
+                                            className="drag-handle"
+                                            style={{
+                                                position: "absolute",
+                                                top: 0,
+                                                left: 0,
+                                                right: 240,
+                                                height: 20,
+                                                cursor: "move",
+                                                opacity: 0,
+                                                zIndex: 1,
+                                            }}
+                                        />
+                                    )}
+
+                                    {/* Floating controls in top-right for medium mode */}
+                                    {!isEditMode ? (
+                                        <div
+                                            className="no-drag"
+                                            style={{
+                                                position: "absolute",
+                                                top: 4,
+                                                right: 8,
+                                                height: 30,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 6,
+                                                zIndex: 3,
+                                            }}
+                                        >
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "thumbnail"
+                                                    );
+                                                }}
+                                                title="Thumbnail"
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "2px 4px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <rect
+                                                        x="1"
+                                                        y="2"
+                                                        width="12"
+                                                        height="10"
+                                                        rx="1"
+                                                    />
+                                                    <rect
+                                                        x="3"
+                                                        y="4"
+                                                        width="8"
+                                                        height="6"
+                                                        rx="0.5"
+                                                        fill="currentColor"
+                                                        opacity="0.7"
+                                                    />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "full"
+                                                    );
+                                                }}
+                                                title="Full"
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "2px 4px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <path d="M5 1H1v4" />
+                                                    <path d="M9 13h4V9" />
+                                                    <path d="M13 5V1H9" />
+                                                    <path d="M1 9v4h4" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="no-drag"
+                                            style={{
+                                                position: "absolute",
+                                                top: 4,
+                                                right: 8,
+                                                height: 30,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 6,
+                                                zIndex: 3,
+                                            }}
+                                        >
+                                            {/* Edit mode controls for medium components */}
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "thumbnail"
+                                                    );
+                                                }}
+                                                title="Thumbnail"
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "2px 4px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <rect
+                                                        x="1"
+                                                        y="2"
+                                                        width="12"
+                                                        height="10"
+                                                        rx="1"
+                                                    />
+                                                    <rect
+                                                        x="3"
+                                                        y="4"
+                                                        width="8"
+                                                        height="6"
+                                                        rx="0.5"
+                                                        fill="currentColor"
+                                                        opacity="0.7"
+                                                    />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "medium"
+                                                    );
+                                                }}
+                                                title="Medium"
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "2px 4px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <rect
+                                                        x="2"
+                                                        y="2"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                    <rect
+                                                        x="8"
+                                                        y="2"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                    <rect
+                                                        x="2"
+                                                        y="8"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                    <rect
+                                                        x="8"
+                                                        y="8"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "full"
+                                                    );
+                                                }}
+                                                title="Full"
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "2px 4px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <path d="M5 1H1v4" />
+                                                    <path d="M9 13h4V9" />
+                                                    <path d="M13 5V1H9" />
+                                                    <path d="M1 9v4h4" />
+                                                </svg>
+                                            </button>
+                                            {/* Title edit field for medium components */}
+                                            <input
+                                                type="text"
+                                                value={
+                                                    instance.customTitle ||
+                                                    title
+                                                }
+                                                onChange={(e) => {
+                                                    const newTitle =
+                                                        e.target.value;
+                                                    setComponents((prev) =>
+                                                        prev.map((comp) =>
+                                                            comp.id ===
+                                                            instance.id
+                                                                ? {
+                                                                      ...comp,
+                                                                      customTitle:
+                                                                          newTitle,
+                                                                  }
+                                                                : comp
+                                                        )
+                                                    );
+                                                    setTimeout(
+                                                        () => saveLayoutToTab(),
+                                                        100
+                                                    );
+                                                }}
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "2px 4px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    color: currentTheme.text,
+                                                    borderRadius: 4,
+                                                    outline: "none",
+                                                    minWidth: "120px",
+                                                    maxWidth: "200px",
+                                                }}
+                                                placeholder="Enter title..."
+                                            />
+                                            {/* Remove button for medium components */}
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    removeComponent(
+                                                        instance.id
+                                                    );
+                                                }}
+                                                title="Remove"
+                                                style={{
+                                                    fontSize: 10,
+                                                    padding: "1px 3px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "#dc3545",
+                                                    color: "white",
+                                                    borderRadius: 3,
+                                                    cursor: "pointer",
+                                                    minWidth: "28px",
+                                                }}
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
                             )}
+
+                            {/* Component content */}
+                            <div
+                                className="component-content"
+                                style={{ flex: 1 }}
+                            >
+                                <ComponentRenderer
+                                    componentId={instance.componentId}
+                                    instance={instance}
+                                    isEditMode={isEditMode}
+                                />
+                            </div>
                         </div>
-                    )}
+                    );
+                })
+                .filter(Boolean), // Remove null entries for fullscreen mode
+        [
+            components,
+            isEditMode,
+            fullScreenId,
+            lockedViewMode,
+            setDisplayMode,
+            setFullScreenId,
+            removeComponent,
+            saveLayoutToTab,
+            currentTheme,
+            setComponents,
+        ]
+    );
+
+    return (
+        <div
+            className="dynamic-canvas"
+            style={{
+                width: "100%",
+                height: "100%",
+                position: "relative",
+                background: currentTheme.background,
+            }}
+        >
+            {/* Add component button */}
+            {isEditMode && (
+                <button
+                    onClick={() => setShowComponentPortal(true)}
+                    style={{
+                        position: "fixed",
+                        top: 20,
+                        right: 20,
+                        zIndex: 1000,
+                        padding: "12px 24px",
+                        background: currentTheme.primary,
+                        color: "white",
+                        border: "none",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        fontSize: 14,
+                        fontWeight: 600,
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    }}
+                >
+                    + Add Component
+                </button>
+            )}
+
+            {fullScreenId ? (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        width: "100vw",
+                        height: "100vh",
+                        background: currentTheme.background,
+                        zIndex: 999,
+                        overflow: "auto",
+                    }}
+                >
+                    {components
+                        .filter((comp) => comp.id === fullScreenId)
+                        .map((instance) => (
+                            <div
+                                key={instance.id}
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    padding: 20,
+                                }}
+                            >
+                                <ComponentRenderer
+                                    componentId={instance.componentId}
+                                    instance={instance}
+                                    isEditMode={isEditMode}
+                                />
+                                {/* Exit fullscreen button */}
+                                <button
+                                    onClick={() => setFullScreenId(null)}
+                                    style={{
+                                        position: "fixed",
+                                        top: 20,
+                                        right: 20,
+                                        padding: "8px 16px",
+                                        background:
+                                            currentTheme.danger || "#dc3545",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: 4,
+                                        cursor: "pointer",
+                                        zIndex: 1001,
+                                    }}
+                                >
+                                    Exit Fullscreen
+                                </button>
+                            </div>
+                        ))}
                 </div>
+            ) : (
+                <ResponsiveGridLayout
+                    className="layout"
+                    layouts={{ lg: generateLayout }}
+                    breakpoints={{
+                        lg: 1200,
+                        md: 996,
+                        sm: 768,
+                        xs: 480,
+                        xxs: 0,
+                    }}
+                    cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+                    rowHeight={60}
+                    onLayoutChange={handleLayoutChange}
+                    onDragStart={handleDragStart}
+                    onDragStop={handleDragStop}
+                    onResizeStart={handleResizeStart}
+                    onResizeStop={handleResizeStop}
+                    margin={[8, 8]}
+                    containerPadding={[16, 16]}
+                    isDraggable={isEditMode}
+                    isResizable={isEditMode}
+                    useCSSTransforms={true}
+                    compactType={null}
+                    preventCollision={false}
+                    width={containerWidth}
+                    key={`layout-${editModeVersion}-${components.length}`}
+                >
+                    {gridChildren}
+                </ResponsiveGridLayout>
+            )}
 
-                {/* Component Portal Modal */}
+            {/* Component Portal Modal */}
+            {showComponentPortal && (
                 <ComponentPortalModal
-                    isOpen={showComponentPortal}
-                    onClose={() => {
-                        setShowComponentPortal(false);
-                    }}
-                    onComponentSelect={(componentId) => {
-                        const meta =
-                            componentInventory.getComponent(componentId);
-
-                        if (meta) {
-                            addComponent(meta);
-                            setShowComponentPortal(false);
-                        } else {
-                            console.error(
-                                "Component not found in inventory:",
-                                componentId
-                            );
-                        }
-                    }}
+                    onClose={() => setShowComponentPortal(false)}
+                    onAddComponent={addComponent}
                 />
-            </div>
-        </>
+            )}
+        </div>
     );
 };
+
+// CSS styles for grid layout and component styling
+const style = document.createElement("style");
+style.textContent = `
+    /* Thumbnail-specific styles for edit mode */
+    .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] {
+        height: 28px !important;
+        min-height: 28px !important;
+        max-height: 28px !important;
+        overflow: visible !important;
+    }
+
+    /* Grid layout improvements */
+    .react-grid-layout {
+        position: relative;
+    }
+
+    .react-grid-item {
+        transition: all 200ms ease;
+        transition-property: left, top;
+    }
+
+    .react-grid-item.cssTransforms {
+        transition-property: transform;
+    }
+
+    .react-grid-item > .react-resizable-handle {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        bottom: 0;
+        right: 0;
+        background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNiIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgNiA2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZG90cyBmaWxsPSIjOTk5IiBjbGFzcz0iZG90cyIvPgo8L3N2Zz4K');
+        background-position: bottom right;
+        padding: 0 3px 3px 0;
+        background-repeat: no-repeat;
+        background-origin: content-box;
+        box-sizing: border-box;
+        cursor: se-resize;
+    }
+
+    .dynamic-canvas {
+        position: relative;
+        overflow: auto;
+    }
+
+    .component-content {
+        flex: 1;
+        overflow: auto;
+    }
+`;
+
+if (!document.head.contains(style)) {
+    document.head.appendChild(style);
+}
+
+export default DynamicCanvas;
