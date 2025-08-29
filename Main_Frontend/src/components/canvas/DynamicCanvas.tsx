@@ -1330,241 +1330,207 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         </button>
                                     </div>
                                 )}
-                                {/* Edit controls (remove + mode + custom title) visible in edit mode */}
+                                {/* Edit controls (mode + custom title) visible in edit mode */}
                                 {isEditMode && (
-                                    <>
-                                        {/* Remove button pinned to top-right */}
+                                    <div
+                                        className="no-drag"
+                                        style={{
+                                            position: "absolute",
+                                            top: 4,
+                                            right: 140,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 6,
+                                            zIndex: 5,
+                                        }}
+                                    >
+                                        {/* Thumbnail */}
                                         <button
-                                            className="no-drag remove-component"
+                                            className="no-drag"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                removeComponent(instance.id);
+                                                setDisplayMode(
+                                                    instance.id,
+                                                    "thumbnail"
+                                                );
                                             }}
-                                            title="Remove"
+                                            title="Thumbnail"
                                             style={{
-                                                position: "absolute",
-                                                top: 4,
-                                                right: 8,
-                                                width: 24,
                                                 height: 24,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
+                                                padding: "2px 6px",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background:
-                                                    currentTheme.background,
+                                                    (instance.displayMode ||
+                                                        "medium") ===
+                                                    "thumbnail"
+                                                        ? `${currentTheme.primary}20`
+                                                        : currentTheme.background,
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                zIndex: 6,
                                             }}
                                         >
-                                            ✕
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 14 14"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.2"
+                                            >
+                                                <rect
+                                                    x="1"
+                                                    y="2"
+                                                    width="12"
+                                                    height="10"
+                                                    rx="1"
+                                                />
+                                                <rect
+                                                    x="3"
+                                                    y="4"
+                                                    width="8"
+                                                    height="6"
+                                                    rx="0.5"
+                                                    fill="currentColor"
+                                                    opacity="0.7"
+                                                />
+                                            </svg>
                                         </button>
-
-                                        <div
+                                        {/* Medium */}
+                                        <button
                                             className="no-drag"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setDisplayMode(
+                                                    instance.id,
+                                                    "medium"
+                                                );
+                                            }}
+                                            title="Medium"
                                             style={{
-                                                position: "absolute",
-                                                top: 4,
-                                                right: 140,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 6,
-                                                zIndex: 5,
+                                                height: 24,
+                                                padding: "2px 6px",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background:
+                                                    (instance.displayMode ||
+                                                        "medium") === "medium"
+                                                        ? `${currentTheme.primary}20`
+                                                        : currentTheme.background,
+                                                color: currentTheme.text,
+                                                borderRadius: 4,
+                                                cursor: "pointer",
                                             }}
                                         >
-                                            {/* Thumbnail */}
-                                            <button
-                                                className="no-drag"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setDisplayMode(
-                                                        instance.id,
-                                                        "thumbnail"
-                                                    );
-                                                }}
-                                                title="Thumbnail"
-                                                style={{
-                                                    height: 24,
-                                                    padding: "2px 6px",
-                                                    border: `1px solid ${currentTheme.border}`,
-                                                    background:
-                                                        (instance.displayMode ||
-                                                            "medium") ===
-                                                        "thumbnail"
-                                                            ? `${currentTheme.primary}20`
-                                                            : currentTheme.background,
-                                                    color: currentTheme.text,
-                                                    borderRadius: 4,
-                                                    cursor: "pointer",
-                                                }}
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 14 14"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.2"
                                             >
-                                                <svg
-                                                    width="14"
-                                                    height="14"
-                                                    viewBox="0 0 14 14"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="1.2"
-                                                >
-                                                    <rect
-                                                        x="1"
-                                                        y="2"
-                                                        width="12"
-                                                        height="10"
-                                                        rx="1"
-                                                    />
-                                                    <rect
-                                                        x="3"
-                                                        y="4"
-                                                        width="8"
-                                                        height="6"
-                                                        rx="0.5"
-                                                        fill="currentColor"
-                                                        opacity="0.7"
-                                                    />
-                                                </svg>
-                                            </button>
-                                            {/* Medium */}
-                                            <button
-                                                className="no-drag"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setDisplayMode(
-                                                        instance.id,
-                                                        "medium"
-                                                    );
-                                                }}
-                                                title="Medium"
-                                                style={{
-                                                    height: 24,
-                                                    padding: "2px 6px",
-                                                    border: `1px solid ${currentTheme.border}`,
-                                                    background:
-                                                        (instance.displayMode ||
-                                                            "medium") ===
-                                                        "medium"
-                                                            ? `${currentTheme.primary}20`
-                                                            : currentTheme.background,
-                                                    color: currentTheme.text,
-                                                    borderRadius: 4,
-                                                    cursor: "pointer",
-                                                }}
+                                                <rect
+                                                    x="2"
+                                                    y="2"
+                                                    width="4"
+                                                    height="4"
+                                                />
+                                                <rect
+                                                    x="8"
+                                                    y="2"
+                                                    width="4"
+                                                    height="4"
+                                                />
+                                                <rect
+                                                    x="2"
+                                                    y="8"
+                                                    width="4"
+                                                    height="4"
+                                                />
+                                                <rect
+                                                    x="8"
+                                                    y="8"
+                                                    width="4"
+                                                    height="4"
+                                                />
+                                            </svg>
+                                        </button>
+                                        {/* Full */}
+                                        <button
+                                            className="no-drag"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setDisplayMode(
+                                                    instance.id,
+                                                    "full"
+                                                );
+                                            }}
+                                            title="Full"
+                                            style={{
+                                                height: 24,
+                                                padding: "2px 6px",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background:
+                                                    (instance.displayMode ||
+                                                        "medium") === "full"
+                                                        ? `${currentTheme.primary}20`
+                                                        : currentTheme.background,
+                                                color: currentTheme.text,
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 14 14"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.2"
                                             >
-                                                <svg
-                                                    width="14"
-                                                    height="14"
-                                                    viewBox="0 0 14 14"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="1.2"
-                                                >
-                                                    <rect
-                                                        x="2"
-                                                        y="2"
-                                                        width="4"
-                                                        height="4"
-                                                    />
-                                                    <rect
-                                                        x="8"
-                                                        y="2"
-                                                        width="4"
-                                                        height="4"
-                                                    />
-                                                    <rect
-                                                        x="2"
-                                                        y="8"
-                                                        width="4"
-                                                        height="4"
-                                                    />
-                                                    <rect
-                                                        x="8"
-                                                        y="8"
-                                                        width="4"
-                                                        height="4"
-                                                    />
-                                                </svg>
-                                            </button>
-                                            {/* Full */}
-                                            <button
-                                                className="no-drag"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setDisplayMode(
-                                                        instance.id,
-                                                        "full"
-                                                    );
-                                                }}
-                                                title="Full"
-                                                style={{
-                                                    height: 24,
-                                                    padding: "2px 6px",
-                                                    border: `1px solid ${currentTheme.border}`,
-                                                    background:
-                                                        (instance.displayMode ||
-                                                            "medium") === "full"
-                                                            ? `${currentTheme.primary}20`
-                                                            : currentTheme.background,
-                                                    color: currentTheme.text,
-                                                    borderRadius: 4,
-                                                    cursor: "pointer",
-                                                }}
-                                            >
-                                                <svg
-                                                    width="14"
-                                                    height="14"
-                                                    viewBox="0 0 14 14"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="1.2"
-                                                >
-                                                    <path d="M5 1H1v4" />
-                                                    <path d="M9 13h4V9" />
-                                                    <path d="M13 5V1H9" />
-                                                    <path d="M1 9v4h4" />
-                                                </svg>
-                                            </button>
-                                            <input
-                                                type="text"
-                                                data-component-id={instance.id}
-                                                placeholder="Custom title (used in Thumbnail)"
-                                                value={
-                                                    instance.customTitle || ""
-                                                }
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    setComponents((prev) =>
-                                                        prev.map((c) =>
-                                                            c.id === instance.id
-                                                                ? {
-                                                                      ...c,
-                                                                      customTitle:
-                                                                          val,
-                                                                  }
-                                                                : c
-                                                        )
-                                                    );
-                                                }}
-                                                onBlur={() => {
-                                                    setTimeout(
-                                                        () => saveLayoutToTab(),
-                                                        100
-                                                    );
-                                                }}
-                                                style={{
-                                                    height: 22,
-                                                    padding: "0 6px",
-                                                    background:
-                                                        currentTheme.background,
-                                                    color: currentTheme.text,
-                                                    border: `1px solid ${currentTheme.border}`,
-                                                    borderRadius: 4,
-                                                    display: "none",
-                                                }}
-                                            />
-                                        </div>
-                                    </>
+                                                <path d="M5 1H1v4" />
+                                                <path d="M9 13h4V9" />
+                                                <path d="M13 5V1H9" />
+                                                <path d="M1 9v4h4" />
+                                            </svg>
+                                        </button>
+                                        <input
+                                            type="text"
+                                            data-component-id={instance.id}
+                                            placeholder="Custom title (used in Thumbnail)"
+                                            value={instance.customTitle || ""}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setComponents((prev) =>
+                                                    prev.map((c) =>
+                                                        c.id === instance.id
+                                                            ? {
+                                                                  ...c,
+                                                                  customTitle:
+                                                                      val,
+                                                              }
+                                                            : c
+                                                    )
+                                                );
+                                            }}
+                                            onBlur={() => {
+                                                setTimeout(
+                                                    () => saveLayoutToTab(),
+                                                    100
+                                                );
+                                            }}
+                                            style={{
+                                                height: 22,
+                                                padding: "0 6px",
+                                                background:
+                                                    currentTheme.background,
+                                                color: currentTheme.text,
+                                                border: `1px solid ${currentTheme.border}`,
+                                                borderRadius: 4,
+                                                display: "none",
+                                            }}
+                                        />
+                                    </div>
                                 )}
                             </>
                         )}
@@ -1762,6 +1728,22 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            overflow: hidden !important;
          }
 
+         /* In edit mode, allow thumbnails to be properly sized - HIGHER SPECIFICITY */
+         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] {
+           height: 40px !important;
+           min-height: 40px !important;
+           max-height: 40px !important;
+           overflow: visible !important;
+         }
+
+         /* Force thumbnail sizing in edit mode - EVEN HIGHER SPECIFICITY */
+         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] .grid-item {
+           height: 40px !important;
+           min-height: 40px !important;
+           max-height: 40px !important;
+           overflow: visible !important;
+         }
+
          /* Force medium and full modes to respect CosmosDB height */
          .react-grid-item[data-display-mode="medium"],
          .react-grid-item[data-display-mode="full"] {
@@ -1786,21 +1768,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
 
 
-        /* Additional thumbnail enforcement */
-        .react-grid-item[data-display-mode="thumbnail"] .grid-item {
-          height: 28px !important;
-          min-height: 28px !important;
-          max-height: 28px !important;
-          overflow: hidden !important;
-        }
 
-        /* In edit mode, allow thumbnails to be properly sized */
-        .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] .grid-item {
-          height: auto !important;
-          min-height: 40px !important;
-          max-height: none !important;
-          overflow: visible !important;
-        }
 
         /* In edit mode, restrict internal interactions to edit UI only */
         ${
