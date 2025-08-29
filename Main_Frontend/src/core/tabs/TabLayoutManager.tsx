@@ -1307,6 +1307,55 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                                 console.log(
                                     "✅ Post-save verification matched."
                                 );
+                                // Ensure UI uses the exact saved state from CosmosDB
+                                try {
+                                    const dedup = (tabs: any[]) => {
+                                        const seen = new Set<string>();
+                                        return (tabs || []).filter((t: any) => {
+                                            if (seen.has(t.id)) return false;
+                                            seen.add(t.id);
+                                            return true;
+                                        });
+                                    };
+                                    const syncedTabs = dedup(remoteTabs).map(
+                                        (t: any) => ({
+                                            ...t,
+                                            editMode: false,
+                                            components: (
+                                                t.components || []
+                                            ).map((c: any) => ({
+                                                ...c,
+                                                position: {
+                                                    x: c.position?.x ?? 0,
+                                                    y: c.position?.y ?? 0,
+                                                    w: c.position?.w ?? 4,
+                                                    h: c.position?.h ?? 1,
+                                                },
+                                                props: {
+                                                    ...(c.props || {}),
+                                                },
+                                            })),
+                                        })
+                                    );
+                                    setCurrentLayout((prev) => ({
+                                        ...prev,
+                                        tabs: [
+                                            prev.tabs[0],
+                                            ...syncedTabs.filter(
+                                                (t: any) => t.id !== "main"
+                                            ),
+                                        ],
+                                        updatedAt: new Date().toISOString(),
+                                    }));
+                                    console.log(
+                                        "🔄 Synchronized UI state with verified CosmosDB config"
+                                    );
+                                } catch (syncErr) {
+                                    console.warn(
+                                        "⚠️ Failed to sync UI with verified config:",
+                                        syncErr
+                                    );
+                                }
                             }
                         } else {
                             console.warn(
