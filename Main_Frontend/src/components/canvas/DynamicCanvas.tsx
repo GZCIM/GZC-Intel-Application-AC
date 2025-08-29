@@ -1062,28 +1062,6 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         >
                                             ✎
                                         </button>
-                                        {/* Remove button */}
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                removeComponent(instance.id);
-                                            }}
-                                            title="Remove"
-                                            style={{
-                                                fontSize: 11,
-                                                padding: "3px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background: "#dc3545",
-                                                color: "white",
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                                fontWeight: "500",
-                                                minWidth: "32px",
-                                            }}
-                                        >
-                                            ✕
-                                        </button>
                                     </div>
                                 ) : (
                                     <div style={{ display: "flex", gap: 4 }}>
@@ -1458,6 +1436,44 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 <path d="M1 9v4h4" />
                                             </svg>
                                         </button>
+                                        {/* Edit title input field - positioned just left of thumbnail control */}
+                                        <input
+                                            type="text"
+                                            data-component-id={instance.id}
+                                            placeholder="Edit title..."
+                                            value={instance.customTitle || ""}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setComponents((prev) =>
+                                                    prev.map((c) =>
+                                                        c.id === instance.id
+                                                            ? {
+                                                                  ...c,
+                                                                  customTitle:
+                                                                      val,
+                                                              }
+                                                            : c
+                                                    )
+                                                );
+                                            }}
+                                            onBlur={() => {
+                                                setTimeout(
+                                                    () => saveLayoutToTab(),
+                                                    100
+                                                );
+                                            }}
+                                            style={{
+                                                height: 24,
+                                                padding: "0 6px",
+                                                background:
+                                                    currentTheme.background,
+                                                color: currentTheme.text,
+                                                border: `1px solid ${currentTheme.border}`,
+                                                borderRadius: 4,
+                                                minWidth: "120px",
+                                                fontSize: "11px",
+                                            }}
+                                        />
                                         {/* Remove button - positioned after size controls */}
                                         <button
                                             className="no-drag"
