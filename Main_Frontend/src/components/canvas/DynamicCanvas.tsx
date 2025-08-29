@@ -19,6 +19,9 @@ import "../../styles/analytics-dashboard.css";
 import "../../styles/dynamic-canvas.css";
 import { editingLockService } from "../../services/editingLockService";
 
+// Grid unit size: 1 grid unit = 28px (used for thumbnail height)
+// Standard thumbnail dimensions: w: 4, h: 1 (4 grid units wide, 1 grid unit tall)
+
 // Memoize WidthProvider for better performance (Context7 recommendation)
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -146,8 +149,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 displayMode: "thumbnail",
                                 x: originalComponent.position.x,
                                 y: originalComponent.position.y,
-                                // Wider in edit mode so controls are fully visible
-                                w: 10,
+                                // Standard thumbnail dimensions in edit mode
+                                w: 4,
                                 h: 1,
                                 originalW: preservedW,
                                 originalH: preservedH,
@@ -606,12 +609,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 }
             }
         } else if (mode === "thumbnail") {
-            // For thumbnail mode, calculate compact dimensions
+            // For thumbnail mode, use standard dimensions
             setComponents((prev) =>
                 prev.map((c) => {
                     if (c.id === id) {
-                        const newW = Math.max(6, Math.floor(c.originalW * 0.6)); // ensure room for 3 icons
-                        const newH = 1; // 1 grid unit height for header only
+                        const newW = 4; // Standard thumbnail width
+                        const newH = 1; // Standard thumbnail height (1 grid unit)
                         console.log(
                             `📱 Thumbnail mode: ${c.originalW}x${c.originalH} -> ${newW}x${newH}`
                         );
@@ -820,26 +823,18 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 display: "flex",
                                 flexDirection: "column",
                                 height: isThumb
-                                    ? isEditMode
-                                        ? "80px"
-                                        : "28px"
+                                    ? "28px" // Standard thumbnail height (1 grid unit) - same in edit and non-edit mode
                                     : `${visualRows * 60}px`,
                                 minHeight: isThumb
-                                    ? isEditMode
-                                        ? "80px"
-                                        : "28px"
+                                    ? "28px" // Standard thumbnail height (1 grid unit) - same in edit and non-edit mode
                                     : `${visualRows * 60}px`,
                                 // Force width using CSS variable - ALWAYS use current w from CosmosDB
                                 "--grid-item-width": isThumb
-                                    ? isEditMode
-                                        ? "400px"
-                                        : "auto"
+                                    ? `calc(4 * (100% / 12))` // Standard thumbnail width (4 grid units) - same in edit and non-edit mode
                                     : `calc(${visualCols} * (100% / 12))`,
                                 // Force height using CSS variable - ALWAYS use current h from CosmosDB
                                 "--grid-item-height": isThumb
-                                    ? isEditMode
-                                        ? "80px"
-                                        : "28px"
+                                    ? "28px" // Standard thumbnail height (1 grid unit) - same in edit and non-edit mode
                                     : `${visualRows * 60}px`,
                             } as React.CSSProperties & {
                                 "--grid-item-width": string;
@@ -852,7 +847,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             <div
                                 className="drag-handle"
                                 style={{
-                                    height: isEditMode ? "80px" : "28px",
+                                    height: "28px", // Standard thumbnail height (1 grid unit) - same in edit and non-edit mode
                                     background: `linear-gradient(to right, ${currentTheme.primary}10, transparent)`,
                                     borderBottom: "none",
                                     borderRadius: "4px",
@@ -864,16 +859,42 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     cursor: isEditMode ? "move" : "auto",
                                 }}
                             >
-                                <span
+                                {/* Title input field for thumbnail components */}
+                                <input
+                                    type="text"
+                                    value={instance.customTitle || title}
+                                    onChange={(e) => {
+                                        const newTitle = e.target.value;
+                                        setComponents((prev) =>
+                                            prev.map((comp) =>
+                                                comp.id === instance.id
+                                                    ? {
+                                                          ...comp,
+                                                          customTitle: newTitle,
+                                                      }
+                                                    : comp
+                                            )
+                                        );
+                                        // Save component props immediately for better UX
+                                        setTimeout(
+                                            () => saveLayoutToTab(),
+                                            100
+                                        );
+                                    }}
                                     style={{
                                         fontSize: "12px",
                                         fontWeight: 600,
                                         color: currentTheme.text,
-                                        opacity: 0.8,
+                                        background: "transparent",
+                                        border: "none",
+                                        outline: "none",
+                                        padding: "4px 8px",
+                                        borderRadius: "4px",
+                                        minWidth: "120px",
+                                        maxWidth: "200px",
                                     }}
-                                >
-                                    {instance.customTitle || title}
-                                </span>
+                                    placeholder="Enter title..."
+                                />
                                 {isEditMode ? (
                                     <div
                                         style={{
@@ -1061,6 +1082,28 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                         >
                                             ✎
+                                        </button>
+                                        {/* Remove button for thumbnail components */}
+                                        <button
+                                            className="no-drag"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeComponent(instance.id);
+                                            }}
+                                            title="Remove"
+                                            style={{
+                                                fontSize: 11,
+                                                padding: "3px 6px",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background: "#dc3545",
+                                                color: "white",
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                                fontWeight: "500",
+                                                minWidth: "32px",
+                                            }}
+                                        >
+                                            ✕
                                         </button>
                                     </div>
                                 ) : (
@@ -1686,36 +1729,36 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           opacity: 0.8 !important;
         }
 
-                 /* Force thumbnail mode to be header-only */
+                 /* Force thumbnail mode to be header-only - 1 grid unit height */
          .react-grid-item[data-display-mode="thumbnail"] {
-           height: 28px !important;
+           height: 28px !important; /* 1 grid unit = 28px */
            min-height: 28px !important;
            max-height: 28px !important;
            overflow: hidden !important;
          }
 
-         /* In edit mode, allow thumbnails to be properly sized - HIGHER SPECIFICITY */
+         /* In edit mode, thumbnails maintain standard height - HIGHER SPECIFICITY */
          .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] {
-           height: 80px !important;
-           min-height: 80px !important;
-           max-height: 80px !important;
+           height: 28px !important; /* Standard thumbnail height (1 grid unit) - same in edit and non-edit mode */
+           min-height: 28px !important;
+           max-height: 28px !important;
            overflow: visible !important;
          }
 
          /* Force thumbnail sizing in edit mode - EVEN HIGHER SPECIFICITY */
          .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] .grid-item {
-           height: 80px !important;
-           min-height: 80px !important;
-           max-height: 80px !important;
+           height: 28px !important; /* Standard thumbnail height (1 grid unit) - same in edit and non-edit mode */
+           min-height: 28px !important;
+           max-height: 28px !important;
            overflow: visible !important;
          }
 
          /* ULTIMATE OVERRIDE for thumbnail edit mode */
          .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"],
          .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] * {
-           height: 80px !important;
-           min-height: 80px !important;
-           max-height: 80px !important;
+           height: 28px !important; /* Standard thumbnail height (1 grid unit) - same in edit and non-edit mode */
+           min-height: 28px !important;
+           max-height: 28px !important;
          }
 
          /* Ensure thumbnail controls are visible in edit mode */
