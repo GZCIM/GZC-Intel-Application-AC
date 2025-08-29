@@ -1023,28 +1023,6 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 <path d="M1 9v4h4" />
                                             </svg>
                                         </button>
-                                        {/* Remove button */}
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                removeComponent(instance.id);
-                                            }}
-                                            title="Remove"
-                                            style={{
-                                                fontSize: 11,
-                                                padding: "3px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background: "#dc3545",
-                                                color: "white",
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                                fontWeight: "500",
-                                                minWidth: "32px",
-                                            }}
-                                        >
-                                            ✕
-                                        </button>
                                         {/* Edit title button */}
                                         <button
                                             className="no-drag"
@@ -1083,6 +1061,28 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                         >
                                             ✎
+                                        </button>
+                                        {/* Remove button */}
+                                        <button
+                                            className="no-drag"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeComponent(instance.id);
+                                            }}
+                                            title="Remove"
+                                            style={{
+                                                fontSize: 11,
+                                                padding: "3px 6px",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background: "#dc3545",
+                                                color: "white",
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                                fontWeight: "500",
+                                                minWidth: "32px",
+                                            }}
+                                        >
+                                            ✕
                                         </button>
                                     </div>
                                 ) : (
@@ -1198,7 +1198,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 )}
 
                                 {/* Floating controls in top-right for medium mode */}
-                                {!isEditMode && (
+                                {!isEditMode ? (
                                     <div
                                         className="no-drag"
                                         style={{
@@ -1292,6 +1292,193 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 <path d="M13 5V1H9" />
                                                 <path d="M1 9v4h4" />
                                             </svg>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    /* Edit mode controls for medium components */
+                                    <div
+                                        className="no-drag"
+                                        style={{
+                                            position: "absolute",
+                                            top: 4,
+                                            right: 8,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 6,
+                                            zIndex: 5,
+                                        }}
+                                    >
+                                        {/* Thumbnail */}
+                                        <button
+                                            className="no-drag"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setDisplayMode(
+                                                    instance.id,
+                                                    "thumbnail"
+                                                );
+                                            }}
+                                            title="Thumbnail"
+                                            style={{
+                                                height: 24,
+                                                padding: "2px 6px",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background:
+                                                    (instance.displayMode ||
+                                                        "medium") ===
+                                                    "thumbnail"
+                                                        ? `${currentTheme.primary}20`
+                                                        : currentTheme.background,
+                                                color: currentTheme.text,
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 14 14"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.2"
+                                            >
+                                                <rect
+                                                    x="1"
+                                                    y="2"
+                                                    width="12"
+                                                    height="10"
+                                                    rx="1"
+                                                />
+                                                <rect
+                                                    x="3"
+                                                    y="4"
+                                                    width="8"
+                                                    height="6"
+                                                    rx="0.5"
+                                                    fill="currentColor"
+                                                    opacity="0.7"
+                                                />
+                                            </svg>
+                                        </button>
+                                        {/* Medium */}
+                                        <button
+                                            className="no-drag"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setDisplayMode(
+                                                    instance.id,
+                                                    "medium"
+                                                );
+                                            }}
+                                            title="Medium"
+                                            style={{
+                                                height: 24,
+                                                padding: "2px 6px",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background:
+                                                    (instance.displayMode ||
+                                                        "medium") === "medium"
+                                                        ? `${currentTheme.primary}20`
+                                                        : currentTheme.background,
+                                                color: currentTheme.text,
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 14 14"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.2"
+                                            >
+                                                <rect
+                                                    x="2"
+                                                    y="2"
+                                                    width="4"
+                                                    height="4"
+                                                />
+                                                <rect
+                                                    x="8"
+                                                    y="2"
+                                                    width="4"
+                                                    height="4"
+                                                />
+                                                <rect
+                                                    x="2"
+                                                    y="8"
+                                                    width="4"
+                                                    height="4"
+                                                />
+                                                <rect
+                                                    x="8"
+                                                    y="8"
+                                                    width="4"
+                                                    height="4"
+                                                />
+                                            </svg>
+                                        </button>
+                                        {/* Fullscreen */}
+                                        <button
+                                            className="no-drag"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setDisplayMode(
+                                                    instance.id,
+                                                    "full"
+                                                );
+                                            }}
+                                            title="Fullscreen"
+                                            style={{
+                                                height: 24,
+                                                padding: "2px 6px",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background:
+                                                    (instance.displayMode ||
+                                                        "medium") === "full"
+                                                        ? `${currentTheme.primary}20`
+                                                        : currentTheme.background,
+                                                color: currentTheme.text,
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 14 14"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.2"
+                                            >
+                                                <path d="M5 1H1v4" />
+                                                <path d="M9 13h4V9" />
+                                                <path d="M13 5V1H9" />
+                                                <path d="M1 9v4h4" />
+                                            </svg>
+                                        </button>
+                                        {/* Remove button - positioned after size controls */}
+                                        <button
+                                            className="no-drag"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeComponent(instance.id);
+                                            }}
+                                            title="Remove"
+                                            style={{
+                                                height: 24,
+                                                padding: "2px 6px",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background: "#dc3545",
+                                                color: "white",
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                                fontWeight: "500",
+                                                minWidth: "32px",
+                                            }}
+                                        >
+                                            ✕
                                         </button>
                                     </div>
                                 )}
@@ -1495,6 +1682,28 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "none",
                                             }}
                                         />
+                                        {/* Remove button - positioned after size controls */}
+                                        <button
+                                            className="no-drag"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeComponent(instance.id);
+                                            }}
+                                            title="Remove"
+                                            style={{
+                                                height: 24,
+                                                padding: "2px 6px",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background: "#dc3545",
+                                                color: "white",
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                                fontWeight: "500",
+                                                minWidth: "32px",
+                                            }}
+                                        >
+                                            ✕
+                                        </button>
                                     </div>
                                 )}
                             </>
