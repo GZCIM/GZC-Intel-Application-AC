@@ -987,7 +987,17 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 gap: 6,
-                                                zIndex: 3,
+                                                zIndex: 1000,
+                                                pointerEvents: "auto",
+                                                background:
+                                                    currentTheme.background,
+                                                color: currentTheme.text,
+                                                padding: "2px 4px",
+                                                borderRadius: 6,
+                                                boxShadow: `0 1px 3px ${
+                                                    currentTheme.shadow ||
+                                                    "#00000040"
+                                                }`,
                                             }}
                                         >
                                             <button
@@ -1092,12 +1102,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 className="no-drag"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setDisplayMode(
-                                                        instance.id,
-                                                        "full"
+                                                    setFullScreenId(
+                                                        instance.id
                                                     );
                                                 }}
-                                                title="Full"
+                                                title="Fullscreen"
                                                 style={{
                                                     fontSize: 11,
                                                     padding: "1px 4px",
@@ -1120,6 +1129,27 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     <path d="M13 5V1H9" />
                                                     <path d="M1 9v4h4" />
                                                 </svg>
+                                            </button>
+                                            {/* Remove (X) on thumbnail in edit mode */}
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    removeComponent(
+                                                        instance.id
+                                                    );
+                                                }}
+                                                title="Remove"
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "1px 6px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                ✕
                                             </button>
                                         </div>
                                     )}
