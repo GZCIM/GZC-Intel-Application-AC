@@ -147,7 +147,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 x: originalComponent.position.x,
                                 y: originalComponent.position.y,
                                 // Slightly wider in edit mode so controls are fully visible
-                                w: 6,
+                                w: 8,
                                 h: 1,
                                 originalW: preservedW,
                                 originalH: preservedH,
@@ -1151,6 +1151,45 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             >
                                                 ✕
                                             </button>
+                                            {/* Edit title button */}
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    // Toggle edit mode for this component
+                                                    const input =
+                                                        document.querySelector(
+                                                            `input[data-component-id="${instance.id}"]`
+                                                        ) as HTMLInputElement;
+                                                    if (input) {
+                                                        input.style.display =
+                                                            input.style
+                                                                .display ===
+                                                            "none"
+                                                                ? "block"
+                                                                : "none";
+                                                        if (
+                                                            input.style
+                                                                .display !==
+                                                            "none"
+                                                        ) {
+                                                            input.focus();
+                                                            input.select();
+                                                        }
+                                                    }
+                                                }}
+                                                title="Edit Title"
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "1px 6px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                ✎
+                                            </button>
                                         </div>
                                     )}
                                 {/* Floating controls in top-right for medium mode */}
@@ -1448,6 +1487,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             </button>
                                             <input
                                                 type="text"
+                                                data-component-id={instance.id}
                                                 placeholder="Custom title (used in Thumbnail)"
                                                 value={
                                                     instance.customTitle || ""
@@ -1480,6 +1520,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     color: currentTheme.text,
                                                     border: `1px solid ${currentTheme.border}`,
                                                     borderRadius: 4,
+                                                    display: "none",
                                                 }}
                                             />
                                         </div>
