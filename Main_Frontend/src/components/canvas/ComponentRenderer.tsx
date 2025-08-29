@@ -310,6 +310,59 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                             position: "relative",
                         }}
                     >
+                        {isEditMode && (
+                            <button
+                                className="remove-component"
+                                onClick={() => {
+                                    debugLogger.info(
+                                        `Remove button clicked for ${componentId}`
+                                    );
+                                    if (
+                                        window.confirm(
+                                            `Are you sure you want to remove ${meta.displayName}?\n\nThis action cannot be undone.`
+                                        )
+                                    ) {
+                                        debugLogger.info(
+                                            `User confirmed removal of ${componentId}`
+                                        );
+                                        onRemove();
+                                    }
+                                }}
+                                style={{
+                                    position: "absolute",
+                                    top: "8px",
+                                    right: "8px",
+                                    zIndex: 10,
+                                    background: currentTheme.error + "15",
+                                    border: `1px solid ${currentTheme.error}`,
+                                    borderRadius: "50%",
+                                    cursor: "pointer",
+                                    color: currentTheme.error,
+                                    width: "24px",
+                                    height: "24px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "16px",
+                                    fontWeight: "bold",
+                                    opacity: 0.7,
+                                    transition: "all 0.2s ease",
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.opacity = "1";
+                                    e.currentTarget.style.backgroundColor =
+                                        currentTheme.error + "25";
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.opacity = "0.7";
+                                    e.currentTarget.style.backgroundColor =
+                                        currentTheme.error + "15";
+                                }}
+                                title={`Remove ${meta.displayName}`}
+                            >
+                                ×
+                            </button>
+                        )}
                         <Component {...props} />
                     </div>
                 </ComponentErrorBoundary>
