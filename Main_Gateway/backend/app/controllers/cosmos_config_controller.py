@@ -1348,6 +1348,87 @@ async def save_device_configuration(
             f"Device configuration '{device_config_doc['name']}' saved by {user_id}"
         )
 
+        # Post-save verification: read-back and compare critical layout fields; retry once if mismatch
+        try:
+
+            def _normalize_tabs(tabs: Any) -> Any:
+                if not isinstance(tabs, list):
+                    return []
+                simplified = []
+                for t in tabs:
+                    if not isinstance(t, dict):
+                        continue
+                    simplified.append(
+                        {
+                            "id": t.get("id"),
+                            "components": [
+                                {
+                                    "id": c.get("id"),
+                                    "pos": c.get("position"),
+                                    "mode": ((c.get("props") or {}).get("displayMode")),
+                                }
+                                for c in (t.get("components") or [])
+                                if isinstance(c, dict)
+                            ],
+                        }
+                    )
+                # sort by id for stable compare
+                try:
+                    simplified.sort(key=lambda x: x.get("id") or "")
+                except Exception:
+                    pass
+                return simplified
+
+            incoming_tabs_norm = _normalize_tabs(merged_config.get("tabs", []))
+
+            # Read back the saved document (support both pk variants)
+            try:
+                read_back = container.read_item(
+                    item=device_config_id, partition_key=device_config_id
+                )
+            except exceptions.CosmosResourceNotFoundError:
+                read_back = container.read_item(
+                    item=device_config_id, partition_key=user_id
+                )
+
+            remote_tabs_norm = _normalize_tabs(
+                ((read_back or {}).get("config") or {}).get("tabs", [])
+            )
+
+            if incoming_tabs_norm != remote_tabs_norm:
+                logger.warning(
+                    "Post-save verification mismatch for %s. Retrying upsert once...",
+                    device_config_id,
+                )
+                saved_doc = container.upsert_item(body=device_config_doc)
+                try:
+                    read_back = container.read_item(
+                        item=device_config_id, partition_key=device_config_id
+                    )
+                except exceptions.CosmosResourceNotFoundError:
+                    read_back = container.read_item(
+                        item=device_config_id, partition_key=user_id
+                    )
+                remote_tabs_norm = _normalize_tabs(
+                    ((read_back or {}).get("config") or {}).get("tabs", [])
+                )
+                if incoming_tabs_norm == remote_tabs_norm:
+                    logger.info(
+                        "✅ Post-save verification matched after retry for %s",
+                        device_config_id,
+                    )
+                else:
+                    logger.warning(
+                        "⚠️ Post-save verification still mismatched for %s",
+                        device_config_id,
+                    )
+            else:
+                logger.info(
+                    "✅ Post-save verification matched for %s", device_config_id
+                )
+        except Exception as ver_err:
+            logger.warning(f"Verification step failed: {ver_err}")
+
         return {
             "message": f"{device_type.title()} configuration saved successfully",
             "deviceType": device_type,

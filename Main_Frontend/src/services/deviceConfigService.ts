@@ -304,6 +304,12 @@ class DeviceConfigService {
      * Get current device type (with override support)
      */
     getCurrentDeviceType(): DeviceType {
+        // Highest priority: explicit override set via ToolsMenu
+        const override = localStorage.getItem("gzc-device-override");
+        if (override && this.validateDeviceType(override as DeviceType)) {
+            return override as DeviceType;
+        }
+        // Next: previously stored detected type
         const stored = localStorage.getItem("gzc-device-type");
         if (stored && this.validateDeviceType(stored as DeviceType)) {
             return stored as DeviceType;

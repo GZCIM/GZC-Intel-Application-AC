@@ -37,6 +37,95 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     }, []);
 
     const menuItems = [
+        // Device Mode selector
+        {
+            label: "Device: Auto (Default)",
+            icon: "🖥️",
+            onClick: () => {
+                try {
+                    localStorage.removeItem("gzc-device-override");
+                    console.info("🔧 Device override cleared (auto-detect)");
+                    window.dispatchEvent(
+                        new CustomEvent("gzc:toast", {
+                            detail: {
+                                message:
+                                    "Device set to Auto (default). Reloading…",
+                                type: "info",
+                                timeout: 2000,
+                            },
+                        })
+                    );
+                } catch {}
+                setTimeout(() => window.location.reload(), 250);
+                setIsOpen(false);
+            },
+        },
+        {
+            label: "Device: Bigscreen",
+            icon: "🖥️",
+            onClick: () => {
+                try {
+                    localStorage.setItem("gzc-device-override", "bigscreen");
+                    console.info("🔧 Device override: bigscreen");
+                    window.dispatchEvent(
+                        new CustomEvent("gzc:toast", {
+                            detail: {
+                                message:
+                                    "Switched to Bigscreen layout. Reloading…",
+                                type: "success",
+                                timeout: 2000,
+                            },
+                        })
+                    );
+                } catch {}
+                setTimeout(() => window.location.reload(), 250);
+                setIsOpen(false);
+            },
+        },
+        {
+            label: "Device: Laptop",
+            icon: "💻",
+            onClick: () => {
+                try {
+                    localStorage.setItem("gzc-device-override", "laptop");
+                    console.info("🔧 Device override: laptop");
+                    window.dispatchEvent(
+                        new CustomEvent("gzc:toast", {
+                            detail: {
+                                message:
+                                    "Switched to Laptop layout. Reloading…",
+                                type: "success",
+                                timeout: 2000,
+                            },
+                        })
+                    );
+                } catch {}
+                setTimeout(() => window.location.reload(), 250);
+                setIsOpen(false);
+            },
+        },
+        {
+            label: "Device: Mobile",
+            icon: "📱",
+            onClick: () => {
+                try {
+                    localStorage.setItem("gzc-device-override", "mobile");
+                    console.info("🔧 Device override: mobile");
+                    window.dispatchEvent(
+                        new CustomEvent("gzc:toast", {
+                            detail: {
+                                message:
+                                    "Switched to Mobile layout. Reloading…",
+                                type: "success",
+                                timeout: 2000,
+                            },
+                        })
+                    );
+                } catch {}
+                setTimeout(() => window.location.reload(), 250);
+                setIsOpen(false);
+            },
+        },
         {
             label: editingLockService.isUnlocked()
                 ? "🔒 Lock Editing"
