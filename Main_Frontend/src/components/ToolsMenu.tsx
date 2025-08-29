@@ -44,11 +44,22 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
             icon: editingLockService.isUnlocked() ? "🔒" : "🔓",
             onClick: () => {
                 const nowUnlocked = editingLockService.toggle();
-                const state = nowUnlocked ? "UNLOCKED" : "LOCKED";
+                const state = nowUnlocked ? "unlocked" : "locked";
                 const msg = nowUnlocked
-                    ? `Edit mode UNLOCKED\nSession: ${editingLockService.getSessionId()}\nEdits will write to Cosmos DB.`
-                    : "Edit mode LOCKED\nConfiguration is read-only; no writes will be sent.";
-                alert(msg);
+                    ? "Editing enabled. Your changes will be saved when you lock."
+                    : "Editing locked. Saving your layout…";
+                console.info(`📝 Edit mode ${state}.`);
+                try {
+                    window.dispatchEvent(
+                        new CustomEvent("gzc:toast", {
+                            detail: {
+                                message: msg,
+                                type: nowUnlocked ? "info" : "success",
+                                timeout: 2500,
+                            },
+                        })
+                    );
+                } catch {}
                 // Broadcast edit mode change so header/canvas can refresh immediately
                 try {
                     window.dispatchEvent(
