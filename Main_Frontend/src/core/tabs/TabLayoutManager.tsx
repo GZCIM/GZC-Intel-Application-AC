@@ -468,10 +468,16 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     );
                 }
 
+                // Prefer device-specific configuration over the general service config.
+                // Only fall back to serviceConfig if the device-specific one is missing or empty.
                 const directCount = cosmosConfig?.tabs?.length || 0;
                 const serviceCount = serviceConfig?.tabs?.length || 0;
                 const bestConfig =
-                    serviceCount > directCount ? serviceConfig : cosmosConfig;
+                    directCount > 0
+                        ? cosmosConfig
+                        : serviceCount > 0
+                        ? serviceConfig
+                        : null;
 
                 if (bestConfig?.tabs && bestConfig.tabs.length > 0) {
                     // Deduplicate tabs when loading and ensure editMode is false
@@ -1837,32 +1843,35 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                 const unlocked = !!e?.detail?.unlocked;
                 if (!unlocked) {
                     // Locking now – save the entire tabs array to device-config
-                    const tabIds = new Set<string>();
-                    const uniqueTabs = currentLayout.tabs.filter((t) => {
-                        if (tabIds.has(t.id)) return false;
-                        tabIds.add(t.id);
-                        return true;
-                    });
+                    // Debounce slightly to let per-tab updateTab() save finish first
+                    setTimeout(async () => {
+                        const tabIds = new Set<string>();
+                        const uniqueTabs = currentLayout.tabs.filter((t) => {
+                            if (tabIds.has(t.id)) return false;
+                            tabIds.add(t.id);
+                            return true;
+                        });
 
-                    const currentDeviceType =
-                        deviceConfigService.detectDeviceType();
-                    await fetch(
-                        `${
-                            import.meta.env.VITE_API_BASE_URL ||
-                            (import.meta.env.PROD
-                                ? ""
-                                : "http://localhost:8080")
-                        }/api/cosmos/device-config/${currentDeviceType}`,
-                        {
-                            method: "POST",
-                            headers: {
-                                Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
-                                "Content-Type": "application/json",
-                                ...editingLockService.getLockHeaders(),
-                            },
-                            body: JSON.stringify({ tabs: uniqueTabs }),
-                        }
-                    );
+                        const currentDeviceType =
+                            deviceConfigService.detectDeviceType();
+                        await fetch(
+                            `${
+                                import.meta.env.VITE_API_BASE_URL ||
+                                (import.meta.env.PROD
+                                    ? ""
+                                    : "http://localhost:8080")
+                            }/api/cosmos/device-config/${currentDeviceType}`,
+                            {
+                                method: "POST",
+                                headers: {
+                                    Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                                    "Content-Type": "application/json",
+                                    ...editingLockService.getLockHeaders(),
+                                },
+                                body: JSON.stringify({ tabs: uniqueTabs }),
+                            }
+                        );
+                    }, 250);
                 }
             } catch (err) {
                 console.warn(
