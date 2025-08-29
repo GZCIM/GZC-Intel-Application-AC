@@ -3,6 +3,7 @@ import React, {
     useContext,
     useState,
     useEffect,
+    useRef,
     ReactNode,
 } from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -1954,6 +1955,10 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
         toggleTabEditMode,
     };
 
+    // Use ref to always get latest layout state
+    const currentLayoutRef = useRef(currentLayout);
+    currentLayoutRef.current = currentLayout;
+
     // Persist ALL tabs on lock so changes across tabs are saved consistently
     useEffect(() => {
         const onEditToggle = async (e: any) => {
@@ -1963,8 +1968,10 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     // Locking now – save the entire tabs array to device-config
                     // Debounce slightly to let per-tab updateTab() save finish first
                     setTimeout(async () => {
+                        // Use the most current layout state by getting it fresh
+                        const currentTabs = currentLayoutRef.current.tabs;
                         const tabIds = new Set<string>();
-                        const uniqueTabs = currentLayout.tabs.filter((t) => {
+                        const uniqueTabs = currentTabs.filter((t) => {
                             if (tabIds.has(t.id)) return false;
                             tabIds.add(t.id);
                             return true;
