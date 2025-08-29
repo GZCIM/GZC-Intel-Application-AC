@@ -1921,6 +1921,19 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                             return true;
                         });
 
+                        // Enforce thumbnail footprint for persistence
+                        const tabsToSave = uniqueTabs.map((t) => ({
+                            ...t,
+                            components: (t.components || []).map((c) => {
+                                const isThumb =
+                                    c?.props?.displayMode === "thumbnail";
+                                const enforcedPosition = isThumb
+                                    ? { ...c.position, w: 4, h: 1 }
+                                    : c.position;
+                                return { ...c, position: enforcedPosition };
+                            }),
+                        }));
+
                         const currentDeviceType =
                             deviceConfigService.detectDeviceType();
                         const baseUrl =
@@ -1932,6 +1945,9 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
                         const auth = await deviceConfigService.getAuthToken();
                         const lockHeaders = editingLockService.getLockHeaders();
+                        const requestId = `lock-${Date.now()}-${Math.random()
+                            .toString(36)
+                            .slice(2, 8)}`;
 
                         const normalize = (tabs: any[]) =>
                             [...tabs]
@@ -1949,11 +1965,26 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                                     (a.id || "").localeCompare(b.id || "")
                                 );
 
-                        const desired = normalize(uniqueTabs as any);
+                        const desired = normalize(tabsToSave as any);
                         try {
                             console.log(
                                 "📝 Global save (lock): Desired normalized tabs before POST:",
                                 JSON.stringify(desired)
+                            );
+                            console.log(
+                                "📦 Global save (lock): Raw tabs payload before POST:",
+                                JSON.stringify(
+                                    tabsToSave.map((t) => ({
+                                        id: t.id,
+                                        components: (t.components || []).map(
+                                            (c) => ({
+                                                id: c.id,
+                                                position: c.position,
+                                                mode: c?.props?.displayMode,
+                                            })
+                                        ),
+                                    }))
+                                )
                             );
                         } catch (e) {}
 
@@ -1964,8 +1995,9 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                                     Authorization: `Bearer ${auth}`,
                                     "Content-Type": "application/json",
                                     ...lockHeaders,
+                                    "X-Request-Id": requestId,
                                 },
-                                body: JSON.stringify({ tabs: uniqueTabs }),
+                                body: JSON.stringify({ tabs: tabsToSave }),
                             });
 
                             // Verify
@@ -1974,6 +2006,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                                 headers: {
                                     Authorization: `Bearer ${auth}`,
                                     "Content-Type": "application/json",
+                                    "X-Request-Id": requestId,
                                 },
                             });
                             if (verifyResp.ok) {
@@ -1989,6 +2022,24 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                                         attempt,
                                         "):",
                                         JSON.stringify(got)
+                                    );
+                                    console.log(
+                                        "📥 Global save (lock): Raw tabs read-back after POST:",
+                                        JSON.stringify(
+                                            (remoteTabs || []).map(
+                                                (t: any) => ({
+                                                    id: t.id,
+                                                    components: (
+                                                        t.components || []
+                                                    ).map((c: any) => ({
+                                                        id: c.id,
+                                                        position: c.position,
+                                                        mode: c?.props
+                                                            ?.displayMode,
+                                                    })),
+                                                })
+                                            )
+                                        )
                                     );
                                 } catch (e) {}
                                 if (
@@ -2020,7 +2071,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                                 await new Promise((r) => setTimeout(r, 250));
                             }
                         }
-                    }, 250);
+                    }, 600);
                 }
             } catch (err) {
                 console.warn(

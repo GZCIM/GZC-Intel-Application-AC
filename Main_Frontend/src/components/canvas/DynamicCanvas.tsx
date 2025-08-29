@@ -132,17 +132,29 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                         console.log(
                             `📥 Restoring ${c.id} to: ${originalComponent.position.w}x${originalComponent.position.h} at (${originalComponent.position.x},${originalComponent.position.y})`
                         );
-                        // If the saved state was thumbnail (h=1), fall back to sensible medium defaults
+                        // Respect saved displayMode in edit mode
                         const savedMode = (originalComponent as any).props
                             ?.displayMode as DisplayMode | undefined;
-                        const mediumW =
-                            savedMode === "thumbnail"
-                                ? meta?.defaultSize?.w || c.originalW || 6
-                                : originalComponent.position.w;
-                        const mediumH =
-                            savedMode === "thumbnail"
-                                ? meta?.defaultSize?.h || c.originalH || 5
-                                : originalComponent.position.h;
+                        if (savedMode === "thumbnail") {
+                            // Keep thumbnail footprint in edit mode, preserve original dims for restoration
+                            const preservedW =
+                                c.originalW || meta?.defaultSize?.w || 6;
+                            const preservedH =
+                                c.originalH || meta?.defaultSize?.h || 5;
+                            return {
+                                ...c,
+                                displayMode: "thumbnail",
+                                x: originalComponent.position.x,
+                                y: originalComponent.position.y,
+                                // Slightly wider in edit mode so controls are fully visible
+                                w: 6,
+                                h: 1,
+                                originalW: preservedW,
+                                originalH: preservedH,
+                            };
+                        }
+                        const mediumW = originalComponent.position.w;
+                        const mediumH = originalComponent.position.h;
                         return {
                             ...c,
                             displayMode: "medium",
