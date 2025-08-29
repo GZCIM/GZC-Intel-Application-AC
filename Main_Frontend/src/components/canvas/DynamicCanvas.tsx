@@ -916,14 +916,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             title="Thumbnail"
                                             style={{
                                                 fontSize: 11,
-                                                padding: "3px 6px",
+                                                padding: "2px 4px",
                                                 border: `1px solid ${currentTheme.border}`,
-                                                background:
-                                                    currentTheme.primary,
-                                                color: "white",
+                                                background: "transparent",
+                                                color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                fontWeight: "500",
                                                 minWidth: "32px",
                                             }}
                                         >
@@ -966,13 +964,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             title="Medium"
                                             style={{
                                                 fontSize: 11,
-                                                padding: "3px 6px",
+                                                padding: "2px 4px",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                fontWeight: "500",
                                                 minWidth: "32px",
                                             }}
                                         >
@@ -1020,13 +1017,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             title="Fullscreen"
                                             style={{
                                                 fontSize: 11,
-                                                padding: "3px 6px",
+                                                padding: "2px 4px",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                fontWeight: "500",
                                                 minWidth: "32px",
                                             }}
                                         >
@@ -1044,45 +1040,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 <path d="M1 9v4h4" />
                                             </svg>
                                         </button>
-                                        {/* Edit title button */}
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                const input =
-                                                    document.querySelector(
-                                                        `input[data-component-id="${instance.id}"]`
-                                                    ) as HTMLInputElement;
-                                                if (input) {
-                                                    input.style.display =
-                                                        input.style.display ===
-                                                        "none"
-                                                            ? "block"
-                                                            : "none";
-                                                    if (
-                                                        input.style.display !==
-                                                        "none"
-                                                    ) {
-                                                        input.focus();
-                                                        input.select();
-                                                    }
-                                                }
-                                            }}
-                                            title="Edit Title"
-                                            style={{
-                                                fontSize: 11,
-                                                padding: "3px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background: "#17a2b8",
-                                                color: "white",
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                                fontWeight: "500",
-                                                minWidth: "32px",
-                                            }}
-                                        >
-                                            ✎
-                                        </button>
+
                                         {/* Remove button for thumbnail components */}
                                         <button
                                             className="no-drag"
@@ -1093,13 +1051,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             title="Remove"
                                             style={{
                                                 fontSize: 11,
-                                                padding: "3px 6px",
+                                                padding: "2px 4px",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "#dc3545",
                                                 color: "white",
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                fontWeight: "500",
                                                 minWidth: "32px",
                                             }}
                                         >
