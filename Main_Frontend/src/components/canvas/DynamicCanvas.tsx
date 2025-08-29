@@ -859,51 +859,68 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     cursor: isEditMode ? "move" : "auto",
                                 }}
                             >
-                                {/* Title input field for thumbnail components */}
-                                <input
-                                    type="text"
-                                    value={instance.customTitle || title}
-                                    onChange={(e) => {
-                                        const newTitle = e.target.value;
-                                        setComponents((prev) =>
-                                            prev.map((comp) =>
-                                                comp.id === instance.id
-                                                    ? {
-                                                          ...comp,
-                                                          customTitle: newTitle,
-                                                      }
-                                                    : comp
-                                            )
-                                        );
-                                        // Save component props immediately for better UX
-                                        setTimeout(
-                                            () => saveLayoutToTab(),
-                                            100
-                                        );
-                                    }}
-                                    style={{
-                                        fontSize: "12px",
-                                        fontWeight: 600,
-                                        color: currentTheme.text,
-                                        background: "transparent",
-                                        border: "none",
-                                        outline: "none",
-                                        padding: "4px 8px",
-                                        borderRadius: "4px",
-                                        minWidth: "120px",
-                                        maxWidth: "200px",
-                                    }}
-                                    placeholder="Enter title..."
-                                />
+                                {/* Title field for thumbnail components - editable in edit mode, read-only when locked */}
                                 {isEditMode ? (
-                                    <div
+                                    <input
+                                        type="text"
+                                        value={instance.customTitle || title}
+                                        onChange={(e) => {
+                                            const newTitle = e.target.value;
+                                            setComponents((prev) =>
+                                                prev.map((comp) =>
+                                                    comp.id === instance.id
+                                                        ? {
+                                                              ...comp,
+                                                              customTitle:
+                                                                  newTitle,
+                                                          }
+                                                        : comp
+                                                )
+                                            );
+                                            // Save component props immediately for better UX
+                                            setTimeout(
+                                                () => saveLayoutToTab(),
+                                                100
+                                            );
+                                        }}
                                         style={{
-                                            display: "flex",
-                                            gap: 4,
-                                            alignItems: "center",
+                                            fontSize: "12px",
+                                            fontWeight: 600,
+                                            color: currentTheme.text,
+                                            background: "transparent",
+                                            border: "none",
+                                            outline: "none",
+                                            padding: "4px 8px",
+                                            borderRadius: "4px",
+                                            minWidth: "120px",
+                                            maxWidth: "200px",
+                                        }}
+                                        placeholder="Enter title..."
+                                    />
+                                ) : (
+                                    <span
+                                        style={{
+                                            fontSize: "12px",
+                                            fontWeight: 600,
+                                            color: currentTheme.text,
+                                            opacity: 0.8,
+                                            padding: "4px 8px",
+                                            minWidth: "120px",
                                         }}
                                     >
-                                        {/* Thumbnail mode button */}
+                                        {instance.customTitle || title}
+                                    </span>
+                                )}
+                                {/* T, M, F controls - smart display based on edit mode */}
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        gap: 4,
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    {/* Thumbnail mode button - show all in edit mode, smart in locked mode */}
+                                    {(isEditMode || effectiveMode !== "thumbnail") && (
                                         <button
                                             className="no-drag"
                                             onClick={(e) => {
@@ -915,14 +932,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Thumbnail"
                                             style={{
-                                                fontSize: 11,
-                                                padding: "2px 4px",
+                                                height: 24,
+                                                padding: "2px 6px",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                minWidth: "32px",
+                                                fontSize: "11px",
                                             }}
                                         >
                                             <svg
@@ -951,7 +968,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 />
                                             </svg>
                                         </button>
-                                        {/* Medium mode button */}
+                                    )}
+                                    {/* Medium mode button - show all in edit mode, smart in locked mode */}
+                                    {(isEditMode || effectiveMode !== "medium") && (
                                         <button
                                             className="no-drag"
                                             onClick={(e) => {
@@ -963,14 +982,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Medium"
                                             style={{
-                                                fontSize: 11,
-                                                padding: "2px 4px",
+                                                height: 24,
+                                                padding: "2px 6px",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                minWidth: "32px",
+                                                fontSize: "11px",
                                             }}
                                         >
                                             <svg
@@ -1007,7 +1026,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 />
                                             </svg>
                                         </button>
-                                        {/* Fullscreen button */}
+                                    )}
+                                    {/* Fullscreen button - show all in edit mode, smart in locked mode */}
+                                    {(isEditMode || effectiveMode !== "full") && (
                                         <button
                                             className="no-drag"
                                             onClick={(e) => {
@@ -1016,14 +1037,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Fullscreen"
                                             style={{
-                                                fontSize: 11,
-                                                padding: "2px 4px",
+                                                height: 24,
+                                                padding: "2px 6px",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                minWidth: "32px",
+                                                fontSize: "11px",
                                             }}
                                         >
                                             <svg
@@ -1040,8 +1061,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 <path d="M1 9v4h4" />
                                             </svg>
                                         </button>
+                                    )}
 
-                                        {/* Remove button for thumbnail components */}
+                                    {/* Remove button - only visible in edit mode */}
+                                    {isEditMode && (
                                         <button
                                             className="no-drag"
                                             onClick={(e) => {
@@ -1050,20 +1073,21 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Remove"
                                             style={{
-                                                fontSize: 11,
-                                                padding: "2px 4px",
+                                                fontSize: 10,
+                                                padding: "1px 3px",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "#dc3545",
                                                 color: "white",
-                                                borderRadius: 4,
+                                                borderRadius: 3,
                                                 cursor: "pointer",
-                                                minWidth: "32px",
+                                                minWidth: "28px",
                                             }}
                                         >
                                             ✕
                                         </button>
-                                    </div>
-                                ) : (
+                                    )}
+                                </div>
+                            ) : (
                                     <div style={{ display: "flex", gap: 4 }}>
                                         {/* Switch to medium */}
                                         <button
