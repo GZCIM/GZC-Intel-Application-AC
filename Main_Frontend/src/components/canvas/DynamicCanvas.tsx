@@ -795,6 +795,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                         className="grid-item" // Better control class
                         data-grid-key={`${instance.id}-${effectiveMode}`}
                         data-display-mode={effectiveMode}
+                        data-edit-mode={isEditMode}
                         style={
                             {
                                 background: currentTheme.surface,
@@ -819,18 +820,26 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 display: "flex",
                                 flexDirection: "column",
                                 height: isThumb
-                                    ? "28px"
+                                    ? isEditMode
+                                        ? "40px"
+                                        : "28px"
                                     : `${visualRows * 60}px`,
                                 minHeight: isThumb
-                                    ? "28px"
+                                    ? isEditMode
+                                        ? "40px"
+                                        : "28px"
                                     : `${visualRows * 60}px`,
                                 // Force width using CSS variable - ALWAYS use current w from CosmosDB
                                 "--grid-item-width": isThumb
-                                    ? "auto"
+                                    ? isEditMode
+                                        ? "auto"
+                                        : "auto"
                                     : `calc(${visualCols} * (100% / 12))`,
                                 // Force height using CSS variable - ALWAYS use current h from CosmosDB
                                 "--grid-item-height": isThumb
-                                    ? "28px"
+                                    ? isEditMode
+                                        ? "40px"
+                                        : "28px"
                                     : `${visualRows * 60}px`,
                             } as React.CSSProperties & {
                                 "--grid-item-width": string;
@@ -843,7 +852,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             <div
                                 className="drag-handle"
                                 style={{
-                                    height: "28px",
+                                    height: isEditMode ? "40px" : "28px",
                                     background: `linear-gradient(to right, ${currentTheme.primary}10, transparent)`,
                                     borderBottom: "none",
                                     borderRadius: "4px",
@@ -1783,6 +1792,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           min-height: 28px !important;
           max-height: 28px !important;
           overflow: hidden !important;
+        }
+
+        /* In edit mode, allow thumbnails to be properly sized */
+        .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] .grid-item {
+          height: auto !important;
+          min-height: 40px !important;
+          max-height: none !important;
+          overflow: visible !important;
         }
 
         /* In edit mode, restrict internal interactions to edit UI only */
