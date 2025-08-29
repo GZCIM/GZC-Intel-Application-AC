@@ -1248,6 +1248,75 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     const responseText = await response.text();
                     console.log("📥 Response from CosmosDB:", responseText);
                     console.log("✅ CosmosDB save completed successfully");
+
+                    // Post-save verification: fetch and compare, retry once if mismatch
+                    try {
+                        const verifyUrl = `$
+                            {import.meta.env.VITE_API_BASE_URL ||
+                            (import.meta.env.PROD ? "" : "http://localhost:8080")}
+                            /api/cosmos/device-config/${currentDeviceType}`.replace(
+                            /\n|\s+/g,
+                            ""
+                        );
+                        const verifyResp = await fetch(verifyUrl, {
+                            method: "GET",
+                            headers: {
+                                Authorization: `Bearer ${authToken}`,
+                                "Content-Type": "application/json",
+                            },
+                        });
+                        if (verifyResp.ok) {
+                            const verifyJson = await verifyResp.json();
+                            const remoteTabs =
+                                verifyJson?.config?.tabs ||
+                                verifyJson?.config?.config?.tabs ||
+                                [];
+                            const normalize = (tabs: any[]) =>
+                                [...tabs]
+                                    .map((t: any) => ({
+                                        id: t.id,
+                                        components: (t.components || []).map(
+                                            (c: any) => ({
+                                                id: c.id,
+                                                pos: c.position,
+                                                mode:
+                                                    c.props?.displayMode ||
+                                                    undefined,
+                                            })
+                                        ),
+                                    }))
+                                    .sort((a, b) => a.id.localeCompare(b.id));
+                            const want = normalize(uniqueTabs as any);
+                            const got = normalize(remoteTabs as any);
+                            const match =
+                                JSON.stringify(want) === JSON.stringify(got);
+                            if (!match) {
+                                console.warn(
+                                    "⚠️ Post-save verification mismatch. Retrying save once…"
+                                );
+                                await fetch(verifyUrl, {
+                                    method: "POST",
+                                    headers: {
+                                        Authorization: `Bearer ${authToken}`,
+                                        "Content-Type": "application/json",
+                                        ...lockHeaders,
+                                    },
+                                    body: JSON.stringify({ tabs: uniqueTabs }),
+                                });
+                            } else {
+                                console.log(
+                                    "✅ Post-save verification matched."
+                                );
+                            }
+                        } else {
+                            console.warn(
+                                "⚠️ Could not verify saved device config:",
+                                await verifyResp.text()
+                            );
+                        }
+                    } catch (verErr) {
+                        console.warn("⚠️ Verification step failed:", verErr);
+                    }
                 } else {
                     console.error(
                         `❌ Failed to save updated tab to ${currentDeviceType} device config:`,
