@@ -103,6 +103,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     const isEditMode = editingLockService.isUnlocked();
     const prevIsEditModeRef = useRef<boolean>(isEditMode);
 
+    // Debug logging for edit mode state
+    useEffect(() => {
+        console.log("🔓 Edit mode state changed:", { isEditMode, tabId });
+    }, [isEditMode, tabId]);
+
     // When entering edit (unlocked) for the first time, normalize to medium once
     useEffect(() => {
         const justEnteredEdit = isEditMode && !prevIsEditModeRef.current;
@@ -230,11 +235,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     // Save current state - MOVED UP to fix temporal dead zone
     const saveLayoutToTab = useCallback(
         (layout?: Layout[]) => {
-            // Do not persist while editing is unlocked. We only save on LOCK.
-            if (editingLockService.isUnlocked()) {
-                console.log("⏭️ Skipping save while in edit (unlocked) mode");
-                return;
-            }
+            // Always save when called - the calling code controls when to call this
+            console.log("💾 Saving layout to tab");
             const currentLayout = layout || layouts.lg || [];
 
             const tabComponents = components.map((comp) => {
@@ -309,6 +311,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         const onToggleAndMaybeSave = (e: any) => {
             try {
                 const unlocked = !!e?.detail?.unlocked;
+                console.log("🔒 Edit mode toggle event:", {
+                    unlocked,
+                    detail: e?.detail,
+                });
                 if (!unlocked) {
                     console.log(
                         "💾 Locking edit mode - saving current layout to CosmosDB"
@@ -347,7 +353,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             zIndex: 0,
                         };
                     });
+                    console.log(
+                        "💾 Calling updateTab with components:",
+                        tabComponents
+                    );
                     updateTab(tabId, { components: tabComponents });
+                    console.log("💾 updateTab called successfully");
                     saveToMemory(`dynamic-canvas-${tabId}`, {
                         components: tabComponents,
                         layouts: layouts,
@@ -418,14 +429,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             console.log("🟢 Drag stop - layout items:", layout?.length);
             setIsDragging(false);
 
-            // Update positions and save immediately for better UX
+            // Update positions but don't save immediately - wait for lock
             if (isEditMode) {
                 // Update visual state
                 setLayouts((prev) => ({ ...prev, lg: layout }));
                 updateComponentPositions(layout);
-
-                // Save the drag immediately so it persists
-                setTimeout(() => saveLayoutToTab(layout), 100);
             }
         },
         [isEditMode, updateComponentPositions, saveLayoutToTab]
@@ -442,17 +450,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             console.log("🟢 Resize stop - layout items:", layout?.length);
             setIsResizing(false);
 
-            // Update positions and save immediately for better UX
+            // Update positions but don't save immediately - wait for lock
             if (isEditMode) {
                 // Update visual state
                 setLayouts((prev) => ({ ...prev, lg: layout }));
                 updateComponentPositions(layout);
-
-                // Save the resize immediately so it persists
-                setTimeout(() => {
-                    console.log("💾 Saving after resize");
-                    saveLayoutToTab(layout);
-                }, 100);
             }
         },
         [isEditMode, updateComponentPositions, saveLayoutToTab]
@@ -506,13 +508,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             ...prev,
             lg: (prev.lg || []).filter((l) => l.i !== componentId),
         }));
-        // Save the change
-        setTimeout(() => saveLayoutToTab(), 100);
+        // Don't save immediately - wait for lock
     };
 
     // Mode helpers
     const setDisplayMode = (id: string, mode: DisplayMode) => {
-        console.log(`🔄 Setting display mode for ${id} to ${mode}`);
+        console.log(
+            `🔄 Setting display mode for ${id} to ${mode} (editMode: ${isEditMode})`
+        );
 
         // If we're LOCKED, treat mode changes as view-only and do not mutate saved state
         if (!isEditMode) {
@@ -610,8 +613,6 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                     return c;
                 })
             );
-            // Immediately save the thumbnail mode change to persist it
-            setTimeout(() => saveLayoutToTab(), 50);
         } else if (mode === "full") {
             // Persist full preference and show fullscreen
             setComponents((prev) =>
@@ -625,14 +626,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                 )
             );
             setFullScreenId(id);
-            // Immediately save the full mode change to persist it
-            setTimeout(() => saveLayoutToTab(), 50);
         }
 
-        // Trigger layout update and save after mode change
+        // Trigger layout update after mode change (no immediate save)
         setTimeout(() => {
-            // Persist only in edit mode
-            saveLayoutToTab();
             // Debounced grid layout recalc
             triggerResize();
         }, 100);

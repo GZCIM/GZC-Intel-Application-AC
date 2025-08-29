@@ -1056,7 +1056,18 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
     };
 
     const updateTab = (tabId: string, updates: Partial<TabConfig>) => {
-        console.log("UPDATE TAB CALLED:", { tabId, updates });
+        console.log("🔄 UPDATE TAB CALLED:", { tabId, updates });
+        console.log("🔓 Current edit mode state:", {
+            isUnlocked: editingLockService.isUnlocked(),
+        });
+        console.log(
+            "🔓 Current edit mode state type:",
+            typeof editingLockService.isUnlocked()
+        );
+        console.log(
+            "🔓 Current edit mode state value:",
+            editingLockService.isUnlocked()
+        );
 
         // Log when components are being saved (this means exiting edit mode)
         if (updates.components) {
@@ -1102,6 +1113,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
         // Save to Cosmos DB (primary storage)
         const saveToCosmosDB = async () => {
+            console.log("🚀 saveToCosmosDB function called");
             try {
                 // Deduplicate tabs before saving
                 const tabIds = new Set<string>();
@@ -1115,6 +1127,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     tabIds.add(t.id);
                     return true;
                 });
+                console.log("🔍 Deduplicated tabs:", uniqueTabs.length);
 
                 console.log(
                     "🚀 Sending to device-specific Cosmos DB config..."
@@ -1123,6 +1136,85 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                 // Save to device-specific config instead of general user config
                 const currentDeviceType =
                     deviceConfigService.detectDeviceType();
+                console.log("📱 Current device type:", currentDeviceType);
+                const lockHeaders = editingLockService.getLockHeaders();
+                console.log("🔒 Lock headers for CosmosDB save:", lockHeaders);
+                console.log("🔒 Lock headers type:", typeof lockHeaders);
+                console.log(
+                    "🔒 Lock headers keys:",
+                    Object.keys(lockHeaders || {})
+                );
+                console.log("🔒 Lock headers value:", lockHeaders);
+                console.log("📦 Request body for CosmosDB save:", {
+                    tabs: uniqueTabs,
+                });
+                const authToken = await deviceConfigService.getAuthToken();
+                console.log(
+                    "🔑 Auth token:",
+                    authToken ? "present" : "missing"
+                );
+                console.log(
+                    "🔑 Auth token length:",
+                    authToken ? authToken.length : 0
+                );
+                console.log(
+                    "🔑 Auth token preview:",
+                    authToken ? authToken.substring(0, 20) + "..." : "none"
+                );
+                console.log("🔑 Full headers:", {
+                    Authorization: `Bearer ${authToken}`,
+                    "Content-Type": "application/json",
+                    ...lockHeaders,
+                });
+                console.log(
+                    "🔑 Request URL:",
+                    `${
+                        import.meta.env.PROD ? "" : "http://localhost:8080"
+                    }/api/cosmos/device-config/${currentDeviceType}`
+                );
+                console.log("🔑 Environment variables:", {
+                    VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+                    PROD: import.meta.env.PROD,
+                });
+                console.log(
+                    "🔑 Final request URL:",
+                    `${
+                        import.meta.env.VITE_API_BASE_URL ||
+                        (import.meta.env.PROD ? "" : "http://localhost:8080")
+                    }/api/cosmos/device-config/${currentDeviceType}`
+                );
+                console.log("🔑 About to make fetch request...");
+                console.log("🔑 Fetch request details:", {
+                    method: "POST",
+                    url: `${
+                        import.meta.env.VITE_API_BASE_URL ||
+                        (import.meta.env.PROD ? "" : "http://localhost:8080")
+                    }/api/cosmos/device-config/${currentDeviceType}`,
+                    headers: {
+                        Authorization: `Bearer ${authToken}`,
+                        "Content-Type": "application/json",
+                        ...lockHeaders,
+                    },
+                    body: JSON.stringify({
+                        tabs: uniqueTabs,
+                    }),
+                });
+                console.log("🔑 About to make fetch request...");
+                console.log("🔑 Final request details:", {
+                    method: "POST",
+                    url: `${
+                        import.meta.env.VITE_API_BASE_URL ||
+                        (import.meta.env.PROD ? "" : "http://localhost:8080")
+                    }/api/cosmos/device-config/${currentDeviceType}`,
+                    headers: {
+                        Authorization: `Bearer ${authToken}`,
+                        "Content-Type": "application/json",
+                        ...lockHeaders,
+                    },
+                    body: JSON.stringify({
+                        tabs: uniqueTabs,
+                    }),
+                });
                 const response = await fetch(
                     `${
                         import.meta.env.VITE_API_BASE_URL ||
@@ -1131,9 +1223,9 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     {
                         method: "POST",
                         headers: {
-                            Authorization: `Bearer ${await deviceConfigService.getAuthToken()}`,
+                            Authorization: `Bearer ${authToken}`,
                             "Content-Type": "application/json",
-                            ...editingLockService.getLockHeaders(),
+                            ...lockHeaders,
                         },
                         body: JSON.stringify({
                             tabs: uniqueTabs,
@@ -1143,26 +1235,36 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
 
                 if (response.ok) {
                     console.log(
-                        `Tab updated in ${currentDeviceType} device config with components:`,
+                        `✅ Tab updated in ${currentDeviceType} device config with components:`,
                         uniqueTabs.find((t) => t.id === tabId)?.components
                             ?.length
                     );
+                    const responseText = await response.text();
+                    console.log("📥 Response from CosmosDB:", responseText);
+                    console.log("✅ CosmosDB save completed successfully");
                 } else {
                     console.error(
-                        `Failed to save updated tab to ${currentDeviceType} device config:`,
+                        `❌ Failed to save updated tab to ${currentDeviceType} device config:`,
                         await response.text()
                     );
                 }
+                console.log("🏁 saveToCosmosDB function completed");
             } catch (error) {
-                console.error("Failed to save to Cosmos DB:", error);
+                console.error("💥 Failed to save to Cosmos DB:", error);
+                console.log("🏁 saveToCosmosDB function completed with error");
             }
         };
 
         // Save to PostgreSQL (legacy)
         const saveToDatabase = async () => {
+            console.log("🗄️ saveToDatabase function called");
             try {
                 const tabToUpdate = updatedLayout.tabs.find(
                     (t) => t.id === tabId
+                );
+                console.log(
+                    "🔍 Found tab to update:",
+                    tabToUpdate ? tabToUpdate.id : "not found"
                 );
                 if (tabToUpdate) {
                     await databaseService.saveTab(userId, {
@@ -1174,16 +1276,23 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                         editMode: tabToUpdate.editMode,
                         custom_settings: tabToUpdate.props,
                     });
-                    console.log("Tab saved to database");
+                    console.log("✅ Tab saved to database");
+                    console.log("✅ Database save completed successfully");
+                } else {
+                    console.log("⚠️ No tab found to update in database");
                 }
+                console.log("🏁 saveToDatabase function completed");
             } catch (error) {
-                console.error("Failed to save tab to database:", error);
+                console.error("❌ Failed to save tab to database:", error);
+                console.log("🏁 saveToDatabase function completed with error");
             }
         };
 
         // Save to both storages
+        console.log("💾 Calling saveToCosmosDB and saveToDatabase...");
         saveToCosmosDB();
         saveToDatabase();
+        console.log("💾 Both save functions called");
 
         // No localStorage - Cosmos DB only
 
@@ -1195,6 +1304,8 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                 )
             );
         }
+
+        console.log("✅ updateTab function completed successfully");
     };
 
     const saveCurrentLayout = (name: string) => {
