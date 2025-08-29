@@ -1950,6 +1950,12 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                                 );
 
                         const desired = normalize(uniqueTabs as any);
+                        try {
+                            console.log(
+                                "📝 Global save (lock): Desired normalized tabs before POST:",
+                                JSON.stringify(desired)
+                            );
+                        } catch (e) {}
 
                         for (let attempt = 1; attempt <= 2; attempt++) {
                             await fetch(url, {
@@ -1977,6 +1983,14 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                                     verifyJson?.config?.config?.tabs ||
                                     [];
                                 const got = normalize(remoteTabs);
+                                try {
+                                    console.log(
+                                        "📝 Global save (lock): Read-back normalized tabs after POST (attempt",
+                                        attempt,
+                                        "):",
+                                        JSON.stringify(got)
+                                    );
+                                } catch (e) {}
                                 if (
                                     JSON.stringify(desired) ===
                                     JSON.stringify(got)
