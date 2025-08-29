@@ -976,6 +976,153 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         }}
                                     />
                                 )}
+                                {isEditMode &&
+                                    instance.displayMode === "thumbnail" && (
+                                        <div
+                                            className="no-drag"
+                                            style={{
+                                                position: "absolute",
+                                                top: 2,
+                                                right: 6,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 6,
+                                                zIndex: 3,
+                                            }}
+                                        >
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "thumbnail"
+                                                    );
+                                                }}
+                                                title="Thumbnail"
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "1px 4px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <rect
+                                                        x="1"
+                                                        y="2"
+                                                        width="12"
+                                                        height="10"
+                                                        rx="1"
+                                                    />
+                                                    <rect
+                                                        x="3"
+                                                        y="4"
+                                                        width="8"
+                                                        height="6"
+                                                        rx="0.5"
+                                                        fill="currentColor"
+                                                        opacity="0.7"
+                                                    />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "medium"
+                                                    );
+                                                }}
+                                                title="Medium"
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "1px 4px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <rect
+                                                        x="2"
+                                                        y="2"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                    <rect
+                                                        x="8"
+                                                        y="2"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                    <rect
+                                                        x="2"
+                                                        y="8"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                    <rect
+                                                        x="8"
+                                                        y="8"
+                                                        width="4"
+                                                        height="4"
+                                                    />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "full"
+                                                    );
+                                                }}
+                                                title="Full"
+                                                style={{
+                                                    fontSize: 11,
+                                                    padding: "1px 4px",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background: "transparent",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <path d="M5 1H1v4" />
+                                                    <path d="M9 13h4V9" />
+                                                    <path d="M13 5V1H9" />
+                                                    <path d="M1 9v4h4" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    )}
                                 {/* Floating controls in top-right for medium mode */}
                                 {!isEditMode && (
                                     <div
