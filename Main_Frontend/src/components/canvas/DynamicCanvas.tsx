@@ -1269,7 +1269,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 height: "24px !important",
                                                 minHeight: "24px !important",
                                                 maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
+                                                padding: "6px 6px !important",
                                                 fontSize: "12px !important",
                                                 lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
@@ -1327,7 +1327,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 height: "24px !important",
                                                 minHeight: "24px !important",
                                                 maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
+                                                padding: "6px 6px !important",
                                                 fontSize: "12px !important",
                                                 lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
@@ -1442,7 +1442,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 height: "24px !important",
                                                 minHeight: "24px !important",
                                                 maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
+                                                padding: "6px 6px !important",
                                                 fontSize: "12px !important",
                                                 lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
@@ -1492,8 +1492,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Full"
                                             style={{
-                                                fontSize: 11,
-                                                padding: "2px 4px",
+                                                height: "24px !important",
+                                                minHeight: "24px !important",
+                                                maxHeight: "24px !important",
+                                                padding: "6px 6px !important",
+                                                fontSize: "12px !important",
+                                                lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background:
                                                     fullScreenId === instance.id
@@ -1501,6 +1505,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         : "transparent",
                                                 borderRadius: 4,
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             <svg
@@ -1547,7 +1555,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 height: "24px !important",
                                                 minHeight: "24px !important",
                                                 maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
+                                                padding: "6px 6px !important",
                                                 fontSize: "12px !important",
                                                 lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
@@ -1607,7 +1615,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 height: "24px !important",
                                                 minHeight: "24px !important",
                                                 maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
+                                                padding: "6px 6px !important",
                                                 fontSize: "12px !important",
                                                 lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
@@ -1674,7 +1682,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 height: "24px !important",
                                                 minHeight: "24px !important",
                                                 maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
+                                                padding: "6px 6px !important",
                                                 fontSize: "12px !important",
                                                 lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
@@ -1757,11 +1765,21 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Remove"
                                             style={{
+                                                height: "24px !important",
+                                                minHeight: "24px !important",
+                                                maxHeight: "24px !important",
+                                                padding: "6px 6px !important",
+                                                fontSize: "12px !important",
+                                                lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "#dc3545",
                                                 color: "white",
                                                 borderRadius: 4,
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             ✕
@@ -2316,7 +2334,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 height: "24px !important",
                                                 minHeight: "24px !important",
                                                 maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
+                                                padding: "6px 6px !important",
                                                 fontSize: "12px !important",
                                                 lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
@@ -2369,7 +2387,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 height: "24px !important",
                                                 minHeight: "24px !important",
                                                 maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
+                                                padding: "6px 6px !important",
                                                 fontSize: "12px !important",
                                                 lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
