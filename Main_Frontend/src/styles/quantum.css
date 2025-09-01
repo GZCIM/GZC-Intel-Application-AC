@@ -250,6 +250,41 @@ h4 {
     white-space: nowrap !important;
 }
 
+/* MAXIMUM SPECIFICITY OVERRIDE - This should override everything */
+.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
+    .no-drag.thumbnail-mode-button.tm-button {
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    padding: 10px 6px !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
+    .no-drag.thumbnail-mode-button.fx-button {
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    padding: 6px 6px !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
 .quantum-button:hover {
     background-color: rgba(149, 189, 120, 0.1);
     border-color: var(--quantum-primary);
