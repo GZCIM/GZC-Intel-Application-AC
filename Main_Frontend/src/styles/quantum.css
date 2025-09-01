@@ -250,14 +250,14 @@ h4 {
     white-space: nowrap !important;
 }
 
-/* MAXIMUM SPECIFICITY OVERRIDE - This should override everything */
+/* NEW APPROACH: Different padding strategy for T/M vs F/X */
 .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
     .no-drag.thumbnail-mode-button.tm-button {
     height: 24px !important;
     min-height: 24px !important;
     max-height: 24px !important;
-    padding: 10px 6px !important;
-    font-size: 12px !important;
+    padding: 2px 10px !important; /* Very little vertical, more horizontal */
+    font-size: 10px !important; /* Smaller font */
     line-height: 1 !important;
     box-sizing: border-box !important;
     display: flex !important;
@@ -266,6 +266,7 @@ h4 {
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+    transform: translateY(-2px) !important; /* More upward shift */
 }
 
 .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
