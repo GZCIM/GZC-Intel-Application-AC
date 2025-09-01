@@ -174,8 +174,9 @@ h4 {
     font-family: inherit;
 }
 
-/* Force all buttons in thumbnail mode to be square - HIGHEST SPECIFICITY */
-.react-grid-item[data-display-mode="thumbnail"] .no-drag {
+/* Force all buttons in thumbnail mode EDIT MODE to be square - HIGHEST SPECIFICITY */
+.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
+    .no-drag {
     height: 24px !important;
     min-height: 24px !important;
     max-height: 24px !important;
