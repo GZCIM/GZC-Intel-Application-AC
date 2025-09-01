@@ -863,7 +863,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 <input
                                     type="text"
                                     value={instance.customTitle || title}
+                                    readOnly={!isEditMode}
                                     onChange={(e) => {
+                                        if (!isEditMode) return;
                                         const newTitle = e.target.value;
                                         setComponents((prev) =>
                                             prev.map((comp) =>
@@ -881,6 +883,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             100
                                         );
                                     }}
+                                    title={
+                                        !isEditMode
+                                            ? "Unlock to edit title"
+                                            : undefined
+                                    }
                                     style={{
                                         fontSize: "12px",
                                         fontWeight: 600,
@@ -892,6 +899,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         borderRadius: "4px",
                                         minWidth: "120px",
                                         maxWidth: "200px",
+                                        cursor: isEditMode ? "text" : "default",
                                     }}
                                     placeholder="Enter title..."
                                 />
