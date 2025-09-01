@@ -1988,6 +1988,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            max-height: 28px !important;
          }
 
+         /* OVERRIDE for thumbnail mode buttons - HIGHEST SPECIFICITY */
+         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] .no-drag.thumbnail-mode-button {
+           height: 24px !important;
+           min-height: 24px !important;
+           max-height: 24px !important;
+         }
+
          /* Ensure thumbnail controls are visible in edit mode */
          .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] .no-drag {
            display: flex !important;
