@@ -900,6 +900,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         minWidth: "120px",
                                         maxWidth: "200px",
                                         cursor: isEditMode ? "text" : "default",
+                                        // Override global focus styles when locked
+                                        ...(!isEditMode && {
+                                            pointerEvents: "none",
+                                        }),
                                     }}
                                     placeholder="Enter title..."
                                 />
