@@ -1001,6 +1001,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
+                                                aspectRatio: "1 !important",
+                                                flexShrink: "0 !important",
+                                                flexGrow: "0 !important",
                                             }}
                                             onLoad={(e) => {
                                                 const button =
@@ -1142,6 +1145,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
+                                                aspectRatio: "1 !important",
+                                                flexShrink: "0 !important",
+                                                flexGrow: "0 !important",
                                             }}
                                             ref={(el) => {
                                                 if (el) {
