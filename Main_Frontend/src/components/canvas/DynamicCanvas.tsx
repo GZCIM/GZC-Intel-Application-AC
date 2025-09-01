@@ -942,7 +942,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             alignItems: "center",
                                         }}
                                     >
-                                        {/* Thumbnail mode button */}
+                                        {/* Thumbnail mode button - Updated */}
                                         <button
                                             className="no-drag"
                                             onClick={(e) => {
