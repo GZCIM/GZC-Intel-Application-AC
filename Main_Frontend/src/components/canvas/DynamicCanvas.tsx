@@ -111,6 +111,34 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         console.log("🔓 Edit mode state changed:", { isEditMode, tabId });
     }, [isEditMode, tabId]);
 
+    // Debug button dimensions when in thumbnail mode
+    useEffect(() => {
+        if (isEditMode) {
+            setTimeout(() => {
+                const buttons = document.querySelectorAll(".no-drag");
+                buttons.forEach((button, index) => {
+                    const computedStyle = window.getComputedStyle(
+                        button as Element
+                    );
+                    console.log(`🔍 Button ${index} Debug:`, {
+                        element: button,
+                        height: computedStyle.height,
+                        minHeight: computedStyle.minHeight,
+                        maxHeight: computedStyle.maxHeight,
+                        padding: computedStyle.padding,
+                        fontSize: computedStyle.fontSize,
+                        lineHeight: computedStyle.lineHeight,
+                        boxSizing: computedStyle.boxSizing,
+                        display: computedStyle.display,
+                        actualHeight: (button as HTMLElement).offsetHeight,
+                        actualWidth: (button as HTMLElement).offsetWidth,
+                        title: (button as HTMLElement).title,
+                    });
+                });
+            }, 100);
+        }
+    }, [isEditMode]);
+
     // When entering edit (unlocked) for the first time, normalize to medium once
     useEffect(() => {
         const justEnteredEdit = isEditMode && !prevIsEditModeRef.current;
@@ -940,6 +968,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             display: "flex",
                                             gap: 4,
                                             alignItems: "center",
+                                            height: 30,
+                                            maxHeight: 30,
                                         }}
                                     >
                                         {/* Thumbnail mode button */}
@@ -951,6 +981,72 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     instance.id,
                                                     "thumbnail"
                                                 );
+                                            }}
+                                            onLoad={(e) => {
+                                                const button =
+                                                    e.target as HTMLButtonElement;
+                                                const computedStyle =
+                                                    window.getComputedStyle(
+                                                        button
+                                                    );
+                                                console.log(
+                                                    "🔍 T Button Debug:",
+                                                    {
+                                                        element: button,
+                                                        height: computedStyle.height,
+                                                        minHeight:
+                                                            computedStyle.minHeight,
+                                                        maxHeight:
+                                                            computedStyle.maxHeight,
+                                                        padding:
+                                                            computedStyle.padding,
+                                                        fontSize:
+                                                            computedStyle.fontSize,
+                                                        lineHeight:
+                                                            computedStyle.lineHeight,
+                                                        boxSizing:
+                                                            computedStyle.boxSizing,
+                                                        display:
+                                                            computedStyle.display,
+                                                        actualHeight:
+                                                            button.offsetHeight,
+                                                        actualWidth:
+                                                            button.offsetWidth,
+                                                    }
+                                                );
+                                            }}
+                                            ref={(el) => {
+                                                if (el) {
+                                                    const computedStyle =
+                                                        window.getComputedStyle(
+                                                            el
+                                                        );
+                                                    console.log(
+                                                        "🔍 T Button Debug (ref):",
+                                                        {
+                                                            element: el,
+                                                            height: computedStyle.height,
+                                                            minHeight:
+                                                                computedStyle.minHeight,
+                                                            maxHeight:
+                                                                computedStyle.maxHeight,
+                                                            padding:
+                                                                computedStyle.padding,
+                                                            fontSize:
+                                                                computedStyle.fontSize,
+                                                            lineHeight:
+                                                                computedStyle.lineHeight,
+                                                            boxSizing:
+                                                                computedStyle.boxSizing,
+                                                            display:
+                                                                computedStyle.display,
+                                                            actualHeight:
+                                                                el.offsetHeight,
+                                                            actualWidth:
+                                                                el.offsetWidth,
+                                                        }
+                                                    );
+                                                }
                                             }}
                                             title="Thumbnail"
                                             style={{
@@ -969,6 +1065,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
                                             }}
                                         >
                                             <svg
@@ -1007,6 +1106,39 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     "medium"
                                                 );
                                             }}
+                                            ref={(el) => {
+                                                if (el) {
+                                                    const computedStyle =
+                                                        window.getComputedStyle(
+                                                            el
+                                                        );
+                                                    console.log(
+                                                        "🔍 M Button Debug (ref):",
+                                                        {
+                                                            element: el,
+                                                            height: computedStyle.height,
+                                                            minHeight:
+                                                                computedStyle.minHeight,
+                                                            maxHeight:
+                                                                computedStyle.maxHeight,
+                                                            padding:
+                                                                computedStyle.padding,
+                                                            fontSize:
+                                                                computedStyle.fontSize,
+                                                            lineHeight:
+                                                                computedStyle.lineHeight,
+                                                            boxSizing:
+                                                                computedStyle.boxSizing,
+                                                            display:
+                                                                computedStyle.display,
+                                                            actualHeight:
+                                                                el.offsetHeight,
+                                                            actualWidth:
+                                                                el.offsetWidth,
+                                                        }
+                                                    );
+                                                }
+                                            }}
                                             title="Medium"
                                             style={{
                                                 height: "24px !important",
@@ -1024,6 +1156,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
                                             }}
                                         >
                                             <svg
@@ -1067,6 +1202,39 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 e.stopPropagation();
                                                 setFullScreenId(instance.id);
                                             }}
+                                            ref={(el) => {
+                                                if (el) {
+                                                    const computedStyle =
+                                                        window.getComputedStyle(
+                                                            el
+                                                        );
+                                                    console.log(
+                                                        "🔍 F Button Debug (ref):",
+                                                        {
+                                                            element: el,
+                                                            height: computedStyle.height,
+                                                            minHeight:
+                                                                computedStyle.minHeight,
+                                                            maxHeight:
+                                                                computedStyle.maxHeight,
+                                                            padding:
+                                                                computedStyle.padding,
+                                                            fontSize:
+                                                                computedStyle.fontSize,
+                                                            lineHeight:
+                                                                computedStyle.lineHeight,
+                                                            boxSizing:
+                                                                computedStyle.boxSizing,
+                                                            display:
+                                                                computedStyle.display,
+                                                            actualHeight:
+                                                                el.offsetHeight,
+                                                            actualWidth:
+                                                                el.offsetWidth,
+                                                        }
+                                                    );
+                                                }
+                                            }}
                                             title="Fullscreen"
                                             style={{
                                                 height: "24px !important",
@@ -1084,6 +1252,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
                                             }}
                                         >
                                             <svg
@@ -1281,6 +1452,39 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     instance.id,
                                                     "thumbnail"
                                                 );
+                                            }}
+                                            ref={(el) => {
+                                                if (el) {
+                                                    const computedStyle =
+                                                        window.getComputedStyle(
+                                                            el
+                                                        );
+                                                    console.log(
+                                                        "🔍 Locked T Button Debug:",
+                                                        {
+                                                            element: el,
+                                                            height: computedStyle.height,
+                                                            minHeight:
+                                                                computedStyle.minHeight,
+                                                            maxHeight:
+                                                                computedStyle.maxHeight,
+                                                            padding:
+                                                                computedStyle.padding,
+                                                            fontSize:
+                                                                computedStyle.fontSize,
+                                                            lineHeight:
+                                                                computedStyle.lineHeight,
+                                                            boxSizing:
+                                                                computedStyle.boxSizing,
+                                                            display:
+                                                                computedStyle.display,
+                                                            actualHeight:
+                                                                el.offsetHeight,
+                                                            actualWidth:
+                                                                el.offsetWidth,
+                                                        }
+                                                    );
+                                                }
                                             }}
                                             title="Thumbnail"
                                             style={{
