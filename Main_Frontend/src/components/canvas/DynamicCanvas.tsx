@@ -961,6 +961,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             <svg
@@ -1008,6 +1012,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             <svg
@@ -1060,6 +1068,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             <svg
@@ -1093,6 +1105,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 color: "white",
                                                 borderRadius: 4,
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             ✕
@@ -1118,6 +1134,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 background: "transparent",
                                                 borderRadius: 4,
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             <svg
@@ -1171,6 +1191,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         : "transparent",
                                                 borderRadius: 4,
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             <svg
@@ -1242,6 +1266,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 background: "transparent",
                                                 borderRadius: 4,
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             <svg
@@ -1345,6 +1373,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             <svg
@@ -1396,6 +1428,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             <svg
@@ -1455,6 +1491,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             <svg
@@ -1525,8 +1565,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 color: "white",
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                fontWeight: "500",
-                                                minWidth: "32px",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             ✕
@@ -2076,6 +2118,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 borderRadius: 4,
                                                 background: "transparent",
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             <svg
@@ -2121,6 +2167,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 borderRadius: 4,
                                                 background: "transparent",
                                                 cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                         >
                                             {/* grid pictogram */}
