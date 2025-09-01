@@ -222,7 +222,7 @@ h4 {
     height: 24px !important;
     min-height: 24px !important;
     max-height: 24px !important;
-    padding: 8px 6px !important;
+    padding: 6px 6px !important; /* Make T/M buttons same square as F button */
     font-size: 12px !important;
     line-height: 1 !important;
     box-sizing: border-box !important;
