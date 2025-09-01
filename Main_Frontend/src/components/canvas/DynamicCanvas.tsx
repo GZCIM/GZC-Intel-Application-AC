@@ -1083,45 +1083,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 <path d="M1 9v4h4" />
                                             </svg>
                                         </button>
-                                        {/* Edit title button */}
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                const input =
-                                                    document.querySelector(
-                                                        `input[data-component-id="${instance.id}"]`
-                                                    ) as HTMLInputElement;
-                                                if (input) {
-                                                    input.style.display =
-                                                        input.style.display ===
-                                                        "none"
-                                                            ? "block"
-                                                            : "none";
-                                                    if (
-                                                        input.style.display !==
-                                                        "none"
-                                                    ) {
-                                                        input.focus();
-                                                        input.select();
-                                                    }
-                                                }
-                                            }}
-                                            title="Edit Title"
-                                            style={{
-                                                fontSize: 11,
-                                                padding: "3px 6px",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background: "#17a2b8",
-                                                color: "white",
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                                fontWeight: "500",
-                                                minWidth: "32px",
-                                            }}
-                                        >
-                                            ✎
-                                        </button>
+
                                         {/* Remove button for thumbnail components */}
                                         <button
                                             className="no-drag"
