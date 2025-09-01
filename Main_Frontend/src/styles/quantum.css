@@ -174,46 +174,6 @@ h4 {
     font-family: inherit;
 }
 
-/* High specificity button height fix for DynamicCanvas - UPDATED to target .no-drag */
-.no-drag {
-    height: 24px !important;
-    min-height: 24px !important;
-    max-height: 24px !important;
-    width: 24px !important;
-    min-width: 24px !important;
-    max-width: 24px !important;
-    padding: 6px 6px !important;
-    font-size: 12px !important;
-    line-height: 1 !important;
-    box-sizing: border-box !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-}
-
-/* Force all buttons in medium mode to be square */
-.react-grid-item[data-display-mode="medium"] .no-drag {
-    height: 24px !important;
-    min-height: 24px !important;
-    max-height: 24px !important;
-    width: 24px !important;
-    min-width: 24px !important;
-    max-width: 24px !important;
-    padding: 6px 6px !important;
-    font-size: 12px !important;
-    line-height: 1 !important;
-    box-sizing: border-box !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-}
-
 /* Force all buttons in thumbnail mode to be square - HIGHEST SPECIFICITY */
 .react-grid-item[data-display-mode="thumbnail"] .no-drag {
     height: 24px !important;
