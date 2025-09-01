@@ -982,6 +982,26 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     "thumbnail"
                                                 );
                                             }}
+                                            style={{
+                                                height: "24px !important",
+                                                minHeight: "24px !important",
+                                                maxHeight: "24px !important",
+                                                width: "24px !important",
+                                                minWidth: "24px !important",
+                                                maxWidth: "24px !important",
+                                                padding: "6px 6px !important",
+                                                fontSize: "12px !important",
+                                                lineHeight: "1 !important",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background: "transparent",
+                                                color: currentTheme.text,
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                            }}
                                             onLoad={(e) => {
                                                 const button =
                                                     e.target as HTMLButtonElement;
@@ -1102,6 +1122,26 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     instance.id,
                                                     "medium"
                                                 );
+                                            }}
+                                            style={{
+                                                height: "24px !important",
+                                                minHeight: "24px !important",
+                                                maxHeight: "24px !important",
+                                                width: "24px !important",
+                                                minWidth: "24px !important",
+                                                maxWidth: "24px !important",
+                                                padding: "6px 6px !important",
+                                                fontSize: "12px !important",
+                                                lineHeight: "1 !important",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background: "transparent",
+                                                color: currentTheme.text,
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                             }}
                                             ref={(el) => {
                                                 if (el) {
@@ -2054,6 +2094,75 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            visibility: visible !important;
            opacity: 1 !important;
            z-index: 9999 !important;
+         }
+
+         /* FORCE THUMBNAIL EDIT MODE BUTTONS TO BE SQUARE - MAXIMUM SPECIFICITY */
+         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] .no-drag {
+           height: 24px !important;
+           min-height: 24px !important;
+           max-height: 24px !important;
+           width: 24px !important;
+           min-width: 24px !important;
+           max-width: 24px !important;
+           padding: 6px 6px !important;
+           font-size: 12px !important;
+           line-height: 1 !important;
+           box-sizing: border-box !important;
+           display: flex !important;
+           align-items: center !important;
+           justify-content: center !important;
+           overflow: hidden !important;
+           text-overflow: ellipsis !important;
+           white-space: nowrap !important;
+           aspect-ratio: 1 !important;
+           flex-shrink: 0 !important;
+           flex-grow: 0 !important;
+         }
+
+         /* ULTRA SPECIFIC - Target buttons by their SVG content */
+         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] button.no-drag {
+           height: 24px !important;
+           min-height: 24px !important;
+           max-height: 24px !important;
+           width: 24px !important;
+           min-width: 24px !important;
+           max-width: 24px !important;
+           padding: 6px 6px !important;
+           font-size: 12px !important;
+           line-height: 1 !important;
+           box-sizing: border-box !important;
+           display: flex !important;
+           align-items: center !important;
+           justify-content: center !important;
+           overflow: hidden !important;
+           text-overflow: ellipsis !important;
+           white-space: nowrap !important;
+           aspect-ratio: 1 !important;
+           flex-shrink: 0 !important;
+           flex-grow: 0 !important;
+         }
+
+         /* NUCLEAR OPTION - Force all button elements to be square */
+         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] button {
+           height: 24px !important;
+           min-height: 24px !important;
+           max-height: 24px !important;
+           width: 24px !important;
+           min-width: 24px !important;
+           max-width: 24px !important;
+           padding: 6px 6px !important;
+           font-size: 12px !important;
+           line-height: 1 !important;
+           box-sizing: border-box !important;
+           display: flex !important;
+           align-items: center !important;
+           justify-content: center !important;
+           overflow: hidden !important;
+           text-overflow: ellipsis !important;
+           white-space: nowrap !important;
+           aspect-ratio: 1 !important;
+           flex-shrink: 0 !important;
+           flex-grow: 0 !important;
          }
 
          /* Force medium and full modes to respect CosmosDB height */
