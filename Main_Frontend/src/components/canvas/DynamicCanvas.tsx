@@ -1993,6 +1993,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            height: 24px !important;
            min-height: 24px !important;
            max-height: 24px !important;
+           padding: 4px 6px !important;
          }
 
          /* Ensure thumbnail controls are visible in edit mode */
