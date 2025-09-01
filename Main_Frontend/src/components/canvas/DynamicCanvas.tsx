@@ -2040,28 +2040,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
          /* ULTIMATE OVERRIDE for thumbnail edit mode */
          .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"],
-         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] * {
+         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] *:not(.no-drag) {
            height: 28px !important; /* Standard thumbnail height (1 grid unit) - same in edit and non-edit mode */
            min-height: 28px !important;
            max-height: 28px !important;
          }
 
-         /* OVERRIDE for thumbnail mode buttons - HIGHEST SPECIFICITY */
-         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] .no-drag {
-           height: 24px !important;
-           min-height: 24px !important;
-           max-height: 24px !important;
-           padding: 6px 6px !important;
-           font-size: 12px !important;
-           line-height: 1 !important;
-           box-sizing: border-box !important;
-           display: flex !important;
-           align-items: center !important;
-           justify-content: center !important;
-           overflow: hidden !important;
-           text-overflow: ellipsis !important;
-           white-space: nowrap !important;
-         }
+
 
          /* Ensure thumbnail controls are visible in edit mode */
          .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] .no-drag {
