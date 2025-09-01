@@ -859,60 +859,81 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     cursor: isEditMode ? "move" : "auto",
                                 }}
                             >
-                                {/* Title input field for thumbnail components */}
-                                <input
-                                    type="text"
-                                    value={instance.customTitle || title}
-                                    readOnly={!isEditMode}
-                                    onChange={(e) => {
-                                        if (!isEditMode) return;
-                                        const newTitle = e.target.value;
-                                        setComponents((prev) =>
-                                            prev.map((comp) =>
-                                                comp.id === instance.id
-                                                    ? {
-                                                          ...comp,
-                                                          customTitle: newTitle,
-                                                      }
-                                                    : comp
-                                            )
-                                        );
-                                        // Save component props immediately for better UX
-                                        setTimeout(
-                                            () => saveLayoutToTab(),
-                                            100
-                                        );
-                                    }}
-                                    title={
-                                        !isEditMode
-                                            ? "Unlock to edit title"
-                                            : undefined
-                                    }
-                                    style={{
-                                        fontSize: "12px",
-                                        fontWeight: 600,
-                                        color: currentTheme.text,
-                                        background: "transparent",
-                                        border: "none",
-                                        outline: "none",
-                                        padding: "4px 8px",
-                                        borderRadius: "4px",
-                                        minWidth: "120px",
-                                        maxWidth: "200px",
-                                        cursor: isEditMode ? "text" : "default",
-                                        // Override global focus styles when locked
-                                        ...(!isEditMode && {
+                                {/* Title field for thumbnail components */}
+                                {isEditMode ? (
+                                    <input
+                                        type="text"
+                                        value={instance.customTitle || title}
+                                        onChange={(e) => {
+                                            const newTitle = e.target.value;
+                                            setComponents((prev) =>
+                                                prev.map((comp) =>
+                                                    comp.id === instance.id
+                                                        ? {
+                                                              ...comp,
+                                                              customTitle:
+                                                                  newTitle,
+                                                          }
+                                                        : comp
+                                                )
+                                            );
+                                            // Save component props immediately for better UX
+                                            setTimeout(
+                                                () => saveLayoutToTab(),
+                                                100
+                                            );
+                                        }}
+                                        onFocus={(e) => {
+                                            // Prevent focus if somehow this gets called in locked mode
+                                            if (!isEditMode) {
+                                                e.target.blur();
+                                            }
+                                        }}
+                                        style={{
+                                            fontSize: "12px",
+                                            fontWeight: 600,
+                                            color: currentTheme.text,
+                                            background: "transparent",
+                                            border: "none",
+                                            outline: "none",
+                                            padding: "4px 8px",
+                                            borderRadius: "4px",
+                                            minWidth: "120px",
+                                            maxWidth: "200px",
+                                            cursor: "text",
+                                        }}
+                                        placeholder="Enter title..."
+                                    />
+                                ) : (
+                                    <div
+                                        title="Unlock to edit title"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        style={{
+                                            fontSize: "12px",
+                                            fontWeight: 600,
+                                            color: currentTheme.text,
+                                            background: "transparent",
+                                            padding: "4px 8px",
+                                            borderRadius: "4px",
+                                            minWidth: "120px",
+                                            maxWidth: "200px",
+                                            cursor: "default",
+                                            userSelect: "none",
                                             pointerEvents: "none",
-                                            // Completely disable focus styling
-                                            boxShadow: "none !important",
-                                            borderColor:
-                                                "transparent !important",
-                                            outline: "none !important",
-                                            outlineOffset: "0 !important",
-                                        }),
-                                    }}
-                                    placeholder="Enter title..."
-                                />
+                                        }}
+                                    >
+                                        {instance.customTitle ||
+                                            title ||
+                                            "Enter title..."}
+                                    </div>
+                                )}
                                 {isEditMode ? (
                                     <div
                                         style={{
