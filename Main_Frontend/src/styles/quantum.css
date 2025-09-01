@@ -191,6 +191,65 @@ h4 {
     white-space: nowrap !important;
 }
 
+/* APPROACH 1: CSS Custom Properties for Button Consistency */
+:root {
+    --button-height: 24px;
+    --button-padding: 6px;
+    --button-font-size: 12px;
+    --button-line-height: 1;
+}
+
+/* Force all thumbnail mode buttons to use custom properties */
+.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
+    .no-drag.thumbnail-mode-button {
+    height: var(--button-height) !important;
+    min-height: var(--button-height) !important;
+    max-height: var(--button-height) !important;
+    padding: var(--button-padding) var(--button-padding) !important;
+    font-size: var(--button-font-size) !important;
+    line-height: var(--button-line-height) !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* APPROACH 2: Separate classes for T/M vs F/X buttons */
+.no-drag.thumbnail-mode-button.tm-button {
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    padding: 8px 6px !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.no-drag.thumbnail-mode-button.fx-button {
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    padding: 6px 6px !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
 .quantum-button:hover {
     background-color: rgba(149, 189, 120, 0.1);
     border-color: var(--quantum-primary);

@@ -974,7 +974,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     >
                                         {/* Thumbnail mode button */}
                                         <button
-                                            className="no-drag thumbnail-mode-button"
+                                            className="no-drag thumbnail-mode-button tm-button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setDisplayMode(
@@ -1050,6 +1050,22 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Thumbnail"
                                             style={{
+                                                height: "24px !important",
+                                                minHeight: "24px !important",
+                                                maxHeight: "24px !important",
+                                                padding: "8px 6px !important",
+                                                fontSize: "12px !important",
+                                                lineHeight: "1 !important",
+                                                boxSizing:
+                                                    "border-box !important",
+                                                display: "flex !important",
+                                                alignItems: "center !important",
+                                                justifyContent:
+                                                    "center !important",
+                                                overflow: "hidden !important",
+                                                textOverflow:
+                                                    "ellipsis !important",
+                                                whiteSpace: "nowrap !important",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
@@ -1085,7 +1101,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         </button>
                                         {/* Medium mode button */}
                                         <button
-                                            className="no-drag thumbnail-mode-button"
+                                            className="no-drag thumbnail-mode-button tm-button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setDisplayMode(
@@ -1128,6 +1144,22 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Medium"
                                             style={{
+                                                height: "24px !important",
+                                                minHeight: "24px !important",
+                                                maxHeight: "24px !important",
+                                                padding: "8px 6px !important",
+                                                fontSize: "12px !important",
+                                                lineHeight: "1 !important",
+                                                boxSizing:
+                                                    "border-box !important",
+                                                display: "flex !important",
+                                                alignItems: "center !important",
+                                                justifyContent:
+                                                    "center !important",
+                                                overflow: "hidden !important",
+                                                textOverflow:
+                                                    "ellipsis !important",
+                                                whiteSpace: "nowrap !important",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
@@ -1171,7 +1203,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         </button>
                                         {/* Fullscreen button */}
                                         <button
-                                            className="no-drag thumbnail-mode-button"
+                                            className="no-drag thumbnail-mode-button fx-button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setFullScreenId(instance.id);
@@ -1235,7 +1267,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
                                         {/* Remove button for thumbnail components */}
                                         <button
-                                            className="no-drag thumbnail-mode-button"
+                                            className="no-drag thumbnail-mode-button fx-button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 removeComponent(instance.id);
