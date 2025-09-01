@@ -954,6 +954,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Thumbnail"
                                             style={{
+                                                height: 24,
                                                 fontSize: 11,
                                                 padding: "2px 6px",
                                                 border: `1px solid ${currentTheme.border}`,
@@ -1003,6 +1004,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Medium"
                                             style={{
+                                                height: 24,
                                                 fontSize: 11,
                                                 padding: "2px 6px",
                                                 border: `1px solid ${currentTheme.border}`,
@@ -1057,6 +1059,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Fullscreen"
                                             style={{
+                                                height: 24,
                                                 fontSize: 11,
                                                 padding: "2px 6px",
                                                 border: `1px solid ${currentTheme.border}`,
@@ -1092,6 +1095,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Remove"
                                             style={{
+                                                height: 24,
                                                 fontSize: 11,
                                                 padding: "2px 6px",
                                                 border: `1px solid ${currentTheme.border}`,
