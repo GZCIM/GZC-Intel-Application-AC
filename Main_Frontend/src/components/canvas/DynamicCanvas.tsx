@@ -903,6 +903,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         // Override global focus styles when locked
                                         ...(!isEditMode && {
                                             pointerEvents: "none",
+                                            // Completely disable focus styling
+                                            boxShadow: "none !important",
+                                            borderColor:
+                                                "transparent !important",
+                                            outline: "none !important",
+                                            outlineOffset: "0 !important",
                                         }),
                                     }}
                                     placeholder="Enter title..."
