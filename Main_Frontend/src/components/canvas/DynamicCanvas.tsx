@@ -974,7 +974,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     >
                                         {/* Thumbnail mode button */}
                                         <button
-                                            className="no-drag"
+                                            className="no-drag thumbnail-mode-button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setDisplayMode(
@@ -1050,24 +1050,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Thumbnail"
                                             style={{
-                                                height: "24px !important",
-                                                minHeight: "24px !important",
-                                                maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
-                                                fontSize: "12px !important",
-                                                lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                boxSizing: "border-box",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
                                             }}
                                         >
                                             <svg
@@ -1098,7 +1085,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         </button>
                                         {/* Medium mode button */}
                                         <button
-                                            className="no-drag"
+                                            className="no-drag thumbnail-mode-button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setDisplayMode(
@@ -1141,24 +1128,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Medium"
                                             style={{
-                                                height: "24px !important",
-                                                minHeight: "24px !important",
-                                                maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
-                                                fontSize: "12px !important",
-                                                lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                boxSizing: "border-box",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
                                             }}
                                         >
                                             <svg
@@ -1197,7 +1171,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         </button>
                                         {/* Fullscreen button */}
                                         <button
-                                            className="no-drag"
+                                            className="no-drag thumbnail-mode-button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setFullScreenId(instance.id);
@@ -1237,24 +1211,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Fullscreen"
                                             style={{
-                                                height: "24px !important",
-                                                minHeight: "24px !important",
-                                                maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
-                                                fontSize: "12px !important",
-                                                lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                boxSizing: "border-box",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
                                             }}
                                         >
                                             <svg
@@ -1274,28 +1235,18 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
                                         {/* Remove button for thumbnail components */}
                                         <button
-                                            className="no-drag"
+                                            className="no-drag thumbnail-mode-button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 removeComponent(instance.id);
                                             }}
                                             title="Remove"
                                             style={{
-                                                height: "24px !important",
-                                                minHeight: "24px !important",
-                                                maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
-                                                fontSize: "12px !important",
-                                                lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "#dc3545",
                                                 color: "white",
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                boxSizing: "border-box",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
                                             }}
                                         >
                                             ✕
@@ -1806,21 +1757,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Remove"
                                             style={{
-                                                height: "24px !important",
-                                                minHeight: "24px !important",
-                                                maxHeight: "24px !important",
-                                                padding: "2px 6px !important",
-                                                fontSize: "12px !important",
-                                                lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "#dc3545",
                                                 color: "white",
                                                 borderRadius: 4,
                                                 cursor: "pointer",
-                                                boxSizing: "border-box",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
                                             }}
                                         >
                                             ✕
