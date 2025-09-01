@@ -954,12 +954,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Thumbnail"
                                             style={{
+                                                height: 24,
                                                 fontSize: 11,
-                                                padding: "3px 6px",
+                                                padding: "2px 6px",
                                                 border: `1px solid ${currentTheme.border}`,
-                                                background:
-                                                    currentTheme.primary,
-                                                color: "white",
+                                                background: "transparent",
+                                                color: currentTheme.text,
                                                 borderRadius: 4,
                                                 cursor: "pointer",
                                                 fontWeight: "500",
@@ -1004,8 +1004,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Medium"
                                             style={{
+                                                height: 24,
                                                 fontSize: 11,
-                                                padding: "3px 6px",
+                                                padding: "2px 6px",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
@@ -1058,8 +1059,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Fullscreen"
                                             style={{
+                                                height: 24,
                                                 fontSize: 11,
-                                                padding: "3px 6px",
+                                                padding: "2px 6px",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
@@ -1093,8 +1095,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Remove"
                                             style={{
+                                                height: 24,
                                                 fontSize: 11,
-                                                padding: "3px 6px",
+                                                padding: "2px 6px",
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "#dc3545",
                                                 color: "white",
