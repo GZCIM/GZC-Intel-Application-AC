@@ -1723,7 +1723,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 6,
-                                            zIndex: 5,
+                                            zIndex: 9999,
                                         }}
                                     >
                                         {/* Thumbnail */}
