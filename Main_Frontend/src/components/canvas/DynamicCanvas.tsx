@@ -3050,14 +3050,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 fullScreenInstance && (
                                     <div
                                         style={{
-                                            position: "fixed",
-                                            top: 48,
+                                            position: "absolute",
+                                            top: 0,
                                             left: 0,
                                             right: 0,
                                             bottom: 0,
                                             overflow: "auto",
                                             background: "transparent",
-                                            zIndex: 100,
+                                            zIndex: 1,
                                             pointerEvents: "none",
                                         }}
                                     >
