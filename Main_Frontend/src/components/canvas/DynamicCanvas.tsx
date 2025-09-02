@@ -2752,21 +2752,34 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         {/* Title input */}
                                         <input
                                             type="text"
-                                            data-component-id={fullScreenInstance.id}
+                                            data-component-id={
+                                                fullScreenInstance.id
+                                            }
                                             placeholder="Edit title..."
-                                            value={fullScreenInstance.customTitle || ""}
+                                            value={
+                                                fullScreenInstance.customTitle ||
+                                                ""
+                                            }
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 setComponents((prev) =>
                                                     prev.map((c) =>
-                                                        c.id === fullScreenInstance.id
-                                                            ? { ...c, customTitle: val }
+                                                        c.id ===
+                                                        fullScreenInstance.id
+                                                            ? {
+                                                                  ...c,
+                                                                  customTitle:
+                                                                      val,
+                                                              }
                                                             : c
                                                     )
                                                 );
                                             }}
                                             onBlur={() => {
-                                                setTimeout(() => saveLayoutToTab(), 100);
+                                                setTimeout(
+                                                    () => saveLayoutToTab(),
+                                                    100
+                                                );
                                             }}
                                             style={{
                                                 height: "24px !important",
@@ -2775,7 +2788,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 padding: "0 6px !important",
                                                 fontSize: "12px !important",
                                                 lineHeight: "1 !important",
-                                                background: currentTheme.background,
+                                                background:
+                                                    currentTheme.background,
                                                 color: currentTheme.text,
                                                 border: `1px solid ${currentTheme.border}`,
                                                 borderRadius: 4,
@@ -2787,7 +2801,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             className="no-drag"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                removeComponent(fullScreenInstance.id);
+                                                removeComponent(
+                                                    fullScreenInstance.id
+                                                );
                                             }}
                                             title="Remove"
                                             style={{
