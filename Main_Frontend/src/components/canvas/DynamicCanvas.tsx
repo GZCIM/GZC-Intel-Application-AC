@@ -1004,6 +1004,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 aspectRatio: "1 !important",
                                                 flexShrink: "0 !important",
                                                 flexGrow: "0 !important",
+                                                overflow: "hidden !important",
+                                                textOverflow:
+                                                    "ellipsis !important",
+                                                whiteSpace: "nowrap !important",
                                             }}
                                             onLoad={(e) => {
                                                 const button =
@@ -1148,6 +1152,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 aspectRatio: "1 !important",
                                                 flexShrink: "0 !important",
                                                 flexGrow: "0 !important",
+                                                overflow: "hidden !important",
+                                                textOverflow:
+                                                    "ellipsis !important",
+                                                whiteSpace: "nowrap !important",
                                             }}
                                             ref={(el) => {
                                                 if (el) {
@@ -1490,6 +1498,33 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     "thumbnail"
                                                 );
                                             }}
+                                            style={{
+                                                height: "24px !important",
+                                                minHeight: "24px !important",
+                                                maxHeight: "24px !important",
+                                                width: "24px !important",
+                                                minWidth: "24px !important",
+                                                maxWidth: "24px !important",
+                                                padding: "6px 6px !important",
+                                                fontSize: "12px !important",
+                                                lineHeight: "1 !important",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background: "transparent",
+                                                color: currentTheme.text,
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                aspectRatio: "1 !important",
+                                                flexShrink: "0 !important",
+                                                flexGrow: "0 !important",
+                                                overflow: "hidden !important",
+                                                textOverflow:
+                                                    "ellipsis !important",
+                                                whiteSpace: "nowrap !important",
+                                            }}
                                             ref={(el) => {
                                                 if (el) {
                                                     const computedStyle =
@@ -1561,6 +1596,71 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     y="4"
                                                     width="8"
                                                     height="6"
+                                                    rx="0.5"
+                                                    fill="currentColor"
+                                                    opacity="0.7"
+                                                />
+                                            </svg>
+                                        </button>
+                                        {/* Medium mode button */}
+                                        <button
+                                            className="no-drag"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setDisplayMode(
+                                                    instance.id,
+                                                    "medium"
+                                                );
+                                            }}
+                                            style={{
+                                                height: "24px !important",
+                                                minHeight: "24px !important",
+                                                maxHeight: "24px !important",
+                                                width: "24px !important",
+                                                minWidth: "24px !important",
+                                                maxWidth: "24px !important",
+                                                padding: "6px 6px !important",
+                                                fontSize: "12px !important",
+                                                lineHeight: "1 !important",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background: "transparent",
+                                                color: currentTheme.text,
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                aspectRatio: "1 !important",
+                                                flexShrink: "0 !important",
+                                                flexGrow: "0 !important",
+                                                overflow: "hidden !important",
+                                                textOverflow:
+                                                    "ellipsis !important",
+                                                whiteSpace: "nowrap !important",
+                                            }}
+                                            title="Medium"
+                                        >
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 14 14"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.2"
+                                            >
+                                                <rect
+                                                    x="1"
+                                                    y="3"
+                                                    width="12"
+                                                    height="8"
+                                                    rx="1"
+                                                />
+                                                <rect
+                                                    x="3"
+                                                    y="5"
+                                                    width="8"
+                                                    height="4"
                                                     rx="0.5"
                                                     fill="currentColor"
                                                     opacity="0.7"
@@ -2086,7 +2186,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
          /* ULTIMATE OVERRIDE for thumbnail edit mode */
          .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"],
-         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] *:not(.no-drag) {
+         .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] *:not(.no-drag):not(button) {
            height: 28px !important; /* Standard thumbnail height (1 grid unit) - same in edit and non-edit mode */
            min-height: 28px !important;
            max-height: 28px !important;
@@ -2169,6 +2269,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            aspect-ratio: 1 !important;
            flex-shrink: 0 !important;
            flex-grow: 0 !important;
+           border-radius: 4px !important;
+           border: 1px solid var(--quantum-border) !important;
+           background: transparent !important;
+           font-weight: 500 !important;
+           font-family: inherit !important;
+           cursor: pointer !important;
+           transition: none !important;
          }
 
          /* Force medium and full modes to respect CosmosDB height */
