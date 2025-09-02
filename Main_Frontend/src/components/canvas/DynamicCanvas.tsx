@@ -3058,6 +3058,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             overflow: "auto",
                                             background: "transparent",
                                             zIndex: 100,
+                                            pointerEvents: "none",
                                         }}
                                     >
                                         <div
@@ -3073,6 +3074,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 style={{
                                                     flex: 1,
                                                     minHeight: 0,
+                                                    pointerEvents: "auto",
                                                 }}
                                             >
                                                 <ComponentRenderer
