@@ -2581,7 +2581,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         zIndex: 10000,
                                         display: "flex",
                                         flexDirection: "column",
-                                        pointerEvents: "auto",
+                                        pointerEvents: "none",
                                     }}
                                 >
                                     {/* Absolute controls aligned with host header; remove extra internal header spacing */}
