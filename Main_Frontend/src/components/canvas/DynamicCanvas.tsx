@@ -1667,50 +1667,56 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 />
                                             </svg>
                                         </button>
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setDisplayMode(
-                                                    instance.id,
-                                                    "full"
-                                                );
-                                            }}
-                                            title="Full"
-                                            style={{
-                                                height: "24px !important",
-                                                minHeight: "24px !important",
-                                                maxHeight: "24px !important",
-                                                padding: "6px 6px !important",
-                                                fontSize: "12px !important",
-                                                lineHeight: "1 !important",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background:
-                                                    fullScreenId === instance.id
-                                                        ? `${currentTheme.primary}20`
-                                                        : "transparent",
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                                boxSizing: "border-box",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
+                                        {effectiveMode !== "full" && (
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "full"
+                                                    );
+                                                }}
+                                                title="Full"
+                                                style={{
+                                                    height: "24px !important",
+                                                    minHeight:
+                                                        "24px !important",
+                                                    maxHeight:
+                                                        "24px !important",
+                                                    padding:
+                                                        "6px 6px !important",
+                                                    fontSize: "12px !important",
+                                                    lineHeight: "1 !important",
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    background:
+                                                        fullScreenId ===
+                                                        instance.id
+                                                            ? `${currentTheme.primary}20`
+                                                            : "transparent",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
+                                                    boxSizing: "border-box",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                }}
                                             >
-                                                <path d="M5 1H1v4" />
-                                                <path d="M9 13h4V9" />
-                                                <path d="M13 5V1H9" />
-                                                <path d="M1 9v4h4" />
-                                            </svg>
-                                        </button>
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <path d="M5 1H1v4" />
+                                                    <path d="M9 13h4V9" />
+                                                    <path d="M13 5V1H9" />
+                                                    <path d="M1 9v4h4" />
+                                                </svg>
+                                            </button>
+                                        )}
                                     </div>
                                 ) : (
                                     /* Edit mode controls for medium components */
