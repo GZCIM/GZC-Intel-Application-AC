@@ -2648,9 +2648,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         }}
                                         style={{
                                             position: "fixed",
-                                            inset: 0,
+                                            top: 48,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
                                             width: "100vw",
-                                            height: "100vh",
+                                            height: "calc(100vh - 48px)",
                                             background: "transparent",
                                             overflow: "auto",
                                             pointerEvents: "auto",
