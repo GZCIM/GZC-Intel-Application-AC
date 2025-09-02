@@ -1717,7 +1717,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     <div
                                         className="no-drag"
                                         style={{
-                                            position: "absolute",
+                                            position:
+                                                fullScreenId === instance.id
+                                                    ? "fixed"
+                                                    : "absolute",
                                             top: 4,
                                             right: 8,
                                             display: "flex",
