@@ -194,3 +194,12 @@ docker push gzcacr.azurecr.io/gzc-intel-app:new-version
 # Update in Azure
 az containerapp update --name gzc-intel-app --image gzcacr.azurecr.io/gzc-intel-app:new-version
 ```
+
+## DynamicCanvas Size Controls (T/M/F)
+
+- Locked mode (view-only):
+  - If current view is Thumbnail (T): show Medium (M) and Full (F)
+  - If current view is Medium (M): show Thumbnail (T) and Full (F)
+  - If current view is Full (F): show Thumbnail (T) and Medium (M)
+- Unlocked edit mode: always show T, M, F controls; title input and Remove (X) are also available. The toolbar remains visible in Full mode (fixed at top-right).
+- Buttons are square 24×24 with consistent padding across modes.
