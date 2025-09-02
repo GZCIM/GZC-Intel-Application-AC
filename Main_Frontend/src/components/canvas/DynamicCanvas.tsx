@@ -3044,6 +3044,59 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         </div>
                                     </div>
                                 )}
+
+                            {!enableFullOverlay &&
+                                fullScreenId &&
+                                fullScreenInstance && (
+                                    <div
+                                        style={{
+                                            position: "fixed",
+                                            top: 48,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            overflow: "auto",
+                                            background: "transparent",
+                                            zIndex: 100,
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                position: "relative",
+                                                width: "100%",
+                                                height: "100%",
+                                                display: "flex",
+                                                alignItems: "stretch",
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    flex: 1,
+                                                    minHeight: 0,
+                                                }}
+                                            >
+                                                <ComponentRenderer
+                                                    componentId={
+                                                        fullScreenInstance.componentId
+                                                    }
+                                                    instanceId={
+                                                        fullScreenInstance.id
+                                                    }
+                                                    props={
+                                                        fullScreenInstance.props ||
+                                                        {}
+                                                    }
+                                                    isEditMode={isEditMode}
+                                                    onRemove={() =>
+                                                        removeComponent(
+                                                            fullScreenInstance.id
+                                                        )
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                         </div>
                     )}
                 </div>
