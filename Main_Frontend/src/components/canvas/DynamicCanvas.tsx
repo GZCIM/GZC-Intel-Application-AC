@@ -2571,160 +2571,144 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
 
                             {fullScreenId && fullScreenInstance && (
                                 <div
+                                    ref={(el) => {
+                                        if (el) {
+                                            const rect =
+                                                el.getBoundingClientRect();
+                                            const cs =
+                                                window.getComputedStyle(el);
+                                            console.log(
+                                                "[FullOverlay] rect:",
+                                                rect.width,
+                                                rect.height,
+                                                "pointerEvents:",
+                                                cs.pointerEvents,
+                                                "position:",
+                                                cs.position
+                                            );
+                                            setTimeout(() => {
+                                                const rect2 =
+                                                    el.getBoundingClientRect();
+                                                console.log(
+                                                    "[FullOverlay:post] rect:",
+                                                    rect2.width,
+                                                    rect2.height
+                                                );
+                                            }, 50);
+                                        }
+                                    }}
                                     style={{
-                                        position: "absolute",
+                                        position:
+                                            fullScreenId === instance.id
+                                                ? "fixed"
+                                                : "absolute",
                                         inset: 0,
                                         background: "transparent",
-                                        border: `1px solid ${currentTheme.border}`,
-                                        borderRadius: 6,
-                                        padding: 6,
+                                        border: "none",
+                                        borderRadius: 0,
+                                        padding: 0,
                                         zIndex: 10000,
-                                        display: "flex",
-                                        flexDirection: "column",
                                         pointerEvents: "none",
                                     }}
                                 >
-                                    {/* Absolute controls aligned with host header; remove extra internal header spacing */}
                                     <div
-                                        className="no-drag"
+                                        ref={(el) => {
+                                            if (el) {
+                                                const rect =
+                                                    el.getBoundingClientRect();
+                                                const cs =
+                                                    window.getComputedStyle(el);
+                                                console.log(
+                                                    "[FullContent] rect:",
+                                                    rect.width,
+                                                    rect.height,
+                                                    "overflow:",
+                                                    cs.overflow,
+                                                    "position:",
+                                                    cs.position
+                                                );
+                                                setTimeout(() => {
+                                                    const rect2 =
+                                                        el.getBoundingClientRect();
+                                                    console.log(
+                                                        "[FullContent:post] rect:",
+                                                        rect2.width,
+                                                        rect2.height
+                                                    );
+                                                }, 50);
+                                                window.requestAnimationFrame(
+                                                    () => {
+                                                        const rect3 =
+                                                            el.getBoundingClientRect();
+                                                        console.log(
+                                                            "[FullContent:raf] rect:",
+                                                            rect3.width,
+                                                            rect3.height
+                                                        );
+                                                    }
+                                                );
+                                            }
+                                        }}
                                         style={{
                                             position: "absolute",
-                                            top: 4, // match medium-mode offset
-                                            right: 8,
-                                            height: 30,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 8,
-                                            zIndex: 3,
+                                            inset: 0,
+                                            width: "100vw",
+                                            height: "100vh",
+                                            background: "transparent",
+                                            overflow: "auto",
+                                            pointerEvents: "auto",
                                         }}
                                     >
-                                        {/* Buttons always shown to exit fullscreen (both modes) */}
-                                        <button
-                                            onClick={() => {
-                                                setDisplayMode(
-                                                    fullScreenInstance.id,
-                                                    "thumbnail"
-                                                );
-                                                setFullScreenId(null);
+                                        <div
+                                            ref={(el) => {
+                                                if (el) {
+                                                    const rect =
+                                                        el.getBoundingClientRect();
+                                                    const cs =
+                                                        window.getComputedStyle(
+                                                            el
+                                                        );
+                                                    console.log(
+                                                        "[FullInner] rect:",
+                                                        rect.width,
+                                                        rect.height,
+                                                        "display:",
+                                                        cs.display
+                                                    );
+                                                }
                                             }}
-                                            title="Thumbnail"
                                             style={{
-                                                height: "24px !important",
-                                                minHeight: "24px !important",
-                                                maxHeight: "24px !important",
-                                                padding: "6px 6px !important",
-                                                fontSize: "12px !important",
-                                                lineHeight: "1 !important",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                borderRadius: 4,
-                                                background: "transparent",
-                                                color: currentTheme.text,
-                                                cursor: "pointer",
-                                                boxSizing: "border-box",
+                                                position: "relative",
+                                                width: "100%",
+                                                height: "100%",
                                                 display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
+                                                alignItems: "stretch",
                                             }}
                                         >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
+                                            {/* Absolute controls aligned with host header; remove extra internal header spacing */}
+                                            <div
+                                                className="no-drag"
+                                                style={{
+                                                    position: "absolute",
+                                                    top: 4, // match medium-mode offset
+                                                    right: 8,
+                                                    height: 30,
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 8,
+                                                    zIndex: 3,
+                                                }}
                                             >
-                                                <rect
-                                                    x="1"
-                                                    y="2"
-                                                    width="12"
-                                                    height="10"
-                                                    rx="1"
-                                                />
-                                                <rect
-                                                    x="3"
-                                                    y="4"
-                                                    width="8"
-                                                    height="6"
-                                                    rx="0.5"
-                                                    fill="currentColor"
-                                                    opacity="0.7"
-                                                />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setDisplayMode(
-                                                    fullScreenInstance.id,
-                                                    "medium"
-                                                );
-                                                setFullScreenId(null);
-                                            }}
-                                            title="Medium"
-                                            style={{
-                                                height: "24px !important",
-                                                minHeight: "24px !important",
-                                                maxHeight: "24px !important",
-                                                padding: "6px 6px !important",
-                                                fontSize: "12px !important",
-                                                lineHeight: "1 !important",
-                                                border: `1px solid ${currentTheme.border}`,
-                                                borderRadius: 4,
-                                                background: "transparent",
-                                                color: currentTheme.text,
-                                                cursor: "pointer",
-                                                boxSizing: "border-box",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <rect
-                                                    x="2"
-                                                    y="2"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="8"
-                                                    y="2"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="2"
-                                                    y="8"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="8"
-                                                    y="8"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                            </svg>
-                                        </button>
-
-                                        {/* Edit-mode-only controls: Full + Title + Remove */}
-                                        {isEditMode && (
-                                            <>
+                                                {/* Buttons always shown to exit fullscreen (both modes) */}
                                                 <button
                                                     onClick={() => {
                                                         setDisplayMode(
                                                             fullScreenInstance.id,
-                                                            "full"
+                                                            "thumbnail"
                                                         );
+                                                        setFullScreenId(null);
                                                     }}
-                                                    title="Full"
+                                                    title="Thumbnail"
                                                     style={{
                                                         height: "24px !important",
                                                         minHeight:
@@ -2738,8 +2722,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         lineHeight:
                                                             "1 !important",
                                                         border: `1px solid ${currentTheme.border}`,
-                                                        background: `${currentTheme.primary}20`,
                                                         borderRadius: 4,
+                                                        background:
+                                                            "transparent",
                                                         color: currentTheme.text,
                                                         cursor: "pointer",
                                                         boxSizing: "border-box",
@@ -2757,76 +2742,33 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         stroke="currentColor"
                                                         strokeWidth="1.2"
                                                     >
-                                                        <path d="M5 1H1v4" />
-                                                        <path d="M9 13h4V9" />
-                                                        <path d="M13 5V1H9" />
-                                                        <path d="M1 9v4h4" />
+                                                        <rect
+                                                            x="1"
+                                                            y="2"
+                                                            width="12"
+                                                            height="10"
+                                                            rx="1"
+                                                        />
+                                                        <rect
+                                                            x="3"
+                                                            y="4"
+                                                            width="8"
+                                                            height="6"
+                                                            rx="0.5"
+                                                            fill="currentColor"
+                                                            opacity="0.7"
+                                                        />
                                                     </svg>
                                                 </button>
-
-                                                <input
-                                                    type="text"
-                                                    data-component-id={
-                                                        fullScreenInstance.id
-                                                    }
-                                                    placeholder="Edit title..."
-                                                    value={
-                                                        fullScreenInstance.customTitle ||
-                                                        ""
-                                                    }
-                                                    onChange={(e) => {
-                                                        const val =
-                                                            e.target.value;
-                                                        setComponents((prev) =>
-                                                            prev.map((c) =>
-                                                                c.id ===
-                                                                fullScreenInstance.id
-                                                                    ? {
-                                                                          ...c,
-                                                                          customTitle:
-                                                                              val,
-                                                                      }
-                                                                    : c
-                                                            )
-                                                        );
-                                                    }}
-                                                    onBlur={() => {
-                                                        setTimeout(
-                                                            () =>
-                                                                saveLayoutToTab(),
-                                                            100
-                                                        );
-                                                    }}
-                                                    style={{
-                                                        height: "24px !important",
-                                                        minHeight:
-                                                            "24px !important",
-                                                        maxHeight:
-                                                            "24px !important",
-                                                        padding:
-                                                            "0 6px !important",
-                                                        fontSize:
-                                                            "12px !important",
-                                                        lineHeight:
-                                                            "1 !important",
-                                                        background:
-                                                            currentTheme.background,
-                                                        color: currentTheme.text,
-                                                        border: `1px solid ${currentTheme.border}`,
-                                                        borderRadius: 4,
-                                                        minWidth: "120px",
-                                                    }}
-                                                />
-
                                                 <button
-                                                    className="no-drag"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        removeComponent(
-                                                            fullScreenInstance.id
+                                                    onClick={() => {
+                                                        setDisplayMode(
+                                                            fullScreenInstance.id,
+                                                            "medium"
                                                         );
+                                                        setFullScreenId(null);
                                                     }}
-                                                    title="Remove"
+                                                    title="Medium"
                                                     style={{
                                                         height: "24px !important",
                                                         minHeight:
@@ -2840,9 +2782,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         lineHeight:
                                                             "1 !important",
                                                         border: `1px solid ${currentTheme.border}`,
-                                                        background: "#dc3545",
-                                                        color: "white",
                                                         borderRadius: 4,
+                                                        background:
+                                                            "transparent",
+                                                        color: currentTheme.text,
                                                         cursor: "pointer",
                                                         boxSizing: "border-box",
                                                         display: "flex",
@@ -2851,10 +2794,195 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                             "center",
                                                     }}
                                                 >
-                                                    ✕
+                                                    <svg
+                                                        width="14"
+                                                        height="14"
+                                                        viewBox="0 0 14 14"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="1.2"
+                                                    >
+                                                        <rect
+                                                            x="2"
+                                                            y="2"
+                                                            width="4"
+                                                            height="4"
+                                                        />
+                                                        <rect
+                                                            x="8"
+                                                            y="2"
+                                                            width="4"
+                                                            height="4"
+                                                        />
+                                                        <rect
+                                                            x="2"
+                                                            y="8"
+                                                            width="4"
+                                                            height="4"
+                                                        />
+                                                        <rect
+                                                            x="8"
+                                                            y="8"
+                                                            width="4"
+                                                            height="4"
+                                                        />
+                                                    </svg>
                                                 </button>
-                                            </>
-                                        )}
+
+                                                {/* Edit-mode-only controls: Full + Title + Remove */}
+                                                {isEditMode && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => {
+                                                                setDisplayMode(
+                                                                    fullScreenInstance.id,
+                                                                    "full"
+                                                                );
+                                                            }}
+                                                            title="Full"
+                                                            style={{
+                                                                height: "24px !important",
+                                                                minHeight:
+                                                                    "24px !important",
+                                                                maxHeight:
+                                                                    "24px !important",
+                                                                padding:
+                                                                    "6px 6px !important",
+                                                                fontSize:
+                                                                    "12px !important",
+                                                                lineHeight:
+                                                                    "1 !important",
+                                                                border: `1px solid ${currentTheme.border}`,
+                                                                background: `${currentTheme.primary}20`,
+                                                                borderRadius: 4,
+                                                                color: currentTheme.text,
+                                                                cursor: "pointer",
+                                                                boxSizing:
+                                                                    "border-box",
+                                                                display: "flex",
+                                                                alignItems:
+                                                                    "center",
+                                                                justifyContent:
+                                                                    "center",
+                                                            }}
+                                                        >
+                                                            <svg
+                                                                width="14"
+                                                                height="14"
+                                                                viewBox="0 0 14 14"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="1.2"
+                                                            >
+                                                                <path d="M5 1H1v4" />
+                                                                <path d="M9 13h4V9" />
+                                                                <path d="M13 5V1H9" />
+                                                                <path d="M1 9v4h4" />
+                                                            </svg>
+                                                        </button>
+
+                                                        <input
+                                                            type="text"
+                                                            data-component-id={
+                                                                fullScreenInstance.id
+                                                            }
+                                                            placeholder="Edit title..."
+                                                            value={
+                                                                fullScreenInstance.customTitle ||
+                                                                ""
+                                                            }
+                                                            onChange={(e) => {
+                                                                const val =
+                                                                    e.target
+                                                                        .value;
+                                                                setComponents(
+                                                                    (prev) =>
+                                                                        prev.map(
+                                                                            (
+                                                                                c
+                                                                            ) =>
+                                                                                c.id ===
+                                                                                fullScreenInstance.id
+                                                                                    ? {
+                                                                                          ...c,
+                                                                                          customTitle:
+                                                                                              val,
+                                                                                      }
+                                                                                    : c
+                                                                        )
+                                                                );
+                                                            }}
+                                                            onBlur={() => {
+                                                                setTimeout(
+                                                                    () =>
+                                                                        saveLayoutToTab(),
+                                                                    100
+                                                                );
+                                                            }}
+                                                            style={{
+                                                                height: "24px !important",
+                                                                minHeight:
+                                                                    "24px !important",
+                                                                maxHeight:
+                                                                    "24px !important",
+                                                                padding:
+                                                                    "0 6px !important",
+                                                                fontSize:
+                                                                    "12px !important",
+                                                                lineHeight:
+                                                                    "1 !important",
+                                                                background:
+                                                                    currentTheme.background,
+                                                                color: currentTheme.text,
+                                                                border: `1px solid ${currentTheme.border}`,
+                                                                borderRadius: 4,
+                                                                minWidth:
+                                                                    "120px",
+                                                            }}
+                                                        />
+
+                                                        <button
+                                                            className="no-drag"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                removeComponent(
+                                                                    fullScreenInstance.id
+                                                                );
+                                                            }}
+                                                            title="Remove"
+                                                            style={{
+                                                                height: "24px !important",
+                                                                minHeight:
+                                                                    "24px !important",
+                                                                maxHeight:
+                                                                    "24px !important",
+                                                                padding:
+                                                                    "6px 6px !important",
+                                                                fontSize:
+                                                                    "12px !important",
+                                                                lineHeight:
+                                                                    "1 !important",
+                                                                border: `1px solid ${currentTheme.border}`,
+                                                                background:
+                                                                    "#dc3545",
+                                                                color: "white",
+                                                                borderRadius: 4,
+                                                                cursor: "pointer",
+                                                                boxSizing:
+                                                                    "border-box",
+                                                                display: "flex",
+                                                                alignItems:
+                                                                    "center",
+                                                                justifyContent:
+                                                                    "center",
+                                                            }}
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}
