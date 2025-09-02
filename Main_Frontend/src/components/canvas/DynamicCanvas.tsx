@@ -2276,6 +2276,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            font-family: inherit !important;
            cursor: pointer !important;
            transition: none !important;
+           box-shadow: inset 0 0 0 1px var(--quantum-border) !important;
          }
 
          /* Force medium and full modes to respect CosmosDB height */
