@@ -2978,6 +2978,38 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         </button>
                                                     </>
                                                 )}
+                                                {/* Fullscreen component content */}
+                                                <div
+                                                    style={{
+                                                        flex: 1,
+                                                        minHeight: 0,
+                                                        position: "relative",
+                                                        width: "100%",
+                                                        height: "100%",
+                                                        background:
+                                                            "transparent",
+                                                        overflow: "auto",
+                                                    }}
+                                                >
+                                                    <ComponentRenderer
+                                                        componentId={
+                                                            fullScreenInstance.componentId
+                                                        }
+                                                        instanceId={
+                                                            fullScreenInstance.id
+                                                        }
+                                                        props={
+                                                            fullScreenInstance.props ||
+                                                            {}
+                                                        }
+                                                        isEditMode={isEditMode}
+                                                        onRemove={() =>
+                                                            removeComponent(
+                                                                fullScreenInstance.id
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
