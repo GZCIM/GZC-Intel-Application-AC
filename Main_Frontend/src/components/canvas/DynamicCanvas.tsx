@@ -2647,7 +2647,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }
                                         }}
                                         style={{
-                                            position: "absolute",
+                                            position: "fixed",
                                             inset: 0,
                                             width: "100vw",
                                             height: "100vh",
