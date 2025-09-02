@@ -2598,10 +2598,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         }
                                     }}
                                     style={{
-                                        position:
-                                            fullScreenId === instance.id
-                                                ? "fixed"
-                                                : "absolute",
+                                        position: "fixed",
                                         inset: 0,
                                         background: "transparent",
                                         border: "none",
