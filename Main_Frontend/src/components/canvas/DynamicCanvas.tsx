@@ -1734,16 +1734,17 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 fullScreenId === instance.id
                                                     ? "fixed"
                                                     : "absolute",
-                                            top: 4,
-                                            right: 8,
+                                            top: 8,
+                                            right: 12,
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 6,
-                                            zIndex: 11000,
+                                            zIndex: 12000,
                                             background: "transparent",
                                             border: "none",
                                             borderRadius: 0,
                                             padding: 0,
+                                            pointerEvents: "auto",
                                         }}
                                     >
                                         {/* Thumbnail */}
