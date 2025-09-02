@@ -2708,47 +2708,108 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 />
                                             </svg>
                                         </button>
-                                    </div>
-                                    <div
-                                        style={{
-                                            flex: 1,
-                                            position: "relative",
-                                        }}
-                                    >
-                                        <ComponentRenderer
-                                            componentId={
-                                                fullScreenInstance.componentId
-                                            }
-                                            instanceId={fullScreenInstance.id}
-                                            props={
-                                                fullScreenInstance.props || {}
-                                            }
-                                            isEditMode={isEditMode}
-                                            onRemove={() =>
-                                                removeComponent(
-                                                    fullScreenInstance.id
-                                                )
-                                            }
-                                            onPropsUpdate={(
-                                                newProps: Record<string, any>
-                                            ) => {
-                                                setComponents((prev) =>
-                                                    prev.map((comp) =>
-                                                        comp.id ===
-                                                        fullScreenInstance.id
-                                                            ? {
-                                                                  ...comp,
-                                                                  props: newProps,
-                                                              }
-                                                            : comp
-                                                    )
-                                                );
-                                                setTimeout(
-                                                    () => saveLayoutToTab(),
-                                                    100
+                                        {/* Full (stays in fullscreen) */}
+                                        <button
+                                            onClick={() => {
+                                                // Keep fullscreen active
+                                                setDisplayMode(
+                                                    fullScreenInstance.id,
+                                                    "full"
                                                 );
                                             }}
+                                            title="Full"
+                                            style={{
+                                                height: "24px !important",
+                                                minHeight: "24px !important",
+                                                maxHeight: "24px !important",
+                                                padding: "6px 6px !important",
+                                                fontSize: "12px !important",
+                                                lineHeight: "1 !important",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background: `${currentTheme.primary}20`,
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                            }}
+                                        >
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 14 14"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.2"
+                                            >
+                                                <path d="M5 1H1v4" />
+                                                <path d="M9 13h4V9" />
+                                                <path d="M13 5V1H9" />
+                                                <path d="M1 9v4h4" />
+                                            </svg>
+                                        </button>
+                                        {/* Title input */}
+                                        <input
+                                            type="text"
+                                            data-component-id={fullScreenInstance.id}
+                                            placeholder="Edit title..."
+                                            value={fullScreenInstance.customTitle || ""}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setComponents((prev) =>
+                                                    prev.map((c) =>
+                                                        c.id === fullScreenInstance.id
+                                                            ? { ...c, customTitle: val }
+                                                            : c
+                                                    )
+                                                );
+                                            }}
+                                            onBlur={() => {
+                                                setTimeout(() => saveLayoutToTab(), 100);
+                                            }}
+                                            style={{
+                                                height: "24px !important",
+                                                minHeight: "24px !important",
+                                                maxHeight: "24px !important",
+                                                padding: "0 6px !important",
+                                                fontSize: "12px !important",
+                                                lineHeight: "1 !important",
+                                                background: currentTheme.background,
+                                                color: currentTheme.text,
+                                                border: `1px solid ${currentTheme.border}`,
+                                                borderRadius: 4,
+                                                minWidth: "120px",
+                                            }}
                                         />
+                                        {/* Remove (X) */}
+                                        <button
+                                            className="no-drag"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeComponent(fullScreenInstance.id);
+                                            }}
+                                            title="Remove"
+                                            style={{
+                                                height: "24px !important",
+                                                minHeight: "24px !important",
+                                                maxHeight: "24px !important",
+                                                padding: "6px 6px !important",
+                                                fontSize: "12px !important",
+                                                lineHeight: "1 !important",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                background: "#dc3545",
+                                                color: "white",
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                            }}
+                                        >
+                                            ✕
+                                        </button>
                                     </div>
                                 </div>
                             )}
