@@ -2687,13 +2687,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 className="no-drag"
                                                 style={{
                                                     position: "absolute",
-                                                    top: 4, // match medium-mode offset
-                                                    right: 8,
+                                                    top: 12,
+                                                    right: 12,
                                                     height: 30,
                                                     display: "flex",
                                                     alignItems: "center",
                                                     gap: 8,
-                                                    zIndex: 3,
+                                                    zIndex: 12001,
+                                                    pointerEvents: "auto",
                                                 }}
                                             >
                                                 {/* Buttons always shown to exit fullscreen (both modes) */}
