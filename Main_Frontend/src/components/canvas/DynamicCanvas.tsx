@@ -2258,7 +2258,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            width: 24px !important;
            min-width: 24px !important;
            max-width: 24px !important;
-           padding: 6px 6px !important;
+           padding: 0 !important;
            font-size: 12px !important;
            line-height: 1 !important;
            box-sizing: border-box !important;
@@ -2268,7 +2268,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            overflow: hidden !important;
            text-overflow: ellipsis !important;
            white-space: nowrap !important;
-           aspect-ratio: 1 !important;
+           aspect-ratio: 1 / 1 !important;
            flex-shrink: 0 !important;
            flex-grow: 0 !important;
          }
@@ -2281,7 +2281,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            width: 24px !important;
            min-width: 24px !important;
            max-width: 24px !important;
-           padding: 6px 6px !important;
+           padding: 0 !important;
            font-size: 12px !important;
            line-height: 1 !important;
            box-sizing: border-box !important;
@@ -2291,7 +2291,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            overflow: hidden !important;
            text-overflow: ellipsis !important;
            white-space: nowrap !important;
-           aspect-ratio: 1 !important;
+           aspect-ratio: 1 / 1 !important;
            flex-shrink: 0 !important;
            flex-grow: 0 !important;
          }
@@ -2304,7 +2304,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            width: 24px !important;
            min-width: 24px !important;
            max-width: 24px !important;
-           padding: 6px 6px !important;
+           padding: 0 !important;
            font-size: 12px !important;
            line-height: 1 !important;
            box-sizing: border-box !important;
@@ -2314,7 +2314,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            overflow: hidden !important;
            text-overflow: ellipsis !important;
            white-space: nowrap !important;
-           aspect-ratio: 1 !important;
+           aspect-ratio: 1 / 1 !important;
            flex-shrink: 0 !important;
            flex-grow: 0 !important;
            border-radius: 4px !important;
