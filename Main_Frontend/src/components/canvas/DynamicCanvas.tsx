@@ -970,8 +970,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             display: "flex",
                                             gap: 4,
                                             alignItems: "center",
-                                            height: 30,
-                                            maxHeight: 30,
+                                            height: 28,
+                                            maxHeight: 28,
+                                            lineHeight: 0,
                                         }}
                                     >
                                         {/* Thumbnail mode button */}
@@ -985,15 +986,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 );
                                             }}
                                             style={{
-                                                height: "24px !important",
-                                                minHeight: "24px !important",
-                                                maxHeight: "24px !important",
-                                                width: "24px !important",
-                                                minWidth: "24px !important",
-                                                maxWidth: "24px !important",
-                                                padding: "6px 6px !important",
-                                                fontSize: "12px !important",
-                                                lineHeight: "1 !important",
+                                                height: 24,
+                                                minHeight: 24,
+                                                maxHeight: 24,
+                                                width: 24,
+                                                minWidth: 24,
+                                                maxWidth: 24,
+                                                padding: 0,
+                                                fontSize: 12,
+                                                lineHeight: 1,
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
@@ -1003,13 +1004,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
-                                                aspectRatio: "1 !important",
-                                                flexShrink: "0 !important",
-                                                flexGrow: "0 !important",
-                                                overflow: "hidden !important",
-                                                textOverflow:
-                                                    "ellipsis !important",
-                                                whiteSpace: "nowrap !important",
+                                                aspectRatio: "1 / 1",
+                                                flex: "0 0 24px",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
                                             }}
                                             onLoad={(e) => {
                                                 const button =
