@@ -36,11 +36,21 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
             document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // Get current device selection
+    const getCurrentDevice = () => {
+        const override = localStorage.getItem("gzc-device-override");
+        if (!override) return "auto";
+        return override;
+    };
+
+    const currentDevice = getCurrentDevice();
+
     const menuItems = [
         // Device Mode selector
         {
             label: "Device: Auto (Default)",
             icon: "🖥️",
+            isSelected: currentDevice === "auto",
             onClick: () => {
                 try {
                     localStorage.removeItem("gzc-device-override");
@@ -63,6 +73,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
         {
             label: "Device: Bigscreen",
             icon: "🖥️",
+            isSelected: currentDevice === "bigscreen",
             onClick: () => {
                 try {
                     localStorage.setItem("gzc-device-override", "bigscreen");
@@ -85,6 +96,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
         {
             label: "Device: Laptop",
             icon: "💻",
+            isSelected: currentDevice === "laptop",
             onClick: () => {
                 try {
                     localStorage.setItem("gzc-device-override", "laptop");
@@ -107,6 +119,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
         {
             label: "Device: Mobile",
             icon: "📱",
+            isSelected: currentDevice === "mobile",
             onClick: () => {
                 try {
                     localStorage.setItem("gzc-device-override", "mobile");
@@ -665,7 +678,18 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                                 <span style={{ fontSize: "16px" }}>
                                     {item.icon}
                                 </span>
-                                <span>{item.label}</span>
+                                <span style={{ flex: 1 }}>{item.label}</span>
+                                {item.isSelected && (
+                                    <span
+                                        style={{
+                                            fontSize: "14px",
+                                            color: theme.primary,
+                                            fontWeight: "bold",
+                                        }}
+                                    >
+                                        ✓
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </motion.div>
