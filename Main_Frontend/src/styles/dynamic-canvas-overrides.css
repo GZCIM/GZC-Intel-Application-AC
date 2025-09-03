@@ -1,0 +1,80 @@
+/* DynamicCanvas overrides extracted from inline styles */
+
+/* Thumbnail height fixed to 28px */
+.react-grid-item[data-display-mode="thumbnail"] {
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    overflow: hidden !important;
+}
+
+.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] {
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    overflow: visible !important;
+}
+
+.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
+    .grid-item {
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    overflow: visible !important;
+}
+
+/* Ensure thumbnail controls are visible in edit mode */
+.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
+    .no-drag {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
+}
+
+/* Force toolbar row height in thumbnail edit mode */
+.drag-handle > div {
+    height: 28px !important;
+    max-height: 28px !important;
+    line-height: 0 !important;
+}
+
+/* Make all toolbar buttons true 24x24 squares */
+.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] button,
+.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
+    button.no-drag,
+.drag-handle button.no-drag {
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    aspect-ratio: 1 !important;
+    flex: 0 0 24px !important;
+}
+
+/* Prevent SVG from affecting layout */
+.drag-handle button.no-drag svg {
+    width: 14px !important;
+    height: 14px !important;
+    display: block !important;
+}
+
+/* Remove any colored backgrounds from buttons */
+.react-grid-item button,
+.react-grid-item .no-drag,
+.react-grid-item button.no-drag {
+    background: transparent !important;
+    background-color: transparent !important;
+}

@@ -17,6 +17,7 @@ import { ComponentRenderer } from "./ComponentRenderer";
 import { ComponentPortalModal } from "../ComponentPortalModal";
 import "../../styles/analytics-dashboard.css";
 import "../../styles/dynamic-canvas.css";
+import "../../styles/dynamic-canvas-overrides.css";
 import { editingLockService } from "../../services/editingLockService";
 
 // Grid unit size: 1 grid unit = 28px (used for thumbnail height)
