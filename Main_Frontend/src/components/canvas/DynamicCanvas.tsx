@@ -2335,6 +2335,25 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            background-color: transparent !important;
          }
 
+         /* FINAL HAMMER: ensure toolbar buttons inside drag-handle are perfect squares */
+         .drag-handle button.no-drag {
+           height: 24px !important;
+           min-height: 24px !important;
+           max-height: 24px !important;
+           width: 24px !important;
+           min-width: 24px !important;
+           max-width: 24px !important;
+           padding: 6px 6px !important;
+           aspect-ratio: 1 !important;
+           line-height: 1 !important;
+           box-sizing: border-box !important;
+           display: flex !important;
+           align-items: center !important;
+           justify-content: center !important;
+           flex-shrink: 0 !important;
+           flex-grow: 0 !important;
+         }
+
          /* Force medium and full modes to respect CosmosDB height */
          .react-grid-item[data-display-mode="medium"],
          .react-grid-item[data-display-mode="full"] {
