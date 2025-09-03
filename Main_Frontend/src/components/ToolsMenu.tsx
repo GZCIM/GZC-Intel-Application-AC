@@ -45,6 +45,128 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
 
     const currentDevice = getCurrentDevice();
 
+    // Helper: copy current layout to specific device config in CosmosDB
+    const copyCurrentLayoutToDevice = async (
+        targetDevice: "laptop" | "mobile" | "bigscreen"
+    ) => {
+        try {
+            // Lazy import to avoid circular refs
+            const { deviceConfigService } = await import(
+                "../services/deviceConfigService"
+            );
+            const { editingLockService } = await import(
+                "../services/editingLockService"
+            );
+
+            // Access current tabs from TabLayout context
+            const { useTabLayout } = await import(
+                "../core/tabs/TabLayoutManager"
+            );
+            // Note: useTabLayout can only be used inside components; instead, read from window if exposed
+            // Fallback: try to read serialized layout from window or localStorage if available
+            const tabsFromWindow: any[] = (window as any)?.gzcCurrentTabs || [];
+
+            // Best-effort: if not available via window, ask app to emit current tabs
+            let tabsToSave: any[] = [];
+            try {
+                const evt = new CustomEvent("gzc:request-current-tabs");
+                window.dispatchEvent(evt);
+                // Give app a moment to set window.gzcCurrentTabs
+                await new Promise((r) => setTimeout(r, 50));
+                tabsToSave = (window as any)?.gzcCurrentTabs || [];
+            } catch {}
+
+            if (!tabsToSave || tabsToSave.length === 0) {
+                // As a last resort, try to parse a known storage key if present
+                try {
+                    const ls = localStorage.getItem("gzc-intel-current-layout");
+                    if (ls) {
+                        const parsed = JSON.parse(ls);
+                        tabsToSave = parsed?.tabs || [];
+                    }
+                } catch {}
+            }
+
+            // Normalize & deduplicate
+            const seen = new Set<string>();
+            const uniqueTabs = (tabsToSave || [])
+                .filter((t: any) => {
+                    if (!t?.id) return false;
+                    if (seen.has(t.id)) return false;
+                    seen.add(t.id);
+                    return true;
+                })
+                .map((t: any) => ({
+                    ...t,
+                    editMode: false,
+                }));
+
+            const auth = await deviceConfigService.getAuthToken();
+            const baseUrl =
+                import.meta.env.VITE_API_BASE_URL ||
+                (import.meta.env.PROD ? "" : "http://localhost:8080");
+
+            const doPost = async (
+                device: "laptop" | "mobile" | "bigscreen"
+            ) => {
+                const url = `${baseUrl}/api/cosmos/device-config/${device}`;
+                const res = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${auth}`,
+                        "Content-Type": "application/json",
+                        ...editingLockService.getLockHeaders(),
+                    },
+                    body: JSON.stringify({ tabs: uniqueTabs }),
+                });
+                if (!res.ok) throw new Error(await res.text());
+            };
+
+            if (targetDevice === "laptop") await doPost("laptop");
+            if (targetDevice === "mobile") await doPost("mobile");
+            if (targetDevice === "bigscreen") await doPost("bigscreen");
+
+            window.dispatchEvent(
+                new CustomEvent("gzc:toast", {
+                    detail: {
+                        message: `Layout copied to ${targetDevice} configuration`,
+                        type: "success",
+                        timeout: 2000,
+                    },
+                })
+            );
+        } catch (err: any) {
+            console.error("Failed to copy layout:", err);
+            window.dispatchEvent(
+                new CustomEvent("gzc:toast", {
+                    detail: {
+                        message: `Copy failed: ${err?.message || err}`,
+                        type: "error",
+                        timeout: 3000,
+                    },
+                })
+            );
+        }
+    };
+
+    const copyCurrentLayoutToAllDevices = async () => {
+        try {
+            await copyCurrentLayoutToDevice("bigscreen");
+            await copyCurrentLayoutToDevice("laptop");
+            await copyCurrentLayoutToDevice("mobile");
+            window.dispatchEvent(
+                new CustomEvent("gzc:toast", {
+                    detail: {
+                        message:
+                            "Layout copied to Bigscreen, Laptop and Mobile",
+                        type: "success",
+                        timeout: 2500,
+                    },
+                })
+            );
+        } catch {}
+    };
+
     const menuItems = [
         // Device Mode selector
         {
@@ -137,6 +259,149 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                 } catch {}
                 setTimeout(() => window.location.reload(), 250);
                 setIsOpen(false);
+            },
+        },
+        // Copy layout actions
+        {
+            label: "Copy current layout → Bigscreen",
+            icon: "📤",
+            onClick: async () => {
+                await copyCurrentLayoutToDevice("bigscreen");
+                setIsOpen(false);
+            },
+        },
+        {
+            label: "Copy current layout → Laptop",
+            icon: "📤",
+            onClick: async () => {
+                await copyCurrentLayoutToDevice("laptop");
+                setIsOpen(false);
+            },
+        },
+        {
+            label: "Copy current layout → Mobile",
+            icon: "📤",
+            onClick: async () => {
+                await copyCurrentLayoutToDevice("mobile");
+                setIsOpen(false);
+            },
+        },
+        {
+            label: "Copy current layout → All devices",
+            icon: "📦",
+            onClick: async () => {
+                await copyCurrentLayoutToAllDevices();
+                setIsOpen(false);
+            },
+        },
+        {
+            label: "Copy current layout → Other user…",
+            icon: "👥",
+            onClick: async () => {
+                try {
+                    const email = (
+                        window.prompt("Enter target email (@gzcim.com):") || ""
+                    ).trim();
+                    if (!email) return;
+                    if (!email.toLowerCase().endsWith("@gzcim.com")) {
+                        window.dispatchEvent(
+                            new CustomEvent("gzc:toast", {
+                                detail: {
+                                    message:
+                                        "Only @gzcim.com emails are allowed",
+                                    type: "error",
+                                    timeout: 2500,
+                                },
+                            })
+                        );
+                        return;
+                    }
+
+                    // Collect current tabs similarly to copy helpers
+                    const requestTabs = async (): Promise<any[]> => {
+                        let tabs: any[] = [];
+                        try {
+                            const evt = new CustomEvent(
+                                "gzc:request-current-tabs"
+                            );
+                            window.dispatchEvent(evt);
+                            await new Promise((r) => setTimeout(r, 50));
+                            tabs = (window as any)?.gzcCurrentTabs || [];
+                        } catch {}
+                        if (!tabs || tabs.length === 0) {
+                            try {
+                                const ls = localStorage.getItem(
+                                    "gzc-intel-current-layout"
+                                );
+                                if (ls) tabs = JSON.parse(ls)?.tabs || [];
+                            } catch {}
+                        }
+                        const seen = new Set<string>();
+                        return (tabs || [])
+                            .filter(
+                                (t: any) =>
+                                    t?.id &&
+                                    !seen.has(t.id) &&
+                                    (seen.add(t.id) || true)
+                            )
+                            .map((t: any) => ({ ...t, editMode: false }));
+                    };
+
+                    const tabs = await requestTabs();
+                    const { deviceConfigService } = await import(
+                        "../services/deviceConfigService"
+                    );
+                    const auth = await deviceConfigService.getAuthToken();
+                    const baseUrl =
+                        import.meta.env.VITE_API_BASE_URL ||
+                        (import.meta.env.PROD ? "" : "http://localhost:8080");
+
+                    const res = await fetch(
+                        `${baseUrl}/api/cosmos/device-config/copy-to`,
+                        {
+                            method: "POST",
+                            headers: {
+                                Authorization: `Bearer ${auth}`,
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                targetEmail: email,
+                                deviceTypes: "all",
+                                tabs,
+                            }),
+                        }
+                    );
+
+                    if (res.ok) {
+                        window.dispatchEvent(
+                            new CustomEvent("gzc:toast", {
+                                detail: {
+                                    message: `Layout copied to ${email} (all devices)`,
+                                    type: "success",
+                                    timeout: 2500,
+                                },
+                            })
+                        );
+                    } else {
+                        const txt = await res.text();
+                        throw new Error(txt);
+                    }
+                } catch (err: any) {
+                    console.error(err);
+                    window.dispatchEvent(
+                        new CustomEvent("gzc:toast", {
+                            detail: {
+                                message: `Copy to user failed: ${
+                                    err?.message || err
+                                }`,
+                                type: "error",
+                                timeout: 3000,
+                            },
+                        })
+                    );
+                } finally {
+                    setIsOpen(false);
+                }
             },
         },
         {
