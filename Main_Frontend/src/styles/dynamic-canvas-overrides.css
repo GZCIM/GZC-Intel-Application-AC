@@ -39,11 +39,11 @@
     line-height: 0 !important;
 }
 
-/* Make all toolbar buttons true 24x24 squares */
-.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] button,
-.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
-    button.no-drag,
-.drag-handle button.no-drag {
+/* Make all toolbar buttons true 24x24 squares - UNIFIED for all modes */
+button.no-drag[title="Thumbnail"],
+button.no-drag[title="Medium"],
+button.no-drag[title="Fullscreen"],
+button.no-drag[title="Remove"] {
     height: 24px !important;
     min-height: 24px !important;
     max-height: 24px !important;
