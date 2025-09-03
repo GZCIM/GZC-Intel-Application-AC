@@ -3040,8 +3040,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                                         "1 !important",
                                                                     border: `1px solid ${currentTheme.border}`,
                                                                     background:
-                                                                        "#dc3545",
-                                                                    color: "white",
+                                                                        "transparent",
+                                                                    color: currentTheme.text,
                                                                     borderRadius: 4,
                                                                     cursor: "pointer",
                                                                     boxSizing:
@@ -3563,8 +3563,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                                 "1 !important",
                                                             border: `1px solid ${currentTheme.border}`,
                                                             background:
-                                                                "#dc3545",
-                                                            color: "white",
+                                                                "transparent",
+                                                            color: currentTheme.text,
                                                             borderRadius: 4,
                                                             cursor: "pointer",
                                                             boxSizing:
