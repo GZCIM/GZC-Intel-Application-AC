@@ -1220,6 +1220,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
+                                                aspectRatio: "1 / 1",
+                                                flexShrink: 0,
+                                                flexGrow: 0,
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
                                             }}
                                         >
                                             <svg
@@ -1316,6 +1322,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
+                                                aspectRatio: "1 / 1",
+                                                flexShrink: 0,
+                                                flexGrow: 0,
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
                                             }}
                                         >
                                             <svg
@@ -1360,6 +1372,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
+                                                aspectRatio: "1 / 1",
+                                                flexShrink: 0,
+                                                flexGrow: 0,
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
                                             }}
                                         >
                                             ✕
@@ -1393,6 +1411,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
+                                                aspectRatio: "1 / 1",
+                                                flexShrink: 0,
+                                                flexGrow: 0,
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
                                             }}
                                         >
                                             <svg
@@ -1454,6 +1478,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
+                                                aspectRatio: "1 / 1",
+                                                flexShrink: 0,
+                                                flexGrow: 0,
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
                                             }}
                                         >
                                             <svg
@@ -2446,6 +2476,39 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           .react-grid-item > .react-resizable-handle {
             display: none !important;
           }
+
+          /* REACT COMPONENT BUTTON OVERRIDES - MAXIMUM PRIORITY */
+          button.no-drag[title="Thumbnail"],
+          button.no-drag[title="Medium"],
+          button.no-drag[title="Fullscreen"],
+          button.no-drag[title="Remove"] {
+            width: 24px !important;
+            height: 24px !important;
+            min-width: 24px !important;
+            max-width: 24px !important;
+            min-height: 24px !important;
+            max-height: 24px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: 1px solid rgb(58, 54, 50) !important;
+            box-sizing: border-box !important;
+            aspect-ratio: 1 / 1 !important;
+            flex: 0 0 24px !important;
+            flex-shrink: 0 !important;
+            flex-grow: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: transparent !important;
+            color: rgb(248, 246, 240) !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            font-size: 12px !important;
+            line-height: 1 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
         `
         }
       `}</style>
@@ -2778,17 +2841,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         }}
                                                         title="Thumbnail"
                                                         style={{
-                                                            height: "24px !important",
-                                                            minHeight:
-                                                                "24px !important",
-                                                            maxHeight:
-                                                                "24px !important",
-                                                            padding:
-                                                                "6px 6px !important",
-                                                            fontSize:
-                                                                "12px !important",
-                                                            lineHeight:
-                                                                "1 !important",
+                                                            height: 24,
+                                                            minHeight: 24,
+                                                            maxHeight: 24,
+                                                            width: 24,
+                                                            minWidth: 24,
+                                                            maxWidth: 24,
+                                                            padding: 0,
+                                                            fontSize: 12,
+                                                            lineHeight: 1,
                                                             border: `1px solid ${currentTheme.border}`,
                                                             borderRadius: 4,
                                                             background:
@@ -2842,17 +2903,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         }}
                                                         title="Medium"
                                                         style={{
-                                                            height: "24px !important",
-                                                            minHeight:
-                                                                "24px !important",
-                                                            maxHeight:
-                                                                "24px !important",
-                                                            padding:
-                                                                "6px 6px !important",
-                                                            fontSize:
-                                                                "12px !important",
-                                                            lineHeight:
-                                                                "1 !important",
+                                                            height: 24,
+                                                            minHeight: 24,
+                                                            maxHeight: 24,
+                                                            width: 24,
+                                                            minWidth: 24,
+                                                            maxWidth: 24,
+                                                            padding: 0,
+                                                            fontSize: 12,
+                                                            lineHeight: 1,
                                                             border: `1px solid ${currentTheme.border}`,
                                                             borderRadius: 4,
                                                             background:
@@ -3158,17 +3217,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         }}
                                                         title="Thumbnail"
                                                         style={{
-                                                            height: "24px !important",
-                                                            minHeight:
-                                                                "24px !important",
-                                                            maxHeight:
-                                                                "24px !important",
-                                                            padding:
-                                                                "6px 6px !important",
-                                                            fontSize:
-                                                                "12px !important",
-                                                            lineHeight:
-                                                                "1 !important",
+                                                            height: 24,
+                                                            minHeight: 24,
+                                                            maxHeight: 24,
+                                                            width: 24,
+                                                            minWidth: 24,
+                                                            maxWidth: 24,
+                                                            padding: 0,
+                                                            fontSize: 12,
+                                                            lineHeight: 1,
                                                             border: `1px solid ${currentTheme.border}`,
                                                             borderRadius: 4,
                                                             background:
@@ -3222,17 +3279,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         }}
                                                         title="Medium"
                                                         style={{
-                                                            height: "24px !important",
-                                                            minHeight:
-                                                                "24px !important",
-                                                            maxHeight:
-                                                                "24px !important",
-                                                            padding:
-                                                                "6px 6px !important",
-                                                            fontSize:
-                                                                "12px !important",
-                                                            lineHeight:
-                                                                "1 !important",
+                                                            height: 24,
+                                                            minHeight: 24,
+                                                            maxHeight: 24,
+                                                            width: 24,
+                                                            minWidth: 24,
+                                                            maxWidth: 24,
+                                                            padding: 0,
+                                                            fontSize: 12,
+                                                            lineHeight: 1,
                                                             border: `1px solid ${currentTheme.border}`,
                                                             borderRadius: 4,
                                                             background:
@@ -3314,17 +3369,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         }}
                                                         title="Thumbnail"
                                                         style={{
-                                                            height: "24px !important",
-                                                            minHeight:
-                                                                "24px !important",
-                                                            maxHeight:
-                                                                "24px !important",
-                                                            padding:
-                                                                "6px 6px !important",
-                                                            fontSize:
-                                                                "12px !important",
-                                                            lineHeight:
-                                                                "1 !important",
+                                                            height: 24,
+                                                            minHeight: 24,
+                                                            maxHeight: 24,
+                                                            width: 24,
+                                                            minWidth: 24,
+                                                            maxWidth: 24,
+                                                            padding: 0,
+                                                            fontSize: 12,
+                                                            lineHeight: 1,
                                                             border: `1px solid ${currentTheme.border}`,
                                                             borderRadius: 4,
                                                             background:
@@ -3379,17 +3432,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         }}
                                                         title="Medium"
                                                         style={{
-                                                            height: "24px !important",
-                                                            minHeight:
-                                                                "24px !important",
-                                                            maxHeight:
-                                                                "24px !important",
-                                                            padding:
-                                                                "6px 6px !important",
-                                                            fontSize:
-                                                                "12px !important",
-                                                            lineHeight:
-                                                                "1 !important",
+                                                            height: 24,
+                                                            minHeight: 24,
+                                                            maxHeight: 24,
+                                                            width: 24,
+                                                            minWidth: 24,
+                                                            maxWidth: 24,
+                                                            padding: 0,
+                                                            fontSize: 12,
+                                                            lineHeight: 1,
                                                             border: `1px solid ${currentTheme.border}`,
                                                             borderRadius: 4,
                                                             background:
@@ -3449,17 +3500,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         }}
                                                         title="Full"
                                                         style={{
-                                                            height: "24px !important",
-                                                            minHeight:
-                                                                "24px !important",
-                                                            maxHeight:
-                                                                "24px !important",
-                                                            padding:
-                                                                "6px 6px !important",
-                                                            fontSize:
-                                                                "12px !important",
-                                                            lineHeight:
-                                                                "1 !important",
+                                                            height: 24,
+                                                            minHeight: 24,
+                                                            maxHeight: 24,
+                                                            width: 24,
+                                                            minWidth: 24,
+                                                            maxWidth: 24,
+                                                            padding: 0,
+                                                            fontSize: 12,
+                                                            lineHeight: 1,
                                                             border: `1px solid ${currentTheme.border}`,
                                                             background:
                                                                 "transparent",
@@ -3556,17 +3605,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         }}
                                                         title="Remove"
                                                         style={{
-                                                            height: "24px !important",
-                                                            minHeight:
-                                                                "24px !important",
-                                                            maxHeight:
-                                                                "24px !important",
-                                                            padding:
-                                                                "6px 6px !important",
-                                                            fontSize:
-                                                                "12px !important",
-                                                            lineHeight:
-                                                                "1 !important",
+                                                            height: 24,
+                                                            minHeight: 24,
+                                                            maxHeight: 24,
+                                                            width: 24,
+                                                            minWidth: 24,
+                                                            maxWidth: 24,
+                                                            padding: 0,
+                                                            fontSize: 12,
+                                                            lineHeight: 1,
                                                             border: `1px solid ${currentTheme.border}`,
                                                             background:
                                                                 "transparent",
