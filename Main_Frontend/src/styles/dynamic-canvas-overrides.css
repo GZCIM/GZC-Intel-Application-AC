@@ -84,6 +84,42 @@
     flex: 0 0 24px !important;
 }
 
+/* NUCLEAR OPTION - Force all buttons to be exactly 24x24 */
+button.no-drag[title="Thumbnail"],
+button.no-drag[title="Medium"],
+button.no-drag[title="Fullscreen"],
+button.no-drag[title="Remove"] {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-width: 1px !important;
+    box-sizing: border-box !important;
+    aspect-ratio: 1 / 1 !important;
+    flex: 0 0 24px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Force SVG icons to be centered and not affect button size */
+button.no-drag[title="Thumbnail"] svg,
+button.no-drag[title="Medium"] svg,
+button.no-drag[title="Fullscreen"] svg,
+button.no-drag[title="Remove"] {
+    width: 14px !important;
+    height: 14px !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 /* Prevent SVG from affecting layout */
 .drag-handle button.no-drag svg {
     width: 14px !important;
