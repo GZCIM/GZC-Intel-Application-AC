@@ -1082,6 +1082,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 height: "24px !important",
                                                 minHeight: "24px !important",
                                                 maxHeight: "24px !important",
+                                                width: "24px !important",
+                                                minWidth: "24px !important",
+                                                maxWidth: "24px !important",
                                                 padding: "6px 6px !important",
                                                 fontSize: "12px !important",
                                                 lineHeight: "1 !important",
@@ -1094,6 +1097,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
+                                                aspectRatio: "1 !important",
+                                                flexShrink: "0 !important",
+                                                flexGrow: "0 !important",
+                                                overflow: "hidden !important",
+                                                textOverflow:
+                                                    "ellipsis !important",
+                                                whiteSpace: "nowrap !important",
                                             }}
                                         >
                                             <svg
@@ -1430,10 +1440,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 fontSize: "12px !important",
                                                 lineHeight: "1 !important",
                                                 border: `1px solid ${currentTheme.border}`,
-                                                background:
-                                                    fullScreenId === instance.id
-                                                        ? `${currentTheme.primary}20`
-                                                        : "transparent",
+                                                background: "transparent",
                                                 borderRadius: 4,
                                                 cursor: "pointer",
                                                 boxSizing: "border-box",
@@ -1701,11 +1708,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     fontSize: "12px !important",
                                                     lineHeight: "1 !important",
                                                     border: `1px solid ${currentTheme.border}`,
-                                                    background:
-                                                        fullScreenId ===
-                                                        instance.id
-                                                            ? `${currentTheme.primary}20`
-                                                            : "transparent",
+                                                    background: "transparent",
                                                     borderRadius: 4,
                                                     cursor: "pointer",
                                                     boxSizing: "border-box",
@@ -2305,6 +2308,14 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            box-shadow: inset 0 0 0 1px var(--quantum-border) !important;
          }
 
+         /* ULTRA NUCLEAR - Remove ALL red backgrounds from ALL buttons */
+         .react-grid-item button,
+         .react-grid-item .no-drag,
+         .react-grid-item button.no-drag {
+           background: transparent !important;
+           background-color: transparent !important;
+         }
+
          /* Force medium and full modes to respect CosmosDB height */
          .react-grid-item[data-display-mode="medium"],
          .react-grid-item[data-display-mode="full"] {
@@ -2873,7 +2884,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                                     lineHeight:
                                                                         "1 !important",
                                                                     border: `1px solid ${currentTheme.border}`,
-                                                                    background: `${currentTheme.primary}20`,
+                                                                    background:
+                                                                        "transparent",
                                                                     borderRadius: 4,
                                                                     color: currentTheme.text,
                                                                     cursor: "pointer",
@@ -3406,7 +3418,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                             lineHeight:
                                                                 "1 !important",
                                                             border: `1px solid ${currentTheme.border}`,
-                                                            background: `${currentTheme.primary}20`,
+                                                            background:
+                                                                "transparent",
                                                             borderRadius: 4,
                                                             color: currentTheme.text,
                                                             cursor: "pointer",
