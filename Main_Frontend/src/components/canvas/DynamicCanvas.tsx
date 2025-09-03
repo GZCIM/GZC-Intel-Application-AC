@@ -1786,12 +1786,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Thumbnail"
                                             style={{
-                                                height: "24px !important",
-                                                minHeight: "24px !important",
-                                                maxHeight: "24px !important",
-                                                padding: "6px 6px !important",
-                                                fontSize: "12px !important",
-                                                lineHeight: "1 !important",
+                                                height: 24,
+                                                minHeight: 24,
+                                                maxHeight: 24,
+                                                width: 24,
+                                                minWidth: 24,
+                                                maxWidth: 24,
+                                                padding: 0,
+                                                fontSize: 12,
+                                                lineHeight: 1,
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
@@ -1802,8 +1805,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 alignItems: "center",
                                                 justifyContent: "center",
                                                 aspectRatio: "1 / 1",
-                                                flexShrink: 0 as any,
-                                                flexGrow: 0 as any,
+                                                flexShrink: 0,
+                                                flexGrow: 0,
                                             }}
                                         >
                                             <svg
@@ -2001,12 +2004,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             }}
                                             title="Remove"
                                             style={{
-                                                height: "24px !important",
-                                                minHeight: "24px !important",
-                                                maxHeight: "24px !important",
-                                                padding: "6px 6px !important",
-                                                fontSize: "12px !important",
-                                                lineHeight: "1 !important",
+                                                height: 24,
+                                                minHeight: 24,
+                                                maxHeight: 24,
+                                                width: 24,
+                                                minWidth: 24,
+                                                maxWidth: 24,
+                                                padding: 0,
+                                                fontSize: 12,
+                                                lineHeight: 1,
                                                 border: `1px solid ${currentTheme.border}`,
                                                 background: "transparent",
                                                 color: currentTheme.text,
@@ -2016,6 +2022,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
+                                                aspectRatio: "1 / 1",
+                                                flexShrink: 0,
+                                                flexGrow: 0,
                                             }}
                                         >
                                             ✕
