@@ -60,7 +60,9 @@
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
-    aspect-ratio: 1 !important;
+    aspect-ratio: 1 / 1 !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
     flex: 0 0 24px !important;
 }
 
