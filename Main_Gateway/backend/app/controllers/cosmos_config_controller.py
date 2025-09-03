@@ -1586,3 +1586,79 @@ async def cosmos_health_check() -> Dict[str, Any]:
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+
+@router.post("/device-config/copy-to")
+async def copy_layout_to_other_user(
+    copy_request: Dict[str, Any], payload: Dict = Depends(validate_token)
+) -> Dict[str, Any]:
+    """
+    Admin-only: Copy provided tabs layout to another user's device configs.
+    Domain-restricted to @gzcim.com and overwrites target device docs.
+
+    Body: { targetEmail: string, deviceTypes: ["laptop"|"mobile"|"bigscreen"]|"all", tabs: [] }
+    """
+
+    container = get_cosmos_container()
+    if not container:
+        raise HTTPException(status_code=503, detail="Cosmos DB not available")
+
+    try:
+        requester_email = (
+            payload.get("preferred_username")
+            or payload.get("email", "")
+            or payload.get("upn", "")
+        )
+        if not requester_email or not requester_email.lower().endswith("@gzcim.com"):
+            raise HTTPException(status_code=403, detail="Forbidden: domain restricted")
+
+        target_email = (copy_request.get("targetEmail") or "").strip().lower()
+        if not target_email or not target_email.endswith("@gzcim.com"):
+            raise HTTPException(
+                status_code=400, detail="Invalid or non-allowed targetEmail"
+            )
+
+        tabs = copy_request.get("tabs") or []
+        if not isinstance(tabs, list):
+            raise HTTPException(status_code=400, detail="tabs must be an array")
+
+        device_types = copy_request.get("deviceTypes")
+        if device_types == "all" or device_types is None:
+            device_types = ["laptop", "mobile", "bigscreen"]
+        if not isinstance(device_types, list) or any(
+            d not in ["laptop", "mobile", "bigscreen"] for d in device_types
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="deviceTypes must be laptop/mobile/bigscreen or 'all'",
+            )
+
+        target_user_id = target_email
+        results: Dict[str, Any] = {"updated": [], "failed": []}
+        for dev in device_types:
+            device_config_id = f"{dev}_{target_user_id}"
+            now = datetime.utcnow().isoformat()
+            doc = {
+                "id": device_config_id,
+                "name": f"{dev.title()} Configuration for {target_user_id}",
+                "type": "user-device-config",
+                "deviceType": dev,
+                "userId": target_user_id,
+                "version": "1.0.0",
+                "config": {"tabs": tabs},
+                "updatedAt": now,
+            }
+            try:
+                container.upsert_item(body=doc)
+                results["updated"].append(dev)
+            except Exception as e:
+                logger.error(f"Failed to upsert device config {device_config_id}: {e}")
+                results["failed"].append({"device": dev, "error": str(e)})
+
+        return {"status": "ok", **results}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error copying layout to other user: {e}")
+        raise HTTPException(status_code=500, detail="Failed to copy layout")

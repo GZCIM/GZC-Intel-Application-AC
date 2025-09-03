@@ -407,9 +407,9 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     "TabLayoutManager: Attempting to load device-specific configuration"
                 );
 
-                // Detect current device type and load appropriate config
+                // Detect current device type (honor manual override) and load appropriate config
                 const currentDeviceType =
-                    deviceConfigService.detectDeviceType();
+                    deviceConfigService.getCurrentDeviceType();
                 console.log(
                     `TabLayoutManager: Detected device type: ${currentDeviceType}`
                 );
@@ -865,9 +865,9 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     return true;
                 });
 
-                // Save to device-specific config instead of general user config
+                // Save to device-specific config instead of general user config (honor manual override)
                 const currentDeviceType =
-                    deviceConfigService.detectDeviceType();
+                    deviceConfigService.getCurrentDeviceType();
                 const response = await fetch(
                     `${
                         import.meta.env.VITE_API_BASE_URL ||
@@ -988,9 +988,9 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                         return true;
                     });
 
-                    // Save to device-specific config instead of general user config
+                    // Save to device-specific config instead of general user config (honor manual override)
                     const currentDeviceType =
-                        deviceConfigService.detectDeviceType();
+                        deviceConfigService.getCurrentDeviceType();
                     const response = await fetch(
                         `${
                             import.meta.env.VITE_API_BASE_URL ||
@@ -1140,9 +1140,9 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                     "🚀 Sending to device-specific Cosmos DB config..."
                 );
 
-                // Save to device-specific config instead of general user config
+                // Save to device-specific config instead of general user config (honor manual override)
                 const currentDeviceType =
-                    deviceConfigService.detectDeviceType();
+                    deviceConfigService.getCurrentDeviceType();
                 console.log("📱 Current device type:", currentDeviceType);
                 const lockHeaders = editingLockService.getLockHeaders();
                 console.log("🔒 Lock headers for CosmosDB save:", lockHeaders);
@@ -1494,8 +1494,9 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                 components: [], // Clear any broken components
             }));
 
-            // Save to device-specific config instead of general user config
-            const currentDeviceType = deviceConfigService.detectDeviceType();
+            // Save to device-specific config instead of general user config (honor manual override)
+            const currentDeviceType =
+                deviceConfigService.getCurrentDeviceType();
             const response = await fetch(
                 `${
                     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
@@ -1881,7 +1882,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
             // Save the clean default to current device-specific config
             try {
                 const currentDeviceType =
-                    deviceConfigService.detectDeviceType();
+                    deviceConfigService.getCurrentDeviceType();
                 const response = await fetch(
                     `${
                         import.meta.env.VITE_API_BASE_URL ||
@@ -1991,7 +1992,7 @@ export function TabLayoutProvider({ children }: TabLayoutProviderProps) {
                         }));
 
                         const currentDeviceType =
-                            deviceConfigService.detectDeviceType();
+                            deviceConfigService.getCurrentDeviceType();
                         const baseUrl =
                             import.meta.env.VITE_API_BASE_URL ||
                             (import.meta.env.PROD
