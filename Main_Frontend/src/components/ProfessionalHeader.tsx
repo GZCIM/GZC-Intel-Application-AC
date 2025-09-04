@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTabLayout } from "../core/tabs/TabLayoutManager";
 import { useTheme } from "../contexts/ThemeContext";
 import { ThemeSelector } from "./ThemeSelector";
