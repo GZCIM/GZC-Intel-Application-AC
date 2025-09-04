@@ -288,7 +288,15 @@ export const ProfessionalHeader = () => {
                 zIndex: 1000,
             }}
         >
-            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "20px",
+                    flex: 1,
+                    minWidth: 0,
+                }}
+            >
                 <motion.div
                     whileHover={{ scale: 1.02 }}
                     style={{
@@ -355,6 +363,9 @@ export const ProfessionalHeader = () => {
                         display: "flex",
                         gap: "8px",
                         alignItems: "center",
+                        flexWrap: "nowrap",
+                        overflowX: "auto",
+                        maxWidth: "100%",
                     }}
                 >
                     {tabs.map((tab, index) => {
@@ -515,6 +526,7 @@ export const ProfessionalHeader = () => {
                     alignItems: "center",
                     gap: "16px",
                     fontSize: "13px",
+                    flexShrink: 0,
                 }}
             >
                 {/* User Profile */}
