@@ -8,6 +8,8 @@ export const MarketIntelPanel = () => {
     // Also collapse on very small height (landscape phones)
     const getInitialCollapsed = () => {
         try {
+            const persisted = localStorage.getItem("gzc-leftpanel-collapsed");
+            if (persisted === "true") return true;
             const override = localStorage.getItem("gzc-device-override");
             const isMobileOverride = override === "mobile";
             const isSmallScreen =
@@ -34,15 +36,17 @@ export const MarketIntelPanel = () => {
     };
 
     const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsed());
+    const userCollapsedRef = React.useRef<boolean | null>(null);
     const { currentTheme: theme } = useTheme();
 
-    // Auto-collapse on small width/height; auto-expand when space is sufficient
+    // Auto-collapse on small width/height; do NOT auto-expand on large screens (respect user choice)
     React.useEffect(() => {
         const onResize = () => {
             const smallWidth = window.innerWidth <= 768;
             const smallHeight = window.innerHeight <= 420;
-            if (smallWidth || smallHeight) setIsCollapsed(true);
-            else setIsCollapsed(false);
+            if (smallWidth || smallHeight) {
+                setIsCollapsed(true);
+            }
         };
         window.addEventListener("resize", onResize);
         return () => window.removeEventListener("resize", onResize);
@@ -51,7 +55,9 @@ export const MarketIntelPanel = () => {
     return (
         <div
             style={{
-                width: isCollapsed ? "48px" : "280px", // Smaller when collapsed for more space
+                width: isCollapsed ? "48px" : "280px",
+                minWidth: isCollapsed ? "48px" : "280px",
+                maxWidth: isCollapsed ? "48px" : "280px",
                 height: "calc(100vh - 88px)", // Dynamic height: full viewport minus header minus footer
                 backgroundColor: theme.surface,
                 borderRight: isCollapsed ? "none" : `1px solid ${theme.border}`,
@@ -62,6 +68,7 @@ export const MarketIntelPanel = () => {
                 position: "relative",
                 display: "flex",
                 flexDirection: "column",
+                zIndex: 2,
             }}
         >
             {/* Header with collapse button */}
@@ -97,7 +104,15 @@ export const MarketIntelPanel = () => {
 
                 <button
                     onClick={() => {
-                        setIsCollapsed(!isCollapsed);
+                        const next = !isCollapsed;
+                        setIsCollapsed(next);
+                        userCollapsedRef.current = next;
+                        try {
+                            localStorage.setItem(
+                                "gzc-leftpanel-collapsed",
+                                String(next)
+                            );
+                        } catch {}
                         // Fire event to notify grid layout - both immediate and delayed
                         window.dispatchEvent(new CustomEvent("panel-toggled"));
                         // Also trigger a resize event to force grid recalculation
@@ -120,6 +135,8 @@ export const MarketIntelPanel = () => {
                         justifyContent: "center",
                         transition: "all 0.2s ease",
                         marginLeft: isCollapsed ? 0 : "auto",
+                        position: "relative",
+                        zIndex: 3,
                     }}
                     onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = theme.surface;
