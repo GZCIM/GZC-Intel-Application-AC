@@ -56,6 +56,7 @@ export const ProfessionalHeader = () => {
             ? localStorage.getItem("gzc-edit-mode") === "unlocked"
             : false
     );
+    const [tabDropdownOpen, setTabDropdownOpen] = useState(false);
     // Mobile detection used for responsive header layout
     const [isMobile, setIsMobile] = useState(() => {
         if (typeof window === "undefined") return false;
@@ -328,30 +329,155 @@ export const ProfessionalHeader = () => {
                     }}
                 >
                     <div style={{ flex: 1 }}>
-                        <select
-                            value={activeTab}
-                            onChange={(e) => {
-                                const tab = tabs.find(
-                                    (t) => t.id === e.target.value
-                                );
-                                if (tab) handleTabClick(tab);
-                            }}
-                            style={{
-                                width: "100%",
-                                backgroundColor: theme.background,
-                                color: theme.text,
-                                border: `1px solid ${theme.border}`,
-                                borderRadius: 6,
-                                padding: "6px 10px",
-                                fontSize: 12,
-                            }}
-                        >
-                            {tabs.map((t) => (
-                                <option key={t.id} value={t.id}>
-                                    {t.name || `Tab ${t.id}`}
-                                </option>
-                            ))}
-                        </select>
+                        <div style={{ position: "relative" }}>
+                            <button
+                                onClick={() =>
+                                    setTabDropdownOpen(!tabDropdownOpen)
+                                }
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    padding: "6px 12px",
+                                    backgroundColor: "transparent",
+                                    border: "none",
+                                    borderRadius: "6px",
+                                    cursor: "pointer",
+                                    fontSize: "13px",
+                                    color: theme.text,
+                                    transition: "all 0.2s ease",
+                                    width: "100%",
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = `${theme.primary}10`;
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor =
+                                        "transparent";
+                                }}
+                            >
+                                <span style={{ fontSize: "16px" }}>📑</span>
+                                <span style={{ flex: 1, textAlign: "left" }}>
+                                    {tabs.find((t) => t.id === activeTab)
+                                        ?.name || "Select Tab"}
+                                </span>
+                                <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 12 12"
+                                    fill="none"
+                                    style={{
+                                        transform: tabDropdownOpen
+                                            ? "rotate(180deg)"
+                                            : "rotate(0deg)",
+                                        transition: "transform 0.2s ease",
+                                    }}
+                                >
+                                    <path
+                                        d="M3 4.5L6 7.5L9 4.5"
+                                        stroke="currentColor"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
+                                </svg>
+                            </button>
+
+                            <AnimatePresence>
+                                {tabDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        style={{
+                                            position: "absolute",
+                                            top: "100%",
+                                            left: 0,
+                                            right: 0,
+                                            marginTop: "4px",
+                                            backgroundColor: theme.surface,
+                                            border: `1px solid ${theme.border}`,
+                                            borderRadius: "8px",
+                                            boxShadow:
+                                                "0 4px 20px rgba(0, 0, 0, 0.15)",
+                                            padding: "4px",
+                                            zIndex: 1000,
+                                        }}
+                                    >
+                                        {tabs.map((tab) => (
+                                            <div
+                                                key={tab.id}
+                                                onClick={() => {
+                                                    handleTabClick(tab);
+                                                    setTabDropdownOpen(false);
+                                                }}
+                                                style={{
+                                                    padding: "6px 12px",
+                                                    cursor: "pointer",
+                                                    fontSize: "11px",
+                                                    color:
+                                                        activeTab === tab.id
+                                                            ? theme.primary
+                                                            : theme.text,
+                                                    background:
+                                                        activeTab === tab.id
+                                                            ? theme.name ===
+                                                              "Institutional"
+                                                                ? "rgba(122, 158, 101, 0.08)"
+                                                                : "rgba(149, 189, 120, 0.08)"
+                                                            : "transparent",
+                                                    transition:
+                                                        "all 0.15s ease",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent:
+                                                        "space-between",
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (activeTab !== tab.id) {
+                                                        e.currentTarget.style.background =
+                                                            theme.name ===
+                                                            "Institutional"
+                                                                ? "rgba(0, 0, 0, 0.03)"
+                                                                : "rgba(255, 255, 255, 0.03)";
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (activeTab !== tab.id) {
+                                                        e.currentTarget.style.background =
+                                                            "transparent";
+                                                    }
+                                                }}
+                                            >
+                                                <span>
+                                                    {tab.name ||
+                                                        `Tab ${tab.id}`}
+                                                </span>
+                                                {activeTab === tab.id && (
+                                                    <svg
+                                                        width="12"
+                                                        height="12"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                    >
+                                                        <path
+                                                            d="M20 6L9 17l-5-5"
+                                                            stroke={
+                                                                theme.primary
+                                                            }
+                                                            strokeWidth="2"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                        />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     </div>
 
                     <div
