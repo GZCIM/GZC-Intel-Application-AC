@@ -39,14 +39,14 @@ export const MarketIntelPanel = () => {
     const userCollapsedRef = React.useRef<boolean | null>(null);
     const { currentTheme: theme } = useTheme();
 
-    // Auto-collapse on small width/height; do NOT auto-expand on large screens (respect user choice)
+    // Auto-collapse on small width/height only until the user makes a choice
     React.useEffect(() => {
         const onResize = () => {
             const smallWidth = window.innerWidth <= 768;
             const smallHeight = window.innerHeight <= 420;
-            if (smallWidth || smallHeight) {
-                setIsCollapsed(true);
-            }
+            // If the user has toggled explicitly, respect that
+            if (userCollapsedRef.current !== null) return;
+            if (smallWidth || smallHeight) setIsCollapsed(true);
         };
         window.addEventListener("resize", onResize);
         return () => window.removeEventListener("resize", onResize);
@@ -69,6 +69,7 @@ export const MarketIntelPanel = () => {
                 display: "flex",
                 flexDirection: "column",
                 zIndex: 2,
+                pointerEvents: "auto",
             }}
         >
             {/* Header with collapse button */}
@@ -103,6 +104,12 @@ export const MarketIntelPanel = () => {
                 )}
 
                 <button
+                    aria-label={
+                        isCollapsed
+                            ? "Expand left panel"
+                            : "Collapse left panel"
+                    }
+                    title={isCollapsed ? "Expand" : "Collapse"}
                     onClick={() => {
                         const next = !isCollapsed;
                         setIsCollapsed(next);
@@ -123,6 +130,12 @@ export const MarketIntelPanel = () => {
                             window.dispatchEvent(new Event("resize"));
                         }, 350); // After animation completes
                     }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLButtonElement).click();
+                        }
+                    }}
                     style={{
                         background: "none",
                         border: "none",
@@ -137,6 +150,10 @@ export const MarketIntelPanel = () => {
                         marginLeft: isCollapsed ? 0 : "auto",
                         position: "relative",
                         zIndex: 3,
+                        pointerEvents: "auto",
+                        touchAction: "manipulation",
+                        width: 36,
+                        height: 36,
                     }}
                     onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = theme.surface;
