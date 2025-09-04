@@ -11,20 +11,20 @@ export const SchemaSelector: React.FC<SchemaSelectorProps> = ({
     isMobile = false,
     onSchemaChange,
 }) => {
-    const { currentTheme: theme } = useTheme();
+    const { currentTheme: theme, setTheme } = useTheme();
     const [isOpen, setIsOpen] = useState(false);
     const [selectedSchema, setSelectedSchema] = useState<string>("gzc-dark");
 
-    // Schema options matching theme names from bigscreen
+    // Schema options matching ThemeSelector values
     const schemaOptions = [
         { value: "gzc-dark", label: "GZC Dark" },
         { value: "analytics-dark", label: "Analytics Dark" },
         { value: "terminal-green", label: "Terminal Green" },
-        { value: "trading-operations", label: "Trading Operations" },
+        { value: "trading-ops", label: "Trading Operations" },
         { value: "midnight-trading", label: "Midnight Trading" },
         { value: "quantum-analytics", label: "Quantum Analytics" },
         { value: "professional", label: "Professional" },
-        { value: "gzc-light", label: "GZC Light" },
+        { value: "institutional", label: "GZC Light" },
         { value: "arctic", label: "Arctic" },
         { value: "parchment", label: "Parchment" },
         { value: "pearl", label: "Pearl" },
@@ -42,6 +42,11 @@ export const SchemaSelector: React.FC<SchemaSelectorProps> = ({
         setSelectedSchema(schemaId);
         localStorage.setItem("gzc-selected-schema", schemaId);
         setIsOpen(false);
+
+        // Apply theme to match bigscreen behavior
+        try {
+            setTheme(schemaId);
+        } catch {}
 
         if (onSchemaChange) {
             onSchemaChange(schemaId);
