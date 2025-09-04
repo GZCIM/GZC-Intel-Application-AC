@@ -12,6 +12,7 @@ import {
 } from "../core/components/ComponentInventory";
 import { UserProfile } from "./UserProfile";
 import { ToolsMenu } from "./ToolsMenu";
+import { SchemaSelector } from "./SchemaSelector";
 import { DraggableWindow } from "./DraggableWindow";
 import { AuthDebugWindow } from "./AuthDebugWindow";
 import { useAuth } from "../hooks/useAuth";
@@ -317,7 +318,7 @@ export const ProfessionalHeader = () => {
                     />
                 </div>
 
-                {/* Bottom row: Tabs dropdown (left) + Tools and avatar (right) */}
+                {/* Bottom row: Tabs dropdown (left) + Schema selector + Tools + avatar (right) */}
                 <div
                     style={{
                         display: "flex",
@@ -360,6 +361,7 @@ export const ProfessionalHeader = () => {
                             gap: 10,
                         }}
                     >
+                        <SchemaSelector isMobile={true} />
                         <ToolsMenu
                             onOpenAuthDebugger={() => setShowAuthDebugger(true)}
                             onRequestAddComponent={handleRequestAddComponent}
