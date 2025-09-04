@@ -55,6 +55,20 @@ export const ProfessionalHeader = () => {
             ? localStorage.getItem("gzc-edit-mode") === "unlocked"
             : false
     );
+    // Mobile detection used for responsive header layout
+    const [isMobile, setIsMobile] = useState(() => {
+        if (typeof window === "undefined") return false;
+        try {
+            const override = localStorage.getItem("gzc-device-override");
+            if (override === "mobile") return true;
+        } catch {}
+        return window.innerWidth <= 768;
+    });
+    useEffect(() => {
+        const onResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener("resize", onResize);
+        return () => window.removeEventListener("resize", onResize);
+    }, []);
 
     useEffect(() => {
         console.log("ProfessionalHeader: State changed:", {
