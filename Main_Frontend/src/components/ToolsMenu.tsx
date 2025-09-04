@@ -3,11 +3,21 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useTabLayout } from "../core/tabs/TabLayoutManager";
 import { motion, AnimatePresence } from "framer-motion";
 import { editingLockService } from "../services/editingLockService";
+import { SchemaSelector } from "./SchemaSelector";
 
 interface ToolsMenuProps {
     onOpenAuthDebugger: () => void;
     onRequestAddComponent?: (tabId: string) => void;
     trigger?: React.ReactNode; // optional custom trigger (e.g., gear icon)
+}
+
+interface MenuItem {
+    label: string;
+    icon: string;
+    isSelected?: boolean;
+    isComponent?: boolean;
+    component?: React.ReactNode;
+    onClick?: () => void;
 }
 
 export const ToolsMenu: React.FC<ToolsMenuProps> = ({
@@ -167,7 +177,30 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
         } catch {}
     };
 
-    const menuItems = [
+    // Check if mobile view
+    const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
+
+    const menuItems: MenuItem[] = [
+        // Schema selector (mobile only)
+        ...(isMobile
+            ? [
+                  {
+                      label: "Schema Selector",
+                      icon: "📊",
+                      isComponent: true,
+                      component: (
+                          <SchemaSelector
+                              isMobile={true}
+                              onSchemaChange={(schemaId) => {
+                                  console.log("Schema changed to:", schemaId);
+                                  setIsOpen(false);
+                              }}
+                          />
+                      ),
+                  },
+              ]
+            : []),
+
         // Device Mode selector
         {
             label: "Device: Auto (Default)",
@@ -914,48 +947,79 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         }}
                     >
                         {menuItems.map((item, index) => (
-                            <button
-                                key={index}
-                                onClick={item.onClick}
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    width: "100%",
-                                    padding: "8px 12px",
-                                    backgroundColor: "transparent",
-                                    border: "none",
-                                    borderRadius: "4px",
-                                    cursor: "pointer",
-                                    fontSize: "13px",
-                                    color: theme.text,
-                                    textAlign: "left",
-                                    transition: "all 0.2s ease",
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = `${theme.primary}15`;
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor =
-                                        "transparent";
-                                }}
-                            >
-                                <span style={{ fontSize: "16px" }}>
-                                    {item.icon}
-                                </span>
-                                <span style={{ flex: 1 }}>{item.label}</span>
-                                {item.isSelected && (
-                                    <span
+                            <div key={index}>
+                                {item.isComponent ? (
+                                    <div
                                         style={{
-                                            fontSize: "14px",
-                                            color: theme.primary,
-                                            fontWeight: "bold",
+                                            padding: "8px 12px",
+                                            borderBottom: `1px solid ${theme.border}`,
+                                            marginBottom: "4px",
                                         }}
                                     >
-                                        ✓
-                                    </span>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "8px",
+                                                marginBottom: "6px",
+                                                fontSize: "13px",
+                                                color: theme.text,
+                                                fontWeight: "600",
+                                            }}
+                                        >
+                                            <span style={{ fontSize: "16px" }}>
+                                                {item.icon}
+                                            </span>
+                                            <span>{item.label}</span>
+                                        </div>
+                                        {item.component}
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={item.onClick}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "8px",
+                                            width: "100%",
+                                            padding: "8px 12px",
+                                            backgroundColor: "transparent",
+                                            border: "none",
+                                            borderRadius: "4px",
+                                            cursor: "pointer",
+                                            fontSize: "13px",
+                                            color: theme.text,
+                                            textAlign: "left",
+                                            transition: "all 0.2s ease",
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = `${theme.primary}15`;
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor =
+                                                "transparent";
+                                        }}
+                                    >
+                                        <span style={{ fontSize: "16px" }}>
+                                            {item.icon}
+                                        </span>
+                                        <span style={{ flex: 1 }}>
+                                            {item.label}
+                                        </span>
+                                        {item.isSelected && (
+                                            <span
+                                                style={{
+                                                    fontSize: "14px",
+                                                    color: theme.primary,
+                                                    fontWeight: "bold",
+                                                }}
+                                            >
+                                                ✓
+                                            </span>
+                                        )}
+                                    </button>
                                 )}
-                            </button>
+                            </div>
                         ))}
                     </motion.div>
                 )}

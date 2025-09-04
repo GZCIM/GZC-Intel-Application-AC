@@ -284,6 +284,141 @@ export const ProfessionalHeader = () => {
         setComponentPortalTabId("");
     };
 
+    // Dedicated mobile layout: two rows (logo on top; tabs dropdown + controls below)
+    if (isMobile) {
+        return (
+            <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                style={{
+                    borderBottom: `1px solid ${theme.border}`,
+                    padding: "6px 12px 4px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 6,
+                    backgroundColor: theme.surface,
+                    position: "relative",
+                    zIndex: 1000,
+                }}
+            >
+                {/* Top row: Logo */}
+                <div style={{ display: "flex", alignItems: "center" }}>
+                    <GZCLogo
+                        height={32}
+                        color={
+                            theme.name.includes("Light") ||
+                            theme.name === "Arctic" ||
+                            theme.name === "Parchment" ||
+                            theme.name === "Pearl"
+                                ? theme.text
+                                : "#E0E0E0"
+                        }
+                    />
+                </div>
+
+                {/* Bottom row: Tabs dropdown (left) + Tools and avatar (right) */}
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 8,
+                    }}
+                >
+                    <div style={{ flex: 1 }}>
+                        <select
+                            value={activeTab}
+                            onChange={(e) => {
+                                const tab = tabs.find(
+                                    (t) => t.id === e.target.value
+                                );
+                                if (tab) handleTabClick(tab);
+                            }}
+                            style={{
+                                width: "100%",
+                                backgroundColor: theme.background,
+                                color: theme.text,
+                                border: `1px solid ${theme.border}`,
+                                borderRadius: 6,
+                                padding: "6px 10px",
+                                fontSize: 12,
+                            }}
+                        >
+                            {tabs.map((t) => (
+                                <option key={t.id} value={t.id}>
+                                    {t.name || `Tab ${t.id}`}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                        }}
+                    >
+                        <ToolsMenu
+                            onOpenAuthDebugger={() => setShowAuthDebugger(true)}
+                            onRequestAddComponent={handleRequestAddComponent}
+                            trigger={
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
+                                </svg>
+                            }
+                        />
+                        <UserProfile compact />
+                    </div>
+                </div>
+
+                {/* Context menu and modals */}
+                <TabContextMenu
+                    tabId={contextMenu.tabId}
+                    isOpen={contextMenu.isOpen}
+                    position={contextMenu.position}
+                    onClose={handleCloseContextMenu}
+                    onRequestAddComponent={handleRequestAddComponent}
+                />
+                {showComponentPortal && (
+                    <ComponentPortalModal
+                        isOpen={showComponentPortal}
+                        onClose={() => {
+                            setShowComponentPortal(false);
+                            setComponentPortalTabId("");
+                        }}
+                        onComponentSelect={(componentId) => {
+                            const componentMeta =
+                                componentInventory.getComponent(componentId);
+                            if (componentMeta) {
+                                handleComponentSelected(componentMeta);
+                            }
+                        }}
+                    />
+                )}
+            </motion.div>
+        );
+    }
+
     return (
         <motion.div
             initial={{ y: -20, opacity: 0 }}
