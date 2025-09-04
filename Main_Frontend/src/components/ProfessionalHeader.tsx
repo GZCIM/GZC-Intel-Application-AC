@@ -358,166 +358,203 @@ export const ProfessionalHeader = () => {
                     <div style={{ width: "20px" }} />
                 </motion.div>
 
-                <nav
-                    style={{
-                        display: "flex",
-                        gap: "8px",
-                        alignItems: "center",
-                        flexWrap: "nowrap",
-                        overflowX: "auto",
-                        maxWidth: "100%",
-                    }}
-                >
-                    {tabs.map((tab, index) => {
-                        // Get tab config to check if closable
-                        const tabConfig = currentLayout?.tabs.find(
-                            (t) => t.id === tab.id
-                        );
-                        return (
-                            <div
-                                key={tab.id}
-                                style={{
-                                    position: "relative",
-                                    display: "flex",
-                                    alignItems: "center",
-                                }}
-                            >
-                                <motion.button
-                                    draggable
-                                    onDragStart={(e) =>
-                                        handleDragStart(e, index)
-                                    }
-                                    onDragOver={(e) =>
-                                        handleDragOver(e as any, index)
-                                    }
-                                    onDragLeave={handleDragLeave}
-                                    onDrop={(e) => handleDrop(e, index)}
-                                    onDragEnd={handleDragEnd}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{
-                                        opacity: draggedTab === index ? 0.5 : 1,
-                                        x: 0,
-                                        scale:
-                                            dragOverIndex === index ? 1.05 : 1,
-                                    }}
-                                    transition={{ delay: index * 0.05 }}
-                                    whileHover={{ y: -2 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => handleTabClick(tab)}
-                                    onContextMenu={(e) =>
-                                        handleTabRightClick(e, tab)
-                                    }
-                                    style={{
-                                        background: "transparent",
-                                        color:
-                                            activeTab === tab.id
-                                                ? editUnlocked ||
-                                                  editingLockService.isUnlocked()
-                                                    ? "#ff6b6b" // reddish when unlocked
-                                                    : theme.primary
-                                                : theme.textSecondary,
-                                        border:
-                                            dragOverIndex === index
-                                                ? `2px solid ${theme.primary}`
-                                                : "none",
-                                        padding: "6px 12px",
-                                        paddingRight: "20px", // Space for type indicator
-                                        fontSize: "12px",
-                                        fontWeight: 700,
-                                        borderRadius: "12px",
-                                        cursor:
-                                            draggedTab !== null
-                                                ? "move"
-                                                : "pointer",
-                                        transition: "all 0.2s ease",
-                                        userSelect: "none",
-                                        position: "relative",
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        if (activeTab !== tab.id) {
-                                            e.currentTarget.style.background = `${theme.primary}10`; // Lighter transparency for hover
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (activeTab !== tab.id) {
-                                            e.currentTarget.style.background =
-                                                "transparent";
-                                        }
-                                    }}
-                                >
-                                    {/* DEBUG: Log tab info for empty names */}
-                                    {!tab.name &&
-                                        console.log(
-                                            "Empty tab name detected:",
-                                            tab
-                                        )}
-                                    {tab.name ||
-                                        `Tab ${tab.id}` ||
-                                        "Unnamed Tab"}
-
-                                    {/* Tab Type Indicator */}
-                                    <div
-                                        style={{
-                                            position: "absolute",
-                                            top: "2px",
-                                            right: "4px",
-                                            width: "4px",
-                                            height: "4px",
-                                            borderRadius: "50%",
-                                            backgroundColor:
-                                                tabConfig?.type === "dynamic"
-                                                    ? "#95BD78"
-                                                    : tabConfig?.type ===
-                                                      "static"
-                                                    ? "#64b5f6"
-                                                    : "#ABD38F",
-                                            opacity: 0.8,
-                                        }}
-                                    />
-                                </motion.button>
-                            </div>
-                        );
-                    })}
-
-                    {/* Add Tab Button */}
-                    <motion.button
-                        onClick={createTabWithPrompt}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                {/* Tabs: dropdown on mobile */}
+                {typeof window !== "undefined" && window.innerWidth <= 768 ? (
+                    <div style={{ position: "relative" }}>
+                        <select
+                            value={activeTab}
+                            onChange={(e) => {
+                                const tab = tabs.find(
+                                    (t) => t.id === e.target.value
+                                );
+                                if (tab) handleTabClick(tab);
+                            }}
+                            style={{
+                                backgroundColor: theme.background,
+                                color: theme.text,
+                                border: `1px solid ${theme.border}`,
+                                borderRadius: "6px",
+                                padding: "6px 10px",
+                                fontSize: "12px",
+                                maxWidth: "220px",
+                            }}
+                        >
+                            {tabs.map((t) => (
+                                <option key={t.id} value={t.id}>
+                                    {t.name || `Tab ${t.id}`}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                ) : (
+                    <nav
                         style={{
                             display: "flex",
+                            gap: "8px",
                             alignItems: "center",
-                            justifyContent: "center",
-                            width: "32px",
-                            height: "32px",
-                            backgroundColor: "transparent",
-                            border: `1px dashed ${theme.border}`,
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                            color: theme.textSecondary,
-                            transition: "all 0.2s ease",
-                            marginLeft: "8px",
-                            fontSize: "16px",
-                            lineHeight: 1,
+                            flexWrap: "nowrap",
+                            overflowX: "auto",
+                            maxWidth: "100%",
                         }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = theme.primary;
-                            e.currentTarget.style.backgroundColor = `${theme.primary}10`;
-                            e.currentTarget.style.color = theme.primary;
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = theme.border;
-                            e.currentTarget.style.backgroundColor =
-                                "transparent";
-                            e.currentTarget.style.color = theme.textSecondary;
-                        }}
-                        title="Add New Tab"
                     >
-                        +
-                    </motion.button>
-                </nav>
+                        {tabs.map((tab, index) => {
+                            // Get tab config to check if closable
+                            const tabConfig = currentLayout?.tabs.find(
+                                (t) => t.id === tab.id
+                            );
+                            return (
+                                <div
+                                    key={tab.id}
+                                    style={{
+                                        position: "relative",
+                                        display: "flex",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <motion.button
+                                        draggable
+                                        onDragStart={(e) =>
+                                            handleDragStart(e, index)
+                                        }
+                                        onDragOver={(e) =>
+                                            handleDragOver(e as any, index)
+                                        }
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={(e) => handleDrop(e, index)}
+                                        onDragEnd={handleDragEnd}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{
+                                            opacity:
+                                                draggedTab === index ? 0.5 : 1,
+                                            x: 0,
+                                            scale:
+                                                dragOverIndex === index
+                                                    ? 1.05
+                                                    : 1,
+                                        }}
+                                        transition={{ delay: index * 0.05 }}
+                                        whileHover={{ y: -2 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => handleTabClick(tab)}
+                                        onContextMenu={(e) =>
+                                            handleTabRightClick(e, tab)
+                                        }
+                                        style={{
+                                            background: "transparent",
+                                            color:
+                                                activeTab === tab.id
+                                                    ? editUnlocked ||
+                                                      editingLockService.isUnlocked()
+                                                        ? "#ff6b6b" // reddish when unlocked
+                                                        : theme.primary
+                                                    : theme.textSecondary,
+                                            border:
+                                                dragOverIndex === index
+                                                    ? `2px solid ${theme.primary}`
+                                                    : "none",
+                                            padding: "6px 12px",
+                                            paddingRight: "20px", // Space for type indicator
+                                            fontSize: "12px",
+                                            fontWeight: 700,
+                                            borderRadius: "12px",
+                                            cursor:
+                                                draggedTab !== null
+                                                    ? "move"
+                                                    : "pointer",
+                                            transition: "all 0.2s ease",
+                                            userSelect: "none",
+                                            position: "relative",
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (activeTab !== tab.id) {
+                                                e.currentTarget.style.background = `${theme.primary}10`; // Lighter transparency for hover
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (activeTab !== tab.id) {
+                                                e.currentTarget.style.background =
+                                                    "transparent";
+                                            }
+                                        }}
+                                    >
+                                        {/* DEBUG: Log tab info for empty names */}
+                                        {!tab.name &&
+                                            console.log(
+                                                "Empty tab name detected:",
+                                                tab
+                                            )}
+                                        {tab.name ||
+                                            `Tab ${tab.id}` ||
+                                            "Unnamed Tab"}
+
+                                        {/* Tab Type Indicator */}
+                                        <div
+                                            style={{
+                                                position: "absolute",
+                                                top: "2px",
+                                                right: "4px",
+                                                width: "4px",
+                                                height: "4px",
+                                                borderRadius: "50%",
+                                                backgroundColor:
+                                                    tabConfig?.type ===
+                                                    "dynamic"
+                                                        ? "#95BD78"
+                                                        : tabConfig?.type ===
+                                                          "static"
+                                                        ? "#64b5f6"
+                                                        : "#ABD38F",
+                                                opacity: 0.8,
+                                            }}
+                                        />
+                                    </motion.button>
+                                </div>
+                            );
+                        })}
+
+                        {/* Add Tab Button */}
+                        <motion.button
+                            onClick={createTabWithPrompt}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                width: "32px",
+                                height: "32px",
+                                backgroundColor: "transparent",
+                                border: `1px dashed ${theme.border}`,
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                color: theme.textSecondary,
+                                transition: "all 0.2s ease",
+                                marginLeft: "8px",
+                                fontSize: "16px",
+                                lineHeight: 1,
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor =
+                                    theme.primary;
+                                e.currentTarget.style.backgroundColor = `${theme.primary}10`;
+                                e.currentTarget.style.color = theme.primary;
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor =
+                                    theme.border;
+                                e.currentTarget.style.backgroundColor =
+                                    "transparent";
+                                e.currentTarget.style.color =
+                                    theme.textSecondary;
+                            }}
+                            title="Add New Tab"
+                        >
+                            +
+                        </motion.button>
+                    </nav>
+                )}
             </div>
 
             <div
@@ -529,8 +566,32 @@ export const ProfessionalHeader = () => {
                     flexShrink: 0,
                 }}
             >
-                {/* User Profile */}
-                <UserProfile />
+                {/* User Profile - compact on small screens */}
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                    }}
+                >
+                    <div
+                        className="only-desktop"
+                        style={{
+                            display: window.innerWidth > 768 ? "block" : "none",
+                        }}
+                    >
+                        <UserProfile />
+                    </div>
+                    <div
+                        className="only-mobile"
+                        style={{
+                            display:
+                                window.innerWidth <= 768 ? "block" : "none",
+                        }}
+                    >
+                        <UserProfile compact />
+                    </div>
+                </div>
 
                 {/* Theme Selector */}
                 <ThemeSelector />
