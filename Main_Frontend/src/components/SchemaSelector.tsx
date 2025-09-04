@@ -13,15 +13,21 @@ export const SchemaSelector: React.FC<SchemaSelectorProps> = ({
 }) => {
     const { currentTheme: theme } = useTheme();
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedSchema, setSelectedSchema] = useState<string>("default");
+    const [selectedSchema, setSelectedSchema] = useState<string>("gzc-dark");
 
-    // Simple schema options like theme selector
+    // Schema options matching theme names from bigscreen
     const schemaOptions = [
-        { value: "default", label: "Default Schema" },
-        { value: "advanced", label: "Advanced Schema" },
-        { value: "portfolio", label: "Portfolio Schema" },
-        { value: "risk", label: "Risk Management" },
-        { value: "custom", label: "Custom Schema" },
+        { value: "gzc-dark", label: "GZC Dark" },
+        { value: "analytics-dark", label: "Analytics Dark" },
+        { value: "terminal-green", label: "Terminal Green" },
+        { value: "trading-operations", label: "Trading Operations" },
+        { value: "midnight-trading", label: "Midnight Trading" },
+        { value: "quantum-analytics", label: "Quantum Analytics" },
+        { value: "professional", label: "Professional" },
+        { value: "gzc-light", label: "GZC Light" },
+        { value: "arctic", label: "Arctic" },
+        { value: "parchment", label: "Parchment" },
+        { value: "pearl", label: "Pearl" },
     ];
 
     // Load saved schema from localStorage

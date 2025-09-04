@@ -3,7 +3,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useTabLayout } from "../core/tabs/TabLayoutManager";
 import { motion, AnimatePresence } from "framer-motion";
 import { editingLockService } from "../services/editingLockService";
-import { SchemaSelector } from "./SchemaSelector";
+// Schema selector is rendered in the header for mobile, not inside this menu
 
 interface ToolsMenuProps {
     onOpenAuthDebugger: () => void;
@@ -181,26 +181,6 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
 
     const menuItems: MenuItem[] = [
-        // Schema selector (mobile only)
-        ...(isMobile
-            ? [
-                  {
-                      label: "Schema Selector",
-                      icon: "📊",
-                      isComponent: true,
-                      component: (
-                          <SchemaSelector
-                              isMobile={true}
-                              onSchemaChange={(schemaId) => {
-                                  console.log("Schema changed to:", schemaId);
-                                  setIsOpen(false);
-                              }}
-                          />
-                      ),
-                  },
-              ]
-            : []),
-
         // Device Mode selector
         {
             label: "Device: Auto (Default)",
