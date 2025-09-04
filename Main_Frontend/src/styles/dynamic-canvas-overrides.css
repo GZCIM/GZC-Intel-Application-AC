@@ -254,3 +254,53 @@ button.no-drag[title="Remove"] {
         height: 16px !important;
     }
 }
+
+/* Extra portrait boost for Samsung/Android devices */
+@media (orientation: portrait) and (max-width: 600px) {
+    .react-grid-item[data-display-mode="thumbnail"] {
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+    }
+
+    .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] {
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+    }
+
+    .drag-handle > div {
+        height: 40px !important;
+        max-height: 40px !important;
+    }
+
+    button.no-drag[title="Thumbnail"],
+    button.no-drag[title="Medium"],
+    button.no-drag[title="Fullscreen"],
+    button.no-drag[title="Remove"],
+    .drag-handle > div > button.no-drag[title="Thumbnail"],
+    .drag-handle > div > button.no-drag[title="Medium"],
+    .drag-handle > div > button.no-drag[title="Fullscreen"],
+    .drag-handle > div > button.no-drag[title="Remove"],
+    #root button.no-drag[title="Thumbnail"],
+    #root button.no-drag[title="Medium"],
+    #root button.no-drag[title="Fullscreen"],
+    #root button.no-drag[title="Remove"] {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+        max-width: 32px !important;
+        max-height: 32px !important;
+        flex: 0 0 32px !important;
+    }
+
+    .drag-handle button.no-drag svg,
+    button.no-drag[title="Thumbnail"] svg,
+    button.no-drag[title="Medium"] svg,
+    button.no-drag[title="Fullscreen"] svg,
+    button.no-drag[title="Remove"] svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+}
