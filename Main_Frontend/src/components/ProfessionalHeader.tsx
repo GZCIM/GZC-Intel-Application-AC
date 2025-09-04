@@ -57,6 +57,9 @@ export const ProfessionalHeader = () => {
             : false
     );
     const [tabDropdownOpen, setTabDropdownOpen] = useState(false);
+    const [isLandscapeCompact, setIsLandscapeCompact] = useState(
+        typeof window !== "undefined" ? window.innerHeight <= 420 : false
+    );
     // Mobile detection used for responsive header layout
     const [isMobile, setIsMobile] = useState(() => {
         if (typeof window === "undefined") return false;
@@ -67,8 +70,10 @@ export const ProfessionalHeader = () => {
         return window.innerWidth <= 768;
     });
     useEffect(() => {
-        const onResize = () =>
+        const onResize = () => {
             setIsMobile(window.innerWidth <= 768 || window.innerHeight <= 420);
+            setIsLandscapeCompact(window.innerHeight <= 420);
+        };
         window.addEventListener("resize", onResize);
         return () => window.removeEventListener("resize", onResize);
     }, []);
@@ -287,8 +292,9 @@ export const ProfessionalHeader = () => {
         setComponentPortalTabId("");
     };
 
-    // Dedicated mobile layout: two rows (logo on top; tabs dropdown + controls below)
+    // Dedicated mobile layout; switch to single row in landscape-compact
     if (isMobile) {
+        const singleRow = isLandscapeCompact;
         return (
             <motion.div
                 initial={{ y: -20, opacity: 0 }}
@@ -296,19 +302,20 @@ export const ProfessionalHeader = () => {
                 transition={{ duration: 0.3 }}
                 style={{
                     borderBottom: `1px solid ${theme.border}`,
-                    padding: "6px 12px 4px",
+                    padding: singleRow ? "6px 8px" : "6px 12px 4px",
                     display: "flex",
-                    flexDirection: "column",
+                    flexDirection: singleRow ? "row" : "column",
+                    alignItems: singleRow ? "center" : undefined,
                     gap: 6,
                     backgroundColor: theme.surface,
                     position: "relative",
                     zIndex: 1000,
                 }}
             >
-                {/* Top row: Logo */}
+                {/* Logo */}
                 <div style={{ display: "flex", alignItems: "center" }}>
                     <GZCLogo
-                        height={32}
+                        height={singleRow ? 28 : 32}
                         color={
                             theme.name.includes("Light") ||
                             theme.name === "Arctic" ||
@@ -320,13 +327,15 @@ export const ProfessionalHeader = () => {
                     />
                 </div>
 
-                {/* Bottom row: Tabs dropdown (left) + Schema selector + Tools + avatar (right) */}
+                {/* Controls */}
                 <div
                     style={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
                         gap: 8,
+                        flex: 1,
+                        marginLeft: singleRow ? 10 : 0,
                     }}
                 >
                     <div style={{ flex: 1 }}>
@@ -339,7 +348,7 @@ export const ProfessionalHeader = () => {
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "8px",
-                                    padding: "6px 12px",
+                                    padding: singleRow ? "4px 8px" : "6px 12px",
                                     backgroundColor: "transparent",
                                     border: "none",
                                     borderRadius: "6px",
@@ -347,7 +356,7 @@ export const ProfessionalHeader = () => {
                                     fontSize: "13px",
                                     color: theme.text,
                                     transition: "all 0.2s ease",
-                                    width: "100%",
+                                    width: singleRow ? "auto" : "100%",
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = `${theme.primary}10`;
