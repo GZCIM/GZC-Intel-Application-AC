@@ -67,7 +67,8 @@ export const ProfessionalHeader = () => {
         return window.innerWidth <= 768;
     });
     useEffect(() => {
-        const onResize = () => setIsMobile(window.innerWidth <= 768);
+        const onResize = () =>
+            setIsMobile(window.innerWidth <= 768 || window.innerHeight <= 420);
         window.addEventListener("resize", onResize);
         return () => window.removeEventListener("resize", onResize);
     }, []);
