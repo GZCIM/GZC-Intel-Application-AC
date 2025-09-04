@@ -36,6 +36,7 @@ export const MarketIntelPanel = () => {
     };
 
     const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsed());
+    const [isMobilePortrait, setIsMobilePortrait] = useState(false);
     const userCollapsedRef = React.useRef<boolean | null>(null);
     const { currentTheme: theme } = useTheme();
 
@@ -44,10 +45,19 @@ export const MarketIntelPanel = () => {
         const onResize = () => {
             const smallWidth = window.innerWidth <= 768;
             const smallHeight = window.innerHeight <= 420;
+            const mobilePortrait =
+                smallWidth && window.innerHeight > window.innerWidth;
+
+            setIsMobilePortrait(mobilePortrait);
+
             // If the user has toggled explicitly, respect that
             if (userCollapsedRef.current !== null) return;
             if (smallWidth || smallHeight) setIsCollapsed(true);
         };
+
+        // Initial check
+        onResize();
+
         window.addEventListener("resize", onResize);
         return () => window.removeEventListener("resize", onResize);
     }, []);
@@ -55,21 +65,47 @@ export const MarketIntelPanel = () => {
     return (
         <div
             style={{
-                width: isCollapsed ? "48px" : "280px",
-                minWidth: isCollapsed ? "48px" : "280px",
-                maxWidth: isCollapsed ? "48px" : "280px",
-                height: "calc(100vh - 88px)", // Dynamic height: full viewport minus header minus footer
+                width: isMobilePortrait
+                    ? "100%"
+                    : isCollapsed
+                    ? "48px"
+                    : "280px",
+                minWidth: isMobilePortrait
+                    ? "100%"
+                    : isCollapsed
+                    ? "48px"
+                    : "280px",
+                maxWidth: isMobilePortrait
+                    ? "100%"
+                    : isCollapsed
+                    ? "48px"
+                    : "280px",
+                height: isMobilePortrait
+                    ? isCollapsed
+                        ? "48px"
+                        : "200px"
+                    : "calc(100vh - 88px)",
                 backgroundColor: theme.surface,
-                borderRight: isCollapsed ? "none" : `1px solid ${theme.border}`,
+                borderRight: isMobilePortrait
+                    ? "none"
+                    : isCollapsed
+                    ? "none"
+                    : `1px solid ${theme.border}`,
+                borderBottom: isMobilePortrait
+                    ? isCollapsed
+                        ? "none"
+                        : `1px solid ${theme.border}`
+                    : "none",
                 padding: isCollapsed ? "16px 8px" : "16px",
                 paddingBottom: isCollapsed ? "16px" : "16px", // Consistent padding
                 overflowY: "auto",
-                transition: "width 0.3s ease",
-                position: "relative",
+                transition: "all 0.3s ease",
+                position: isMobilePortrait ? "relative" : "relative",
                 display: "flex",
                 flexDirection: "column",
                 zIndex: 2,
                 pointerEvents: "auto",
+                order: isMobilePortrait ? 3 : 0, // Move to third row in mobile portrait
             }}
         >
             {/* Header with collapse button */}
