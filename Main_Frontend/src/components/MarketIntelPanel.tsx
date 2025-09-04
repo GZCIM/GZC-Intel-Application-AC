@@ -5,33 +5,44 @@ import { getVersionString } from "../utils/version";
 
 export const MarketIntelPanel = () => {
     // Collapse by default on mobile or when device override is set to mobile
+    // Also collapse on very small height (landscape phones)
     const getInitialCollapsed = () => {
         try {
             const override = localStorage.getItem("gzc-device-override");
             const isMobileOverride = override === "mobile";
             const isSmallScreen =
                 typeof window !== "undefined" && window.innerWidth <= 768;
+            const isLandscapeCompact =
+                typeof window !== "undefined" && window.innerHeight <= 420;
             const isMobileUA =
                 typeof navigator !== "undefined" &&
                 /Mobile|Android|iPhone|iPad|iPod|Windows Phone/i.test(
                     navigator.userAgent
                 );
-            return isMobileOverride || isSmallScreen || isMobileUA;
+            return (
+                isMobileOverride ||
+                isSmallScreen ||
+                isLandscapeCompact ||
+                isMobileUA
+            );
         } catch {
-            return typeof window !== "undefined" && window.innerWidth <= 768;
+            return (
+                typeof window !== "undefined" &&
+                (window.innerWidth <= 768 || window.innerHeight <= 420)
+            );
         }
     };
 
     const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsed());
     const { currentTheme: theme } = useTheme();
 
-    // Auto-collapse on small screens initially; only auto-expand when large again
+    // Auto-collapse on small width/height; auto-expand when space is sufficient
     React.useEffect(() => {
         const onResize = () => {
-            const small = window.innerWidth <= 768;
-            if (!small) {
-                setIsCollapsed(false);
-            }
+            const smallWidth = window.innerWidth <= 768;
+            const smallHeight = window.innerHeight <= 420;
+            if (smallWidth || smallHeight) setIsCollapsed(true);
+            else setIsCollapsed(false);
         };
         window.addEventListener("resize", onResize);
         return () => window.removeEventListener("resize", onResize);
