@@ -25,11 +25,13 @@ export const MarketIntelPanel = () => {
     const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsed());
     const { currentTheme: theme } = useTheme();
 
-    // Keep collapsed on small screens, expand on larger screens automatically
+    // Auto-collapse on small screens initially; only auto-expand when large again
     React.useEffect(() => {
         const onResize = () => {
             const small = window.innerWidth <= 768;
-            setIsCollapsed(small);
+            if (!small) {
+                setIsCollapsed(false);
+            }
         };
         window.addEventListener("resize", onResize);
         return () => window.removeEventListener("resize", onResize);
