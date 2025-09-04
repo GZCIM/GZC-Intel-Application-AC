@@ -566,37 +566,16 @@ export const ProfessionalHeader = () => {
                     flexShrink: 0,
                 }}
             >
-                {/* User Profile - compact on small screens */}
+                {/* Theme Selector (desktop only) */}
                 <div
                     style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
+                        display: window.innerWidth > 768 ? "block" : "none",
                     }}
                 >
-                    <div
-                        className="only-desktop"
-                        style={{
-                            display: window.innerWidth > 768 ? "block" : "none",
-                        }}
-                    >
-                        <UserProfile />
-                    </div>
-                    <div
-                        className="only-mobile"
-                        style={{
-                            display:
-                                window.innerWidth <= 768 ? "block" : "none",
-                        }}
-                    >
-                        <UserProfile compact />
-                    </div>
+                    <ThemeSelector />
                 </div>
 
-                {/* Theme Selector */}
-                <ThemeSelector />
-
-                {/* Tools Menu on far right */}
+                {/* Tools Menu */}
                 <ToolsMenu
                     onOpenAuthDebugger={() => setShowAuthDebugger(true)}
                     onRequestAddComponent={handleRequestAddComponent}
@@ -624,6 +603,31 @@ export const ProfessionalHeader = () => {
                         </svg>
                     }
                 />
+
+                {/* User Profile - compact on small screens (avatar only), full on desktop */}
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                    }}
+                >
+                    <div
+                        style={{
+                            display: window.innerWidth > 768 ? "block" : "none",
+                        }}
+                    >
+                        <UserProfile />
+                    </div>
+                    <div
+                        style={{
+                            display:
+                                window.innerWidth <= 768 ? "block" : "none",
+                        }}
+                    >
+                        <UserProfile compact />
+                    </div>
+                </div>
             </div>
 
             {/* Context Menu */}
