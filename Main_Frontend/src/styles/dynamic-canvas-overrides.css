@@ -258,20 +258,24 @@ button.no-drag[title="Remove"] {
 /* Extra portrait boost for Samsung/Android devices */
 @media (orientation: portrait) and (max-width: 600px) {
     .react-grid-item[data-display-mode="thumbnail"] {
-        height: 40px !important;
-        min-height: 40px !important;
-        max-height: 40px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        max-height: 48px !important;
     }
 
     .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] {
-        height: 40px !important;
-        min-height: 40px !important;
-        max-height: 40px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        max-height: 48px !important;
     }
 
     .drag-handle > div {
-        height: 40px !important;
-        max-height: 40px !important;
+        height: 48px !important;
+        max-height: 48px !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
     }
 
     button.no-drag[title="Thumbnail"],
@@ -286,13 +290,13 @@ button.no-drag[title="Remove"] {
     #root button.no-drag[title="Medium"],
     #root button.no-drag[title="Fullscreen"],
     #root button.no-drag[title="Remove"] {
-        width: 32px !important;
-        height: 32px !important;
-        min-width: 32px !important;
-        min-height: 32px !important;
-        max-width: 32px !important;
-        max-height: 32px !important;
-        flex: 0 0 32px !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        max-width: 36px !important;
+        max-height: 36px !important;
+        flex: 0 0 36px !important;
     }
 
     .drag-handle button.no-drag svg,
@@ -300,7 +304,18 @@ button.no-drag[title="Remove"] {
     button.no-drag[title="Medium"] svg,
     button.no-drag[title="Fullscreen"] svg,
     button.no-drag[title="Remove"] svg {
-        width: 18px !important;
-        height: 18px !important;
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    /* Improve tap experience */
+    .drag-handle {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    .drag-handle > input,
+    .drag-handle > div > button.no-drag {
+        pointer-events: auto !important;
+        z-index: 10000 !important;
     }
 }
