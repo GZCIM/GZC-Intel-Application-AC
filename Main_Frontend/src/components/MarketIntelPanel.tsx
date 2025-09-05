@@ -68,19 +68,6 @@ export const MarketIntelPanel = () => {
             setIsMobilePortrait(mobilePortrait);
             setIsMobileLandscapeCompact(mobileLandscapeCompact);
 
-            // Debug logging for mobile detection
-            console.log("Mobile Detection Debug:", {
-                width: window.innerWidth,
-                height: window.innerHeight,
-                isPortrait,
-                isLandscape,
-                smallWidth,
-                smallHeight,
-                mobilePortrait,
-                mobileLandscapeCompact,
-                isCollapsed,
-            });
-
             // If the user has toggled explicitly, respect that
             if (userCollapsedRef.current !== null) return;
             if (smallWidth || smallHeight) setIsCollapsed(true);
@@ -216,20 +203,6 @@ export const MarketIntelPanel = () => {
                         }}
                     >
                         Market Intel
-                        {/* Debug indicator */}
-                        <span
-                            style={{
-                                fontSize: "10px",
-                                marginLeft: "8px",
-                                color: theme.textSecondary,
-                            }}
-                        >
-                            {isMobilePortrait
-                                ? "MP"
-                                : isMobileLandscapeCompact
-                                ? "ML"
-                                : "D"}
-                        </span>
                     </h3>
                 )}
 
