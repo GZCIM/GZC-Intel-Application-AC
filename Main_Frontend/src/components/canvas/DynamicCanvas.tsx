@@ -892,49 +892,49 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             >
                                 {/* Title field for thumbnail components */}
                                 {isEditMode ? (
-                                <input
-                                    type="text"
-                                    value={instance.customTitle || title}
-                                    onChange={(e) => {
-                                        const newTitle = e.target.value;
-                                        setComponents((prev) =>
-                                            prev.map((comp) =>
-                                                comp.id === instance.id
-                                                    ? {
-                                                          ...comp,
+                                    <input
+                                        type="text"
+                                        value={instance.customTitle || title}
+                                        onChange={(e) => {
+                                            const newTitle = e.target.value;
+                                            setComponents((prev) =>
+                                                prev.map((comp) =>
+                                                    comp.id === instance.id
+                                                        ? {
+                                                              ...comp,
                                                               customTitle:
                                                                   newTitle,
-                                                      }
-                                                    : comp
-                                            )
-                                        );
-                                        // Save component props immediately for better UX
-                                        setTimeout(
-                                            () => saveLayoutToTab(),
-                                            100
-                                        );
-                                    }}
+                                                          }
+                                                        : comp
+                                                )
+                                            );
+                                            // Save component props immediately for better UX
+                                            setTimeout(
+                                                () => saveLayoutToTab(),
+                                                100
+                                            );
+                                        }}
                                         onFocus={(e) => {
                                             // Prevent focus if somehow this gets called in locked mode
                                             if (!isEditMode) {
                                                 e.target.blur();
                                             }
                                         }}
-                                    style={{
-                                        fontSize: "12px",
-                                        fontWeight: 600,
-                                        color: currentTheme.text,
-                                        background: "transparent",
-                                        border: "none",
-                                        outline: "none",
-                                        padding: "4px 8px",
-                                        borderRadius: "4px",
-                                        minWidth: "120px",
-                                        maxWidth: "200px",
+                                        style={{
+                                            fontSize: "12px",
+                                            fontWeight: 600,
+                                            color: currentTheme.text,
+                                            background: "transparent",
+                                            border: "none",
+                                            outline: "none",
+                                            padding: "4px 8px",
+                                            borderRadius: "4px",
+                                            minWidth: "120px",
+                                            maxWidth: "200px",
                                             cursor: "text",
-                                    }}
-                                    placeholder="Enter title..."
-                                />
+                                        }}
+                                        placeholder="Enter title..."
+                                    />
                                 ) : (
                                     <div
                                         title="Unlock to edit title"
@@ -1736,17 +1736,17 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             </button>
                                         )}
                                         {effectiveMode !== "full" && (
-                                        <button
-                                            className="no-drag"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setDisplayMode(
-                                                    instance.id,
-                                                    "full"
-                                                );
-                                            }}
-                                            title="Full"
-                                            style={{
+                                            <button
+                                                className="no-drag"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDisplayMode(
+                                                        instance.id,
+                                                        "full"
+                                                    );
+                                                }}
+                                                title="Full"
+                                                style={{
                                                     height: "24px !important",
                                                     minHeight:
                                                         "24px !important",
@@ -1756,30 +1756,30 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         "6px 6px !important",
                                                     fontSize: "12px !important",
                                                     lineHeight: "1 !important",
-                                                border: `1px solid ${currentTheme.border}`,
+                                                    border: `1px solid ${currentTheme.border}`,
                                                     background: "transparent",
-                                                borderRadius: 4,
-                                                cursor: "pointer",
+                                                    borderRadius: 4,
+                                                    cursor: "pointer",
                                                     boxSizing: "border-box",
                                                     display: "flex",
                                                     alignItems: "center",
                                                     justifyContent: "center",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
+                                                }}
                                             >
-                                                <path d="M5 1H1v4" />
-                                                <path d="M9 13h4V9" />
-                                                <path d="M13 5V1H9" />
-                                                <path d="M1 9v4h4" />
-                                            </svg>
-                                        </button>
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.2"
+                                                >
+                                                    <path d="M5 1H1v4" />
+                                                    <path d="M9 13h4V9" />
+                                                    <path d="M13 5V1H9" />
+                                                    <path d="M1 9v4h4" />
+                                                </svg>
+                                            </button>
                                         )}
                                     </div>
                                 ) : (
@@ -2727,9 +2727,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 }, 50);
                                             }
                                         }}
-                                    style={{
+                                        style={{
                                             position: "fixed",
-                                        inset: 0,
+                                            inset: 0,
                                             background: "transparent",
                                             border: "none",
                                             borderRadius: 0,
@@ -2813,38 +2813,38 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     position: "relative",
                                                     width: "100%",
                                                     height: "100%",
-                                        display: "flex",
+                                                    display: "flex",
                                                     alignItems: "stretch",
-                                    }}
-                                >
-                                    {/* Absolute controls aligned with host header; remove extra internal header spacing */}
-                                    <div
-                                        className="no-drag"
-                                        style={{
-                                            position: "absolute",
+                                                }}
+                                            >
+                                                {/* Absolute controls aligned with host header; remove extra internal header spacing */}
+                                                <div
+                                                    className="no-drag"
+                                                    style={{
+                                                        position: "absolute",
                                                         top: 12,
                                                         right: 12,
-                                            height: 30,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 8,
+                                                        height: 30,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: 8,
                                                         zIndex: 12001,
                                                         pointerEvents: "auto",
-                                        }}
-                                    >
+                                                    }}
+                                                >
                                                     {/* Buttons always shown to exit fullscreen (both modes) */}
-                                        <button
-                                            onClick={() => {
-                                                setDisplayMode(
-                                                    fullScreenInstance.id,
-                                                    "thumbnail"
-                                                );
+                                                    <button
+                                                        onClick={() => {
+                                                            setDisplayMode(
+                                                                fullScreenInstance.id,
+                                                                "thumbnail"
+                                                            );
                                                             setFullScreenId(
                                                                 null
                                                             );
-                                            }}
-                                            title="Thumbnail"
-                                            style={{
+                                                        }}
+                                                        title="Thumbnail"
+                                                        style={{
                                                             height: 24,
                                                             minHeight: 24,
                                                             maxHeight: 24,
@@ -2854,74 +2854,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                             padding: 0,
                                                             fontSize: 12,
                                                             lineHeight: 1,
-                                                border: `1px solid ${currentTheme.border}`,
-                                                borderRadius: 4,
+                                                            border: `1px solid ${currentTheme.border}`,
+                                                            borderRadius: 4,
                                                             background:
                                                                 "transparent",
                                                             color: currentTheme.text,
-                                                cursor: "pointer",
-                                                            boxSizing:
-                                                                "border-box",
-                                                            display: "flex",
-                                                            alignItems:
-                                                                "center",
-                                                            justifyContent:
-                                                                "center",
-                                            }}
-                                        >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <rect
-                                                    x="1"
-                                                    y="2"
-                                                    width="12"
-                                                    height="10"
-                                                    rx="1"
-                                                />
-                                                <rect
-                                                    x="3"
-                                                    y="4"
-                                                    width="8"
-                                                    height="6"
-                                                    rx="0.5"
-                                                    fill="currentColor"
-                                                    opacity="0.7"
-                                                />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setDisplayMode(
-                                                    fullScreenInstance.id,
-                                                    "medium"
-                                                );
-                                                            setFullScreenId(
-                                                                null
-                                                            );
-                                            }}
-                                            title="Medium"
-                                            style={{
-                                                            height: 24,
-                                                            minHeight: 24,
-                                                            maxHeight: 24,
-                                                            width: 24,
-                                                            minWidth: 24,
-                                                            maxWidth: 24,
-                                                            padding: 0,
-                                                            fontSize: 12,
-                                                            lineHeight: 1,
-                                                border: `1px solid ${currentTheme.border}`,
-                                                borderRadius: 4,
-                                                            background:
-                                                                "transparent",
-                                                            color: currentTheme.text,
-                                                cursor: "pointer",
+                                                            cursor: "pointer",
                                                             boxSizing:
                                                                 "border-box",
                                                             display: "flex",
@@ -2931,40 +2869,102 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                                 "center",
                                                         }}
                                                     >
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 14 14"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="1.2"
-                                            >
-                                                <rect
-                                                    x="2"
-                                                    y="2"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="8"
-                                                    y="2"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="2"
-                                                    y="8"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                                <rect
-                                                    x="8"
-                                                    y="8"
-                                                    width="4"
-                                                    height="4"
-                                                />
-                                            </svg>
-                                        </button>
+                                                        <svg
+                                                            width="14"
+                                                            height="14"
+                                                            viewBox="0 0 14 14"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="1.2"
+                                                        >
+                                                            <rect
+                                                                x="1"
+                                                                y="2"
+                                                                width="12"
+                                                                height="10"
+                                                                rx="1"
+                                                            />
+                                                            <rect
+                                                                x="3"
+                                                                y="4"
+                                                                width="8"
+                                                                height="6"
+                                                                rx="0.5"
+                                                                fill="currentColor"
+                                                                opacity="0.7"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setDisplayMode(
+                                                                fullScreenInstance.id,
+                                                                "medium"
+                                                            );
+                                                            setFullScreenId(
+                                                                null
+                                                            );
+                                                        }}
+                                                        title="Medium"
+                                                        style={{
+                                                            height: 24,
+                                                            minHeight: 24,
+                                                            maxHeight: 24,
+                                                            width: 24,
+                                                            minWidth: 24,
+                                                            maxWidth: 24,
+                                                            padding: 0,
+                                                            fontSize: 12,
+                                                            lineHeight: 1,
+                                                            border: `1px solid ${currentTheme.border}`,
+                                                            borderRadius: 4,
+                                                            background:
+                                                                "transparent",
+                                                            color: currentTheme.text,
+                                                            cursor: "pointer",
+                                                            boxSizing:
+                                                                "border-box",
+                                                            display: "flex",
+                                                            alignItems:
+                                                                "center",
+                                                            justifyContent:
+                                                                "center",
+                                                        }}
+                                                    >
+                                                        <svg
+                                                            width="14"
+                                                            height="14"
+                                                            viewBox="0 0 14 14"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="1.2"
+                                                        >
+                                                            <rect
+                                                                x="2"
+                                                                y="2"
+                                                                width="4"
+                                                                height="4"
+                                                            />
+                                                            <rect
+                                                                x="8"
+                                                                y="2"
+                                                                width="4"
+                                                                height="4"
+                                                            />
+                                                            <rect
+                                                                x="2"
+                                                                y="8"
+                                                                width="4"
+                                                                height="4"
+                                                            />
+                                                            <rect
+                                                                x="8"
+                                                                y="8"
+                                                                width="4"
+                                                                height="4"
+                                                            />
+                                                        </svg>
+                                                    </button>
 
                                                     {/* Edit-mode-only controls: Full + Title + Remove */}
                                                     {isEditMode && (
@@ -3128,9 +3128,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         </>
                                                     )}
                                                     {/* Fullscreen component content */}
-                                    <div
-                                        style={{
-                                            flex: 1,
+                                                    <div
+                                                        style={{
+                                                            flex: 1,
                                                             minHeight: 0,
                                                             position:
                                                                 "relative",
@@ -3139,27 +3139,27 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                             background:
                                                                 "transparent",
                                                             overflow: "auto",
-                                        }}
-                                    >
-                                        <ComponentRenderer
-                                            componentId={
-                                                fullScreenInstance.componentId
-                                            }
+                                                        }}
+                                                    >
+                                                        <ComponentRenderer
+                                                            componentId={
+                                                                fullScreenInstance.componentId
+                                                            }
                                                             instanceId={
                                                                 fullScreenInstance.id
                                                             }
-                                            props={
+                                                            props={
                                                                 fullScreenInstance.props ||
                                                                 {}
-                                            }
+                                                            }
                                                             isEditMode={
                                                                 isEditMode
                                                             }
-                                            onRemove={() =>
-                                                removeComponent(
-                                                    fullScreenInstance.id
-                                                )
-                                            }
+                                                            onRemove={() =>
+                                                                removeComponent(
+                                                                    fullScreenInstance.id
+                                                                )
+                                                            }
                                                         />
                                                     </div>
                                                 </div>
@@ -3608,23 +3608,23 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                                     prev.map(
                                                                         (c) =>
                                                                             c.id ===
-                                                        fullScreenInstance.id
-                                                            ? {
+                                                                            fullScreenInstance.id
+                                                                                ? {
                                                                                       ...c,
                                                                                       customTitle:
                                                                                           val,
-                                                              }
+                                                                                  }
                                                                                 : c
-                                                    )
-                                                );
+                                                                    )
+                                                            );
                                                         }}
                                                         onBlur={() => {
-                                                setTimeout(
+                                                            setTimeout(
                                                                 () =>
                                                                     saveLayoutToTab(),
-                                                    100
-                                                );
-                                            }}
+                                                                100
+                                                            );
+                                                        }}
                                                         style={{
                                                             height: "24px !important",
                                                             minHeight:
@@ -3710,9 +3710,9 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     }
                                                 />
                                             </div>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
                         </div>
                     )}
                 </div>
