@@ -98,6 +98,15 @@ body {
     body.leftpanel-full .dashboard-content {
         display: none;
     }
+    body.leftpanel-full .dashboard-body {
+        flex-direction: column; /* ensure stacked layout during takeover */
+    }
+    body.leftpanel-full .dashboard-left-panel {
+        width: 100%;
+        max-width: 100%;
+        flex: 1; /* allow panel to fill remaining space */
+        overflow-y: auto;
+    }
 }
 
 /* Better scrollbar for main content */
