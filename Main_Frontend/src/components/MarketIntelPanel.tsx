@@ -78,18 +78,18 @@ export const MarketIntelPanel = () => {
         return () => window.removeEventListener("resize", onResize);
     }, []);
 
-    // In mobile compact landscape, when expanded, take over and hide main content
+    // In mobile portrait or compact landscape, when expanded, take over and hide main content
     React.useEffect(() => {
         if (typeof document === "undefined") return;
-        const takeover = isMobileLandscapeCompact && !isCollapsed;
+        const takeover = (isMobilePortrait || isMobileLandscapeCompact) && !isCollapsed;
         document.body.classList.toggle("leftpanel-full", takeover);
         return () => {
             document.body.classList.remove("leftpanel-full");
         };
-    }, [isMobileLandscapeCompact, isCollapsed]);
+    }, [isMobilePortrait, isMobileLandscapeCompact, isCollapsed]);
 
     const isTakeover =
-        isMobileLandscapeCompact && !isCollapsed; // Only landscape takes over full screen
+        (isMobilePortrait || isMobileLandscapeCompact) && !isCollapsed; // Both mobile orientations take over full screen
     const isMobilePortraitExpanded = isMobilePortrait && !isCollapsed; // Mobile portrait expanded state
 
     return (
@@ -101,8 +101,8 @@ export const MarketIntelPanel = () => {
                 maxWidth: isTakeover ? "100%" : isMobilePortrait ? "100%" : isCollapsed ? "48px" : "280px",
                 height: isTakeover
                     ? "calc(100vh - 88px)"
-                    : isMobilePortrait
-                    ? isCollapsed ? "60px" : "calc(100vh - 88px)" // Thin row when collapsed, full screen when expanded
+                    : isMobilePortrait && isCollapsed
+                    ? "60px" // Thin row when collapsed on mobile portrait
                     : "calc(100vh - 88px)",
                 backgroundColor: theme.surface,
                 borderRight: isTakeover
