@@ -47,12 +47,15 @@ export const MarketIntelPanel = () => {
         const onResize = () => {
             const smallWidth = window.innerWidth <= 768;
             const smallHeight = window.innerHeight <= 420;
-            const mobilePortrait =
-                smallWidth && window.innerHeight > window.innerWidth;
+            const isPortrait = window.innerHeight > window.innerWidth;
+            const isLandscape = window.innerWidth > window.innerHeight;
+            
+            // Mobile portrait: either small width OR portrait orientation on mobile device
+            const mobilePortrait = smallWidth || (isPortrait && window.innerWidth <= 1024);
             let mobileLandscapeCompact =
                 smallWidth &&
                 smallHeight &&
-                window.innerWidth > window.innerHeight;
+                isLandscape;
             try {
                 const override = localStorage.getItem("gzc-device-override");
                 if (
@@ -65,6 +68,19 @@ export const MarketIntelPanel = () => {
 
             setIsMobilePortrait(mobilePortrait);
             setIsMobileLandscapeCompact(mobileLandscapeCompact);
+            
+            // Debug logging for mobile detection
+            console.log('Mobile Detection Debug:', {
+                width: window.innerWidth,
+                height: window.innerHeight,
+                isPortrait,
+                isLandscape,
+                smallWidth,
+                smallHeight,
+                mobilePortrait,
+                mobileLandscapeCompact,
+                isCollapsed
+            });
 
             // If the user has toggled explicitly, respect that
             if (userCollapsedRef.current !== null) return;
@@ -196,6 +212,10 @@ export const MarketIntelPanel = () => {
                         }}
                     >
                         Market Intel
+                        {/* Debug indicator */}
+                        <span style={{ fontSize: "10px", marginLeft: "8px", color: theme.textSecondary }}>
+                            {isMobilePortrait ? "MP" : isMobileLandscapeCompact ? "ML" : "D"}
+                        </span>
                     </h3>
                 )}
 
