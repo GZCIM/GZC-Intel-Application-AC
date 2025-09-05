@@ -342,7 +342,9 @@ export const MarketIntelPanel = () => {
                             gridTemplateColumns: isMobileLandscapeCompact
                                 ? "none"
                                 : "1fr",
-                            flexDirection: isMobileLandscapeCompact ? "row" : "column",
+                            flexDirection: isMobileLandscapeCompact
+                                ? "row"
+                                : "column",
                             gap: 12,
                             overflow: isMobileLandscapeCompact
                                 ? "hidden"
@@ -363,21 +365,27 @@ export const MarketIntelPanel = () => {
                                     paddingBottom: "8px",
                                 }}
                             >
-                                <div style={{ minWidth: "200px", flexShrink: 0 }}>
+                                <div
+                                    style={{ minWidth: "200px", flexShrink: 0 }}
+                                >
                                     <AIAgentContent
                                         noScroll={true}
                                         showTitle={true}
                                         title="AI Agents"
                                     />
                                 </div>
-                                <div style={{ minWidth: "200px", flexShrink: 0 }}>
+                                <div
+                                    style={{ minWidth: "200px", flexShrink: 0 }}
+                                >
                                     <AIAgentContent
                                         noScroll={true}
                                         showTitle={true}
                                         title="Alerts"
                                     />
                                 </div>
-                                <div style={{ minWidth: "200px", flexShrink: 0 }}>
+                                <div
+                                    style={{ minWidth: "200px", flexShrink: 0 }}
+                                >
                                     <AIAgentContent
                                         noScroll={true}
                                         showTitle={true}
@@ -534,13 +542,13 @@ const AIAgentTabs = () => {
 };
 
 // AI Agent Content Component
-const AIAgentContent = ({ 
-    noScroll = false, 
-    showTitle = false, 
-    title = "AI Agents" 
-}: { 
-    noScroll?: boolean; 
-    showTitle?: boolean; 
+const AIAgentContent = ({
+    noScroll = false,
+    showTitle = false,
+    title = "AI Agents",
+}: {
+    noScroll?: boolean;
+    showTitle?: boolean;
     title?: string;
 }) => {
     const { currentTheme: theme } = useTheme();
