@@ -93,7 +93,7 @@ export const MarketIntelPanel = () => {
                 height: isMobilePortrait
                     ? isCollapsed
                         ? "48px"
-                        : "calc(100vh - 88px)"
+                        : "calc(100vh - 48px)"
                     : "calc(100vh - 88px)",
                 backgroundColor: theme.surface,
                 borderRight: isMobilePortrait

@@ -53,7 +53,7 @@ body {
 @media (max-width: 768px) and (orientation: portrait) {
     .dashboard-left-panel {
         order: 3; /* Move to third row */
-        max-height: 200px; /* Limit height when expanded */
+        max-height: none; /* Allow full height when expanded */
     }
 }
 
