@@ -105,7 +105,7 @@ export const MarketIntelPanel = () => {
                     isMobilePortrait || isMobileLandscapeCompact
                         ? isCollapsed
                             ? "48px"
-                            : "calc(100vh - 48px)"
+                            : "calc(100vh - 88px)" // header (48) + status bar (40)
                         : "calc(100vh - 88px)",
                 backgroundColor: theme.surface,
                 borderRight:
@@ -114,11 +114,12 @@ export const MarketIntelPanel = () => {
                         : isCollapsed
                         ? "none"
                         : `1px solid ${theme.border}`,
-                borderBottom: isMobilePortrait
-                    ? isCollapsed
-                        ? "none"
-                        : `1px solid ${theme.border}`
-                    : "none",
+                borderBottom:
+                    isMobilePortrait || isMobileLandscapeCompact
+                        ? isCollapsed
+                            ? "none"
+                            : `1px solid ${theme.border}`
+                        : "none",
                 padding: isCollapsed ? "16px 8px" : "16px",
                 paddingBottom: isCollapsed ? "16px" : "16px", // Consistent padding
                 overflowY: "auto",
@@ -128,7 +129,7 @@ export const MarketIntelPanel = () => {
                 flexDirection: "column",
                 zIndex: 2,
                 pointerEvents: "auto",
-                order: isMobilePortrait ? 3 : 0, // Move to third row in mobile portrait
+                order: isMobilePortrait || isMobileLandscapeCompact ? 3 : 0, // Third row during mobile takeover
             }}
         >
             {/* Header with collapse button */}
