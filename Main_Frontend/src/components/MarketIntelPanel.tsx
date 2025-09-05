@@ -163,12 +163,12 @@ export const MarketIntelPanel = () => {
                     aria-label={
                         isMobilePortrait
                             ? isCollapsed
-                                ? "Expand panel down"
-                                : "Collapse panel up"
-                            : isMobileLandscapeCompact
-                            ? isCollapsed
                                 ? "Expand panel right"
                                 : "Collapse panel left"
+                            : isMobileLandscapeCompact
+                            ? isCollapsed
+                                ? "Expand panel down"
+                                : "Collapse panel up"
                             : isCollapsed
                             ? "Expand left panel"
                             : "Collapse left panel"
@@ -244,12 +244,12 @@ export const MarketIntelPanel = () => {
                         name={
                             isMobilePortrait
                                 ? isCollapsed
-                                    ? "chevron-down"
-                                    : "chevron-up"
-                                : isMobileLandscapeCompact
-                                ? isCollapsed
                                     ? "chevron-right"
                                     : "chevron-left"
+                                : isMobileLandscapeCompact
+                                ? isCollapsed
+                                    ? "chevron-down"
+                                    : "chevron-up"
                                 : isCollapsed
                                 ? "chevron-right"
                                 : "chevron-left"
