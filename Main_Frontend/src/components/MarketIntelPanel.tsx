@@ -78,19 +78,18 @@ export const MarketIntelPanel = () => {
         return () => window.removeEventListener("resize", onResize);
     }, []);
 
-    // In mobile portrait or compact landscape, when expanded, take over and hide main content
+    // In mobile compact landscape, when expanded, take over and hide main content
     React.useEffect(() => {
         if (typeof document === "undefined") return;
-        const takeover =
-            (isMobilePortrait || isMobileLandscapeCompact) && !isCollapsed;
+        const takeover = isMobileLandscapeCompact && !isCollapsed;
         document.body.classList.toggle("leftpanel-full", takeover);
         return () => {
             document.body.classList.remove("leftpanel-full");
         };
-    }, [isMobilePortrait, isMobileLandscapeCompact, isCollapsed]);
+    }, [isMobileLandscapeCompact, isCollapsed]);
 
     const isTakeover =
-        (isMobilePortrait || isMobileLandscapeCompact) && !isCollapsed;
+        isMobileLandscapeCompact && !isCollapsed; // Only landscape takes over full screen
 
     return (
         <div
@@ -100,6 +99,8 @@ export const MarketIntelPanel = () => {
                 maxWidth: isTakeover ? "100%" : isCollapsed ? "48px" : "280px",
                 height: isTakeover
                     ? "calc(100vh - 88px)"
+                    : isMobilePortrait && !isCollapsed
+                    ? "300px" // Fixed height for mobile portrait when expanded
                     : "calc(100vh - 88px)",
                 backgroundColor: theme.surface,
                 borderRight: isTakeover
@@ -111,6 +112,8 @@ export const MarketIntelPanel = () => {
                     ? isCollapsed
                         ? "none"
                         : `1px solid ${theme.border}`
+                    : isMobilePortrait && !isCollapsed
+                    ? `1px solid ${theme.border}` // Bottom border for mobile portrait
                     : "none",
                 padding: isCollapsed ? "16px 8px" : "12px 12px 8px",
                 paddingBottom: isCollapsed ? "16px" : "16px", // Consistent padding
