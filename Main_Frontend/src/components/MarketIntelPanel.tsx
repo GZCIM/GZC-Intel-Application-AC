@@ -62,6 +62,16 @@ export const MarketIntelPanel = () => {
         return () => window.removeEventListener("resize", onResize);
     }, []);
 
+    // In mobile portrait, when expanded, take over and hide main content
+    React.useEffect(() => {
+        if (typeof document === "undefined") return;
+        const takeover = isMobilePortrait && !isCollapsed;
+        document.body.classList.toggle("leftpanel-full", takeover);
+        return () => {
+            document.body.classList.remove("leftpanel-full");
+        };
+    }, [isMobilePortrait, isCollapsed]);
+
     return (
         <div
             style={{
@@ -83,7 +93,7 @@ export const MarketIntelPanel = () => {
                 height: isMobilePortrait
                     ? isCollapsed
                         ? "48px"
-                        : "200px"
+                        : "calc(100vh - 88px)"
                     : "calc(100vh - 88px)",
                 backgroundColor: theme.surface,
                 borderRight: isMobilePortrait
@@ -141,11 +151,23 @@ export const MarketIntelPanel = () => {
 
                 <button
                     aria-label={
-                        isCollapsed
+                        isMobilePortrait
+                            ? isCollapsed
+                                ? "Expand panel down"
+                                : "Collapse panel up"
+                            : isCollapsed
                             ? "Expand left panel"
                             : "Collapse left panel"
                     }
-                    title={isCollapsed ? "Expand" : "Collapse"}
+                    title={
+                        isMobilePortrait
+                            ? isCollapsed
+                                ? "Expand"
+                                : "Collapse"
+                            : isCollapsed
+                            ? "Expand"
+                            : "Collapse"
+                    }
                     onClick={() => {
                         const next = !isCollapsed;
                         setIsCollapsed(next);
@@ -201,7 +223,15 @@ export const MarketIntelPanel = () => {
                     }}
                 >
                     <FeatherIcon
-                        name={isCollapsed ? "chevron-right" : "chevron-left"}
+                        name={
+                            isMobilePortrait
+                                ? isCollapsed
+                                    ? "chevron-down"
+                                    : "chevron-up"
+                                : isCollapsed
+                                ? "chevron-right"
+                                : "chevron-left"
+                        }
                         size={16}
                     />
                 </button>
