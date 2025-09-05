@@ -93,8 +93,8 @@ body {
     }
 }
 
-/* When left panel is full takeover on mobile, hide main content */
-@media (max-width: 768px) and (orientation: portrait) {
+/* When left panel is full takeover on mobile (portrait or compact landscape), hide main content */
+@media (max-width: 768px) {
     body.leftpanel-full .dashboard-content {
         display: none;
     }
