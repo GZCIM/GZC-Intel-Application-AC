@@ -37,6 +37,8 @@ export const MarketIntelPanel = () => {
 
     const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsed());
     const [isMobilePortrait, setIsMobilePortrait] = useState(false);
+    const [isMobileLandscapeCompact, setIsMobileLandscapeCompact] =
+        useState(false);
     const userCollapsedRef = React.useRef<boolean | null>(null);
     const { currentTheme: theme } = useTheme();
 
@@ -47,8 +49,13 @@ export const MarketIntelPanel = () => {
             const smallHeight = window.innerHeight <= 420;
             const mobilePortrait =
                 smallWidth && window.innerHeight > window.innerWidth;
+            const mobileLandscapeCompact =
+                smallWidth &&
+                smallHeight &&
+                window.innerWidth > window.innerHeight;
 
             setIsMobilePortrait(mobilePortrait);
+            setIsMobileLandscapeCompact(mobileLandscapeCompact);
 
             // If the user has toggled explicitly, respect that
             if (userCollapsedRef.current !== null) return;
@@ -62,45 +69,51 @@ export const MarketIntelPanel = () => {
         return () => window.removeEventListener("resize", onResize);
     }, []);
 
-    // In mobile portrait, when expanded, take over and hide main content
+    // In mobile portrait or compact landscape, when expanded, take over and hide main content
     React.useEffect(() => {
         if (typeof document === "undefined") return;
-        const takeover = isMobilePortrait && !isCollapsed;
+        const takeover =
+            (isMobilePortrait || isMobileLandscapeCompact) && !isCollapsed;
         document.body.classList.toggle("leftpanel-full", takeover);
         return () => {
             document.body.classList.remove("leftpanel-full");
         };
-    }, [isMobilePortrait, isCollapsed]);
+    }, [isMobilePortrait, isMobileLandscapeCompact, isCollapsed]);
 
     return (
         <div
             style={{
-                width: isMobilePortrait
-                    ? "100%"
-                    : isCollapsed
-                    ? "48px"
-                    : "280px",
-                minWidth: isMobilePortrait
-                    ? "100%"
-                    : isCollapsed
-                    ? "48px"
-                    : "280px",
-                maxWidth: isMobilePortrait
-                    ? "100%"
-                    : isCollapsed
-                    ? "48px"
-                    : "280px",
-                height: isMobilePortrait
-                    ? isCollapsed
+                width:
+                    isMobilePortrait || isMobileLandscapeCompact
+                        ? "100%"
+                        : isCollapsed
                         ? "48px"
-                        : "calc(100vh - 48px)"
-                    : "calc(100vh - 88px)",
+                        : "280px",
+                minWidth:
+                    isMobilePortrait || isMobileLandscapeCompact
+                        ? "100%"
+                        : isCollapsed
+                        ? "48px"
+                        : "280px",
+                maxWidth:
+                    isMobilePortrait || isMobileLandscapeCompact
+                        ? "100%"
+                        : isCollapsed
+                        ? "48px"
+                        : "280px",
+                height:
+                    isMobilePortrait || isMobileLandscapeCompact
+                        ? isCollapsed
+                            ? "48px"
+                            : "calc(100vh - 48px)"
+                        : "calc(100vh - 88px)",
                 backgroundColor: theme.surface,
-                borderRight: isMobilePortrait
-                    ? "none"
-                    : isCollapsed
-                    ? "none"
-                    : `1px solid ${theme.border}`,
+                borderRight:
+                    isMobilePortrait || isMobileLandscapeCompact
+                        ? "none"
+                        : isCollapsed
+                        ? "none"
+                        : `1px solid ${theme.border}`,
                 borderBottom: isMobilePortrait
                     ? isCollapsed
                         ? "none"
@@ -151,7 +164,7 @@ export const MarketIntelPanel = () => {
 
                 <button
                     aria-label={
-                        isMobilePortrait
+                        isMobilePortrait || isMobileLandscapeCompact
                             ? isCollapsed
                                 ? "Expand panel down"
                                 : "Collapse panel up"
@@ -160,7 +173,7 @@ export const MarketIntelPanel = () => {
                             : "Collapse left panel"
                     }
                     title={
-                        isMobilePortrait
+                        isMobilePortrait || isMobileLandscapeCompact
                             ? isCollapsed
                                 ? "Expand"
                                 : "Collapse"
@@ -224,7 +237,7 @@ export const MarketIntelPanel = () => {
                 >
                     <FeatherIcon
                         name={
-                            isMobilePortrait
+                            isMobilePortrait || isMobileLandscapeCompact
                                 ? isCollapsed
                                     ? "chevron-down"
                                     : "chevron-up"
