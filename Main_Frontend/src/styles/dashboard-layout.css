@@ -93,20 +93,18 @@ body {
     }
 }
 
-/* When left panel is full takeover on mobile (portrait or compact landscape), hide main content */
-@media (max-width: 768px) {
-    body.leftpanel-full .dashboard-content {
-        display: none;
-    }
-    body.leftpanel-full .dashboard-body {
-        flex-direction: column; /* ensure stacked layout during takeover */
-    }
-    body.leftpanel-full .dashboard-left-panel {
-        width: 100%;
-        max-width: 100%;
-        flex: 1; /* allow panel to fill remaining space */
-        overflow-y: auto;
-    }
+/* When left panel is in full takeover (set by JS on body), hide main content and let panel fill */
+body.leftpanel-full .dashboard-content {
+    display: none;
+}
+body.leftpanel-full .dashboard-body {
+    flex-direction: column; /* ensure stacked layout during takeover */
+}
+body.leftpanel-full .dashboard-left-panel {
+    width: 100%;
+    max-width: 100%;
+    flex: 1; /* allow panel to fill remaining space */
+    overflow-y: auto;
 }
 
 /* Better scrollbar for main content */
