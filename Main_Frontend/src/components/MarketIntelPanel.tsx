@@ -367,12 +367,12 @@ export const MarketIntelPanel = () => {
                             >
                                 <div
                                     className="mobile-landscape-section"
-                                    style={{ 
-                                        minWidth: "200px", 
+                                    style={{
+                                        minWidth: "200px",
                                         flexShrink: 0,
                                         maxHeight: "100%",
                                         overflowY: "auto",
-                                        paddingRight: "4px"
+                                        paddingRight: "4px",
                                     }}
                                 >
                                     <AIAgentContent
@@ -383,12 +383,12 @@ export const MarketIntelPanel = () => {
                                 </div>
                                 <div
                                     className="mobile-landscape-section"
-                                    style={{ 
-                                        minWidth: "200px", 
+                                    style={{
+                                        minWidth: "200px",
                                         flexShrink: 0,
                                         maxHeight: "100%",
                                         overflowY: "auto",
-                                        paddingRight: "4px"
+                                        paddingRight: "4px",
                                     }}
                                 >
                                     <AIAgentContent
@@ -399,12 +399,12 @@ export const MarketIntelPanel = () => {
                                 </div>
                                 <div
                                     className="mobile-landscape-section"
-                                    style={{ 
-                                        minWidth: "200px", 
+                                    style={{
+                                        minWidth: "200px",
                                         flexShrink: 0,
                                         maxHeight: "100%",
                                         overflowY: "auto",
-                                        paddingRight: "4px"
+                                        paddingRight: "4px",
                                     }}
                                 >
                                     <AIAgentContent
