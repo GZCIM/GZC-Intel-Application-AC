@@ -896,7 +896,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             <div
                                 className="drag-handle"
                                 style={{
-                                    height: isMobilePortrait ? "48px" : "56px", // Compact height for mobile portrait
+                                    height: isMobilePortrait ? "52px" : "56px", // Slightly higher for complete control visibility
                                     background: `linear-gradient(to right, ${currentTheme.primary}10, transparent)`,
                                     borderBottom: "none",
                                     borderRadius: "4px",
@@ -1043,10 +1043,10 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             ? "center"
                                             : "flex-end",
                                         height: isMobilePortrait
-                                            ? "20px"
+                                            ? "22px"
                                             : "28px",
                                         maxHeight: isMobilePortrait
-                                            ? "20px"
+                                            ? "22px"
                                             : "28px",
                                         lineHeight: 0,
                                         marginTop: isMobilePortrait
@@ -2565,12 +2565,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
            overflow: hidden !important;
          }
 
-         /* Mobile portrait thumbnail - compact height */
+         /* Mobile portrait thumbnail - slightly higher for complete control visibility */
          @media (max-width: 768px) and (orientation: portrait) {
            .react-grid-item[data-display-mode="thumbnail"] {
-             height: 48px !important; /* Compact height for mobile portrait */
-             min-height: 48px !important;
-             max-height: 48px !important;
+             height: 52px !important; /* Slightly higher for complete control visibility */
+             min-height: 52px !important;
+             max-height: 52px !important;
            }
          }
 
