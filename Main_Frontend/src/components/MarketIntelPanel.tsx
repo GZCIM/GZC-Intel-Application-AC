@@ -49,10 +49,19 @@ export const MarketIntelPanel = () => {
             const smallHeight = window.innerHeight <= 420;
             const mobilePortrait =
                 smallWidth && window.innerHeight > window.innerWidth;
-            const mobileLandscapeCompact =
+            let mobileLandscapeCompact =
                 smallWidth &&
                 smallHeight &&
                 window.innerWidth > window.innerHeight;
+            try {
+                const override = localStorage.getItem("gzc-device-override");
+                if (
+                    override === "mobile" &&
+                    window.innerWidth > window.innerHeight
+                ) {
+                    mobileLandscapeCompact = true;
+                }
+            } catch {}
 
             setIsMobilePortrait(mobilePortrait);
             setIsMobileLandscapeCompact(mobileLandscapeCompact);
@@ -80,54 +89,41 @@ export const MarketIntelPanel = () => {
         };
     }, [isMobilePortrait, isMobileLandscapeCompact, isCollapsed]);
 
+    const isTakeover =
+        (isMobilePortrait || isMobileLandscapeCompact) && !isCollapsed;
+
     return (
         <div
             style={{
-                width:
-                    isMobilePortrait || isMobileLandscapeCompact
-                        ? "100%"
-                        : isCollapsed
-                        ? "48px"
-                        : "280px",
-                minWidth:
-                    isMobilePortrait || isMobileLandscapeCompact
-                        ? "100%"
-                        : isCollapsed
-                        ? "48px"
-                        : "280px",
-                maxWidth:
-                    isMobilePortrait || isMobileLandscapeCompact
-                        ? "100%"
-                        : isCollapsed
-                        ? "48px"
-                        : "280px",
-                height:
-                    isMobilePortrait || isMobileLandscapeCompact
-                        ? isCollapsed
-                            ? "48px"
-                            : "calc(100vh - 88px)" // header (48) + status bar (40)
-                        : "calc(100vh - 88px)",
+                width: isTakeover ? "100%" : isCollapsed ? "48px" : "280px",
+                minWidth: isTakeover ? "100%" : isCollapsed ? "48px" : "280px",
+                maxWidth: isTakeover ? "100%" : isCollapsed ? "48px" : "280px",
+                height: isTakeover
+                    ? "calc(100vh - 88px)"
+                    : "calc(100vh - 88px)",
                 backgroundColor: theme.surface,
-                borderRight:
-                    isMobilePortrait || isMobileLandscapeCompact
+                borderRight: isTakeover
+                    ? "none"
+                    : isCollapsed
+                    ? "none"
+                    : `1px solid ${theme.border}`,
+                borderBottom: isTakeover
+                    ? isCollapsed
                         ? "none"
-                        : isCollapsed
-                        ? "none"
-                        : `1px solid ${theme.border}`,
-                borderBottom:
-                    isMobilePortrait || isMobileLandscapeCompact
-                        ? isCollapsed
-                            ? "none"
-                            : `1px solid ${theme.border}`
-                        : "none",
-                padding: isCollapsed ? "16px 8px" : "16px",
+                        : `1px solid ${theme.border}`
+                    : "none",
+                padding: isCollapsed ? "16px 8px" : "12px 12px 8px",
                 paddingBottom: isCollapsed ? "16px" : "16px", // Consistent padding
                 overflowY: "auto",
                 transition: "all 0.3s ease",
-                position: isMobilePortrait ? "relative" : "relative",
+                position: isTakeover ? "fixed" : "relative",
+                top: isTakeover ? 48 : undefined,
+                bottom: isTakeover ? 40 : undefined,
+                left: isTakeover ? 0 : undefined,
+                right: isTakeover ? 0 : undefined,
                 display: "flex",
                 flexDirection: "column",
-                zIndex: 2,
+                zIndex: isTakeover ? 1200 : 2,
                 pointerEvents: "auto",
                 order: isMobilePortrait || isMobileLandscapeCompact ? 3 : 0, // Third row during mobile takeover
             }}
@@ -261,29 +257,21 @@ export const MarketIntelPanel = () => {
                     <div
                         style={{
                             flex: 1,
-                            display: "flex",
-                            flexDirection: isMobileLandscapeCompact
-                                ? "row"
-                                : "column",
-                            gap: isMobileLandscapeCompact ? 12 : 0,
-                            overflowY: isMobileLandscapeCompact
-                                ? "hidden"
-                                : "auto",
+                            display: "grid",
+                            gridTemplateColumns: isMobileLandscapeCompact
+                                ? "1fr 1fr"
+                                : "1fr",
+                            gap: 12,
+                            overflowY: "auto",
                         }}
                     >
-                        {isMobileLandscapeCompact ? (
-                            // Two-column layout on compact landscape for better use of width
-                            <>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    <AIAgentContent />
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    {/* Duplicate key sections for quick access in landscape */}
-                                    <AIAgentContent />
-                                </div>
-                            </>
-                        ) : (
+                        <div style={{ minWidth: 0 }}>
                             <AIAgentContent />
+                        </div>
+                        {isMobileLandscapeCompact && (
+                            <div style={{ minWidth: 0 }}>
+                                <AIAgentContent />
+                            </div>
                         )}
                     </div>
                 </>
