@@ -258,20 +258,20 @@ button.no-drag[title="Remove"] {
 /* Extra portrait boost for Samsung/Android devices */
 @media (orientation: portrait) and (max-width: 600px) {
     .react-grid-item[data-display-mode="thumbnail"] {
-        height: 48px !important;
-        min-height: 48px !important;
-        max-height: 48px !important;
+        height: 60px !important;
+        min-height: 60px !important;
+        max-height: 60px !important;
     }
 
     .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] {
-        height: 48px !important;
-        min-height: 48px !important;
-        max-height: 48px !important;
+        height: 60px !important;
+        min-height: 60px !important;
+        max-height: 60px !important;
     }
 
     .drag-handle > div {
-        height: 48px !important;
-        max-height: 48px !important;
+        height: 60px !important;
+        max-height: 60px !important;
         align-items: center !important;
         gap: 8px !important;
         padding-left: 8px !important;

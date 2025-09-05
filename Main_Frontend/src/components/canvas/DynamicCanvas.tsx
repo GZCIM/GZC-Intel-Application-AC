@@ -896,7 +896,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             <div
                                 className="drag-handle"
                                 style={{
-                                    height: isMobilePortrait ? "52px" : "56px", // Slightly higher for complete control visibility
+                                    height: isMobilePortrait ? "60px" : "56px", // Higher for complete control visibility
                                     background: `linear-gradient(to right, ${currentTheme.primary}10, transparent)`,
                                     borderBottom: "none",
                                     borderRadius: "4px",
