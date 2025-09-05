@@ -101,9 +101,18 @@ body.leftpanel-full .dashboard-body {
     flex-direction: column; /* ensure stacked layout during takeover */
 }
 body.leftpanel-full .dashboard-left-panel {
+    position: fixed;
+    top: 48px; /* Below header */
+    left: 0;
+    right: 0;
+    bottom: 40px; /* Above status bar */
     width: 100%;
-    max-width: 100%;
-    flex: 1; /* allow panel to fill remaining space */
+    max-width: none;
+    height: auto; /* Let flex handle height */
+    flex: 1;
+    z-index: 999; /* Ensure it's on top */
+    border-right: none; /* No side border in takeover */
+    border-bottom: none; /* No bottom border in takeover */
     overflow-y: auto;
 }
 

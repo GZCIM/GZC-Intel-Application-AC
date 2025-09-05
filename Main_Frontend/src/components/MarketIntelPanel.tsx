@@ -138,6 +138,11 @@ export const MarketIntelPanel = () => {
                     : isMobilePortrait && isCollapsed
                     ? "60px" // Thin row when collapsed on mobile portrait
                     : "calc(100vh - 88px)",
+                maxHeight: isTakeover
+                    ? "calc(100vh - 88px)"
+                    : isMobilePortrait && isCollapsed
+                    ? "60px"
+                    : "calc(100vh - 88px)",
                 backgroundColor: theme.surface,
                 borderRight: isTakeover
                     ? "none"
@@ -348,7 +353,10 @@ export const MarketIntelPanel = () => {
                             gap: 12,
                             overflow: isMobileLandscapeCompact
                                 ? "hidden"
+                                : isMobilePortrait
+                                ? "auto"
                                 : "auto",
+                            minHeight: 0, // Allow flex child to shrink
                         }}
                     >
                         {isMobileLandscapeCompact ? (
@@ -416,7 +424,14 @@ export const MarketIntelPanel = () => {
                             </div>
                         ) : (
                             // Desktop/portrait: vertical stacked sections
-                            <div style={{ minWidth: 0 }}>
+                            <div 
+                                style={{ 
+                                    minWidth: 0,
+                                    flex: 1,
+                                    overflowY: isMobilePortrait ? "auto" : "auto",
+                                    minHeight: 0
+                                }}
+                            >
                                 <AIAgentContent
                                     noScroll={false}
                                     showTitle={true}
