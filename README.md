@@ -49,6 +49,7 @@ K8s Bloomberg Gateway/  # Kubernetes-deployed Bloomberg proxy
 - **K8s Bloomberg Gateway**: Secure proxy for Bloomberg Terminal data (no mixed content issues)
 - **Theme System**: Dark/light themes with CSS variables
 - **WebSocket Data**: Real-time market data streams
+- **Mobile Responsive Design**: Full-screen panel takeover for mobile devices with device-specific layouts
 
 ## Development Journal
 
@@ -73,6 +74,14 @@ See `/journal/` for daily progress and decisions:
 - Min/max size constraints per component
 - Edit mode for arrangement
 - Persistence via localStorage
+- Mobile-responsive with device-specific layouts
+
+### Mobile Responsiveness
+- **Mobile Portrait**: MarketIntel panel takes over full phone view with up/down chevrons
+- **Mobile Landscape**: MarketIntel panel takes over full screen with left/right chevrons and 2-column content layout
+- **Device Detection**: Automatic device type detection with manual override options
+- **Responsive Header**: Stacked layout on mobile with proper control visibility
+- **Full-Screen Takeover**: No internal scrollbars, content spreads across full screen
 
 ### Authentication
 - Azure MSAL integration
@@ -194,3 +203,12 @@ docker push gzcacr.azurecr.io/gzc-intel-app:new-version
 # Update in Azure
 az containerapp update --name gzc-intel-app --image gzcacr.azurecr.io/gzc-intel-app:new-version
 ```
+
+## DynamicCanvas Size Controls (T/M/F)
+
+- Locked mode (view-only):
+  - If current view is Thumbnail (T): show Medium (M) and Full (F)
+  - If current view is Medium (M): show Thumbnail (T) and Full (F)
+  - If current view is Full (F): show Thumbnail (T) and Medium (M)
+- Unlocked edit mode: always show T, M, F controls; title input and Remove (X) are also available. The toolbar remains visible in Full mode (fixed at top-right).
+- Buttons are square 24×24 with consistent padding across modes.

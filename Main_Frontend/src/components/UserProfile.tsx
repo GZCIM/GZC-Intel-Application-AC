@@ -34,10 +34,12 @@ const getUserColor = (name: string, theme: any): string => {
 
 interface UserProfileProps {
     showSignOut?: boolean;
+    compact?: boolean; // mobile-compact: avatar only
 }
 
 export const UserProfile: React.FC<UserProfileProps> = ({
     showSignOut = true,
+    compact = false,
 }) => {
     const { user, isAuthenticated } = useUser();
     const { logout, login } = useAuth(); // Get both login and logout from the same hook call
@@ -69,10 +71,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                     border: "none",
                     cursor: "pointer",
                     transition: "all 0.2s ease",
-                    fontWeight: "500"
+                    fontWeight: "500",
                 }}
                 onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.primaryHover || theme.primary;
+                    e.currentTarget.style.backgroundColor =
+                        theme.primaryHover || theme.primary;
                 }}
                 onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = theme.primary;
@@ -85,7 +88,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     }
 
     const initials = getInitials(user.name);
-    const userColor = getUserColor(user.name, theme);
+    const userColor = compact
+        ? theme.info || "#3B82F6"
+        : getUserColor(user.name, theme);
 
     const handleSignOut = async () => {
         try {
@@ -98,7 +103,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
     return (
         <div style={{ position: "relative" }}>
-            {/* User Avatar and Name */}
+            {/* User Avatar (and optional Name) */}
             <motion.div
                 onClick={showSignOut ? () => setIsOpen(!isOpen) : undefined}
                 whileHover={showSignOut ? { scale: 1.02 } : {}}
@@ -147,17 +152,19 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                     {initials}
                 </div>
 
-                {/* Name */}
-                <span
-                    style={{
-                        color: theme.text,
-                        fontSize: "12px",
-                        fontWeight: "500",
-                        whiteSpace: "nowrap",
-                    }}
-                >
-                    {user.name}
-                </span>
+                {/* Name hidden in compact/mobile */}
+                {!compact && (
+                    <span
+                        style={{
+                            color: theme.text,
+                            fontSize: "12px",
+                            fontWeight: "500",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {user.name}
+                    </span>
+                )}
 
                 {/* Dropdown Arrow - Only show if sign out is enabled */}
                 {showSignOut && (

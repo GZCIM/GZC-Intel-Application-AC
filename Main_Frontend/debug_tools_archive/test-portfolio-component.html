@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portfolio Component Test</title>
 </head>
+
 <body>
     <h1>Portfolio Component Test</h1>
     <p>Open the browser console and run these commands to test:</p>
-    
+
     <pre>
 // 1. Check if portfolio exists in inventory
 componentInventory.getComponent('portfolio')
@@ -54,15 +56,16 @@ if (!componentInventory.getComponent('portfolio')) {
                     <li>Select "Dynamic" type</li>
                 </ul>
             </li>
-            <li><strong>Enter Edit Mode:</strong>
+            <li><strong>Unlock Editing:</strong>
                 <ul>
-                    <li>Click "Edit" button (top-right of tab)</li>
-                    <li>Button should change to "Save"</li>
+                    <li>Click "Tools" in the header</li>
+                    <li>Click "Unlock Editing" (toggle shows session)</li>
                 </ul>
             </li>
             <li><strong>Add Component:</strong>
                 <ul>
-                    <li>Click "➕ Add Component" button</li>
+                    <li>Right-click the tab and choose "Add Component"</li>
+                    <li>Or open Tools → "Add Component"</li>
                     <li>Modal should open with component list</li>
                 </ul>
             </li>
@@ -95,4 +98,5 @@ if (!componentInventory.getComponent('portfolio')) {
         </ol>
     </div>
 </body>
+
 </html>

@@ -1,5 +1,35 @@
 # CHANGELOG - GZC Intel Application AC
 
+## [v20250117-mobile-responsive] - 2025-01-17
+
+### Added
+- **Mobile Responsive Design**: Comprehensive mobile responsiveness improvements
+  - Mobile portrait panel takes over full phone view with up/down chevrons
+  - Mobile landscape panel takes over full screen with left/right chevrons
+  - 2-column content layout for mobile landscape mode
+  - Device detection with orientation display in Tools menu
+  - Responsive header layout for mobile devices
+  - Full-screen takeover without internal scrollbars
+
+### Enhanced
+- **Device Selection Menu**: Shows current device category and orientation
+  - Auto mode displays detected device type (Mobile, Laptop, Bigscreen)
+  - Mobile option shows current orientation (Portrait, Landscape)
+  - Enhanced user experience for device configuration
+
+### Technical Details
+- Modified `Main_Frontend/src/components/MarketIntelPanel.tsx` for mobile responsiveness
+- Updated `Main_Frontend/src/styles/dashboard-layout.css` with full-screen takeover styles
+- Enhanced `Main_Frontend/src/components/ToolsMenu.tsx` device detection
+- Added `body.leftpanel-full` CSS class for mobile full-screen behavior
+- Implemented proper chevron directions based on device orientation
+
+### Security
+- Removed `.env` file from git history to resolve GitHub Push Protection issues
+- All secrets purged from repository history
+
+---
+
 ## [v20250809-143545] - 2025-01-09
 
 ### Fixed

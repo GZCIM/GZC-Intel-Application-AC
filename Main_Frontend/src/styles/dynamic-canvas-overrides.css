@@ -1,0 +1,321 @@
+/* DynamicCanvas overrides extracted from inline styles */
+
+/* Thumbnail height fixed to 28px */
+.react-grid-item[data-display-mode="thumbnail"] {
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    overflow: hidden !important;
+}
+
+.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] {
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    overflow: visible !important;
+}
+
+.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
+    .grid-item {
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    overflow: visible !important;
+}
+
+/* Ensure thumbnail controls are visible in edit mode */
+.react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
+    .no-drag {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
+}
+
+/* Force toolbar row height in thumbnail edit mode */
+.drag-handle > div {
+    height: 28px !important;
+    max-height: 28px !important;
+    line-height: 0 !important;
+}
+
+/* Make all toolbar buttons true 24x24 squares - UNIFIED for all modes */
+button.no-drag[title="Thumbnail"],
+button.no-drag[title="Medium"],
+button.no-drag[title="Fullscreen"],
+button.no-drag[title="Remove"] {
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    aspect-ratio: 1 / 1 !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    flex: 0 0 24px !important;
+}
+
+/* Ultra-specific selector for thumbnail mode buttons */
+.drag-handle > div > button.no-drag[title="Thumbnail"],
+.drag-handle > div > button.no-drag[title="Medium"],
+.drag-handle > div > button.no-drag[title="Fullscreen"],
+.drag-handle > div > button.no-drag[title="Remove"] {
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    padding: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    flex: 0 0 24px !important;
+}
+
+/* NUCLEAR OPTION - Force all buttons to be exactly 24x24 */
+button.no-drag[title="Thumbnail"],
+button.no-drag[title="Medium"],
+button.no-drag[title="Fullscreen"],
+button.no-drag[title="Remove"] {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-width: 1px !important;
+    box-sizing: border-box !important;
+    aspect-ratio: 1 / 1 !important;
+    flex: 0 0 24px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* ULTIMATE OVERRIDE - Target the exact button structure */
+.drag-handle div button.no-drag[title="Thumbnail"],
+.drag-handle div button.no-drag[title="Medium"],
+.drag-handle div button.no-drag[title="Fullscreen"],
+.drag-handle div button.no-drag[title="Remove"],
+.no-drag[style*="position: absolute"] button.no-drag[title="Thumbnail"],
+.no-drag[style*="position: absolute"] button.no-drag[title="Medium"],
+.no-drag[style*="position: absolute"] button.no-drag[title="Fullscreen"],
+.no-drag[style*="position: absolute"] button.no-drag[title="Remove"] {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 1px solid rgb(58, 54, 50) !important;
+    box-sizing: border-box !important;
+    aspect-ratio: 1 / 1 !important;
+    flex: 0 0 24px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    color: rgb(248, 246, 240) !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* Force SVG icons to be centered and not affect button size */
+button.no-drag[title="Thumbnail"] svg,
+button.no-drag[title="Medium"] svg,
+button.no-drag[title="Fullscreen"] svg,
+button.no-drag[title="Remove"] {
+    width: 14px !important;
+    height: 14px !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* React component specific overrides */
+#root button.no-drag[title="Thumbnail"],
+#root button.no-drag[title="Medium"],
+#root button.no-drag[title="Fullscreen"],
+#root button.no-drag[title="Remove"] {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 1px solid rgb(58, 54, 50) !important;
+    box-sizing: border-box !important;
+    aspect-ratio: 1 / 1 !important;
+    flex: 0 0 24px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    color: rgb(248, 246, 240) !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* Prevent SVG from affecting layout */
+.drag-handle button.no-drag svg {
+    width: 14px !important;
+    height: 14px !important;
+    display: block !important;
+}
+
+/* Remove any colored backgrounds from buttons */
+.react-grid-item button,
+.react-grid-item .no-drag,
+.react-grid-item button.no-drag {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Mobile touch-optimization: increase thumbnail bar height and button size on narrow screens */
+@media (max-width: 480px) {
+    .react-grid-item[data-display-mode="thumbnail"] {
+        height: 36px !important;
+        min-height: 36px !important;
+        max-height: 36px !important;
+    }
+
+    .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] {
+        height: 36px !important;
+        min-height: 36px !important;
+        max-height: 36px !important;
+    }
+
+    .drag-handle > div {
+        height: 36px !important;
+        max-height: 36px !important;
+    }
+
+    button.no-drag[title="Thumbnail"],
+    button.no-drag[title="Medium"],
+    button.no-drag[title="Fullscreen"],
+    button.no-drag[title="Remove"],
+    .drag-handle > div > button.no-drag[title="Thumbnail"],
+    .drag-handle > div > button.no-drag[title="Medium"],
+    .drag-handle > div > button.no-drag[title="Fullscreen"],
+    .drag-handle > div > button.no-drag[title="Remove"],
+    #root button.no-drag[title="Thumbnail"],
+    #root button.no-drag[title="Medium"],
+    #root button.no-drag[title="Fullscreen"],
+    #root button.no-drag[title="Remove"] {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        min-height: 28px !important;
+        max-width: 28px !important;
+        max-height: 28px !important;
+        flex: 0 0 28px !important;
+    }
+
+    .drag-handle button.no-drag svg,
+    button.no-drag[title="Thumbnail"] svg,
+    button.no-drag[title="Medium"] svg,
+    button.no-drag[title="Fullscreen"] svg,
+    button.no-drag[title="Remove"] svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+}
+
+/* Extra portrait boost for Samsung/Android devices */
+@media (orientation: portrait) and (max-width: 600px) {
+    .react-grid-item[data-display-mode="thumbnail"] {
+        height: 48px !important;
+        min-height: 48px !important;
+        max-height: 48px !important;
+    }
+
+    .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] {
+        height: 48px !important;
+        min-height: 48px !important;
+        max-height: 48px !important;
+    }
+
+    .drag-handle > div {
+        height: 48px !important;
+        max-height: 48px !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    button.no-drag[title="Thumbnail"],
+    button.no-drag[title="Medium"],
+    button.no-drag[title="Fullscreen"],
+    button.no-drag[title="Remove"],
+    .drag-handle > div > button.no-drag[title="Thumbnail"],
+    .drag-handle > div > button.no-drag[title="Medium"],
+    .drag-handle > div > button.no-drag[title="Fullscreen"],
+    .drag-handle > div > button.no-drag[title="Remove"],
+    #root button.no-drag[title="Thumbnail"],
+    #root button.no-drag[title="Medium"],
+    #root button.no-drag[title="Fullscreen"],
+    #root button.no-drag[title="Remove"] {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        max-width: 36px !important;
+        max-height: 36px !important;
+        flex: 0 0 36px !important;
+    }
+
+    .drag-handle button.no-drag svg,
+    button.no-drag[title="Thumbnail"] svg,
+    button.no-drag[title="Medium"] svg,
+    button.no-drag[title="Fullscreen"] svg,
+    button.no-drag[title="Remove"] svg {
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    /* Improve tap experience */
+    .drag-handle {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    .drag-handle > input,
+    .drag-handle > div > button.no-drag {
+        pointer-events: auto !important;
+        z-index: 10000 !important;
+    }
+}

@@ -1,115 +1,258 @@
 /* Fixed Dashboard Layout Styles - Safe Version */
 
-/* Don't force body constraints that could cause render loops */
+/* Prevent body and html from scrolling */
+html,
 body {
-  margin: 0;
-  padding: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevent main page scrolling */
+    height: 100vh; /* Full viewport height */
 }
 
 /* Main app container - safer approach */
 .dashboard-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Fixed height to viewport */
+    overflow: hidden; /* Prevent container scrolling */
 }
 
 /* Header - fixed at top */
 .dashboard-header {
-  flex-shrink: 0;
-  position: relative;
-  z-index: 100;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 100;
 }
 
 /* Main content wrapper */
 .dashboard-body {
-  display: flex;
-  flex: 1;
+    display: flex;
+    flex: 1;
+    overflow: hidden; /* Prevent main body from scrolling */
 }
 
-/* Left panel - Market Intel - width now controlled by React component */
+/* Mobile portrait layout - stack vertically */
+@media (max-width: 768px) and (orientation: portrait) {
+    .dashboard-body {
+        flex-direction: column;
+    }
+}
+
+/* Left panel - Market Intel - independent scrolling */
 .dashboard-left-panel {
-  flex-shrink: 0;
-  /* width removed - controlled by MarketIntelPanel component */
-  position: relative;
-  z-index: 10;
+    flex-shrink: 0;
+    /* width removed - controlled by MarketIntelPanel component */
+    position: relative;
+    z-index: 10;
+    overflow-y: auto; /* Enable independent vertical scrolling */
+    overflow-x: hidden;
+    max-height: 100vh; /* Limit height to viewport */
+}
+
+/* Mobile portrait - left panel becomes third row */
+@media (max-width: 768px) and (orientation: portrait) {
+    .dashboard-left-panel {
+        order: 3; /* Move to third row */
+        max-height: none; /* Allow full height when expanded */
+    }
 }
 
 /* Scrollbar styling for left panel */
 .dashboard-left-panel::-webkit-scrollbar {
-  width: 6px;
+    width: 6px;
 }
 
 .dashboard-left-panel::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.1);
 }
 
 .dashboard-left-panel::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 3px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
 }
 
 .dashboard-left-panel::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.5);
 }
 
-/* Main content area - scrollable */
+/* Main content area - independent scrolling */
 .dashboard-content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  height: 100%;
-  position: relative;
+    flex: 1;
+    overflow-y: auto; /* Enable independent vertical scrolling */
+    overflow-x: hidden;
+    height: 100vh; /* Fixed height to viewport */
+    position: relative;
+}
+
+/* Mobile portrait - main content should come after left panel */
+@media (max-width: 768px) and (orientation: portrait) {
+    .dashboard-content {
+        order: 4; /* After left panel (order 3) */
+        height: auto; /* Let it grow naturally */
+        flex: 1;
+    }
+}
+
+/* When left panel is in full takeover (set by JS on body), hide main content and let panel fill */
+body.leftpanel-full .dashboard-content {
+    display: none;
+}
+body.leftpanel-full .dashboard-body {
+    flex-direction: column; /* ensure stacked layout during takeover */
+}
+body.leftpanel-full .dashboard-left-panel {
+    position: fixed;
+    top: 48px; /* Below header */
+    left: 0;
+    right: 0;
+    bottom: 40px; /* Above status bar */
+    width: 100%;
+    max-width: none;
+    height: auto; /* Let flex handle height */
+    flex: 1;
+    z-index: 999; /* Ensure it's on top */
+    border-right: none; /* No side border in takeover */
+    border-bottom: none; /* No bottom border in takeover */
+    overflow-y: auto;
+}
+
+/* Mobile portrait - panel as thin horizontal row when collapsed, full takeover when expanded */
+@media (max-width: 768px) and (orientation: portrait) {
+    .dashboard-left-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 60px !important; /* Thin horizontal row when collapsed */
+        max-height: 60px !important; /* Thin horizontal row when collapsed */
+        order: 3; /* Below header and tabs */
+        border-bottom: 1px solid var(--border-color, #333);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .dashboard-content {
+        order: 4; /* After left panel */
+        height: auto;
+        flex: 1;
+    }
 }
 
 /* Better scrollbar for main content */
 .dashboard-content::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+    width: 8px;
+    height: 8px;
 }
 
 .dashboard-content::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
 }
 
 .dashboard-content::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
 }
 
 .dashboard-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .dashboard-content::-webkit-scrollbar-corner {
-  background: transparent;
+    background: transparent;
 }
 
 /* Status bar - fixed at bottom */
 .dashboard-status-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  flex-shrink: 0;
-  z-index: 1000;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    flex-shrink: 0;
+    z-index: 1000;
 }
 
 /* Canvas container within scrollable area */
 .canvas-scroll-container {
-  min-height: 100%;
-  padding: 16px;
-  position: relative;
+    height: 100%;
+    padding: 8px;
+    position: relative;
+    overflow: hidden; /* Let parent handle scrolling */
 }
 
 /* Toast notification animation */
 @keyframes slideUp {
-  from {
-    transform: translateY(100px);
+    from {
+        transform: translateY(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Mobile landscape horizontal scroll styles */
+.mobile-landscape-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.mobile-landscape-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.mobile-landscape-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.mobile-landscape-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.mobile-landscape-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Mobile landscape vertical scroll styles for individual sections */
+.mobile-landscape-section {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.mobile-landscape-section::-webkit-scrollbar {
+    width: 4px;
+}
+
+.mobile-landscape-section::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.mobile-landscape-section::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+.mobile-landscape-section::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+/* Scroll indicators for mobile landscape */
+.mobile-scroll-indicator {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    pointer-events: none;
+    z-index: 10;
     opacity: 0;
-  }
-  to {
-    transform: translateY(0);
+    transition: opacity 0.3s ease;
+}
+
+.mobile-scroll-indicator.show {
     opacity: 1;
-  }
 }

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Detection Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .device-info {
+            background: #f0f8ff;
+        }
+
+        .manual-override {
+            background: #fff8f0;
+        }
+
+        .api-test {
+            background: #f8fff0;
+        }
+
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 3px;
+        }
+
+        .error {
+            background: #ffe6e6;
+            color: #cc0000;
+        }
+
+        .success {
+            background: #e6ffe6;
+            color: #006600;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔍 Device Detection Debug Tool</h1>
+
+    <div class="debug-section device-info">
+        <h2>📱 Current Device Information</h2>
+        <div id="deviceInfo"></div>
+        <button onclick="refreshDeviceInfo()">🔄 Refresh Device Info</button>
+    </div>
+
+    <div class="debug-section manual-override">
+        <h2>🔧 Manual Device Type Override</h2>
+        <p>Force the device type for testing:</p>
+        <button onclick="overrideDeviceType('mobile')">📱 Force Mobile</button>
+        <button onclick="overrideDeviceType('laptop')">💻 Force Laptop</button>
+        <button onclick="overrideDeviceType('bigscreen')">🖥️ Force Bigscreen</button>
+        <button onclick="resetDeviceType()">🔄 Reset to Auto-Detect</button>
+    </div>
+
+    <div class="debug-section api-test">
+        <h2>🌐 Test Device Config API</h2>
+        <p>Test the backend API with current device type:</p>
+        <button onclick="testDeviceConfigAPI()">🧪 Test API Call</button>
+        <div id="apiResult"></div>
+    </div>
+
+    <script>
+        // Mock device config service for testing
+        const deviceConfigService = {
+            detectDeviceType() {
+                const width = window.screen.width;
+                const height = window.screen.height;
+                const userAgent = navigator.userAgent;
+
+                console.log(`🔍 Device Detection Debug:`);
+                console.log(`  - Screen: ${width}x${height}`);
+                console.log(`  - User Agent: ${userAgent}`);
+                console.log(`  - Platform: ${navigator.platform}`);
+
+                const mobileKeywords = [
+                    "Mobile", "Android", "iPhone", "iPad", "iPod",
+                    "BlackBerry", "Windows Phone"
+                ];
+                const isMobileUA = mobileKeywords.some(keyword =>
+                    userAgent.includes(keyword)
+                );
+
+                console.log(`  - Mobile UA detected: ${isMobileUA}`);
+
+                let deviceType;
+                if (width <= 768 || isMobileUA) {
+                    deviceType = "mobile";
+                } else if (width <= 1366) {
+                    deviceType = "laptop";
+                } else {
+                    deviceType = "bigscreen";
+                }
+
+                console.log(`  - Detected device type: ${deviceType}`);
+                console.log(`  - Threshold check: ${width} <= 768 = ${width <= 768}`);
+
+                return deviceType;
+            },
+
+            getDeviceInfo() {
+                return {
+                    screenWidth: window.screen.width,
+                    screenHeight: window.screen.height,
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                };
+            },
+
+            overrideDeviceType(deviceType) {
+                console.log(`🔧 Manually overriding device type to: ${deviceType}`);
+                localStorage.setItem("gzc-device-type", deviceType);
+                refreshDeviceInfo();
+            }
+        };
+
+        function refreshDeviceInfo() {
+            const deviceInfo = deviceConfigService.getDeviceInfo();
+            const detectedType = deviceConfigService.detectDeviceType();
+            const storedType = localStorage.getItem("gzc-device-type");
+
+            document.getElementById('deviceInfo').innerHTML = `
+                <div class="result">
+                    <strong>Screen Size:</strong> ${deviceInfo.screenWidth} x ${deviceInfo.screenHeight}<br>
+                    <strong>User Agent:</strong> ${deviceInfo.userAgent}<br>
+                    <strong>Platform:</strong> ${deviceInfo.platform}<br>
+                    <strong>Timezone:</strong> ${deviceInfo.timezone}<br>
+                    <strong>Auto-Detected Type:</strong> ${detectedType}<br>
+                    <strong>Stored Type:</strong> ${storedType || 'None'}
+                </div>
+            `;
+        }
+
+        function overrideDeviceType(deviceType) {
+            deviceConfigService.overrideDeviceType(deviceType);
+        }
+
+        function resetDeviceType() {
+            localStorage.removeItem("gzc-device-type");
+            refreshDeviceInfo();
+        }
+
+        async function testDeviceConfigAPI() {
+            const deviceType = localStorage.getItem("gzc-device-type") || deviceConfigService.detectDeviceType();
+            const resultDiv = document.getElementById('apiResult');
+
+            resultDiv.innerHTML = '<div class="result">🔄 Testing API call...</div>';
+
+            try {
+                // Try to call the actual API endpoint
+                const response = await fetch(`/api/cosmos/device-config/${deviceType}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ API Call Successful<br>
+                            <strong>Device Type:</strong> ${deviceType}<br>
+                            <strong>Response:</strong> ${JSON.stringify(data, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ API Call Failed<br>
+                            <strong>Status:</strong> ${response.status}<br>
+                            <strong>Error:</strong> ${errorText}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        💥 API Call Error<br>
+                        <strong>Error:</strong> ${error.message}<br>
+                        <strong>Device Type:</strong> ${deviceType}
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize on page load
+        window.onload = function () {
+            refreshDeviceInfo();
+            console.log('🔍 Device Detection Debug Tool Loaded');
+            console.log('💡 Check browser console for detailed device detection logs');
+        };
+
+        // Make available globally for console testing
+        window.deviceConfig = deviceConfigService;
+        window.debugDeviceDetection = {
+            refreshDeviceInfo,
+            overrideDeviceType,
+            resetDeviceType,
+            testDeviceConfigAPI
+        };
+    </script>
+</body>
+
+</html>
