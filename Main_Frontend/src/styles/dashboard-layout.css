@@ -93,6 +93,13 @@ body {
     }
 }
 
+/* When left panel is full takeover on mobile, hide main content */
+@media (max-width: 768px) and (orientation: portrait) {
+    body.leftpanel-full .dashboard-content {
+        display: none;
+    }
+}
+
 /* Better scrollbar for main content */
 .dashboard-content::-webkit-scrollbar {
     width: 8px;
