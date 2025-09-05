@@ -114,7 +114,7 @@ export const MarketIntelPanel = () => {
                     : "none",
                 padding: isCollapsed ? "16px 8px" : "12px 12px 8px",
                 paddingBottom: isCollapsed ? "16px" : "16px", // Consistent padding
-                overflowY: "auto",
+                overflowY: isTakeover ? "hidden" : "auto",
                 transition: "all 0.3s ease",
                 position: isTakeover ? "fixed" : "relative",
                 top: isTakeover ? 48 : undefined,
@@ -262,15 +262,21 @@ export const MarketIntelPanel = () => {
                                 ? "1fr 1fr"
                                 : "1fr",
                             gap: 12,
-                            overflowY: "auto",
+                            overflow: isMobileLandscapeCompact
+                                ? "hidden"
+                                : "auto",
                         }}
                     >
                         <div style={{ minWidth: 0 }}>
-                            <AIAgentContent />
+                            <AIAgentContent
+                                noScroll={isMobileLandscapeCompact}
+                            />
                         </div>
                         {isMobileLandscapeCompact && (
                             <div style={{ minWidth: 0 }}>
-                                <AIAgentContent />
+                                <AIAgentContent
+                                    noScroll={isMobileLandscapeCompact}
+                                />
                             </div>
                         )}
                     </div>
@@ -409,11 +415,11 @@ const AIAgentTabs = () => {
 };
 
 // AI Agent Content Component
-const AIAgentContent = () => {
+const AIAgentContent = ({ noScroll = false }: { noScroll?: boolean }) => {
     const { currentTheme: theme } = useTheme();
 
     return (
-        <div style={{ flex: 1, overflowY: "auto" }}>
+        <div style={{ flex: 1, overflowY: noScroll ? "hidden" : "auto" }}>
             {/* Active AI Agents */}
             <div style={{ marginBottom: "20px" }}>
                 <h4
