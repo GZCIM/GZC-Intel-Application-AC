@@ -424,12 +424,14 @@ export const MarketIntelPanel = () => {
                             </div>
                         ) : (
                             // Desktop/portrait: vertical stacked sections
-                            <div 
-                                style={{ 
+                            <div
+                                style={{
                                     minWidth: 0,
                                     flex: 1,
-                                    overflowY: isMobilePortrait ? "auto" : "auto",
-                                    minHeight: 0
+                                    overflowY: isMobilePortrait
+                                        ? "auto"
+                                        : "auto",
+                                    minHeight: 0,
                                 }}
                             >
                                 <AIAgentContent
