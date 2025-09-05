@@ -366,28 +366,49 @@ export const MarketIntelPanel = () => {
                                 }}
                             >
                                 <div
-                                    style={{ minWidth: "200px", flexShrink: 0 }}
+                                    className="mobile-landscape-section"
+                                    style={{ 
+                                        minWidth: "200px", 
+                                        flexShrink: 0,
+                                        maxHeight: "100%",
+                                        overflowY: "auto",
+                                        paddingRight: "4px"
+                                    }}
                                 >
                                     <AIAgentContent
-                                        noScroll={true}
+                                        noScroll={false}
                                         showTitle={true}
                                         title="AI Agents"
                                     />
                                 </div>
                                 <div
-                                    style={{ minWidth: "200px", flexShrink: 0 }}
+                                    className="mobile-landscape-section"
+                                    style={{ 
+                                        minWidth: "200px", 
+                                        flexShrink: 0,
+                                        maxHeight: "100%",
+                                        overflowY: "auto",
+                                        paddingRight: "4px"
+                                    }}
                                 >
                                     <AIAgentContent
-                                        noScroll={true}
+                                        noScroll={false}
                                         showTitle={true}
                                         title="Alerts"
                                     />
                                 </div>
                                 <div
-                                    style={{ minWidth: "200px", flexShrink: 0 }}
+                                    className="mobile-landscape-section"
+                                    style={{ 
+                                        minWidth: "200px", 
+                                        flexShrink: 0,
+                                        maxHeight: "100%",
+                                        overflowY: "auto",
+                                        paddingRight: "4px"
+                                    }}
                                 >
                                     <AIAgentContent
-                                        noScroll={true}
+                                        noScroll={false}
                                         showTitle={true}
                                         title="Azure Jobs"
                                     />

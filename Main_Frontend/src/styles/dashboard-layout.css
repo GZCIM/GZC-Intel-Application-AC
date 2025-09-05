@@ -204,6 +204,29 @@ body.leftpanel-full .dashboard-left-panel {
     background: rgba(255, 255, 255, 0.5);
 }
 
+/* Mobile landscape vertical scroll styles for individual sections */
+.mobile-landscape-section {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.mobile-landscape-section::-webkit-scrollbar {
+    width: 4px;
+}
+
+.mobile-landscape-section::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.mobile-landscape-section::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+.mobile-landscape-section::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
 /* Scroll indicators for mobile landscape */
 .mobile-scroll-indicator {
     position: absolute;
