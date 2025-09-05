@@ -55,6 +55,11 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
 
     const currentDevice = getCurrentDevice();
 
+    // Detect orientation for display purposes
+    const isPortrait =
+        typeof window !== "undefined" && window.innerHeight > window.innerWidth;
+    const orientationLabel = isPortrait ? "Portrait" : "Landscape";
+
     // Helper: copy current layout to specific device config in CosmosDB
     const copyCurrentLayoutToDevice = async (
         targetDevice: "laptop" | "mobile" | "bigscreen"
@@ -183,7 +188,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     const menuItems: MenuItem[] = [
         // Device Mode selector
         {
-            label: "Device: Auto (Default)",
+            label: `Device: Auto (${orientationLabel})`,
             icon: "🖥️",
             isSelected: currentDevice === "auto",
             onClick: () => {
@@ -252,7 +257,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
             },
         },
         {
-            label: "Device: Mobile",
+            label: `Device: Mobile (${orientationLabel})`,
             icon: "📱",
             isSelected: currentDevice === "mobile",
             onClick: () => {
