@@ -107,15 +107,23 @@ body.leftpanel-full .dashboard-left-panel {
     overflow-y: auto;
 }
 
-/* Mobile portrait - panel expands vertically without full takeover */
+/* Mobile portrait - panel as thin horizontal row that expands to full screen */
 @media (max-width: 768px) and (orientation: portrait) {
     .dashboard-left-panel {
         width: 100% !important;
         max-width: 100% !important;
-        height: auto !important;
-        max-height: 400px; /* Fixed height for mobile portrait expansion */
+        height: 60px !important; /* Thin horizontal row when collapsed */
+        max-height: 60px !important; /* Thin horizontal row when collapsed */
         order: 3; /* Below header and tabs */
         border-bottom: 1px solid var(--border-color, #333);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .dashboard-left-panel.expanded {
+        height: calc(100vh - 88px) !important; /* Full screen when expanded */
+        max-height: calc(100vh - 88px) !important;
+        overflow-y: auto;
     }
     
     .dashboard-content {
