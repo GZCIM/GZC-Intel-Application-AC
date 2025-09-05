@@ -49,13 +49,12 @@ export const MarketIntelPanel = () => {
             const smallHeight = window.innerHeight <= 420;
             const isPortrait = window.innerHeight > window.innerWidth;
             const isLandscape = window.innerWidth > window.innerHeight;
-            
+
             // Mobile portrait: either small width OR portrait orientation on mobile device
-            const mobilePortrait = smallWidth || (isPortrait && window.innerWidth <= 1024);
+            const mobilePortrait =
+                smallWidth || (isPortrait && window.innerWidth <= 1024);
             let mobileLandscapeCompact =
-                smallWidth &&
-                smallHeight &&
-                isLandscape;
+                smallWidth && smallHeight && isLandscape;
             try {
                 const override = localStorage.getItem("gzc-device-override");
                 if (
@@ -68,9 +67,9 @@ export const MarketIntelPanel = () => {
 
             setIsMobilePortrait(mobilePortrait);
             setIsMobileLandscapeCompact(mobileLandscapeCompact);
-            
+
             // Debug logging for mobile detection
-            console.log('Mobile Detection Debug:', {
+            console.log("Mobile Detection Debug:", {
                 width: window.innerWidth,
                 height: window.innerHeight,
                 isPortrait,
@@ -79,7 +78,7 @@ export const MarketIntelPanel = () => {
                 smallHeight,
                 mobilePortrait,
                 mobileLandscapeCompact,
-                isCollapsed
+                isCollapsed,
             });
 
             // If the user has toggled explicitly, respect that
@@ -213,8 +212,18 @@ export const MarketIntelPanel = () => {
                     >
                         Market Intel
                         {/* Debug indicator */}
-                        <span style={{ fontSize: "10px", marginLeft: "8px", color: theme.textSecondary }}>
-                            {isMobilePortrait ? "MP" : isMobileLandscapeCompact ? "ML" : "D"}
+                        <span
+                            style={{
+                                fontSize: "10px",
+                                marginLeft: "8px",
+                                color: theme.textSecondary,
+                            }}
+                        >
+                            {isMobilePortrait
+                                ? "MP"
+                                : isMobileLandscapeCompact
+                                ? "ML"
+                                : "D"}
                         </span>
                     </h3>
                 )}
