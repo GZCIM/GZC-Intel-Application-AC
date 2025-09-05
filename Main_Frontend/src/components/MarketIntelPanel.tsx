@@ -257,15 +257,34 @@ export const MarketIntelPanel = () => {
                     {/* Tab Navigation */}
                     <AIAgentTabs />
 
-                    {/* AI Agent Content */}
+                    {/* AI Agent Content - responsive reflow for compact landscape */}
                     <div
                         style={{
                             flex: 1,
                             display: "flex",
-                            flexDirection: "column",
+                            flexDirection: isMobileLandscapeCompact
+                                ? "row"
+                                : "column",
+                            gap: isMobileLandscapeCompact ? 12 : 0,
+                            overflowY: isMobileLandscapeCompact
+                                ? "hidden"
+                                : "auto",
                         }}
                     >
-                        <AIAgentContent />
+                        {isMobileLandscapeCompact ? (
+                            // Two-column layout on compact landscape for better use of width
+                            <>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <AIAgentContent />
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    {/* Duplicate key sections for quick access in landscape */}
+                                    <AIAgentContent />
+                                </div>
+                            </>
+                        ) : (
+                            <AIAgentContent />
+                        )}
                     </div>
                 </>
             )}

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useTabLayout } from "../core/tabs/TabLayoutManager";
+import { deviceConfigService } from "../services/deviceConfigService";
 import { motion, AnimatePresence } from "framer-motion";
 import { editingLockService } from "../services/editingLockService";
 // Schema selector is rendered in the header for mobile, not inside this menu
@@ -54,6 +55,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     };
 
     const currentDevice = getCurrentDevice();
+    const detectedDevice = deviceConfigService.getCurrentDeviceType();
 
     // Detect orientation for display purposes
     const isPortrait =
@@ -188,7 +190,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     const menuItems: MenuItem[] = [
         // Device Mode selector
         {
-            label: `Device: Auto (${orientationLabel})`,
+            label: `Device: Auto (${detectedDevice}, ${orientationLabel})`,
             icon: "🖥️",
             isSelected: currentDevice === "auto",
             onClick: () => {
