@@ -81,7 +81,8 @@ export const MarketIntelPanel = () => {
     // In mobile portrait or compact landscape, when expanded, take over and hide main content
     React.useEffect(() => {
         if (typeof document === "undefined") return;
-        const takeover = (isMobilePortrait || isMobileLandscapeCompact) && !isCollapsed;
+        const takeover =
+            (isMobilePortrait || isMobileLandscapeCompact) && !isCollapsed;
         document.body.classList.toggle("leftpanel-full", takeover);
         return () => {
             document.body.classList.remove("leftpanel-full");
@@ -96,9 +97,27 @@ export const MarketIntelPanel = () => {
         <div
             className={isMobilePortraitExpanded ? "expanded" : ""}
             style={{
-                width: isTakeover ? "100%" : isMobilePortrait ? "100%" : isCollapsed ? "48px" : "280px",
-                minWidth: isTakeover ? "100%" : isMobilePortrait ? "100%" : isCollapsed ? "48px" : "280px",
-                maxWidth: isTakeover ? "100%" : isMobilePortrait ? "100%" : isCollapsed ? "48px" : "280px",
+                width: isTakeover
+                    ? "100%"
+                    : isMobilePortrait
+                    ? "100%"
+                    : isCollapsed
+                    ? "48px"
+                    : "280px",
+                minWidth: isTakeover
+                    ? "100%"
+                    : isMobilePortrait
+                    ? "100%"
+                    : isCollapsed
+                    ? "48px"
+                    : "280px",
+                maxWidth: isTakeover
+                    ? "100%"
+                    : isMobilePortrait
+                    ? "100%"
+                    : isCollapsed
+                    ? "48px"
+                    : "280px",
                 height: isTakeover
                     ? "calc(100vh - 88px)"
                     : isMobilePortrait && isCollapsed
@@ -117,7 +136,12 @@ export const MarketIntelPanel = () => {
                     : isMobilePortrait
                     ? `1px solid ${theme.border}` // Bottom border for mobile portrait
                     : "none",
-                padding: isMobilePortrait && isCollapsed ? "8px 16px" : isCollapsed ? "16px 8px" : "12px 12px 8px",
+                padding:
+                    isMobilePortrait && isCollapsed
+                        ? "8px 16px"
+                        : isCollapsed
+                        ? "16px 8px"
+                        : "12px 12px 8px",
                 paddingBottom: isCollapsed ? "16px" : "16px", // Consistent padding
                 overflowY: isTakeover ? "hidden" : "auto",
                 transition: "all 0.3s ease",
@@ -127,9 +151,14 @@ export const MarketIntelPanel = () => {
                 left: isTakeover ? 0 : undefined,
                 right: isTakeover ? 0 : undefined,
                 display: "flex",
-                flexDirection: isMobilePortrait && isCollapsed ? "row" : "column", // Horizontal when collapsed on mobile portrait
-                alignItems: isMobilePortrait && isCollapsed ? "center" : "stretch",
-                justifyContent: isMobilePortrait && isCollapsed ? "space-between" : "flex-start",
+                flexDirection:
+                    isMobilePortrait && isCollapsed ? "row" : "column", // Horizontal when collapsed on mobile portrait
+                alignItems:
+                    isMobilePortrait && isCollapsed ? "center" : "stretch",
+                justifyContent:
+                    isMobilePortrait && isCollapsed
+                        ? "space-between"
+                        : "flex-start",
                 zIndex: isTakeover ? 1200 : 2,
                 pointerEvents: "auto",
                 order: isMobilePortrait || isMobileLandscapeCompact ? 3 : 0, // Third row during mobile takeover
@@ -141,9 +170,12 @@ export const MarketIntelPanel = () => {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    marginBottom: isMobilePortrait && isCollapsed ? "0" : "20px",
-                    minHeight: isMobilePortrait && isCollapsed ? "44px" : "32px",
-                    flexDirection: isMobilePortrait && isCollapsed ? "row" : "row",
+                    marginBottom:
+                        isMobilePortrait && isCollapsed ? "0" : "20px",
+                    minHeight:
+                        isMobilePortrait && isCollapsed ? "44px" : "32px",
+                    flexDirection:
+                        isMobilePortrait && isCollapsed ? "row" : "row",
                 }}
             >
                 {!isCollapsed && (
@@ -259,8 +291,8 @@ export const MarketIntelPanel = () => {
                                     ? "chevron-right"
                                     : "chevron-left"
                                 : isCollapsed
-                                    ? "chevron-right"
-                                    : "chevron-left"
+                                ? "chevron-right"
+                                : "chevron-left"
                         }
                         size={16}
                     />
@@ -311,7 +343,9 @@ export const MarketIntelPanel = () => {
                         display: "flex",
                         flexDirection: isMobilePortrait ? "row" : "column",
                         alignItems: "center",
-                        justifyContent: isMobilePortrait ? "space-between" : "center",
+                        justifyContent: isMobilePortrait
+                            ? "space-between"
+                            : "center",
                         gap: isMobilePortrait ? "8px" : "12px",
                         padding: isMobilePortrait ? "0 8px" : "0",
                     }}
