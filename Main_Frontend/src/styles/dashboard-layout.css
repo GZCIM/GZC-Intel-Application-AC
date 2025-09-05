@@ -180,3 +180,47 @@ body.leftpanel-full .dashboard-left-panel {
         opacity: 1;
     }
 }
+
+/* Mobile landscape horizontal scroll styles */
+.mobile-landscape-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.mobile-landscape-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.mobile-landscape-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.mobile-landscape-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.mobile-landscape-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Scroll indicators for mobile landscape */
+.mobile-scroll-indicator {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.mobile-scroll-indicator.show {
+    opacity: 1;
+}

@@ -338,25 +338,59 @@ export const MarketIntelPanel = () => {
                     <div
                         style={{
                             flex: 1,
-                            display: "grid",
+                            display: isMobileLandscapeCompact ? "flex" : "grid",
                             gridTemplateColumns: isMobileLandscapeCompact
-                                ? "1fr 1fr"
+                                ? "none"
                                 : "1fr",
+                            flexDirection: isMobileLandscapeCompact ? "row" : "column",
                             gap: 12,
                             overflow: isMobileLandscapeCompact
                                 ? "hidden"
                                 : "auto",
                         }}
                     >
-                        <div style={{ minWidth: 0 }}>
-                            <AIAgentContent
-                                noScroll={isMobileLandscapeCompact}
-                            />
-                        </div>
-                        {isMobileLandscapeCompact && (
+                        {isMobileLandscapeCompact ? (
+                            // Mobile landscape: horizontal scrollable sections
+                            <div
+                                className="mobile-landscape-scroll"
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    gap: 12,
+                                    overflowX: "auto",
+                                    overflowY: "hidden",
+                                    flex: 1,
+                                    paddingBottom: "8px",
+                                }}
+                            >
+                                <div style={{ minWidth: "200px", flexShrink: 0 }}>
+                                    <AIAgentContent
+                                        noScroll={true}
+                                        showTitle={true}
+                                        title="AI Agents"
+                                    />
+                                </div>
+                                <div style={{ minWidth: "200px", flexShrink: 0 }}>
+                                    <AIAgentContent
+                                        noScroll={true}
+                                        showTitle={true}
+                                        title="Alerts"
+                                    />
+                                </div>
+                                <div style={{ minWidth: "200px", flexShrink: 0 }}>
+                                    <AIAgentContent
+                                        noScroll={true}
+                                        showTitle={true}
+                                        title="Azure Jobs"
+                                    />
+                                </div>
+                            </div>
+                        ) : (
+                            // Desktop/portrait: vertical stacked sections
                             <div style={{ minWidth: 0 }}>
                                 <AIAgentContent
-                                    noScroll={isMobileLandscapeCompact}
+                                    noScroll={false}
+                                    showTitle={true}
                                 />
                             </div>
                         )}
@@ -500,13 +534,195 @@ const AIAgentTabs = () => {
 };
 
 // AI Agent Content Component
-const AIAgentContent = ({ noScroll = false }: { noScroll?: boolean }) => {
+const AIAgentContent = ({ 
+    noScroll = false, 
+    showTitle = false, 
+    title = "AI Agents" 
+}: { 
+    noScroll?: boolean; 
+    showTitle?: boolean; 
+    title?: string;
+}) => {
     const { currentTheme: theme } = useTheme();
+
+    const renderContent = () => {
+        switch (title) {
+            case "AI Agents":
+                return (
+                    <>
+                        <AIAgentCard
+                            name="Market Sentiment Analyzer"
+                            status="running"
+                            lastUpdate="2 min ago"
+                            icon="brain"
+                        />
+                        <AIAgentCard
+                            name="Risk Assessment Bot"
+                            status="idle"
+                            lastUpdate="15 min ago"
+                            icon="shield"
+                        />
+                        <AIAgentCard
+                            name="News Impact Scorer"
+                            status="running"
+                            lastUpdate="1 min ago"
+                            icon="newspaper"
+                        />
+                    </>
+                );
+            case "Alerts":
+                return (
+                    <>
+                        <NotificationCard
+                            type="info"
+                            message="Federal Reserve speech at 2:00 PM EST"
+                            time="10 min ago"
+                        />
+                        <NotificationCard
+                            type="warning"
+                            message="Unusual volume spike in EUR/USD"
+                            time="25 min ago"
+                        />
+                        <NotificationCard
+                            type="success"
+                            message="Weekly report generated successfully"
+                            time="1 hour ago"
+                        />
+                    </>
+                );
+            case "Azure Jobs":
+                return (
+                    <>
+                        <AzureJobCard
+                            jobName="Data Pipeline Sync"
+                            status="completed"
+                            progress={100}
+                            eta="Completed"
+                        />
+                        <AzureJobCard
+                            jobName="ML Model Training"
+                            status="running"
+                            progress={67}
+                            eta="8 min remaining"
+                        />
+                        <AzureJobCard
+                            jobName="Report Distribution"
+                            status="queued"
+                            progress={0}
+                            eta="Starting soon"
+                        />
+                    </>
+                );
+            default:
+                // Default: show all content (desktop/portrait mode)
+                return (
+                    <>
+                        {/* Active AI Agents */}
+                        <div style={{ marginBottom: "20px" }}>
+                            <h4
+                                style={{
+                                    fontSize: "11px",
+                                    fontWeight: 600,
+                                    color: theme.textSecondary,
+                                    marginBottom: "8px",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.5px",
+                                }}
+                            >
+                                Active AI Agents
+                            </h4>
+                            <AIAgentCard
+                                name="Market Sentiment Analyzer"
+                                status="running"
+                                lastUpdate="2 min ago"
+                                icon="brain"
+                            />
+                            <AIAgentCard
+                                name="Risk Assessment Bot"
+                                status="idle"
+                                lastUpdate="15 min ago"
+                                icon="shield"
+                            />
+                            <AIAgentCard
+                                name="News Impact Scorer"
+                                status="running"
+                                lastUpdate="1 min ago"
+                                icon="newspaper"
+                            />
+                        </div>
+
+                        {/* Recent Notifications */}
+                        <div style={{ marginBottom: "20px" }}>
+                            <h4
+                                style={{
+                                    fontSize: "11px",
+                                    fontWeight: 600,
+                                    color: theme.textSecondary,
+                                    marginBottom: "8px",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.5px",
+                                }}
+                            >
+                                Recent Alerts
+                            </h4>
+                            <NotificationCard
+                                type="info"
+                                message="Federal Reserve speech at 2:00 PM EST"
+                                time="10 min ago"
+                            />
+                            <NotificationCard
+                                type="warning"
+                                message="Unusual volume spike in EUR/USD"
+                                time="25 min ago"
+                            />
+                            <NotificationCard
+                                type="success"
+                                message="Weekly report generated successfully"
+                                time="1 hour ago"
+                            />
+                        </div>
+
+                        {/* Azure Job Queue */}
+                        <div>
+                            <h4
+                                style={{
+                                    fontSize: "11px",
+                                    fontWeight: 600,
+                                    color: theme.textSecondary,
+                                    marginBottom: "8px",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.5px",
+                                }}
+                            >
+                                Azure Job Queue
+                            </h4>
+                            <AzureJobCard
+                                jobName="Data Pipeline Sync"
+                                status="completed"
+                                progress={100}
+                                eta="Completed"
+                            />
+                            <AzureJobCard
+                                jobName="ML Model Training"
+                                status="running"
+                                progress={67}
+                                eta="8 min remaining"
+                            />
+                            <AzureJobCard
+                                jobName="Report Distribution"
+                                status="queued"
+                                progress={0}
+                                eta="Starting soon"
+                            />
+                        </div>
+                    </>
+                );
+        }
+    };
 
     return (
         <div style={{ flex: 1, overflowY: noScroll ? "hidden" : "auto" }}>
-            {/* Active AI Agents */}
-            <div style={{ marginBottom: "20px" }}>
+            {showTitle && (
                 <h4
                     style={{
                         fontSize: "11px",
@@ -517,101 +733,10 @@ const AIAgentContent = ({ noScroll = false }: { noScroll?: boolean }) => {
                         letterSpacing: "0.5px",
                     }}
                 >
-                    Active AI Agents
+                    {title}
                 </h4>
-
-                <AIAgentCard
-                    name="Market Sentiment Analyzer"
-                    status="running"
-                    lastUpdate="2 min ago"
-                    icon="brain"
-                />
-
-                <AIAgentCard
-                    name="Risk Assessment Bot"
-                    status="idle"
-                    lastUpdate="15 min ago"
-                    icon="shield"
-                />
-
-                <AIAgentCard
-                    name="News Impact Scorer"
-                    status="running"
-                    lastUpdate="1 min ago"
-                    icon="newspaper"
-                />
-            </div>
-
-            {/* Recent Notifications */}
-            <div style={{ marginBottom: "20px" }}>
-                <h4
-                    style={{
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        color: theme.textSecondary,
-                        marginBottom: "8px",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                    }}
-                >
-                    Recent Alerts
-                </h4>
-
-                <NotificationCard
-                    type="info"
-                    message="Federal Reserve speech at 2:00 PM EST"
-                    time="10 min ago"
-                />
-
-                <NotificationCard
-                    type="warning"
-                    message="Unusual volume spike in EUR/USD"
-                    time="25 min ago"
-                />
-
-                <NotificationCard
-                    type="success"
-                    message="Weekly report generated successfully"
-                    time="1 hour ago"
-                />
-            </div>
-
-            {/* Azure Job Queue */}
-            <div>
-                <h4
-                    style={{
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        color: theme.textSecondary,
-                        marginBottom: "8px",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                    }}
-                >
-                    Azure Job Queue
-                </h4>
-
-                <AzureJobCard
-                    jobName="Data Pipeline Sync"
-                    status="completed"
-                    progress={100}
-                    eta="Completed"
-                />
-
-                <AzureJobCard
-                    jobName="ML Model Training"
-                    status="running"
-                    progress={67}
-                    eta="8 min remaining"
-                />
-
-                <AzureJobCard
-                    jobName="Report Distribution"
-                    status="queued"
-                    progress={0}
-                    eta="Starting soon"
-                />
-            </div>
+            )}
+            {renderContent()}
         </div>
     );
 };
