@@ -2395,6 +2395,16 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     onRemove={() =>
                                         removeComponent(instance.id)
                                     }
+                                    componentState={
+                                        instance.displayMode === 'thumbnail' ? 'minimized' :
+                                        instance.displayMode === 'full' ? 'maximized' : 'normal'
+                                    }
+                                    onComponentStateChange={(state) => {
+                                        const newDisplayMode = 
+                                            state === 'minimized' ? 'thumbnail' :
+                                            state === 'maximized' ? 'full' : 'medium';
+                                        setDisplayMode(instance.id, newDisplayMode);
+                                    }}
                                     onPropsUpdate={(
                                         newProps: Record<string, any>
                                     ) => {

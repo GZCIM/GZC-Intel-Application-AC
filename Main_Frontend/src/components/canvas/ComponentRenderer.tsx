@@ -3,6 +3,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { componentInventory } from "../../core/components/ComponentInventory";
 import { debugLogger, logComponentLoad } from "../../utils/debugLogger";
 import { ComponentErrorBoundary } from "../debug/ErrorBoundary";
+import { ComponentHeaderWrapper } from "./ComponentHeaderWrapper";
 
 interface ComponentRendererProps {
     componentId: string;
@@ -11,6 +12,8 @@ interface ComponentRendererProps {
     isEditMode: boolean;
     onRemove: () => void;
     onPropsUpdate?: (props: Record<string, any>) => void;
+    componentState?: 'minimized' | 'normal' | 'maximized';
+    onComponentStateChange?: (state: 'minimized' | 'normal' | 'maximized') => void;
 }
 
 // Map component IDs to actual components
@@ -54,7 +57,7 @@ const componentMap: Record<string, () => Promise<any>> = {
 };
 
 export const ComponentRenderer = React.memo<ComponentRendererProps>(
-    ({ componentId, instanceId, props = {}, isEditMode, onRemove }) => {
+    ({ componentId, instanceId, props = {}, isEditMode, onRemove, componentState = 'normal', onComponentStateChange }) => {
         const { currentTheme } = useTheme();
         const [Component, setComponent] =
             useState<React.ComponentType<any> | null>(null);
@@ -303,15 +306,18 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                     componentName={`${meta.displayName} (${componentId})`}
                     showError={true}
                 >
-                    <div
-                        style={{
-                            height: "100%",
-                            width: "100%",
-                            position: "relative",
-                        }}
+                    <ComponentHeaderWrapper
+                        componentId={componentId}
+                        instanceId={instanceId}
+                        displayName={meta.displayName}
+                        componentState={componentState}
+                        onComponentStateChange={onComponentStateChange}
+                        dataQuality={95}
+                        lastUpdated="2m ago"
+                        isEditMode={isEditMode}
                     >
                         <Component {...props} />
-                    </div>
+                    </ComponentHeaderWrapper>
                 </ComponentErrorBoundary>
             );
         }
