@@ -576,7 +576,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     };
 
     // Mode helpers
-    const setDisplayMode = useCallback((id: string, mode: DisplayMode) => {
+    const setDisplayMode = (id: string, mode: DisplayMode) => {
         console.log(
             `🔄 Setting display mode for ${id} to ${mode} (editMode: ${isEditMode})`
         );
@@ -692,40 +692,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
             setFullScreenId(id);
         }
 
-        // Trigger layout update after mode change
+        // Trigger layout update after mode change (no immediate save)
         setTimeout(() => {
             // Debounced grid layout recalc
             triggerResize();
         }, 100);
-
-        // Persist the displayMode change to user memory for cross-browser consistency
-        // This ensures Chrome and Safari stay in sync
-        const tabComponents = components.map((comp) => {
-            const updatedComp = comp.id === id 
-                ? { ...comp, displayMode: mode }
-                : comp;
-            return {
-                id: updatedComp.id,
-                type: updatedComp.componentId,
-                position: {
-                    x: updatedComp.x,
-                    y: updatedComp.y,
-                    w: updatedComp.w,
-                    h: updatedComp.h,
-                },
-                props: updatedComp.props || {},
-                displayMode: updatedComp.displayMode,
-                customTitle: updatedComp.customTitle,
-            };
-        });
-
-        // Save to tab configuration and memory
-        updateTab(tabId, { components: tabComponents });
-        saveToMemory(`dynamic-canvas-${tabId}`, {
-            components: tabComponents,
-            layouts: layouts,
-        });
-    }, [components, layouts, tabId, updateTab, saveToMemory, isEditMode, tab, componentInventory, fullScreenId, triggerResize]);
+    };
 
     // Memoize layout generation to prevent infinite re-renders
     const generateLayout = useMemo((): Layout[] => {

@@ -1657,6 +1657,73 @@ export function VolatilityAnalysis({
                 >
                     {loading ? "Loading..." : "Refresh"}
                 </button>
+
+                <div
+                    style={{
+                        marginLeft: "auto",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "16px",
+                        fontSize: "11px",
+                        color: currentTheme.textSecondary,
+                    }}
+                >
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                        }}
+                    >
+                        <span>Data Quality:</span>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                padding: "2px 8px",
+                                borderRadius: "12px",
+                                backgroundColor:
+                                    getQualityColor(dataQualityScore) + "20",
+                                border: `1px solid ${getQualityColor(
+                                    dataQualityScore
+                                )}40`,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: "6px",
+                                    height: "6px",
+                                    borderRadius: "50%",
+                                    backgroundColor:
+                                        getQualityColor(dataQualityScore),
+                                }}
+                            />
+                            <span
+                                style={{
+                                    color: getQualityColor(dataQualityScore),
+                                    fontWeight: "600",
+                                }}
+                            >
+                                {dataQualityScore}%
+                            </span>
+                        </div>
+                    </div>
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                        }}
+                    >
+                        <span>Updated:</span>
+                        <span style={{ fontWeight: "500" }}>
+                            {lastUpdate
+                                ? lastUpdate.toLocaleTimeString()
+                                : "Never"}
+                        </span>
+                    </div>
+                </div>
             </div>
 
             {error && (
