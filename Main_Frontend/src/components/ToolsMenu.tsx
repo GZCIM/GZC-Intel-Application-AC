@@ -34,12 +34,20 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     const menuRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+    const justOpenedRef = useRef<number>(0);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
             const clickedInsideMenu = menuRef.current?.contains(target);
             const clickedTrigger = containerRef.current?.contains(target);
+            const now = Date.now();
+            // Ignore the very first document click right after opening
+            if (now - (justOpenedRef.current || 0) < 200) {
+                // Debug
+                try { console.log("[ToolsMenu] ignoring initial document click after open"); } catch {}
+                return;
+            }
             // Debug
             try {
                 console.log("[ToolsMenu] document click", {
@@ -875,6 +883,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         console.log("[ToolsMenu] trigger mousedown", { next });
                         setIsOpen(next);
                         if (next) {
+                            justOpenedRef.current = Date.now();
                             const rect = containerRef.current?.getBoundingClientRect();
                             console.log("[ToolsMenu] rect (mousedown)", rect);
                             setMenuPos({
@@ -891,6 +900,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         console.log("[ToolsMenu] trigger click", { next });
                         setIsOpen(next);
                         if (next) {
+                            justOpenedRef.current = Date.now();
                             const rect = containerRef.current?.getBoundingClientRect();
                             console.log("[ToolsMenu] rect (click)", rect);
                             setMenuPos({
@@ -927,6 +937,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         console.log("[ToolsMenu] button mousedown", { next });
                         setIsOpen(next);
                         if (next) {
+                            justOpenedRef.current = Date.now();
                             const rect = containerRef.current?.getBoundingClientRect();
                             console.log("[ToolsMenu] rect (button mousedown)", rect);
                             setMenuPos({
@@ -943,6 +954,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         console.log("[ToolsMenu] button click", { next });
                         setIsOpen(next);
                         if (next) {
+                            justOpenedRef.current = Date.now();
                             const rect = containerRef.current?.getBoundingClientRect();
                             console.log("[ToolsMenu] rect (button click)", rect);
                             setMenuPos({
