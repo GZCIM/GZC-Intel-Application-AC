@@ -71,17 +71,7 @@ button.no-drag[title="Remove"] {
 .drag-handle > div > button.no-drag[title="Medium"],
 .drag-handle > div > button.no-drag[title="Fullscreen"],
 .drag-handle > div > button.no-drag[title="Remove"] {
-    height: 24px !important;
-    min-height: 24px !important;
-    max-height: 24px !important;
-    width: 24px !important;
-    min-width: 24px !important;
-    max-width: 24px !important;
-    padding: 0 !important;
-    aspect-ratio: 1 / 1 !important;
-    flex-shrink: 0 !important;
-    flex-grow: 0 !important;
-    flex: 0 0 24px !important;
+    display: none !important;
 }
 
 /* NUCLEAR OPTION - Force all buttons to be exactly 24x24 */
@@ -113,36 +103,11 @@ button.no-drag[title="Remove"] {
 .drag-handle div button.no-drag[title="Medium"],
 .drag-handle div button.no-drag[title="Fullscreen"],
 .drag-handle div button.no-drag[title="Remove"],
-.no-drag[style*="position: absolute"] button.no-drag[title="Thumbnail"],
-.no-drag[style*="position: absolute"] button.no-drag[title="Medium"],
-.no-drag[style*="position: absolute"] button.no-drag[title="Fullscreen"],
-.no-drag[style*="position: absolute"] button.no-drag[title="Remove"] {
-    width: 24px !important;
-    height: 24px !important;
-    min-width: 24px !important;
-    max-width: 24px !important;
-    min-height: 24px !important;
-    max-height: 24px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: 1px solid rgb(58, 54, 50) !important;
-    box-sizing: border-box !important;
-    aspect-ratio: 1 / 1 !important;
-    flex: 0 0 24px !important;
-    flex-shrink: 0 !important;
-    flex-grow: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: transparent !important;
-    color: rgb(248, 246, 240) !important;
-    border-radius: 4px !important;
-    cursor: pointer !important;
-    font-size: 12px !important;
-    line-height: 1 !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+.no-drag[style*="position: absolute"] > button.no-drag[title="Thumbnail"],
+.no-drag[style*="position: absolute"] > button.no-drag[title="Medium"],
+.no-drag[style*="position: absolute"] > button.no-drag[title="Fullscreen"],
+.no-drag[style*="position: absolute"] > button.no-drag[title="Remove"] {
+    display: none !important;
 }
 
 /* Force SVG icons to be centered and not affect button size */

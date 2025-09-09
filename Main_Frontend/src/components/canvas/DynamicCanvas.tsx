@@ -1080,7 +1080,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 )}
 
                                 {/* Floating controls in top-right for medium mode */}
-                                {!isEditMode ? (
+                                {false ? (
                                     <div
                                         className="no-drag"
                                         style={{
@@ -1088,7 +1088,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                             top: 4, // nudge down to align with header text baseline
                                             right: 8,
                                             height: 30,
-                                            display: "flex",
+                                            display: "none",
                                             alignItems: "center",
                                             gap: 6,
                                             zIndex: 3,
@@ -1638,14 +1638,23 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         removeComponent(instance.id)
                                     }
                                     componentState={
-                                        instance.displayMode === 'thumbnail' ? 'minimized' :
-                                        instance.displayMode === 'full' ? 'maximized' : 'normal'
+                                        instance.displayMode === "thumbnail"
+                                            ? "minimized"
+                                            : instance.displayMode === "full"
+                                            ? "maximized"
+                                            : "normal"
                                     }
                                     onComponentStateChange={(state) => {
-                                        const newDisplayMode = 
-                                            state === 'minimized' ? 'thumbnail' :
-                                            state === 'maximized' ? 'full' : 'medium';
-                                        setDisplayMode(instance.id, newDisplayMode);
+                                        const newDisplayMode =
+                                            state === "minimized"
+                                                ? "thumbnail"
+                                                : state === "maximized"
+                                                ? "full"
+                                                : "medium";
+                                        setDisplayMode(
+                                            instance.id,
+                                            newDisplayMode
+                                        );
                                     }}
                                     onPropsUpdate={(
                                         newProps: Record<string, any>
@@ -2396,7 +2405,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         top: 12,
                                                         right: 12,
                                                         height: 30,
-                                                        display: "flex",
+                                                        display: "none",
                                                         alignItems: "center",
                                                         gap: 8,
                                                         zIndex: 12001,
