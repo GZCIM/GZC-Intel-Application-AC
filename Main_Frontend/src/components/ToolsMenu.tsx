@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { useTabLayout } from "../core/tabs/TabLayoutManager";
 import { deviceConfigService } from "../services/deviceConfigService";
@@ -31,13 +32,15 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
         useTabLayout();
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (
-                menuRef.current &&
-                !menuRef.current.contains(event.target as Node)
-            ) {
+            const target = event.target as Node;
+            const clickedInsideMenu = menuRef.current?.contains(target);
+            const clickedTrigger = containerRef.current?.contains(target);
+            if (!clickedInsideMenu && !clickedTrigger) {
                 setIsOpen(false);
             }
         };
@@ -852,17 +855,41 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     ];
 
     return (
-        <div ref={menuRef} style={{ position: "relative" }}>
+        <div ref={containerRef} style={{ position: "relative" }}>
             {trigger ? (
                 <div
-                    onClick={() => setIsOpen(!isOpen)}
+                    onClick={() => {
+                        const next = !isOpen;
+                        setIsOpen(next);
+                        if (next) {
+                            const rect = containerRef.current?.getBoundingClientRect();
+                            if (rect) {
+                                setMenuPos({
+                                    top: Math.round(rect.bottom + 4),
+                                    left: Math.round(Math.max(8, rect.right - 240)),
+                                });
+                            }
+                        }
+                    }}
                     style={{ cursor: "pointer" }}
                 >
                     {trigger}
                 </div>
             ) : (
                 <button
-                    onClick={() => setIsOpen(!isOpen)}
+                    onClick={() => {
+                        const next = !isOpen;
+                        setIsOpen(next);
+                        if (next) {
+                            const rect = containerRef.current?.getBoundingClientRect();
+                            if (rect) {
+                                setMenuPos({
+                                    top: Math.round(rect.bottom + 4),
+                                    left: Math.round(Math.max(8, rect.right - 240)),
+                                });
+                            }
+                        }
+                    }}
                     style={{
                         display: "flex",
                         alignItems: "center",
@@ -914,25 +941,26 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
 
             <AnimatePresence>
                 {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        style={{
-                            position: "absolute",
-                            top: "100%",
-                            right: 0,
-                            marginTop: "4px",
-                            minWidth: "220px",
-                            backgroundColor: theme.surface,
-                            border: `1px solid ${theme.border}`,
-                            borderRadius: "8px",
-                            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-                            padding: "4px",
-                            zIndex: 20070,
-                        }}
-                    >
+                    createPortal(
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                            style={{
+                                position: "fixed",
+                                top: menuPos.top,
+                                left: menuPos.left,
+                                minWidth: "220px",
+                                backgroundColor: theme.surface,
+                                border: `1px solid ${theme.border}`,
+                                borderRadius: "8px",
+                                boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+                                padding: "4px",
+                                zIndex: 20070,
+                            }}
+                            ref={menuRef}
+                        >
                         {menuItems.map((item, index) => (
                             <div key={index}>
                                 {item.isComponent ? (
@@ -1008,7 +1036,9 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                                 )}
                             </div>
                         ))}
-                    </motion.div>
+                        </motion.div>,
+                        document.body
+                    )
                 )}
             </AnimatePresence>
         </div>
