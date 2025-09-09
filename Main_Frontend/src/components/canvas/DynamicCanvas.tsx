@@ -1464,7 +1464,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 <ComponentRenderer
                                     componentId={instance.componentId}
                                     instanceId={instance.id}
-                                    props={instance.props || {}}
+                                    props={{
+                                        ...(instance.props || {}),
+                                        customTitle:
+                                            instance.customTitle || title || "",
+                                        displayMode: instance.displayMode,
+                                    }}
                                     isEditMode={isEditMode}
                                     onRemove={() =>
                                         removeComponent(instance.id)
@@ -3109,10 +3114,15 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     instanceId={
                                                         fullScreenInstance.id
                                                     }
-                                                    props={
-                                                        fullScreenInstance.props ||
-                                                        {}
-                                                    }
+                                                    props={{
+                                                        ...(fullScreenInstance.props || {}),
+                                                        customTitle:
+                                                            fullScreenInstance.customTitle ||
+                                                            title ||
+                                                            "",
+                                                        displayMode:
+                                                            fullScreenInstance.displayMode,
+                                                    }}
                                                     isEditMode={isEditMode}
                                                     onRemove={() =>
                                                         removeComponent(
