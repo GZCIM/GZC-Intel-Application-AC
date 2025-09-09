@@ -42,10 +42,14 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     }, [isOpen, menuPos]);
 
     const handleOpen = () => {
-        if (isOpeningRef.current) return; // Prevent double-triggering
+        console.log("[ToolsMenu] handleOpen called, isOpeningRef:", isOpeningRef.current);
+        if (isOpeningRef.current) {
+            console.log("[ToolsMenu] handleOpen blocked by isOpeningRef guard");
+            return; // Prevent double-triggering
+        }
         isOpeningRef.current = true;
         
-        console.log("[ToolsMenu] handleOpen called");
+        console.log("[ToolsMenu] handleOpen executing");
         setIsOpen(true);
         justOpenedRef.current = Date.now();
         const rect = containerRef.current?.getBoundingClientRect();
@@ -58,7 +62,10 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
         setMenuPos(newPos);
         
         // Reset the flag after a short delay
-        setTimeout(() => { isOpeningRef.current = false; }, 100);
+        setTimeout(() => { 
+            console.log("[ToolsMenu] resetting isOpeningRef guard");
+            isOpeningRef.current = false; 
+        }, 100);
     };
 
     useEffect(() => {
