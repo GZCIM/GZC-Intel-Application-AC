@@ -858,36 +858,50 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
         <div ref={containerRef} style={{ position: "relative" }}>
             {trigger ? (
                 <div
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         const next = !isOpen;
                         setIsOpen(next);
                         if (next) {
                             const rect = containerRef.current?.getBoundingClientRect();
-                            if (rect) {
-                                setMenuPos({
-                                    top: Math.round(rect.bottom + 4),
-                                    left: Math.round(Math.max(8, rect.right - 240)),
-                                });
-                            }
+                            setMenuPos({
+                                top: Math.round((rect?.bottom ?? 56) + 4),
+                                left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
+                            });
                         }
                     }}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const rect = containerRef.current?.getBoundingClientRect();
+                            setIsOpen(true);
+                            setMenuPos({
+                                top: Math.round((rect?.bottom ?? 56) + 4),
+                                left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
+                            });
+                        }
+                    }}
+                    role="button"
+                    tabIndex={0}
                     style={{ cursor: "pointer" }}
                 >
                     {trigger}
                 </div>
             ) : (
                 <button
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         const next = !isOpen;
                         setIsOpen(next);
                         if (next) {
                             const rect = containerRef.current?.getBoundingClientRect();
-                            if (rect) {
-                                setMenuPos({
-                                    top: Math.round(rect.bottom + 4),
-                                    left: Math.round(Math.max(8, rect.right - 240)),
-                                });
-                            }
+                            setMenuPos({
+                                top: Math.round((rect?.bottom ?? 56) + 4),
+                                left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
+                            });
                         }
                     }}
                     style={{
