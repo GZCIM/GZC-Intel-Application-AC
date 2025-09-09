@@ -1616,19 +1616,18 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                             </>
                         )}
 
-                        {/* Component content - hidden in thumbnail mode */}
-                        {!isThumb && (
-                            <div
-                                style={{
-                                    flex: 1,
-                                    minHeight: 0,
-                                    position: "relative",
-                                    width: "100%",
-                                    height: "100%",
-                                    background: "transparent",
-                                    overflow: "auto",
-                                }}
-                            >
+                        {/* Component content - render also in thumbnail so component header controls work */}
+                        <div
+                            style={{
+                                flex: 1,
+                                minHeight: 0,
+                                position: "relative",
+                                width: "100%",
+                                height: "100%",
+                                background: "transparent",
+                                overflow: isThumb ? "hidden" : "auto",
+                            }}
+                        >
                                 <ComponentRenderer
                                     componentId={instance.componentId}
                                     instanceId={instance.id}
@@ -1678,7 +1677,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 />
 
                                 {/* Explicit resize handles to avoid selecting inner UI while resizing */}
-                                {isEditMode && (
+                                {isEditMode && !isThumb && (
                                     <>
                                         <div
                                             className="react-resizable-handle react-resizable-handle-e"
@@ -1709,7 +1708,6 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     </>
                                 )}
                             </div>
-                        )}
                     </div>
                 );
             }),

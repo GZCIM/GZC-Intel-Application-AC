@@ -1,25 +1,25 @@
 /* DynamicCanvas overrides extracted from inline styles */
 
-/* Thumbnail height fixed to 28px */
+/* Thumbnail height set to 56px to fit component-level controls */
 .react-grid-item[data-display-mode="thumbnail"] {
-    height: 28px !important;
-    min-height: 28px !important;
-    max-height: 28px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
     overflow: hidden !important;
 }
 
 .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"] {
-    height: 28px !important;
-    min-height: 28px !important;
-    max-height: 28px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
     overflow: visible !important;
 }
 
 .react-grid-item[data-display-mode="thumbnail"][data-edit-mode="true"]
     .grid-item {
-    height: 28px !important;
-    min-height: 28px !important;
-    max-height: 28px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
     overflow: visible !important;
 }
 
@@ -67,12 +67,8 @@ button.no-drag[title="Remove"] {
 }
 
 /* Ultra-specific selector for thumbnail mode buttons */
-.drag-handle > div > button.no-drag[title="Thumbnail"],
-.drag-handle > div > button.no-drag[title="Medium"],
-.drag-handle > div > button.no-drag[title="Fullscreen"],
-.drag-handle > div > button.no-drag[title="Remove"] {
-    display: none !important;
-}
+/* Allow component-level controls; we no longer render main T/M/F here */
+/* Keeping this block empty to avoid accidental overrides */
 
 /* NUCLEAR OPTION - Force all buttons to be exactly 24x24 */
 button.no-drag[title="Thumbnail"],
