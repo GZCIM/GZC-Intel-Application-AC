@@ -37,6 +37,10 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     const justOpenedRef = useRef<number>(0);
 
     useEffect(() => {
+        try { console.log("[ToolsMenu] state:isOpen", isOpen, "pos", menuPos); } catch {}
+    }, [isOpen, menuPos]);
+
+    useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
             const clickedInsideMenu = menuRef.current?.contains(target);
@@ -879,18 +883,17 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         e.preventDefault();
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
-                        const next = !isOpen;
-                        console.log("[ToolsMenu] trigger mousedown", { next });
-                        setIsOpen(next);
-                        if (next) {
-                            justOpenedRef.current = Date.now();
-                            const rect = containerRef.current?.getBoundingClientRect();
-                            console.log("[ToolsMenu] rect (mousedown)", rect);
-                            setMenuPos({
-                                top: Math.round((rect?.bottom ?? 56) + 4),
-                                left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
-                            });
-                        }
+                        console.log("[ToolsMenu] trigger mousedown (force open)");
+                        setIsOpen(true);
+                        justOpenedRef.current = Date.now();
+                        const rect = containerRef.current?.getBoundingClientRect();
+                        console.log("[ToolsMenu] rect (mousedown)", rect);
+                        const newPos = {
+                            top: Math.round((rect?.bottom ?? 56) + 4),
+                            left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
+                        };
+                        console.log("[ToolsMenu] setMenuPos", newPos);
+                        setMenuPos(newPos);
                     }}
                     onClick={(e) => {
                         // Do not toggle on click; mousedown already handled open
@@ -905,10 +908,12 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                             e.stopPropagation();
                             const rect = containerRef.current?.getBoundingClientRect();
                             setIsOpen(true);
-                            setMenuPos({
+                            const newPos = {
                                 top: Math.round((rect?.bottom ?? 56) + 4),
                                 left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
-                            });
+                            };
+                            console.log("[ToolsMenu] setMenuPos (keydown)", newPos);
+                            setMenuPos(newPos);
                         }
                     }}
                     role="button"
@@ -923,18 +928,17 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         e.preventDefault();
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
-                        const next = !isOpen;
-                        console.log("[ToolsMenu] button mousedown", { next });
-                        setIsOpen(next);
-                        if (next) {
-                            justOpenedRef.current = Date.now();
-                            const rect = containerRef.current?.getBoundingClientRect();
-                            console.log("[ToolsMenu] rect (button mousedown)", rect);
-                            setMenuPos({
-                                top: Math.round((rect?.bottom ?? 56) + 4),
-                                left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
-                            });
-                        }
+                        console.log("[ToolsMenu] button mousedown (force open)");
+                        setIsOpen(true);
+                        justOpenedRef.current = Date.now();
+                        const rect = containerRef.current?.getBoundingClientRect();
+                        console.log("[ToolsMenu] rect (button mousedown)", rect);
+                        const newPos = {
+                            top: Math.round((rect?.bottom ?? 56) + 4),
+                            left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
+                        };
+                        console.log("[ToolsMenu] setMenuPos", newPos);
+                        setMenuPos(newPos);
                     }}
                     onClick={(e) => {
                         // Do not toggle on click; mousedown already handled open
@@ -1000,6 +1004,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.2 }}
+                            onAnimationComplete={() => { try { console.log("[ToolsMenu] portal animation complete (mounted)"); } catch {} }}
                             style={{
                                 position: "fixed",
                                 top: menuPos.top,
@@ -1012,12 +1017,14 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                                 padding: "4px",
                                 zIndex: 20070,
                             }}
-                            ref={menuRef}
+                            ref={(el) => { menuRef.current = el; try { console.log("[ToolsMenu] menuRef set", !!el); } catch {} }}
                             onMouseDown={(e) => {
                                 // prevent closing when clicking inside
+                                try { console.log("[ToolsMenu] menu mousedown inside"); } catch {}
                                 e.stopPropagation();
                             }}
                             onClick={(e) => {
+                                try { console.log("[ToolsMenu] menu click inside"); } catch {}
                                 e.stopPropagation();
                             }}
                         >
