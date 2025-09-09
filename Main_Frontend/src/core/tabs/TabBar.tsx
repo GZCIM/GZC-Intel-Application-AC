@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { createPortal } from "react-dom";
 import { useTabLayout } from "./TabLayoutManager";
 import { FeatherIcon } from "../../components/icons/FeatherIcon";
 import { quantumTheme } from "../../theme/quantum";
@@ -19,6 +20,8 @@ export function TabBar() {
     } = useTabLayout();
 
     const [showLayoutMenu, setShowLayoutMenu] = useState(false);
+    const layoutBtnRef = useRef<HTMLButtonElement>(null);
+    const [layoutMenuPos, setLayoutMenuPos] = useState<{top:number;left:number}>({top:0,left:0});
     const [layoutName, setLayoutName] = useState("");
 
     const handleSaveLayout = () => {
@@ -380,7 +383,17 @@ export function TabBar() {
 
                 {/* Layout Menu Button */}
                 <button
-                    onClick={() => setShowLayoutMenu(!showLayoutMenu)}
+                    ref={layoutBtnRef}
+                    onClick={() => {
+                        const next = !showLayoutMenu;
+                        setShowLayoutMenu(next);
+                        if (next) {
+                            const rect = layoutBtnRef.current?.getBoundingClientRect();
+                            if (rect) {
+                                setLayoutMenuPos({ top: Math.round(rect.bottom + 8), left: Math.round(rect.right - 240) });
+                            }
+                        }
+                    }}
                     style={{
                         display: "flex",
                         alignItems: "center",
@@ -434,18 +447,18 @@ export function TabBar() {
 
             {/* Layout Menu Dropdown */}
             {showLayoutMenu && (
+                createPortal(
                 <div
                     style={{
-                        position: "absolute",
-                        top: "100%",
-                        right: "16px",
-                        marginTop: "8px",
+                        position: "fixed",
+                        top: layoutMenuPos.top,
+                        left: layoutMenuPos.left,
                         backgroundColor: "#1A1A1A",
                         border: `1px solid ${quantumTheme.border}`,
                         borderRadius: "8px",
                         padding: "8px",
                         minWidth: "200px",
-                        zIndex: 20050,
+                        zIndex: 20070,
                         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.5)",
                     }}
                 >
@@ -581,7 +594,7 @@ export function TabBar() {
                     >
                         Reset to Default
                     </button>
-                </div>
+                </div>, document.body)
             )}
         </div>
     );
