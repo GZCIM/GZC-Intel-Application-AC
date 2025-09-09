@@ -62,7 +62,7 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
       backgroundColor: currentTheme.surface,
       border: `1px solid ${currentTheme.border}`,
       borderRadius: '8px',
-      overflow: 'hidden'
+      overflow: 'visible'
     }}>
       {/* Component Header with integrated controls (Title + T/M/F) */}
       <div
@@ -84,7 +84,9 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
         borderBottom: `1px solid ${currentTheme.border}`,
         minHeight: '36px',
         flexShrink: 0,
-        cursor: isEditMode ? 'default' : 'pointer'
+        cursor: isEditMode ? 'default' : 'pointer',
+        position: 'relative',
+        zIndex: 2
       }}>
         {/* Left: Component Name (editable in edit mode) */}
         <div style={{
