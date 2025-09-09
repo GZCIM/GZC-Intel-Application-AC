@@ -98,10 +98,20 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
             <input
               type="text"
               value={inputValue}
+              autoComplete="off"
+              spellCheck={false}
               onChange={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 setInputValue(e.target.value);
+              }}
+              onInput={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onKeyUp={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
               }}
               onBlur={(e) => {
                 e.preventDefault();
