@@ -1345,7 +1345,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     : "absolute",
                                             top: 8,
                                             right: 12,
-                                            display: "flex",
+                                            display: "none",
                                             alignItems: "center",
                                             gap: 6,
                                             zIndex: 12000,
