@@ -3288,6 +3288,28 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                             fullScreenInstance.id
                                                         )
                                                     }
+                                                    componentState={
+                                                        fullScreenInstance.displayMode === "thumbnail"
+                                                            ? "minimized"
+                                                            : fullScreenInstance.displayMode === "full"
+                                                            ? "maximized"
+                                                            : "normal"
+                                                    }
+                                                    onComponentStateChange={(state) => {
+                                                        const newDisplayMode =
+                                                            state === "minimized"
+                                                                ? "thumbnail"
+                                                                : state === "maximized"
+                                                                ? "full"
+                                                                : "medium";
+                                                        setDisplayMode(
+                                                            fullScreenInstance.id,
+                                                            newDisplayMode
+                                                        );
+                                                        if (newDisplayMode !== "full") {
+                                                            setFullScreenId(null);
+                                                        }
+                                                    }}
                                                 />
                                             </div>
                                         </div>
