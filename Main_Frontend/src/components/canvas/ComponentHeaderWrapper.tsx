@@ -87,7 +87,6 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
           {isEditMode ? (
             <input
               type="text"
-              defaultValue={undefined}
               value={displayName && displayName !== (defaultName || '') ? displayName : ''}
               onChange={(e) => onTitleChange?.(e.target.value)}
               onBlur={(e) => onTitleChange?.(e.target.value)}

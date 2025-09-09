@@ -2564,10 +2564,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                             instanceId={
                                                                 fullScreenInstance.id
                                                             }
-                                                            props={
-                                                                fullScreenInstance.props ||
-                                                                {}
-                                                            }
+                                                            props={{
+                                                                ...(fullScreenInstance.props || {}),
+                                                                customTitle: fullScreenInstance.customTitle,
+                                                                displayMode: fullScreenInstance.displayMode,
+                                                            }}
                                                             isEditMode={
                                                                 isEditMode
                                                             }
