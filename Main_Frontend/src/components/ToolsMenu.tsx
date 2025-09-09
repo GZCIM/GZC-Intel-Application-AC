@@ -1043,6 +1043,19 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                                             left: el.style.left,
                                             zIndex: el.style.zIndex
                                         });
+                                        // Check if element is actually in DOM
+                                        console.log("[ToolsMenu] element in DOM:", document.body.contains(el));
+                                        // Check computed styles
+                                        const computed = window.getComputedStyle(el);
+                                        console.log("[ToolsMenu] computed styles:", {
+                                            display: computed.display,
+                                            visibility: computed.visibility,
+                                            opacity: computed.opacity,
+                                            position: computed.position,
+                                            top: computed.top,
+                                            left: computed.left,
+                                            zIndex: computed.zIndex
+                                        });
                                     }
                                 } catch {} 
                             }}
@@ -1056,8 +1069,8 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                                 e.stopPropagation();
                             }}
                         >
-                        <div style={{ padding: "8px", backgroundColor: "red", color: "white", fontSize: "12px" }}>
-                            TEST MENU VISIBLE
+                        <div style={{ padding: "8px", backgroundColor: "red", color: "white", fontSize: "12px", fontWeight: "bold" }}>
+                            TEST MENU VISIBLE - CLICK ME
                         </div>
                         {menuItems.map((item, index) => (
                             <div key={index}>
