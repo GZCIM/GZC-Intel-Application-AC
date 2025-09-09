@@ -897,7 +897,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         e.preventDefault();
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
-                        console.log("[ToolsMenu] trigger click (ignored)");
+                        console.log("[ToolsMenu] trigger click (ignored - v2)");
                     }}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
