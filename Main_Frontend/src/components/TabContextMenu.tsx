@@ -133,7 +133,7 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
                             position: "fixed",
                             top: position.y,
                             left: position.x,
-                            zIndex: 10000,
+                            zIndex: 20050,
                             backgroundColor: currentTheme.surface,
                             border: `1px solid ${currentTheme.border}`,
                             borderRadius: "8px",

@@ -445,7 +445,7 @@ export function TabBar() {
                         borderRadius: "8px",
                         padding: "8px",
                         minWidth: "200px",
-                        zIndex: 1000,
+                        zIndex: 20050,
                         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.5)",
                     }}
                 >

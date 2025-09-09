@@ -201,7 +201,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                             borderRadius: "8px",
                             border: `1px solid ${theme.border}`,
                             overflow: "hidden",
-                            zIndex: 1000,
+                            zIndex: 20050,
                             backdropFilter: "blur(12px)",
                             boxShadow:
                                 theme.name.includes("Light") ||
