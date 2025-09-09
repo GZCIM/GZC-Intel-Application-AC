@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface ComponentHeaderWrapperProps {
@@ -33,6 +33,14 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
 }) => {
   const { currentTheme } = useTheme();
 
+  // Track the last non-full state so we can return to it from full in locked mode
+  const lastNonFullRef = useRef<'minimized' | 'normal'>(componentState === 'maximized' ? 'normal' : componentState);
+  useEffect(() => {
+    if (componentState !== 'maximized') {
+      lastNonFullRef.current = componentState as 'minimized' | 'normal';
+    }
+  }, [componentState]);
+
   // Always render a header with controls; for minimized, we'll hide children content below
 
   return (
@@ -47,7 +55,16 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
       overflow: 'hidden'
     }}>
       {/* Component Header with integrated controls (Title + T/M/F) */}
-      <div style={{
+      <div
+        onDoubleClick={() => {
+          if (isEditMode) return;
+          if (componentState === 'maximized') {
+            onComponentStateChange?.(lastNonFullRef.current);
+          } else {
+            onComponentStateChange?.('maximized');
+          }
+        }}
+        style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -102,97 +119,99 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
           )}
         </div>
 
-        {/* Right: Component State Controls */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '2px',
-          marginLeft: '8px'
-        }}>
-          {/* Minimize Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onComponentStateChange?.('minimized');
-            }}
-            style={{
-              width: '24px',
-              height: '24px',
-              padding: '0',
-              border: `1px solid ${componentState === 'minimized' ? currentTheme.primary : currentTheme.border}`,
-              borderRadius: '4px',
-              backgroundColor: componentState === 'minimized' ? `${currentTheme.primary}20` : 'transparent',
-              color: componentState === 'minimized' ? currentTheme.primary : currentTheme.textSecondary,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease'
-            }}
-            title="Minimize"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2">
-              <rect x="1" y="2" width="12" height="10" rx="1" />
-              <rect x="3" y="4" width="8" height="6" rx="0.5" fill="currentColor" opacity="0.3" />
-            </svg>
-          </button>
+        {/* Right: Component State Controls - visible only in edit mode */}
+        {isEditMode && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2px',
+            marginLeft: '8px'
+          }}>
+            {/* Minimize Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onComponentStateChange?.('minimized');
+              }}
+              style={{
+                width: '24px',
+                height: '24px',
+                padding: '0',
+                border: `1px solid ${componentState === 'minimized' ? currentTheme.primary : currentTheme.border}`,
+                borderRadius: '4px',
+                backgroundColor: componentState === 'minimized' ? `${currentTheme.primary}20` : 'transparent',
+                color: componentState === 'minimized' ? currentTheme.primary : currentTheme.textSecondary,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease'
+              }}
+              title="Minimize"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2">
+                <rect x="1" y="2" width="12" height="10" rx="1" />
+                <rect x="3" y="4" width="8" height="6" rx="0.5" fill="currentColor" opacity="0.3" />
+              </svg>
+            </button>
 
-          {/* Normal View Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onComponentStateChange?.('normal');
-            }}
-            style={{
-              width: '24px',
-              height: '24px',
-              padding: '0',
-              border: `1px solid ${componentState === 'normal' ? currentTheme.primary : currentTheme.border}`,
-              borderRadius: '4px',
-              backgroundColor: componentState === 'normal' ? `${currentTheme.primary}20` : 'transparent',
-              color: componentState === 'normal' ? currentTheme.primary : currentTheme.textSecondary,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease'
-            }}
-            title="Normal View"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <line x1="3" y1="9" x2="21" y2="9" />
-              <line x1="9" y1="21" x2="9" y2="9" />
-            </svg>
-          </button>
+            {/* Normal View Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onComponentStateChange?.('normal');
+              }}
+              style={{
+                width: '24px',
+                height: '24px',
+                padding: '0',
+                border: `1px solid ${componentState === 'normal' ? currentTheme.primary : currentTheme.border}`,
+                borderRadius: '4px',
+                backgroundColor: componentState === 'normal' ? `${currentTheme.primary}20` : 'transparent',
+                color: componentState === 'normal' ? currentTheme.primary : currentTheme.textSecondary,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease'
+              }}
+              title="Normal View"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="3" y1="9" x2="21" y2="9" />
+                <line x1="9" y1="21" x2="9" y2="9" />
+              </svg>
+            </button>
 
-          {/* Maximize Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onComponentStateChange?.('maximized');
-            }}
-            style={{
-              width: '24px',
-              height: '24px',
-              padding: '0',
-              border: `1px solid ${componentState === 'maximized' ? currentTheme.primary : currentTheme.border}`,
-              borderRadius: '4px',
-              backgroundColor: componentState === 'maximized' ? `${currentTheme.primary}20` : 'transparent',
-              color: componentState === 'maximized' ? currentTheme.primary : currentTheme.textSecondary,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease'
-            }}
-            title="Maximize"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-            </svg>
-          </button>
-        </div>
+            {/* Maximize Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onComponentStateChange?.('maximized');
+              }}
+              style={{
+                width: '24px',
+                height: '24px',
+                padding: '0',
+                border: `1px solid ${componentState === 'maximized' ? currentTheme.primary : currentTheme.border}`,
+                borderRadius: '4px',
+                backgroundColor: componentState === 'maximized' ? `${currentTheme.primary}20` : 'transparent',
+                color: componentState === 'maximized' ? currentTheme.primary : currentTheme.textSecondary,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease'
+              }}
+              title="Maximize"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Component Content */}
