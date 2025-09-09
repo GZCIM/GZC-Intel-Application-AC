@@ -91,10 +91,19 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
               onChange={(e) => onTitleChange?.(e.target.value)}
               onBlur={(e) => onTitleChange?.(e.target.value)}
               onKeyDown={(e) => {
+                // Prevent Enter from submitting any parent form and bubbling
                 if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
                   (e.target as HTMLInputElement).blur();
+                } else {
+                  // Stop bubbling to header to avoid accidental double-click detection
+                  e.stopPropagation();
                 }
               }}
+              onClick={(e) => e.stopPropagation()}
+              onDoubleClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
               style={{
                 width: '100%',
                 background: 'transparent',
