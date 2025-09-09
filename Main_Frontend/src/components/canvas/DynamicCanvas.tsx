@@ -2773,8 +2773,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 alignItems: "stretch",
                                             }}
                                         >
-                                            {/* Locked-mode controls in fullscreen fallback: show T, M, and F */}
-                                            {!isEditMode && (
+                                            {/* Locked-mode controls in fullscreen fallback: hidden (controls moved into component) */}
+                                            {false && (
                                                 <div
                                                     className="no-drag"
                                                     style={{
@@ -2782,7 +2782,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         top: 12,
                                                         right: 12,
                                                         height: 30,
-                                                        display: "flex",
+                                                        display: "none",
                                                         alignItems: "center",
                                                         gap: 8,
                                                         zIndex: 12001,
