@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface ComponentHeaderWrapperProps {
@@ -43,6 +43,14 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
     }
   }, [componentState]);
 
+  // Local state for the input value to prevent controlled/uncontrolled issues
+  const [inputValue, setInputValue] = useState(displayName);
+
+  // Update input value when displayName changes (e.g., when switching between components)
+  useEffect(() => {
+    setInputValue(displayName);
+  }, [displayName]);
+
   // Always render a header with controls; for minimized, we'll hide children content below
 
   return (
@@ -58,8 +66,9 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
     }}>
       {/* Component Header with integrated controls (Title + T/M/F) */}
       <div
-        onDoubleClick={() => {
+        onDoubleClick={(e) => {
           if (isEditMode) return;
+          e.stopPropagation();
           if (componentState === 'maximized') {
             onComponentStateChange?.(lastNonFullRef.current);
           } else {
@@ -74,7 +83,8 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
         backgroundColor: currentTheme.background,
         borderBottom: `1px solid ${currentTheme.border}`,
         minHeight: '36px',
-        flexShrink: 0
+        flexShrink: 0,
+        cursor: isEditMode ? 'default' : 'pointer'
       }}>
         {/* Left: Component Name (editable in edit mode) */}
         <div style={{
@@ -87,9 +97,17 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
           {isEditMode ? (
             <input
               type="text"
-              value={displayName && displayName !== (defaultName || '') ? displayName : ''}
-              onChange={(e) => onTitleChange?.(e.target.value)}
-              onBlur={(e) => onTitleChange?.(e.target.value)}
+              value={inputValue}
+              onChange={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setInputValue(e.target.value);
+              }}
+              onBlur={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onTitleChange?.(e.target.value);
+              }}
               onKeyDown={(e) => {
                 // Prevent Enter from submitting any parent form and bubbling
                 if (e.key === 'Enter') {
@@ -112,7 +130,8 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
                 padding: '2px 6px',
                 color: currentTheme.text,
                 fontSize: '12px',
-                fontWeight: 600
+                fontWeight: 600,
+                outline: 'none'
               }}
               placeholder={defaultName || 'Enter title...'}
             />
