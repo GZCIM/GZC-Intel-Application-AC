@@ -1026,8 +1026,26 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                                 boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
                                 padding: "4px",
                                 zIndex: 20070,
+                                display: "block",
+                                visibility: "visible",
                             }}
-                            ref={(el) => { menuRef.current = el; try { console.log("[ToolsMenu] menuRef set", !!el); } catch {} }}
+                            ref={(el) => { 
+                                menuRef.current = el; 
+                                try { 
+                                    console.log("[ToolsMenu] menuRef set", !!el);
+                                    if (el) {
+                                        console.log("[ToolsMenu] menu element style:", {
+                                            display: el.style.display,
+                                            visibility: el.style.visibility,
+                                            opacity: el.style.opacity,
+                                            position: el.style.position,
+                                            top: el.style.top,
+                                            left: el.style.left,
+                                            zIndex: el.style.zIndex
+                                        });
+                                    }
+                                } catch {} 
+                            }}
                             onMouseDown={(e) => {
                                 // prevent closing when clicking inside
                                 try { console.log("[ToolsMenu] menu mousedown inside"); } catch {}
@@ -1038,6 +1056,9 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                                 e.stopPropagation();
                             }}
                         >
+                        <div style={{ padding: "8px", backgroundColor: "red", color: "white", fontSize: "12px" }}>
+                            TEST MENU VISIBLE
+                        </div>
                         {menuItems.map((item, index) => (
                             <div key={index}>
                                 {item.isComponent ? (
