@@ -31,44 +31,7 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
 }) => {
   const { currentTheme } = useTheme();
 
-  // In minimized state, show compact display
-  if (componentState === 'minimized' && !isEditMode) {
-    return (
-      <div style={{
-        height: '100%',
-        width: '100%',
-        backgroundColor: currentTheme.surface,
-        border: `1px solid ${currentTheme.border}`,
-        borderRadius: '8px',
-        padding: '12px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease'
-      }}
-      onClick={() => onComponentStateChange?.('normal')}
-      >
-        <div style={{ fontSize: '24px', opacity: 0.4, marginBottom: '8px' }}>📊</div>
-        <div style={{ 
-          fontSize: '11px', 
-          color: currentTheme.text,
-          fontWeight: '500',
-          textAlign: 'center'
-        }}>
-          {displayName}
-        </div>
-        <div style={{ 
-          fontSize: '10px', 
-          color: currentTheme.textSecondary,
-          marginTop: '4px'
-        }}>
-          Click to expand
-        </div>
-      </div>
-    );
-  }
+  // Always render a header with controls; for minimized, we'll hide children content below
 
   return (
     <div style={{
@@ -81,7 +44,7 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
       borderRadius: '8px',
       overflow: 'hidden'
     }}>
-      {/* Component Header with integrated controls */}
+      {/* Component Header with integrated controls (Title + T/M/F) */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -111,29 +74,6 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
           }}>
             {displayName}
           </h4>
-        </div>
-
-        {/* Center: Status Indicators */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          fontSize: '11px',
-          color: currentTheme.textSecondary
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ opacity: 0.7 }}>Data Quality:</span>
-            <span style={{ 
-              color: dataQuality >= 90 ? '#10b981' : dataQuality >= 70 ? '#f59e0b' : '#ef4444',
-              fontWeight: '500'
-            }}>
-              {dataQuality}%
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ opacity: 0.7 }}>Updated:</span>
-            <span>{lastUpdated}</span>
-          </div>
         </div>
 
         {/* Right: Component State Controls */}
@@ -230,13 +170,15 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
       </div>
 
       {/* Component Content */}
-      <div style={{
-        flex: 1,
-        overflow: 'auto',
-        position: 'relative'
-      }}>
-        {children}
-      </div>
+      {componentState === 'minimized' ? null : (
+        <div style={{
+          flex: 1,
+          overflow: 'auto',
+          position: 'relative'
+        }}>
+          {children}
+        </div>
+      )}
     </div>
   );
 };
