@@ -45,9 +45,9 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
             }
         };
 
-        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("click", handleClickOutside, true);
         return () =>
-            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("click", handleClickOutside, true);
     }, []);
 
     // Get current device selection
@@ -861,6 +861,21 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                     onMouseDown={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        (e as any).nativeEvent?.stopImmediatePropagation?.();
+                        const next = !isOpen;
+                        setIsOpen(next);
+                        if (next) {
+                            const rect = containerRef.current?.getBoundingClientRect();
+                            setMenuPos({
+                                top: Math.round((rect?.bottom ?? 56) + 4),
+                                left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
+                            });
+                        }
+                    }}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        (e as any).nativeEvent?.stopImmediatePropagation?.();
                         const next = !isOpen;
                         setIsOpen(next);
                         if (next) {
@@ -894,6 +909,21 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                     onMouseDown={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        (e as any).nativeEvent?.stopImmediatePropagation?.();
+                        const next = !isOpen;
+                        setIsOpen(next);
+                        if (next) {
+                            const rect = containerRef.current?.getBoundingClientRect();
+                            setMenuPos({
+                                top: Math.round((rect?.bottom ?? 56) + 4),
+                                left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
+                            });
+                        }
+                    }}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        (e as any).nativeEvent?.stopImmediatePropagation?.();
                         const next = !isOpen;
                         setIsOpen(next);
                         if (next) {
