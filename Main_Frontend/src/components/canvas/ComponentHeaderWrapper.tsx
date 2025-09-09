@@ -5,6 +5,7 @@ interface ComponentHeaderWrapperProps {
   componentId: string;
   instanceId: string;
   displayName: string;
+  defaultName?: string;
   children: React.ReactNode;
   componentState: 'minimized' | 'normal' | 'maximized';
   onComponentStateChange?: (state: 'minimized' | 'normal' | 'maximized') => void;
@@ -23,6 +24,7 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
   componentId,
   instanceId,
   displayName,
+  defaultName,
   children,
   componentState = 'normal',
   onComponentStateChange,
@@ -85,7 +87,9 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
           {isEditMode ? (
             <input
               type="text"
-              defaultValue={displayName}
+              defaultValue={undefined}
+              value={displayName && displayName !== (defaultName || '') ? displayName : ''}
+              onChange={(e) => onTitleChange?.(e.target.value)}
               onBlur={(e) => onTitleChange?.(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -102,7 +106,7 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
                 fontSize: '12px',
                 fontWeight: 600
               }}
-              placeholder="Enter title..."
+              placeholder={defaultName || 'Enter title...'}
             />
           ) : (
             <h4 style={{
