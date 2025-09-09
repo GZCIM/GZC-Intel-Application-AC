@@ -301,6 +301,7 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
 
         // Render actual component if loaded
         if (Component) {
+            const headerTitle = (props && (props as any).customTitle) || meta.displayName;
             return (
                 <ComponentErrorBoundary
                     componentName={`${meta.displayName} (${componentId})`}
@@ -309,7 +310,7 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                     <ComponentHeaderWrapper
                         componentId={componentId}
                         instanceId={instanceId}
-                        displayName={meta.displayName}
+                        displayName={headerTitle}
                         componentState={componentState}
                         onComponentStateChange={onComponentStateChange}
                         dataQuality={95}
