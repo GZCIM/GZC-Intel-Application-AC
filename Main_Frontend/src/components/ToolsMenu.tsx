@@ -930,7 +930,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                             borderRadius: "8px",
                             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
                             padding: "4px",
-                            zIndex: 1000,
+                            zIndex: 20070,
                         }}
                     >
                         {menuItems.map((item, index) => (
