@@ -35,10 +35,31 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     const containerRef = useRef<HTMLDivElement>(null);
     const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
     const justOpenedRef = useRef<number>(0);
+    const isOpeningRef = useRef<boolean>(false);
 
     useEffect(() => {
         try { console.log("[ToolsMenu] state:isOpen", isOpen, "pos", menuPos); } catch {}
     }, [isOpen, menuPos]);
+
+    const handleOpen = () => {
+        if (isOpeningRef.current) return; // Prevent double-triggering
+        isOpeningRef.current = true;
+        
+        console.log("[ToolsMenu] handleOpen called");
+        setIsOpen(true);
+        justOpenedRef.current = Date.now();
+        const rect = containerRef.current?.getBoundingClientRect();
+        console.log("[ToolsMenu] rect (handleOpen)", rect);
+        const newPos = {
+            top: Math.round((rect?.bottom ?? 56) + 4),
+            left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
+        };
+        console.log("[ToolsMenu] setMenuPos", newPos);
+        setMenuPos(newPos);
+        
+        // Reset the flag after a short delay
+        setTimeout(() => { isOpeningRef.current = false; }, 100);
+    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -884,16 +905,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
                         console.log("[ToolsMenu] trigger mousedown (force open)");
-                        setIsOpen(true);
-                        justOpenedRef.current = Date.now();
-                        const rect = containerRef.current?.getBoundingClientRect();
-                        console.log("[ToolsMenu] rect (mousedown)", rect);
-                        const newPos = {
-                            top: Math.round((rect?.bottom ?? 56) + 4),
-                            left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
-                        };
-                        console.log("[ToolsMenu] setMenuPos", newPos);
-                        setMenuPos(newPos);
+                        handleOpen();
                     }}
                     onClick={(e) => {
                         // Do not toggle on click; mousedown already handled open
@@ -929,16 +941,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
                         console.log("[ToolsMenu] button mousedown (force open)");
-                        setIsOpen(true);
-                        justOpenedRef.current = Date.now();
-                        const rect = containerRef.current?.getBoundingClientRect();
-                        console.log("[ToolsMenu] rect (button mousedown)", rect);
-                        const newPos = {
-                            top: Math.round((rect?.bottom ?? 56) + 4),
-                            left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
-                        };
-                        console.log("[ToolsMenu] setMenuPos", newPos);
-                        setMenuPos(newPos);
+                        handleOpen();
                     }}
                     onClick={(e) => {
                         // Do not toggle on click; mousedown already handled open
