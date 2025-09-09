@@ -57,7 +57,7 @@ const componentMap: Record<string, () => Promise<any>> = {
 };
 
 export const ComponentRenderer = React.memo<ComponentRendererProps>(
-    ({ componentId, instanceId, props = {}, isEditMode, onRemove, componentState = 'normal', onComponentStateChange }) => {
+    ({ componentId, instanceId, props = {}, isEditMode, onRemove, onPropsUpdate, componentState = 'normal', onComponentStateChange }) => {
         const { currentTheme } = useTheme();
         const [Component, setComponent] =
             useState<React.ComponentType<any> | null>(null);
@@ -313,6 +313,10 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                         displayName={headerTitle}
                         componentState={componentState}
                         onComponentStateChange={onComponentStateChange}
+                        onTitleChange={(title) => {
+                            const nextProps = { ...(props as any), customTitle: title };
+                            onPropsUpdate?.(nextProps);
+                        }}
                         dataQuality={95}
                         lastUpdated="2m ago"
                         isEditMode={isEditMode}

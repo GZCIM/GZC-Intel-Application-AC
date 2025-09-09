@@ -11,6 +11,7 @@ interface ComponentHeaderWrapperProps {
   dataQuality?: number;
   lastUpdated?: string;
   isEditMode: boolean;
+  onTitleChange?: (title: string) => void;
 }
 
 /**
@@ -27,7 +28,8 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
   onComponentStateChange,
   dataQuality = 0,
   lastUpdated = 'Never',
-  isEditMode
+  isEditMode,
+  onTitleChange
 }) => {
   const { currentTheme } = useTheme();
 
@@ -55,7 +57,7 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
         minHeight: '36px',
         flexShrink: 0
       }}>
-        {/* Left: Component Name */}
+        {/* Left: Component Name (editable in edit mode) */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -63,17 +65,41 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
           flex: 1,
           minWidth: 0
         }}>
-          <h4 style={{
-            margin: 0,
-            fontSize: '12px',
-            fontWeight: '600',
-            color: currentTheme.text,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap'
-          }}>
-            {displayName}
-          </h4>
+          {isEditMode ? (
+            <input
+              type="text"
+              defaultValue={displayName}
+              onBlur={(e) => onTitleChange?.(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
+              style={{
+                width: '100%',
+                background: 'transparent',
+                border: `1px solid ${currentTheme.border}`,
+                borderRadius: '4px',
+                padding: '2px 6px',
+                color: currentTheme.text,
+                fontSize: '12px',
+                fontWeight: 600
+              }}
+              placeholder="Enter title..."
+            />
+          ) : (
+            <h4 style={{
+              margin: 0,
+              fontSize: '12px',
+              fontWeight: '600',
+              color: currentTheme.text,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}>
+              {displayName}
+            </h4>
+          )}
         </div>
 
         {/* Right: Component State Controls */}
