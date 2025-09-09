@@ -1466,8 +1466,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                     instanceId={instance.id}
                                     props={{
                                         ...(instance.props || {}),
-                                        customTitle:
-                                            instance.customTitle || title || "",
+                                        customTitle: instance.customTitle,
                                         displayMode: instance.displayMode,
                                     }}
                                     isEditMode={isEditMode}
@@ -3118,9 +3117,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     props={{
                                                         ...(fullScreenInstance.props || {}),
                                                         customTitle:
-                                                            fullScreenInstance.customTitle ||
-                                                            title ||
-                                                            "",
+                                                            fullScreenInstance.customTitle,
                                                         displayMode:
                                                             fullScreenInstance.displayMode,
                                                     }}
