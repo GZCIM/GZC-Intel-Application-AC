@@ -40,7 +40,16 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
             const target = event.target as Node;
             const clickedInsideMenu = menuRef.current?.contains(target);
             const clickedTrigger = containerRef.current?.contains(target);
+            // Debug
+            try {
+                console.log("[ToolsMenu] document click", {
+                    targetTag: (target as HTMLElement)?.tagName,
+                    clickedInsideMenu,
+                    clickedTrigger,
+                });
+            } catch {}
             if (!clickedInsideMenu && !clickedTrigger) {
+                console.log("[ToolsMenu] closing via outside click");
                 setIsOpen(false);
             }
         };
@@ -863,9 +872,11 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
                         const next = !isOpen;
+                        console.log("[ToolsMenu] trigger mousedown", { next });
                         setIsOpen(next);
                         if (next) {
                             const rect = containerRef.current?.getBoundingClientRect();
+                            console.log("[ToolsMenu] rect (mousedown)", rect);
                             setMenuPos({
                                 top: Math.round((rect?.bottom ?? 56) + 4),
                                 left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
@@ -877,9 +888,11 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
                         const next = !isOpen;
+                        console.log("[ToolsMenu] trigger click", { next });
                         setIsOpen(next);
                         if (next) {
                             const rect = containerRef.current?.getBoundingClientRect();
+                            console.log("[ToolsMenu] rect (click)", rect);
                             setMenuPos({
                                 top: Math.round((rect?.bottom ?? 56) + 4),
                                 left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
@@ -911,9 +924,11 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
                         const next = !isOpen;
+                        console.log("[ToolsMenu] button mousedown", { next });
                         setIsOpen(next);
                         if (next) {
                             const rect = containerRef.current?.getBoundingClientRect();
+                            console.log("[ToolsMenu] rect (button mousedown)", rect);
                             setMenuPos({
                                 top: Math.round((rect?.bottom ?? 56) + 4),
                                 left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
@@ -925,9 +940,11 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
                         const next = !isOpen;
+                        console.log("[ToolsMenu] button click", { next });
                         setIsOpen(next);
                         if (next) {
                             const rect = containerRef.current?.getBoundingClientRect();
+                            console.log("[ToolsMenu] rect (button click)", rect);
                             setMenuPos({
                                 top: Math.round((rect?.bottom ?? 56) + 4),
                                 left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
@@ -1004,6 +1021,13 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                                 zIndex: 20070,
                             }}
                             ref={menuRef}
+                            onMouseDown={(e) => {
+                                // prevent closing when clicking inside
+                                e.stopPropagation();
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                            }}
                         >
                         {menuItems.map((item, index) => (
                             <div key={index}>
