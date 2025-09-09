@@ -309,7 +309,7 @@ export const ProfessionalHeader = () => {
                     gap: 6,
                     backgroundColor: theme.surface,
                     position: "relative",
-                    zIndex: 1000,
+                    zIndex: 20060,
                 }}
             >
                 {/* Logo */}
@@ -412,7 +412,7 @@ export const ProfessionalHeader = () => {
                                             boxShadow:
                                                 "0 4px 20px rgba(0, 0, 0, 0.15)",
                                             padding: "4px",
-                                            zIndex: 1000,
+                                            zIndex: 20060,
                                         }}
                                     >
                                         {tabs.map((tab) => (
@@ -572,7 +572,7 @@ export const ProfessionalHeader = () => {
                 backdropFilter: "blur(12px)",
                 backgroundColor: theme.surface,
                 position: "relative",
-                zIndex: 1000,
+                zIndex: 20060,
             }}
         >
             <div
@@ -717,7 +717,7 @@ export const ProfessionalHeader = () => {
                                         boxShadow:
                                             "0 4px 20px rgba(0, 0, 0, 0.15)",
                                         padding: "4px",
-                                        zIndex: 1000,
+                                        zIndex: 20060,
                                     }}
                                 >
                                     {tabs.map((t) => (
