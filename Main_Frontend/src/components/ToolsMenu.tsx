@@ -893,21 +893,11 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         }
                     }}
                     onClick={(e) => {
+                        // Do not toggle on click; mousedown already handled open
                         e.preventDefault();
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
-                        const next = !isOpen;
-                        console.log("[ToolsMenu] trigger click", { next });
-                        setIsOpen(next);
-                        if (next) {
-                            justOpenedRef.current = Date.now();
-                            const rect = containerRef.current?.getBoundingClientRect();
-                            console.log("[ToolsMenu] rect (click)", rect);
-                            setMenuPos({
-                                top: Math.round((rect?.bottom ?? 56) + 4),
-                                left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
-                            });
-                        }
+                        console.log("[ToolsMenu] trigger click (ignored)");
                     }}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
@@ -947,21 +937,11 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         }
                     }}
                     onClick={(e) => {
+                        // Do not toggle on click; mousedown already handled open
                         e.preventDefault();
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
-                        const next = !isOpen;
-                        console.log("[ToolsMenu] button click", { next });
-                        setIsOpen(next);
-                        if (next) {
-                            justOpenedRef.current = Date.now();
-                            const rect = containerRef.current?.getBoundingClientRect();
-                            console.log("[ToolsMenu] rect (button click)", rect);
-                            setMenuPos({
-                                top: Math.round((rect?.bottom ?? 56) + 4),
-                                left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
-                            });
-                        }
+                        console.log("[ToolsMenu] button click (ignored)");
                     }}
                     style={{
                         display: "flex",
