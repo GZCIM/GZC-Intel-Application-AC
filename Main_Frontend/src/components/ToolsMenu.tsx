@@ -1006,72 +1006,46 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                 </button>
             )}
 
-            <AnimatePresence>
-                {isOpen && (
-                    createPortal(
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.2 }}
-                            onAnimationComplete={() => { try { console.log("[ToolsMenu] portal animation complete (mounted)"); } catch {} }}
-                            style={{
-                                position: "fixed",
-                                top: menuPos.top,
-                                left: menuPos.left,
-                                minWidth: "220px",
-                                backgroundColor: theme.surface,
-                                border: `1px solid ${theme.border}`,
-                                borderRadius: "8px",
-                                boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-                                padding: "4px",
-                                zIndex: 20070,
-                                display: "block",
-                                visibility: "visible",
-                            }}
-                            ref={(el) => { 
-                                menuRef.current = el; 
-                                try { 
-                                    console.log("[ToolsMenu] menuRef set", !!el);
-                                    if (el) {
-                                        console.log("[ToolsMenu] menu element style:", {
-                                            display: el.style.display,
-                                            visibility: el.style.visibility,
-                                            opacity: el.style.opacity,
-                                            position: el.style.position,
-                                            top: el.style.top,
-                                            left: el.style.left,
-                                            zIndex: el.style.zIndex
-                                        });
-                                        // Check if element is actually in DOM
-                                        console.log("[ToolsMenu] element in DOM:", document.body.contains(el));
-                                        // Check computed styles
-                                        const computed = window.getComputedStyle(el);
-                                        console.log("[ToolsMenu] computed styles:", {
-                                            display: computed.display,
-                                            visibility: computed.visibility,
-                                            opacity: computed.opacity,
-                                            position: computed.position,
-                                            top: computed.top,
-                                            left: computed.left,
-                                            zIndex: computed.zIndex
-                                        });
-                                    }
-                                } catch {} 
-                            }}
-                            onMouseDown={(e) => {
-                                // prevent closing when clicking inside
-                                try { console.log("[ToolsMenu] menu mousedown inside"); } catch {}
-                                e.stopPropagation();
-                            }}
-                            onClick={(e) => {
-                                try { console.log("[ToolsMenu] menu click inside"); } catch {}
-                                e.stopPropagation();
-                            }}
-                        >
-                        <div style={{ padding: "8px", backgroundColor: "red", color: "white", fontSize: "12px", fontWeight: "bold" }}>
-                            TEST MENU VISIBLE - CLICK ME
-                        </div>
+            {isOpen && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: menuPos.top,
+                        left: menuPos.left,
+                        minWidth: "220px",
+                        backgroundColor: "red",
+                        border: "2px solid white",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.8)",
+                        padding: "16px",
+                        zIndex: 99999,
+                        display: "block",
+                        visibility: "visible",
+                        color: "white",
+                        fontSize: "16px",
+                        fontWeight: "bold",
+                    }}
+                    ref={(el) => { 
+                        menuRef.current = el; 
+                        try { 
+                            console.log("[ToolsMenu] SIMPLE menuRef set", !!el, menuPos);
+                            if (el) {
+                                console.log("[ToolsMenu] SIMPLE element in DOM:", document.body.contains(el));
+                                console.log("[ToolsMenu] SIMPLE element position:", el.getBoundingClientRect());
+                            }
+                        } catch {} 
+                    }}
+                    onMouseDown={(e) => {
+                        try { console.log("[ToolsMenu] SIMPLE menu mousedown inside"); } catch {}
+                        e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                        try { console.log("[ToolsMenu] SIMPLE menu click inside"); } catch {}
+                        e.stopPropagation();
+                    }}
+                >
+                    <div>SIMPLE MENU TEST - SHOULD BE VISIBLE</div>
+                    <div>Position: {menuPos.top}, {menuPos.left}</div>
                         {menuItems.map((item, index) => (
                             <div key={index}>
                                 {item.isComponent ? (
@@ -1147,11 +1121,8 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                                 )}
                             </div>
                         ))}
-                        </motion.div>,
-                        document.body
-                    )
-                )}
-            </AnimatePresence>
+                </div>
+            )}
         </div>
     );
 };
