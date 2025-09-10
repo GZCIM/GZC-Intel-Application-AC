@@ -2811,8 +2811,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 </div>
                                             )}
 
-                                            {/* Edit-mode controls in fullscreen fallback: show T, M, F + title + X */}
-                                            {isEditMode && (
+                                            {/* Edit-mode controls are now embedded inside the component header in fullscreen. Hide legacy canvas-level controls. */}
+                                            {false && isEditMode && (
                                                 <div
                                                     className="no-drag"
                                                     style={{
