@@ -1013,39 +1013,28 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         top: menuPos.top,
                         left: menuPos.left,
                         minWidth: "220px",
-                        backgroundColor: "red",
-                        border: "2px solid white",
+                        backgroundColor: theme.surface,
+                        border: `1px solid ${theme.border}`,
                         borderRadius: "8px",
-                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.8)",
-                        padding: "16px",
-                        zIndex: 99999,
+                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+                        padding: "4px",
+                        zIndex: 20070,
                         display: "block",
                         visibility: "visible",
-                        color: "white",
-                        fontSize: "16px",
-                        fontWeight: "bold",
                     }}
                     ref={(el) => { 
                         menuRef.current = el; 
                         try { 
-                            console.log("[ToolsMenu] SIMPLE menuRef set", !!el, menuPos);
-                            if (el) {
-                                console.log("[ToolsMenu] SIMPLE element in DOM:", document.body.contains(el));
-                                console.log("[ToolsMenu] SIMPLE element position:", el.getBoundingClientRect());
-                            }
+                            console.log("[ToolsMenu] menuRef set", !!el, menuPos);
                         } catch {} 
                     }}
                     onMouseDown={(e) => {
-                        try { console.log("[ToolsMenu] SIMPLE menu mousedown inside"); } catch {}
                         e.stopPropagation();
                     }}
                     onClick={(e) => {
-                        try { console.log("[ToolsMenu] SIMPLE menu click inside"); } catch {}
                         e.stopPropagation();
                     }}
                 >
-                    <div>SIMPLE MENU TEST - SHOULD BE VISIBLE</div>
-                    <div>Position: {menuPos.top}, {menuPos.left}</div>
                         {menuItems.map((item, index) => (
                             <div key={index}>
                                 {item.isComponent ? (
