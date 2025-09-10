@@ -1007,34 +1007,36 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
             )}
 
             {isOpen && (
-                <div
-                    style={{
-                        position: "fixed",
-                        top: menuPos.top,
-                        left: menuPos.left,
-                        minWidth: "220px",
-                        backgroundColor: theme.surface,
-                        border: `1px solid ${theme.border}`,
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-                        padding: "4px",
-                        zIndex: 99999,
-                        display: "block",
-                        visibility: "visible",
-                    }}
-                    ref={(el) => { 
-                        menuRef.current = el; 
-                        try { 
-                            console.log("[ToolsMenu] menuRef set", !!el, menuPos);
-                        } catch {} 
-                    }}
-                    onMouseDown={(e) => {
-                        e.stopPropagation();
-                    }}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                    }}
-                >
+                createPortal(
+                    <div
+                        style={{
+                            position: "fixed",
+                            top: menuPos.top,
+                            left: menuPos.left,
+                            minWidth: "220px",
+                            backgroundColor: theme.surface,
+                            border: `1px solid ${theme.border}`,
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+                            padding: "4px",
+                            zIndex: 30000,
+                            display: "block",
+                            visibility: "visible",
+                            pointerEvents: "auto",
+                        }}
+                        ref={(el) => { 
+                            menuRef.current = el; 
+                            try { 
+                                console.log("[ToolsMenu] menuRef set", !!el, menuPos);
+                            } catch {} 
+                        }}
+                        onMouseDown={(e) => {
+                            e.stopPropagation();
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                        }}
+                    >
                         {menuItems.map((item, index) => (
                             <div key={index}>
                                 {item.isComponent ? (
@@ -1110,7 +1112,9 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                                 )}
                             </div>
                         ))}
-                </div>
+                    </div>,
+                    document.body
+                )
             )}
         </div>
     );
