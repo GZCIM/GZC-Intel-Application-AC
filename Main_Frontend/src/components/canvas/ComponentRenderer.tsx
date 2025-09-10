@@ -319,6 +319,7 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                             const nextProps = { ...(props as any), customTitle: title };
                             onPropsUpdate?.(nextProps);
                         }}
+                        onRemove={onRemove}
                         dataQuality={95}
                         lastUpdated="2m ago"
                         isEditMode={isEditMode}

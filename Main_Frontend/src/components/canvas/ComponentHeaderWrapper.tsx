@@ -13,6 +13,7 @@ interface ComponentHeaderWrapperProps {
   lastUpdated?: string;
   isEditMode: boolean;
   onTitleChange?: (title: string) => void;
+  onRemove?: () => void;
 }
 
 /**
@@ -31,7 +32,8 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
   dataQuality = 0,
   lastUpdated = 'Never',
   isEditMode,
-  onTitleChange
+  onTitleChange,
+  onRemove
 }) => {
   const { currentTheme } = useTheme();
 
@@ -251,6 +253,34 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+            </button>
+
+            {/* Remove Button (X) */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove?.();
+              }}
+              style={{
+                width: '24px',
+                height: '24px',
+                padding: '0',
+                border: `1px solid ${currentTheme.border}`,
+                borderRadius: '4px',
+                backgroundColor: 'transparent',
+                color: currentTheme.error || '#D69A82',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease'
+              }}
+              title="Remove"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
           </div>
