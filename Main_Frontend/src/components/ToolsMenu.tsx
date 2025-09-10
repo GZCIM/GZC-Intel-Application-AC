@@ -1018,7 +1018,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         borderRadius: "8px",
                         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
                         padding: "4px",
-                        zIndex: 20070,
+                        zIndex: 99999,
                         display: "block",
                         visibility: "visible",
                     }}
