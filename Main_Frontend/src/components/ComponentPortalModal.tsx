@@ -56,16 +56,16 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
       // Load local components
       const allComponents = componentInventory.getAllComponents()
       const searchComponents = componentInventory.searchComponents('')
+      // Filter to show only Volatility Analysis
+      const filtered = (searchComponents && searchComponents.length > 0 ? searchComponents : allComponents)
+        .filter((c: any) => c.id === 'bloomberg-volatility')
       console.log('ComponentPortalModal: All components from inventory:', allComponents)
       console.log('ComponentPortalModal: Search components result:', searchComponents)
       console.log('ComponentPortalModal: Portfolio component:', componentInventory.getComponent('portfolio'))
       console.log('ComponentPortalModal: Components length:', searchComponents?.length)
       
       // Use getAllComponents as fallback if search returns nothing
-      const componentsToUse = (searchComponents && searchComponents.length > 0) 
-        ? searchComponents 
-        : allComponents
-      
+      const componentsToUse = filtered
       if (componentsToUse && componentsToUse.length > 0) {
         console.log('ComponentPortalModal: Using components:', componentsToUse)
         setLocalComponents(componentsToUse)
