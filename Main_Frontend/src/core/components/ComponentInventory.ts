@@ -191,58 +191,7 @@ export class ComponentInventory {
 
         // Initialize only the GZC components from port 3200
 
-        // GZC Portfolio - Professional FX trading component from port 3200
-        this.addComponent({
-            id: "gzc-portfolio",
-            name: "GZCPortfolio",
-            displayName: "GZC Portfolio",
-            category: "financial",
-            subcategory: "portfolio",
-            description:
-                "Professional FX portfolio with trades and positions views, fund filtering, and real-time P&L",
-            defaultSize: { w: 6, h: 8 },
-            minSize: { w: 2, h: 4 },
-            maxSize: { w: 12, h: 12 },
-            tags: [
-                "portfolio",
-                "fx",
-                "trading",
-                "gcf",
-                "gmf",
-                "positions",
-                "professional",
-                "port-3200",
-            ],
-            complexity: "complex",
-            quality: "port-3200",
-            source: "port-3200",
-        });
-
-        // GZC Analytics Dashboard - Professional analytics from port 3200
-        this.addComponent({
-            id: "gzc-analytics",
-            name: "GZCAnalytics",
-            displayName: "GZC Analytics",
-            category: "analytics",
-            subcategory: "dashboard",
-            description:
-                "Real-time market analytics with live prices, order book, performance metrics, and correlations",
-            defaultSize: { w: 6, h: 8 },
-            minSize: { w: 4, h: 4 },
-            maxSize: { w: 12, h: 12 },
-            tags: [
-                "analytics",
-                "market",
-                "real-time",
-                "orderbook",
-                "performance",
-                "professional",
-                "port-3200",
-            ],
-            complexity: "complex",
-            quality: "port-3200",
-            source: "port-3200",
-        });
+        // Only keep essential components as requested (Volatility Analysis below).
 
         // Bloomberg Volatility Analysis component
         this.addComponent({
@@ -281,23 +230,7 @@ export class ComponentInventory {
             },
         });
 
-        // Portfolio component
-        this.addComponent({
-            id: "portfolio",
-            name: "Portfolio",
-            displayName: "Portfolio Manager",
-            category: "financial",
-            subcategory: "portfolio",
-            description:
-                "Portfolio management component with holdings and performance tracking",
-            defaultSize: { w: 6, h: 6 },
-            minSize: { w: 4, h: 4 },
-            maxSize: { w: 12, h: 10 },
-            tags: ["portfolio", "holdings", "performance", "management"],
-            complexity: "medium",
-            quality: "standard",
-            source: "internal",
-        });
+
 
         this.buildSearchIndex();
     }
@@ -492,36 +425,6 @@ export interface ComponentFilter {
 // Force module reload
 export const componentInventory = ComponentInventory.getInstance();
 
-// Ensure portfolio component is registered (in case inventory was already initialized)
-if (!componentInventory.getComponent("portfolio")) {
-    componentInventory.addComponent({
-        id: "portfolio",
-        name: "Portfolio",
-        displayName: "Portfolio Dashboard",
-        category: "financial",
-        subcategory: "portfolio",
-        description:
-            "Comprehensive portfolio management with real-time P&L, positions table, metrics, and charts",
-        defaultSize: { w: 8, h: 6 },
-        minSize: { w: 6, h: 4 },
-        maxSize: { w: 12, h: 10 },
-        tags: [
-            "portfolio",
-            "trading",
-            "pnl",
-            "positions",
-            "financial",
-            "real-time",
-            "dashboard",
-        ],
-        complexity: "complex",
-        quality: "enhanced",
-        source: "internal",
-    });
-
-    // Rebuild search index to ensure it's searchable
-    componentInventory.rebuildSearchIndex();
-}
 
 // Ensure bloomberg-volatility component is registered
 if (!componentInventory.getComponent("bloomberg-volatility")) {
