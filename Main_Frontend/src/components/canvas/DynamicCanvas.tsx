@@ -1496,14 +1496,18 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         newProps: Record<string, any>
                                     ) => {
                                         setComponents((prev) =>
-                                            prev.map((comp) =>
-                                                comp.id === instance.id
-                                                    ? {
-                                                          ...comp,
-                                                          props: newProps,
-                                                      }
-                                                    : comp
-                                            )
+                                            prev.map((comp) => {
+                                                if (comp.id !== instance.id) return comp;
+                                                const nextCustomTitle = (newProps as any)?.customTitle;
+                                                return {
+                                                    ...comp,
+                                                    props: newProps,
+                                                    customTitle:
+                                                        typeof nextCustomTitle === "string"
+                                                            ? nextCustomTitle
+                                                            : comp.customTitle,
+                                                };
+                                            })
                                         );
                                         // Save component props immediately for better UX
                                         setTimeout(
