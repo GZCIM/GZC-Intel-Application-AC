@@ -20,6 +20,9 @@ export const Portfolio: React.FC<PortfolioProps> = ({
     const [selectedPortfolioId, setSelectedPortfolioId] = useState<string>("");
     const [dataMode, setDataMode] = useState<"live" | "eod" | "date">("live");
     const [selectedDate, setSelectedDate] = useState<string>("");
+    const [portfolioMode, setPortfolioMode] = useState<"active" | "virtual">(
+        "active"
+    );
 
     // Load persisted mode/date from localStorage
     useEffect(() => {
@@ -31,6 +34,10 @@ export const Portfolio: React.FC<PortfolioProps> = ({
             const savedDate = localStorage.getItem("portfolio.selectedDate");
             if (savedDate) {
                 setSelectedDate(savedDate);
+            }
+            const savedPMode = localStorage.getItem("portfolio.mode");
+            if (savedPMode === "active" || savedPMode === "virtual") {
+                setPortfolioMode(savedPMode);
             }
         } catch (_) {}
     }, []);
@@ -49,6 +56,12 @@ export const Portfolio: React.FC<PortfolioProps> = ({
             }
         } catch (_) {}
     }, [selectedDate]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem("portfolio.mode", portfolioMode);
+        } catch (_) {}
+    }, [portfolioMode]);
 
     const formatDateBadge = (value?: string) => {
         try {
@@ -117,14 +130,19 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     {/* Active/Virtual toggle */}
                     <div style={{ display: "flex", gap: 6 }}>
                         <button
-                            onClick={() =>
-                                console.log("Portfolio: Active mode")
-                            }
+                            type="button"
+                            onClick={() => setPortfolioMode("active")}
                             style={{
                                 padding: "4px 8px",
-                                backgroundColor: "#8bbf63",
-                                color: currentTheme.background,
-                                border: `1px solid ${currentTheme.border}`,
+                                backgroundColor:
+                                    portfolioMode === "active"
+                                        ? (currentTheme.success || "#6aa84f")
+                                        : "#1e1e1e",
+                                color:
+                                    portfolioMode === "active"
+                                        ? "#ffffff"
+                                        : currentTheme.textSecondary,
+                                border: `1px solid ${currentTheme.border}66`,
                                 borderRadius: 4,
                                 fontSize: 11,
                                 cursor: "pointer",
@@ -133,14 +151,19 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                             Active
                         </button>
                         <button
-                            onClick={() =>
-                                console.log("Portfolio: Virtual mode")
-                            }
+                            type="button"
+                            onClick={() => setPortfolioMode("virtual")}
                             style={{
                                 padding: "4px 8px",
-                                backgroundColor: currentTheme.surface,
-                                color: currentTheme.textSecondary,
-                                border: `1px solid ${currentTheme.border}`,
+                                backgroundColor:
+                                    portfolioMode === "virtual"
+                                        ? (currentTheme.success || "#6aa84f")
+                                        : "#1e1e1e",
+                                color:
+                                    portfolioMode === "virtual"
+                                        ? "#ffffff"
+                                        : currentTheme.textSecondary,
+                                border: `1px solid ${currentTheme.border}66`,
                                 borderRadius: 4,
                                 fontSize: 11,
                                 cursor: "pointer",
@@ -198,12 +221,13 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         title="Sync DB"
                         style={{
                             padding: "4px 10px",
-                            backgroundColor: "#8bb3d9",
-                            color: currentTheme.background,
-                            border: `1px solid ${currentTheme.border}`,
+                            backgroundColor: "#7da6d9",
+                            color: "#ffffff",
+                            border: `1px solid ${currentTheme.border}66`,
                             borderRadius: 4,
                             fontSize: 11,
                             cursor: "pointer",
+                            boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.2)",
                         }}
                     >
                         Sync DB
