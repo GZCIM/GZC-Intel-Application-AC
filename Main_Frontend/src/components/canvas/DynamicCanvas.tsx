@@ -967,7 +967,6 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     "thumbnail"
                                                 );
                                             }}
-                                            
                                             ref={(el) => {
                                                 if (el) {
                                                     const computedStyle =
