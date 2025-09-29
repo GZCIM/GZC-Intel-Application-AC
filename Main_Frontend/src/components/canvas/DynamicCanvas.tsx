@@ -967,32 +967,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     "thumbnail"
                                                 );
                                             }}
-                                            style={{
-                                                height: 24,
-                                                minHeight: 24,
-                                                maxHeight: 24,
-                                                width: 24,
-                                                minWidth: 24,
-                                                maxWidth: 24,
-                                                padding: 0,
-                                                fontSize: 12,
-                                                lineHeight: 1,
-                                                border: `1px solid ${currentTheme.border}`,
-                                                background: "transparent",
-                                                color: currentTheme.text,
-                                                borderRadius: 4,
-                                                cursor: "pointer",
-                                                boxSizing: "border-box",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                aspectRatio: "1 / 1",
-                                                flexShrink: 0,
-                                                flexGrow: 0,
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                            }}
+                                            
                                             ref={(el) => {
                                                 if (el) {
                                                     const computedStyle =
@@ -1438,7 +1413,6 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                 border: `1px solid ${currentTheme.border}`,
                                                 borderRadius: 4,
                                                 minWidth: "120px",
-                                                fontSize: "11px",
                                             }}
                                         />
                                         {/* Remove button - positioned after size controls */}

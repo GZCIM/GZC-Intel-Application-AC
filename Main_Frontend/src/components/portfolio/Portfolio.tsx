@@ -154,42 +154,6 @@ export const Portfolio: React.FC<PortfolioProps> = ({
 
 export default Portfolio;
 
-import React, { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import { useTheme } from "../../contexts/ThemeContext";
-import { useQuoteContext } from "../../contexts/QuoteContext";
-import { useUser } from "../../hooks/useUser";
-import { useAuth } from "../../hooks/useAuth";
-import { PortfolioTable } from "./PortfolioTable";
-import { PortfolioMetrics } from "./PortfolioMetrics";
-import { PortfolioChart } from "./PortfolioChart";
-import {
-    PortfolioPosition,
-    PortfolioMetrics as MetricsType,
-    PortfolioFilter,
-    TimeRange,
-} from "../../types/portfolio";
-import { generateMockPortfolio } from "../../utils/mockPortfolioData";
-import { usePortfolioData } from "../../modules/portfolio/hooks/usePortfolioData";
-import { useTransactionsData } from "../../modules/portfolio/hooks/useTransactionsData";
-
-interface PortfolioProps {
-    width?: number | string;
-    height?: number | string;
-    mockMode?: boolean;
-}
-
-export const Portfolio: React.FC<PortfolioProps> = ({
-    width = "100%",
-    height = "100%",
-    mockMode = false, // Default to real data
-}) => {
-    const { currentTheme: theme } = useTheme();
-    const { user: currentUser } = useUser();
-    const { isAuthenticated } = useAuth();
-    const { subscribeToSymbol, unsubscribeFromSymbol, getQuote } =
-        useQuoteContext();
-
     const [positions, setPositions] = useState<PortfolioPosition[]>([]);
     const [metrics, setMetrics] = useState<MetricsType | null>(null);
     const [filter, setFilter] = useState<PortfolioFilter>({
