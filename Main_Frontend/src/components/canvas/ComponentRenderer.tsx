@@ -12,8 +12,10 @@ interface ComponentRendererProps {
     isEditMode: boolean;
     onRemove: () => void;
     onPropsUpdate?: (props: Record<string, any>) => void;
-    componentState?: 'minimized' | 'normal' | 'maximized';
-    onComponentStateChange?: (state: 'minimized' | 'normal' | 'maximized') => void;
+    componentState?: "minimized" | "normal" | "maximized";
+    onComponentStateChange?: (
+        state: "minimized" | "normal" | "maximized"
+    ) => void;
 }
 
 // Map component IDs to actual components
@@ -57,7 +59,16 @@ const componentMap: Record<string, () => Promise<any>> = {
 };
 
 export const ComponentRenderer = React.memo<ComponentRendererProps>(
-    ({ componentId, instanceId, props = {}, isEditMode, onRemove, onPropsUpdate, componentState = 'normal', onComponentStateChange }) => {
+    ({
+        componentId,
+        instanceId,
+        props = {},
+        isEditMode,
+        onRemove,
+        onPropsUpdate,
+        componentState = "normal",
+        onComponentStateChange,
+    }) => {
         const { currentTheme } = useTheme();
         const [Component, setComponent] =
             useState<React.ComponentType<any> | null>(null);
@@ -301,8 +312,13 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
 
         // Render actual component if loaded
         if (Component) {
-            const rawCustomTitle = (props && (props as any).customTitle) as string | undefined;
-            const headerTitle = (rawCustomTitle && rawCustomTitle.trim().length > 0) ? rawCustomTitle : meta.displayName;
+            const rawCustomTitle = (props && (props as any).customTitle) as
+                | string
+                | undefined;
+            const headerTitle =
+                rawCustomTitle && rawCustomTitle.trim().length > 0
+                    ? rawCustomTitle
+                    : meta.displayName;
             return (
                 <ComponentErrorBoundary
                     componentName={`${meta.displayName} (${componentId})`}
@@ -316,7 +332,10 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                         componentState={componentState}
                         onComponentStateChange={onComponentStateChange}
                         onTitleChange={(title) => {
-                            const nextProps = { ...(props as any), customTitle: title };
+                            const nextProps = {
+                                ...(props as any),
+                                customTitle: title,
+                            };
                             onPropsUpdate?.(nextProps);
                         }}
                         onRemove={onRemove}
@@ -330,9 +349,16 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
             );
         }
 
-        // Fallback placeholder (component not implemented yet)
+        // Fallback placeholder (component not implemented yet or not found)
         return (
             <div
+                onContextMenu={(e) => {
+                    if (!isEditMode) return;
+                    e.preventDefault();
+                    if (confirm("Remove this component from the layout?")) {
+                        onRemove?.();
+                    }
+                }}
                 style={{
                     height: "100%",
                     width: "100%",
@@ -365,6 +391,24 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                     >
                         {meta.displayName}
                     </h4>
+                    {isEditMode && (
+                        <button
+                            className="no-drag"
+                            onClick={() => onRemove?.()}
+                            title="Remove component"
+                            style={{
+                                border: `1px solid ${currentTheme.border}`,
+                                background: "transparent",
+                                color: currentTheme.textSecondary,
+                                borderRadius: 4,
+                                fontSize: 12,
+                                padding: "2px 6px",
+                                cursor: "pointer",
+                            }}
+                        >
+                            ×
+                        </button>
+                    )}
                 </div>
 
                 {/* Component Content Placeholder */}
