@@ -1,2 +1,2 @@
-export { Portfolio } from './Portfolio'
-export { default } from './Portfolio'
+export { Portfolio } from "./Portfolio";
+export { default } from "./Portfolio";
