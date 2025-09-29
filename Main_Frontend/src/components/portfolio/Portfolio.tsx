@@ -59,12 +59,45 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                 style={{
                     padding: "8px",
                     borderBottom: `1px solid ${currentTheme.border}`,
-                        display: "flex",
-                        gap: "12px",
-                        alignItems: "center",
-                    }}
-                >
+                    display: "flex",
+                    gap: "12px",
+                    alignItems: "center",
+                }}
+            >
+                {/* Left controls: Active/Virtual toggle and portfolio select */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {/* Active/Virtual toggle */}
+                    <div style={{ display: "flex", gap: 6 }}>
+                        <button
+                            onClick={() => console.log("Portfolio: Active mode")}
+                            style={{
+                                padding: "4px 8px",
+                                backgroundColor: "#8bbf63",
+                                color: currentTheme.background,
+                                border: `1px solid ${currentTheme.border}`,
+                                borderRadius: 4,
+                                fontSize: 11,
+                                cursor: "pointer",
+                            }}
+                        >
+                            Active
+                        </button>
+                        <button
+                            onClick={() => console.log("Portfolio: Virtual mode")}
+                            style={{
+                                padding: "4px 8px",
+                                backgroundColor: currentTheme.surface,
+                                color: currentTheme.textSecondary,
+                                border: `1px solid ${currentTheme.border}`,
+                                borderRadius: 4,
+                                fontSize: 11,
+                                cursor: "pointer",
+                            }}
+                        >
+                            Virtual
+                        </button>
+                    </div>
+
                     <label
                         style={{
                             fontSize: "12px",
@@ -99,8 +132,66 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     </select>
                 </div>
 
-                <div style={{ marginLeft: "auto", fontSize: 11, color: currentTheme.textSecondary }}>
-                    {loading ? "Loading..." : error ? "" : selectedPortfolio ? selectedPortfolio.name : "No selection"}
+                {/* Right controls: Sync DB, Live/EOD, Date display */}
+                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+                    <button
+                        onClick={() => console.log("Portfolio: Sync DB")}
+                        title="Sync DB"
+                        style={{
+                            padding: "4px 10px",
+                            backgroundColor: "#8bb3d9",
+                            color: currentTheme.background,
+                            border: `1px solid ${currentTheme.border}`,
+                            borderRadius: 4,
+                            fontSize: 11,
+                            cursor: "pointer",
+                        }}
+                    >
+                        Sync DB
+                    </button>
+                    <div style={{ display: "flex", gap: 6 }}>
+                        <button
+                            onClick={() => console.log("Portfolio: Live mode")}
+                            style={{
+                                padding: "4px 8px",
+                                backgroundColor: currentTheme.surface,
+                                color: currentTheme.text,
+                                border: `1px solid ${currentTheme.border}`,
+                                borderRadius: 4,
+                                fontSize: 11,
+                                cursor: "pointer",
+                            }}
+                        >
+                            Live
+                        </button>
+                        <button
+                            onClick={() => console.log("Portfolio: EOD mode")}
+                            style={{
+                                padding: "4px 8px",
+                                backgroundColor: currentTheme.surface,
+                                color: currentTheme.textSecondary,
+                                border: `1px solid ${currentTheme.border}`,
+                                borderRadius: 4,
+                                fontSize: 11,
+                                cursor: "pointer",
+                            }}
+                        >
+                            EOD
+                        </button>
+                    </div>
+                    <div
+                        title="Date"
+                        style={{
+                            padding: "4px 8px",
+                            backgroundColor: currentTheme.surface,
+                            color: currentTheme.textSecondary,
+                            border: `1px solid ${currentTheme.border}`,
+                            borderRadius: 4,
+                            fontSize: 11,
+                        }}
+                    >
+                        {new Date().toLocaleDateString()}
+                    </div>
                 </div>
             </div>
 
