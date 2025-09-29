@@ -16,6 +16,8 @@ export const Portfolio: React.FC<PortfolioProps> = ({
     const [error, setError] = useState<string | null>(null);
     const [portfolios, setPortfolios] = useState<Array<{ id: string; name: string }>>([]);
     const [selectedPortfolioId, setSelectedPortfolioId] = useState<string>("");
+    const [dataMode, setDataMode] = useState<"live" | "eod" | "date">("live");
+    const [selectedDate, setSelectedDate] = useState<string>("");
 
     useEffect(() => {
         const fetchPortfolios = async () => {
@@ -132,7 +134,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     </select>
                 </div>
 
-                {/* Right controls: Sync DB, Live/EOD, Date display */}
+                {/* Right controls: Sync DB, Live/EOD/Date, Date control */}
                 <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
                     <button
                         onClick={() => console.log("Portfolio: Sync DB")}
@@ -151,11 +153,17 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     </button>
                     <div style={{ display: "flex", gap: 6 }}>
                         <button
-                            onClick={() => console.log("Portfolio: Live mode")}
+                            onClick={() => setDataMode("live")}
                             style={{
                                 padding: "4px 8px",
-                                backgroundColor: currentTheme.surface,
-                                color: currentTheme.text,
+                                backgroundColor:
+                                    dataMode === "live"
+                                        ? currentTheme.primary
+                                        : currentTheme.surface,
+                                color:
+                                    dataMode === "live"
+                                        ? currentTheme.background
+                                        : currentTheme.text,
                                 border: `1px solid ${currentTheme.border}`,
                                 borderRadius: 4,
                                 fontSize: 11,
@@ -165,11 +173,17 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                             Live
                         </button>
                         <button
-                            onClick={() => console.log("Portfolio: EOD mode")}
+                            onClick={() => setDataMode("eod")}
                             style={{
                                 padding: "4px 8px",
-                                backgroundColor: currentTheme.surface,
-                                color: currentTheme.textSecondary,
+                                backgroundColor:
+                                    dataMode === "eod"
+                                        ? currentTheme.primary
+                                        : currentTheme.surface,
+                                color:
+                                    dataMode === "eod"
+                                        ? currentTheme.background
+                                        : currentTheme.textSecondary,
                                 border: `1px solid ${currentTheme.border}`,
                                 borderRadius: 4,
                                 fontSize: 11,
@@ -178,20 +192,56 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         >
                             EOD
                         </button>
+                        <button
+                            onClick={() => setDataMode("date")}
+                            style={{
+                                padding: "4px 8px",
+                                backgroundColor:
+                                    dataMode === "date"
+                                        ? currentTheme.primary
+                                        : currentTheme.surface,
+                                color:
+                                    dataMode === "date"
+                                        ? currentTheme.background
+                                        : currentTheme.textSecondary,
+                                border: `1px solid ${currentTheme.border}`,
+                                borderRadius: 4,
+                                fontSize: 11,
+                                cursor: "pointer",
+                            }}
+                        >
+                            Date
+                        </button>
                     </div>
-                    <div
-                        title="Date"
-                        style={{
-                            padding: "4px 8px",
-                            backgroundColor: currentTheme.surface,
-                            color: currentTheme.textSecondary,
-                            border: `1px solid ${currentTheme.border}`,
-                            borderRadius: 4,
-                            fontSize: 11,
-                        }}
-                    >
-                        {new Date().toLocaleDateString()}
-                    </div>
+                    {dataMode === "date" ? (
+                        <input
+                            type="date"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            style={{
+                                padding: "3px 6px",
+                                backgroundColor: currentTheme.background,
+                                color: currentTheme.text,
+                                border: `1px solid ${currentTheme.border}`,
+                                borderRadius: 4,
+                                fontSize: 11,
+                            }}
+                        />
+                    ) : (
+                        <div
+                            title="Date"
+                            style={{
+                                padding: "4px 8px",
+                                backgroundColor: currentTheme.surface,
+                                color: currentTheme.textSecondary,
+                                border: `1px solid ${currentTheme.border}`,
+                                borderRadius: 4,
+                                fontSize: 11,
+                            }}
+                        >
+                            {new Date().toLocaleDateString()}
+                        </div>
+                    )}
                 </div>
             </div>
 
