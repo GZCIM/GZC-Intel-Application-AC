@@ -158,11 +158,11 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 padding: "4px 8px",
                                 backgroundColor:
                                     dataMode === "live"
-                                        ? currentTheme.primary
+                                        ? (currentTheme.success || "#2e7d32")
                                         : currentTheme.surface,
                                 color:
                                     dataMode === "live"
-                                        ? currentTheme.background
+                                        ? "#ffffff"
                                         : currentTheme.text,
                                 border: `1px solid ${currentTheme.border}`,
                                 borderRadius: 4,
@@ -178,11 +178,11 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 padding: "4px 8px",
                                 backgroundColor:
                                     dataMode === "eod"
-                                        ? currentTheme.primary
+                                        ? (currentTheme.success || "#2e7d32")
                                         : currentTheme.surface,
                                 color:
                                     dataMode === "eod"
-                                        ? currentTheme.background
+                                        ? "#ffffff"
                                         : currentTheme.textSecondary,
                                 border: `1px solid ${currentTheme.border}`,
                                 borderRadius: 4,
@@ -198,11 +198,11 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 padding: "4px 8px",
                                 backgroundColor:
                                     dataMode === "date"
-                                        ? currentTheme.primary
+                                        ? (currentTheme.success || "#2e7d32")
                                         : currentTheme.surface,
                                 color:
                                     dataMode === "date"
-                                        ? currentTheme.background
+                                        ? "#ffffff"
                                         : currentTheme.textSecondary,
                                 border: `1px solid ${currentTheme.border}`,
                                 borderRadius: 4,
