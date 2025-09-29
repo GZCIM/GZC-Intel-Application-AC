@@ -245,23 +245,95 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
             loadComponent();
         }, [componentId, instanceId]);
 
-        // Component not found in inventory
+        // Component not found in inventory (show removable placeholder in edit mode)
         if (!meta) {
             return (
                 <div
+                    onContextMenu={(e) => {
+                        if (!isEditMode) return;
+                        e.preventDefault();
+                        if (confirm("Remove this component from the layout?")) {
+                            onRemove?.();
+                        }
+                    }}
                     style={{
                         height: "100%",
-                        padding: "20px",
+                        width: "100%",
                         backgroundColor: currentTheme.surface,
                         border: `1px solid ${currentTheme.border}`,
                         borderRadius: "8px",
+                        padding: "16px",
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: currentTheme.textSecondary,
+                        flexDirection: "column",
+                        gap: "8px",
                     }}
                 >
-                    Component not found: {componentId}
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            paddingBottom: "8px",
+                            borderBottom: `1px solid ${currentTheme.border}`,
+                        }}
+                    >
+                        <h4
+                            style={{
+                                margin: 0,
+                                fontSize: "14px",
+                                fontWeight: "600",
+                                color: currentTheme.text,
+                            }}
+                        >
+                            Missing component: {componentId}
+                        </h4>
+                        {isEditMode && (
+                            <button
+                                className="no-drag react-draggable-cancel"
+                                onMouseDown={(e) => {
+                                    e.stopPropagation();
+                                }}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onRemove?.();
+                                }}
+                                title="Remove component"
+                                style={{
+                                    border: `1px solid ${currentTheme.border}`,
+                                    background: "transparent",
+                                    color: currentTheme.textSecondary,
+                                    borderRadius: 4,
+                                    fontSize: 12,
+                                    padding: "2px 6px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
+                    <div
+                        style={{
+                            flex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexDirection: "column",
+                            gap: "10px",
+                            color: currentTheme.textSecondary,
+                            fontSize: "12px",
+                            textAlign: "center",
+                        }}
+                    >
+                        <div style={{ fontSize: "28px", opacity: 0.3 }}>❓</div>
+                        <div>Component not found: {componentId}</div>
+                        {isEditMode && (
+                            <div style={{ fontSize: "10px", opacity: 0.7 }}>
+                                Right-click or click × to remove this tile
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
         }
@@ -393,8 +465,15 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                     </h4>
                     {isEditMode && (
                         <button
-                            className="no-drag"
-                            onClick={() => onRemove?.()}
+                            className="no-drag react-draggable-cancel"
+                            onMouseDown={(e) => {
+                                e.stopPropagation();
+                            }}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onRemove?.();
+                            }}
                             title="Remove component"
                             style={{
                                 border: `1px solid ${currentTheme.border}`,
