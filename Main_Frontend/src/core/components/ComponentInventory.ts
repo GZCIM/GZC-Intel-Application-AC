@@ -471,3 +471,31 @@ if (!componentInventory.getComponent("bloomberg-volatility")) {
 if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
     (window as any).componentInventory = componentInventory;
 }
+
+// Ensure portfolio component is registered
+if (!componentInventory.getComponent("portfolio")) {
+    componentInventory.addComponent({
+        id: "portfolio",
+        name: "Portfolio",
+        displayName: "Portfolio",
+        category: "portfolio",
+        subcategory: "overview",
+        description:
+            "Portfolio overview and analytics. Mirrors internal structure of volatility component.",
+        defaultSize: { w: 6, h: 8 },
+        minSize: { w: 3, h: 4 },
+        maxSize: { w: 12, h: 12 },
+        tags: ["portfolio", "positions", "overview"],
+        complexity: "medium",
+        quality: "enhanced",
+        source: "internal",
+        props: {
+            apiEndpoint:
+                process.env.NODE_ENV === "development"
+                    ? "http://localhost:8080"
+                    : "/api/bloomberg",
+        },
+    });
+
+    componentInventory.rebuildSearchIndex();
+}

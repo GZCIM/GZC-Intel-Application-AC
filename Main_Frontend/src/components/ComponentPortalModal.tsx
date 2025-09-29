@@ -56,9 +56,9 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
       // Load local components
       const allComponents = componentInventory.getAllComponents()
       const searchComponents = componentInventory.searchComponents('')
-      // Filter to show only Volatility Analysis
+      // Show both Volatility Analysis and Portfolio for now
       const filtered = (searchComponents && searchComponents.length > 0 ? searchComponents : allComponents)
-        .filter((c: any) => c.id === 'bloomberg-volatility')
+        .filter((c: any) => ['bloomberg-volatility', 'portfolio'].includes(c.id))
       console.log('ComponentPortalModal: All components from inventory:', allComponents)
       console.log('ComponentPortalModal: Search components result:', searchComponents)
       console.log('ComponentPortalModal: Portfolio component:', componentInventory.getComponent('portfolio'))
