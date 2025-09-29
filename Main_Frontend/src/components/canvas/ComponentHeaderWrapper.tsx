@@ -170,7 +170,8 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: '2px',
-            marginLeft: '8px'
+            marginLeft: '8px',
+            flexShrink: 0
           }}>
             {/* Minimize Button */}
             <button
@@ -181,6 +182,10 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
               style={{
                 width: '24px',
                 height: '24px',
+                minWidth: '24px',
+                minHeight: '24px',
+                flex: '0 0 24px',
+                boxSizing: 'border-box',
                 padding: '0',
                 border: `1px solid ${componentState === 'minimized' ? currentTheme.primary : currentTheme.border}`,
                 borderRadius: '4px',
@@ -209,6 +214,10 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
               style={{
                 width: '24px',
                 height: '24px',
+                minWidth: '24px',
+                minHeight: '24px',
+                flex: '0 0 24px',
+                boxSizing: 'border-box',
                 padding: '0',
                 border: `1px solid ${componentState === 'normal' ? currentTheme.primary : currentTheme.border}`,
                 borderRadius: '4px',
@@ -238,6 +247,10 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
               style={{
                 width: '24px',
                 height: '24px',
+                minWidth: '24px',
+                minHeight: '24px',
+                flex: '0 0 24px',
+                boxSizing: 'border-box',
                 padding: '0',
                 border: `1px solid ${componentState === 'maximized' ? currentTheme.primary : currentTheme.border}`,
                 borderRadius: '4px',
@@ -265,6 +278,10 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
               style={{
                 width: '24px',
                 height: '24px',
+                minWidth: '24px',
+                minHeight: '24px',
+                flex: '0 0 24px',
+                boxSizing: 'border-box',
                 padding: '0',
                 border: `1px solid ${currentTheme.border}`,
                 borderRadius: '4px',
