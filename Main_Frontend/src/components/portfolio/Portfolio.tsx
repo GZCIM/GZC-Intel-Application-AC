@@ -14,21 +14,67 @@ export const Portfolio: React.FC<PortfolioProps> = ({
     const { currentTheme } = useTheme();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [portfolios, setPortfolios] = useState<Array<{ id: string; name: string }>>([]);
+    const [portfolios, setPortfolios] = useState<
+        Array<{ id: string; name: string }>
+    >([]);
     const [selectedPortfolioId, setSelectedPortfolioId] = useState<string>("");
     const [dataMode, setDataMode] = useState<"live" | "eod" | "date">("live");
     const [selectedDate, setSelectedDate] = useState<string>("");
+
+    // Load persisted mode/date from localStorage
+    useEffect(() => {
+        try {
+            const savedMode = localStorage.getItem("portfolio.dataMode");
+            if (savedMode === "live" || savedMode === "eod" || savedMode === "date") {
+                setDataMode(savedMode);
+            }
+            const savedDate = localStorage.getItem("portfolio.selectedDate");
+            if (savedDate) {
+                setSelectedDate(savedDate);
+            }
+        } catch (_) {}
+    }, []);
+
+    // Persist mode/date on change
+    useEffect(() => {
+        try {
+            localStorage.setItem("portfolio.dataMode", dataMode);
+        } catch (_) {}
+    }, [dataMode]);
+
+    useEffect(() => {
+        try {
+            if (selectedDate) {
+                localStorage.setItem("portfolio.selectedDate", selectedDate);
+            }
+        } catch (_) {}
+    }, [selectedDate]);
+
+    const formatDateBadge = (value?: string) => {
+        try {
+            const d = value ? new Date(value) : new Date();
+            return d.toLocaleDateString("en-GB"); // dd/MM/yyyy
+        } catch (_) {
+            return new Date().toLocaleDateString("en-GB");
+        }
+    };
 
     useEffect(() => {
         const fetchPortfolios = async () => {
             setLoading(true);
             setError(null);
             try {
-                const resp = await axios.get(`${apiEndpoint}/api/portfolio/list`);
-                const list = (resp.data?.data || resp.data || []).map((p: any, idx: number) => ({
-                    id: String(p.id ?? idx),
-                    name: String(p.name ?? p.title ?? `Portfolio ${idx + 1}`),
-                }));
+                const resp = await axios.get(
+                    `${apiEndpoint}/api/portfolio/list`
+                );
+                const list = (resp.data?.data || resp.data || []).map(
+                    (p: any, idx: number) => ({
+                        id: String(p.id ?? idx),
+                        name: String(
+                            p.name ?? p.title ?? `Portfolio ${idx + 1}`
+                        ),
+                    })
+                );
                 setPortfolios(list);
                 if (list.length > 0) setSelectedPortfolioId(list[0].id);
             } catch (_) {
@@ -71,7 +117,9 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     {/* Active/Virtual toggle */}
                     <div style={{ display: "flex", gap: 6 }}>
                         <button
-                            onClick={() => console.log("Portfolio: Active mode")}
+                            onClick={() =>
+                                console.log("Portfolio: Active mode")
+                            }
                             style={{
                                 padding: "4px 8px",
                                 backgroundColor: "#8bbf63",
@@ -85,7 +133,9 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                             Active
                         </button>
                         <button
-                            onClick={() => console.log("Portfolio: Virtual mode")}
+                            onClick={() =>
+                                console.log("Portfolio: Virtual mode")
+                            }
                             style={{
                                 padding: "4px 8px",
                                 backgroundColor: currentTheme.surface,
@@ -101,19 +151,19 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     </div>
 
                     <label
-                        style={{
-                            fontSize: "12px",
+                                        style={{
+                                            fontSize: "12px",
                             color: currentTheme.textSecondary,
                             marginRight: 8,
                         }}
                     >
                         Portfolio:
                     </label>
-                    <select
+                        <select
                         value={selectedPortfolioId}
                         onChange={(e) => setSelectedPortfolioId(e.target.value)}
                         aria-label="Select portfolio"
-                        style={{
+                            style={{
                             backgroundColor: currentTheme.background,
                             color: currentTheme.text,
                             border: `1px solid ${currentTheme.border}`,
@@ -131,11 +181,18 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 </option>
                             ))
                         )}
-                    </select>
-                </div>
+                        </select>
+            </div>
 
                 {/* Right controls: Sync DB, Live/EOD/Date, Date control */}
-                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                    style={{
+                        marginLeft: "auto",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                    }}
+                >
                     <button
                         onClick={() => console.log("Portfolio: Sync DB")}
                         title="Sync DB"
@@ -158,13 +215,13 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 padding: "4px 8px",
                                 backgroundColor:
                                     dataMode === "live"
-                                        ? (currentTheme.success || "#2e7d32")
-                                        : currentTheme.surface,
+                                        ? (currentTheme.success || "#6aa84f")
+                                        : "#1e1e1e",
                                 color:
                                     dataMode === "live"
                                         ? "#ffffff"
-                                        : currentTheme.text,
-                                border: `1px solid ${currentTheme.border}`,
+                                        : currentTheme.textSecondary,
+                                border: `1px solid ${currentTheme.border}66`,
                                 borderRadius: 4,
                                 fontSize: 11,
                                 cursor: "pointer",
@@ -178,13 +235,13 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 padding: "4px 8px",
                                 backgroundColor:
                                     dataMode === "eod"
-                                        ? (currentTheme.success || "#2e7d32")
-                                        : currentTheme.surface,
+                                        ? (currentTheme.success || "#6aa84f")
+                                        : "#1e1e1e",
                                 color:
                                     dataMode === "eod"
                                         ? "#ffffff"
                                         : currentTheme.textSecondary,
-                                border: `1px solid ${currentTheme.border}`,
+                                border: `1px solid ${currentTheme.border}66`,
                                 borderRadius: 4,
                                 fontSize: 11,
                                 cursor: "pointer",
@@ -192,54 +249,56 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         >
                             EOD
                         </button>
-                        <button
+                    <button
                             onClick={() => setDataMode("date")}
-                            style={{
+                        style={{
                                 padding: "4px 8px",
-                                backgroundColor:
+                            backgroundColor:
                                     dataMode === "date"
-                                        ? (currentTheme.success || "#2e7d32")
-                                        : currentTheme.surface,
-                                color:
+                                        ? (currentTheme.success || "#6aa84f")
+                                        : "#1e1e1e",
+                            color:
                                     dataMode === "date"
                                         ? "#ffffff"
                                         : currentTheme.textSecondary,
-                                border: `1px solid ${currentTheme.border}`,
+                                border: `1px solid ${currentTheme.border}66`,
                                 borderRadius: 4,
                                 fontSize: 11,
-                                cursor: "pointer",
-                            }}
-                        >
+                            cursor: "pointer",
+                        }}
+                    >
                             Date
-                        </button>
+                    </button>
                     </div>
                     {dataMode === "date" ? (
-                        <input
-                            type="date"
-                            value={selectedDate}
-                            onChange={(e) => setSelectedDate(e.target.value)}
-                            style={{
-                                padding: "3px 6px",
-                                backgroundColor: currentTheme.background,
-                                color: currentTheme.text,
-                                border: `1px solid ${currentTheme.border}`,
-                                borderRadius: 4,
-                                fontSize: 11,
-                            }}
-                        />
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                style={{
+                                    padding: "4px 8px",
+                                    backgroundColor: "#0f0f0f",
+                                    color: "#eaeaea",
+                                    border: `1px solid ${currentTheme.border}66`,
+                                    borderRadius: 4,
+                                    fontSize: 11,
+                                }}
+                            />
+                        </div>
                     ) : (
                         <div
                             title="Date"
-                            style={{
+                        style={{
                                 padding: "4px 8px",
-                                backgroundColor: currentTheme.surface,
+                                backgroundColor: "#1e1e1e",
                                 color: currentTheme.textSecondary,
-                                border: `1px solid ${currentTheme.border}`,
+                                border: `1px solid ${currentTheme.border}66`,
                                 borderRadius: 4,
                                 fontSize: 11,
                             }}
                         >
-                            {new Date().toLocaleDateString()}
+                            {formatDateBadge(selectedDate)}
                         </div>
                     )}
                 </div>
