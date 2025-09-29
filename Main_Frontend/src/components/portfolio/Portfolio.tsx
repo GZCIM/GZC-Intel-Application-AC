@@ -153,8 +153,6 @@ export const Portfolio: React.FC<PortfolioProps> = ({
 };
 
 export default Portfolio;
-
-    const [positions, setPositions] = useState<PortfolioPosition[]>([]);
     const [metrics, setMetrics] = useState<MetricsType | null>(null);
     const [filter, setFilter] = useState<PortfolioFilter>({
         search: "",
