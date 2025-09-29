@@ -28,7 +28,11 @@ export const Portfolio: React.FC<PortfolioProps> = ({
     useEffect(() => {
         try {
             const savedMode = localStorage.getItem("portfolio.dataMode");
-            if (savedMode === "live" || savedMode === "eod" || savedMode === "date") {
+            if (
+                savedMode === "live" ||
+                savedMode === "eod" ||
+                savedMode === "date"
+            ) {
                 setDataMode(savedMode);
             }
             const savedDate = localStorage.getItem("portfolio.selectedDate");
@@ -136,7 +140,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 padding: "4px 8px",
                                 backgroundColor:
                                     portfolioMode === "active"
-                                        ? (currentTheme.success || "#6aa84f")
+                                        ? currentTheme.success || "#6aa84f"
                                         : "#1e1e1e",
                                 color:
                                     portfolioMode === "active"
@@ -157,7 +161,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 padding: "4px 8px",
                                 backgroundColor:
                                     portfolioMode === "virtual"
-                                        ? (currentTheme.success || "#6aa84f")
+                                        ? currentTheme.success || "#6aa84f"
                                         : "#1e1e1e",
                                 color:
                                     portfolioMode === "virtual"
@@ -174,19 +178,19 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     </div>
 
                     <label
-                                        style={{
-                                            fontSize: "12px",
+                        style={{
+                            fontSize: "12px",
                             color: currentTheme.textSecondary,
                             marginRight: 8,
                         }}
                     >
                         Portfolio:
                     </label>
-                        <select
+                    <select
                         value={selectedPortfolioId}
                         onChange={(e) => setSelectedPortfolioId(e.target.value)}
                         aria-label="Select portfolio"
-                            style={{
+                        style={{
                             backgroundColor: currentTheme.background,
                             color: currentTheme.text,
                             border: `1px solid ${currentTheme.border}`,
@@ -204,8 +208,29 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 </option>
                             ))
                         )}
-                        </select>
-            </div>
+                    </select>
+
+                    {/* Show create action when in Virtual portfolio mode */}
+                    {portfolioMode === "virtual" && (
+                        <button
+                            type="button"
+                            onClick={() => console.log("Create new virtual portfolio")}
+                            style={{
+                                marginLeft: 8,
+                                padding: "4px 10px",
+                                backgroundColor: (currentTheme.success || "#6aa84f") + "33",
+                                color: currentTheme.text,
+                                border: `1px solid ${currentTheme.border}66`,
+                                borderRadius: 4,
+                                fontSize: 12,
+                                cursor: "pointer",
+                            }}
+                            title="Create New Portfolio"
+                        >
+                            + Create New Portfolio
+                        </button>
+                    )}
+                </div>
 
                 {/* Right controls: Sync DB, Live/EOD/Date, Date control */}
                 <div
@@ -240,7 +265,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 padding: "4px 8px",
                                 backgroundColor:
                                     dataMode === "live"
-                                        ? (currentTheme.success || "#6aa84f")
+                                        ? currentTheme.success || "#6aa84f"
                                         : "#1e1e1e",
                                 color:
                                     dataMode === "live"
@@ -260,7 +285,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 padding: "4px 8px",
                                 backgroundColor:
                                     dataMode === "eod"
-                                        ? (currentTheme.success || "#6aa84f")
+                                        ? currentTheme.success || "#6aa84f"
                                         : "#1e1e1e",
                                 color:
                                     dataMode === "eod"
@@ -274,33 +299,41 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         >
                             EOD
                         </button>
-                    <button
+                        <button
                             onClick={() => setDataMode("date")}
-                        style={{
+                            style={{
                                 padding: "4px 8px",
-                            backgroundColor:
+                                backgroundColor:
                                     dataMode === "date"
-                                        ? (currentTheme.success || "#6aa84f")
+                                        ? currentTheme.success || "#6aa84f"
                                         : "#1e1e1e",
-                            color:
+                                color:
                                     dataMode === "date"
                                         ? "#ffffff"
                                         : currentTheme.textSecondary,
                                 border: `1px solid ${currentTheme.border}66`,
                                 borderRadius: 4,
                                 fontSize: 11,
-                            cursor: "pointer",
-                        }}
-                    >
+                                cursor: "pointer",
+                            }}
+                        >
                             Date
-                    </button>
+                        </button>
                     </div>
                     {dataMode === "date" ? (
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                            }}
+                        >
                             <input
                                 type="date"
                                 value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
+                                onChange={(e) =>
+                                    setSelectedDate(e.target.value)
+                                }
                                 style={{
                                     padding: "4px 8px",
                                     backgroundColor: "#0f0f0f",
@@ -314,7 +347,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     ) : (
                         <div
                             title="Date"
-                        style={{
+                            style={{
                                 padding: "4px 8px",
                                 backgroundColor: "#1e1e1e",
                                 color: currentTheme.textSecondary,
