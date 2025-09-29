@@ -120,12 +120,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     const gridCols = useMemo(
         () =>
             isEditMode
-                ? { lg: 24, md: 20, sm: 12, xs: 8, xxs: 4 }
+                ? { lg: 36, md: 30, sm: 18, xs: 12, xxs: 6 }
                 : { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
         [isEditMode]
     );
 
-    const gridRowHeight = useMemo(() => (isEditMode ? 30 : 60), [isEditMode]);
+    const gridRowHeight = useMemo(() => (isEditMode ? 22 : 60), [isEditMode]);
     const gridMargin = useMemo(
         () => (isEditMode ? [1, 1] : [2, 2]),
         [isEditMode]
