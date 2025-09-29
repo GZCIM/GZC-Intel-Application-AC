@@ -26,7 +26,7 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
   mode = 'select'
 }) => {
   const { currentTheme } = useTheme()
-  const [activeTab, setActiveTab] = useState<'local' | 'import'>('local')
+  const [activeTab, setActiveTab] = useState<'local'>('local')
   const [port3200Components, setPort3200Components] = useState<Port3200Component[]>([])
   const [localComponents, setLocalComponents] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -240,8 +240,8 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
                   onClick={() => setActiveTab('local')}
                   style={{
                     padding: '6px 12px',
-                    backgroundColor: activeTab === 'local' ? currentTheme.primary : 'transparent',
-                    color: activeTab === 'local' ? 'white' : currentTheme.text,
+                    backgroundColor: currentTheme.primary,
+                    color: 'white',
                     border: `1px solid ${currentTheme.border}`,
                     borderRadius: '4px',
                     cursor: 'pointer',
@@ -249,20 +249,6 @@ export const ComponentPortalModal: React.FC<ComponentPortalModalProps> = ({
                   }}
                 >
                   Local Components
-                </button>
-                <button
-                  onClick={() => setActiveTab('import')}
-                  style={{
-                    padding: '6px 12px',
-                    backgroundColor: activeTab === 'import' ? currentTheme.primary : 'transparent',
-                    color: activeTab === 'import' ? 'white' : currentTheme.text,
-                    border: `1px solid ${currentTheme.border}`,
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '11px'
-                  }}
-                >
-                  Import from 3200
                 </button>
               </div>
 

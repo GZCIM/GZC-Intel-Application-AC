@@ -109,11 +109,27 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
     );
     const isEditMode = editingLockService.isUnlocked();
     const prevIsEditModeRef = useRef<boolean>(isEditMode);
+    const animFrameRef = useRef<number | null>(null);
 
     // Debug logging for edit mode state
     useEffect(() => {
         console.log("🔓 Edit mode state changed:", { isEditMode, tabId });
     }, [isEditMode, tabId]);
+
+    // Grid density and spacing are increased in edit mode for smoother, more flexible movement
+    const gridCols = useMemo(
+        () =>
+            isEditMode
+                ? { lg: 24, md: 20, sm: 12, xs: 8, xxs: 4 }
+                : { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
+        [isEditMode]
+    );
+
+    const gridRowHeight = useMemo(() => (isEditMode ? 30 : 60), [isEditMode]);
+    const gridMargin = useMemo(
+        () => (isEditMode ? [1, 1] : [2, 2]),
+        [isEditMode]
+    );
 
     // Mobile portrait detection
     useEffect(() => {
@@ -523,6 +539,21 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
         },
         [isEditMode, updateComponentPositions, saveLayoutToTab]
     );
+
+    // Lightweight visual updates while dragging/resizing, throttled via rAF
+    const handleDrag = useCallback((layout: Layout[]) => {
+        if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = window.requestAnimationFrame(() => {
+            setLayouts((prev) => ({ ...prev, lg: layout }));
+        });
+    }, []);
+
+    const handleResize = useCallback((layout: Layout[]) => {
+        if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = window.requestAnimationFrame(() => {
+            setLayouts((prev) => ({ ...prev, lg: layout }));
+        });
+    }, []);
 
     // Save on explicit actions only (no longer tracking edit mode transitions)
 
@@ -1461,94 +1492,90 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 overflow: isThumb ? "hidden" : "auto",
                             }}
                         >
-                                <ComponentRenderer
-                                    componentId={instance.componentId}
-                                    instanceId={instance.id}
-                                    props={{
-                                        ...(instance.props || {}),
-                                        customTitle: instance.customTitle,
-                                        displayMode: instance.displayMode,
-                                    }}
-                                    isEditMode={isEditMode}
-                                    onRemove={() =>
-                                        removeComponent(instance.id)
-                                    }
-                                    componentState={
-                                        instance.displayMode === "thumbnail"
-                                            ? "minimized"
-                                            : instance.displayMode === "full"
-                                            ? "maximized"
-                                            : "normal"
-                                    }
-                                    onComponentStateChange={(state) => {
-                                        const newDisplayMode =
-                                            state === "minimized"
-                                                ? "thumbnail"
-                                                : state === "maximized"
-                                                ? "full"
-                                                : "medium";
-                                        setDisplayMode(
-                                            instance.id,
-                                            newDisplayMode
-                                        );
-                                    }}
-                                    onPropsUpdate={(
-                                        newProps: Record<string, any>
-                                    ) => {
-                                        setComponents((prev) =>
-                                            prev.map((comp) => {
-                                                if (comp.id !== instance.id) return comp;
-                                                const nextCustomTitle = (newProps as any)?.customTitle;
-                                                return {
-                                                    ...comp,
-                                                    props: newProps,
-                                                    customTitle:
-                                                        typeof nextCustomTitle === "string"
-                                                            ? nextCustomTitle
-                                                            : comp.customTitle,
-                                                };
-                                            })
-                                        );
-                                        // Save component props immediately for better UX
-                                        setTimeout(
-                                            () => saveLayoutToTab(),
-                                            100
-                                        );
-                                    }}
-                                />
+                            <ComponentRenderer
+                                componentId={instance.componentId}
+                                instanceId={instance.id}
+                                props={{
+                                    ...(instance.props || {}),
+                                    customTitle: instance.customTitle,
+                                    displayMode: instance.displayMode,
+                                }}
+                                isEditMode={isEditMode}
+                                onRemove={() => removeComponent(instance.id)}
+                                componentState={
+                                    instance.displayMode === "thumbnail"
+                                        ? "minimized"
+                                        : instance.displayMode === "full"
+                                        ? "maximized"
+                                        : "normal"
+                                }
+                                onComponentStateChange={(state) => {
+                                    const newDisplayMode =
+                                        state === "minimized"
+                                            ? "thumbnail"
+                                            : state === "maximized"
+                                            ? "full"
+                                            : "medium";
+                                    setDisplayMode(instance.id, newDisplayMode);
+                                }}
+                                onPropsUpdate={(
+                                    newProps: Record<string, any>
+                                ) => {
+                                    setComponents((prev) =>
+                                        prev.map((comp) => {
+                                            if (comp.id !== instance.id)
+                                                return comp;
+                                            const nextCustomTitle = (
+                                                newProps as any
+                                            )?.customTitle;
+                                            return {
+                                                ...comp,
+                                                props: newProps,
+                                                customTitle:
+                                                    typeof nextCustomTitle ===
+                                                    "string"
+                                                        ? nextCustomTitle
+                                                        : comp.customTitle,
+                                            };
+                                        })
+                                    );
+                                    // Save component props immediately for better UX
+                                    setTimeout(() => saveLayoutToTab(), 100);
+                                }}
+                            />
 
-                                {/* Explicit resize handles to avoid selecting inner UI while resizing */}
-                                {isEditMode && !isThumb && (
-                                    <>
-                                        <div
-                                            className="react-resizable-handle react-resizable-handle-e"
-                                            style={{
-                                                position: "absolute",
-                                                top: 0,
-                                                right: 0,
-                                                width: 14,
-                                                height: "100%",
-                                                cursor: "e-resize",
-                                                zIndex: 10,
-                                                pointerEvents: "auto",
-                                            }}
-                                        />
-                                        <div
-                                            className="react-resizable-handle react-resizable-handle-s"
-                                            style={{
-                                                position: "absolute",
-                                                left: 0,
-                                                bottom: 0,
-                                                width: "100%",
-                                                height: 14,
-                                                cursor: "s-resize",
-                                                zIndex: 10,
-                                                pointerEvents: "auto",
-                                            }}
-                                        />
-                                    </>
-                                )}
-                            </div>
+                            {/* Explicit resize handles to avoid selecting inner UI while resizing */}
+                            {isEditMode && !isThumb && (
+                                <>
+                                    <div
+                                        className="react-resizable-handle react-resizable-handle-e"
+                                        style={{
+                                            position: "absolute",
+                                            top: 0,
+                                            right: 0,
+                                            width: 14,
+                                            height: "100%",
+                                            cursor: "e-resize",
+                                            zIndex: 10,
+                                            pointerEvents: "auto",
+                                        }}
+                                    />
+                                    <div
+                                        className="react-resizable-handle react-resizable-handle-s"
+                                        style={{
+                                            position: "absolute",
+                                            left: 0,
+                                            bottom: 0,
+                                            width: "100%",
+                                            height: 14,
+                                            cursor: "s-resize",
+                                            zIndex: 10,
+                                            pointerEvents: "auto",
+                                        }}
+                                    />
+                                </>
+                            )}
+                        </div>
                     </div>
                 );
             }),
@@ -2082,24 +2109,20 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                         }, 100);
                                     }}
                                     onDragStart={handleDragStart}
+                                    onDrag={handleDrag}
                                     onDragStop={handleDragStop}
                                     onResizeStart={handleResizeStart}
+                                    onResize={handleResize}
                                     onResizeStop={handleResizeStop}
                                     isDraggable={true} // Always allow dragging
                                     isResizable={true} // Always allow resizing
                                     useCSSTransforms={true} // 6x faster paint performance
                                     resizeHandles={["e", "s", "se"]}
                                     transformScale={1} // Important for smooth scaling
-                                    margin={[2, 2]}
+                                    margin={gridMargin as any}
                                     containerPadding={[0, 0]}
-                                    rowHeight={60}
-                                    cols={{
-                                        lg: 12,
-                                        md: 10,
-                                        sm: 6,
-                                        xs: 4,
-                                        xxs: 2,
-                                    }}
+                                    rowHeight={gridRowHeight}
+                                    cols={gridCols as any}
                                     breakpoints={{
                                         lg: 1000, // Lowered from 1200 to accommodate your 1054px container
                                         md: 996,
@@ -2568,9 +2591,12 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                                 fullScreenInstance.id
                                                             }
                                                             props={{
-                                                                ...(fullScreenInstance.props || {}),
-                                                                customTitle: fullScreenInstance.customTitle,
-                                                                displayMode: fullScreenInstance.displayMode,
+                                                                ...(fullScreenInstance.props ||
+                                                                    {}),
+                                                                customTitle:
+                                                                    fullScreenInstance.customTitle,
+                                                                displayMode:
+                                                                    fullScreenInstance.displayMode,
                                                             }}
                                                             isEditMode={
                                                                 isEditMode
@@ -3119,7 +3145,8 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         fullScreenInstance.id
                                                     }
                                                     props={{
-                                                        ...(fullScreenInstance.props || {}),
+                                                        ...(fullScreenInstance.props ||
+                                                            {}),
                                                         customTitle:
                                                             fullScreenInstance.customTitle,
                                                         displayMode:
@@ -3132,25 +3159,36 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                         )
                                                     }
                                                     componentState={
-                                                        fullScreenInstance.displayMode === "thumbnail"
+                                                        fullScreenInstance.displayMode ===
+                                                        "thumbnail"
                                                             ? "minimized"
-                                                            : fullScreenInstance.displayMode === "full"
+                                                            : fullScreenInstance.displayMode ===
+                                                              "full"
                                                             ? "maximized"
                                                             : "normal"
                                                     }
-                                                    onComponentStateChange={(state) => {
+                                                    onComponentStateChange={(
+                                                        state
+                                                    ) => {
                                                         const newDisplayMode =
-                                                            state === "minimized"
+                                                            state ===
+                                                            "minimized"
                                                                 ? "thumbnail"
-                                                                : state === "maximized"
+                                                                : state ===
+                                                                  "maximized"
                                                                 ? "full"
                                                                 : "medium";
                                                         setDisplayMode(
                                                             fullScreenInstance.id,
                                                             newDisplayMode
                                                         );
-                                                        if (newDisplayMode !== "full") {
-                                                            setFullScreenId(null);
+                                                        if (
+                                                            newDisplayMode !==
+                                                            "full"
+                                                        ) {
+                                                            setFullScreenId(
+                                                                null
+                                                            );
                                                         }
                                                     }}
                                                 />
