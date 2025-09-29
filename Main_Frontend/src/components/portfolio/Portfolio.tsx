@@ -6,12 +6,6 @@ interface PortfolioProps {
     apiEndpoint?: string;
 }
 
-/**
- * Portfolio component
- * - Mirrors internal structure and styling approach used by bloomberg-volatility module
- * - Provides header, controls area, and a main content area that fills the tile
- * - Minimal data wiring for now; ready to integrate with backend portfolio APIs
- */
 export const Portfolio: React.FC<PortfolioProps> = ({
     apiEndpoint = process.env.NODE_ENV === "development"
         ? "http://localhost:8080"
@@ -28,8 +22,6 @@ export const Portfolio: React.FC<PortfolioProps> = ({
             setLoading(true);
             setError(null);
             try {
-                // Placeholder endpoint; adjust when backend is ready
-                // Using try/catch and non-fatal failures to keep UI responsive
                 const resp = await axios.get(`${apiEndpoint}/api/portfolio/list`);
                 const list = (resp.data?.data || resp.data || []).map((p: any, idx: number) => ({
                     id: String(p.id ?? idx),
@@ -37,8 +29,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                 }));
                 setPortfolios(list);
                 if (list.length > 0) setSelectedPortfolioId(list[0].id);
-            } catch (e) {
-                // Non-blocking; show empty state when API not available yet
+            } catch (_) {
                 setError(null);
             } finally {
                 setLoading(false);
@@ -64,7 +55,6 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                 flexDirection: "column",
             }}
         >
-            {/* Header */}
             <div
                 style={{
                     padding: "8px",
@@ -114,7 +104,6 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                 </div>
             </div>
 
-            {/* Content */}
             <div
                 style={{
                     flex: 1,
