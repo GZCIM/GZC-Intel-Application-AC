@@ -220,12 +220,13 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         onClick={() => console.log("Portfolio: Sync DB")}
                         title="Sync DB"
                         style={{
-                            padding: "4px 10px",
-                            backgroundColor: "#7da6d9",
+                            padding: "4px 12px",
+                            backgroundColor: "#5da0ea",
                             color: "#ffffff",
-                            border: `1px solid ${currentTheme.border}66`,
+                            border: `1px solid #3b82f6`,
                             borderRadius: 4,
                             fontSize: 11,
+                            fontWeight: 600,
                             cursor: "pointer",
                             boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.2)",
                         }}
