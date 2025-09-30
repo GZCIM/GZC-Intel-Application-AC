@@ -66,253 +66,55 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
       borderRadius: '8px',
       overflow: 'visible'
     }}>
-      {/* Component Header with integrated controls (Title + T/M/F) */}
-      <div
-        onDoubleClick={(e) => {
-          if (isEditMode) return;
-          e.stopPropagation();
-          if (componentState === 'maximized') {
-            onComponentStateChange?.(lastNonFullRef.current);
-          } else {
-            onComponentStateChange?.('maximized');
-          }
-        }}
-        style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '6px 10px',
-        backgroundColor: currentTheme.background,
-        borderBottom: `1px solid ${currentTheme.border}`,
-        minHeight: '36px',
-        flexShrink: 0,
-        cursor: isEditMode ? 'default' : 'pointer',
-        position: 'relative',
-        zIndex: 2
-      }}>
-        {/* Left: Component Name (editable in edit mode) */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          flex: 1,
-          minWidth: 0
-        }}>
-          {isEditMode ? (
-            <input
-              type="text"
-              value={inputValue}
-              autoComplete="off"
-              spellCheck={false}
-              onChange={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setInputValue(e.target.value);
-              }}
-              onInput={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onKeyUp={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onBlur={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onTitleChange?.(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                // Prevent Enter from submitting any parent form and bubbling
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  (e.target as HTMLInputElement).blur();
-                } else {
-                  // Stop bubbling to header to avoid accidental double-click detection
-                  e.stopPropagation();
-                }
-              }}
-              onClick={(e) => e.stopPropagation()}
-              onDoubleClick={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-              style={{
-                width: '100%',
-                background: 'transparent',
-                border: `1px solid ${currentTheme.border}`,
-                borderRadius: '4px',
-                padding: '2px 6px',
-                color: currentTheme.text,
-                fontSize: '12px',
-                fontWeight: 600,
-                outline: 'none'
-              }}
-              placeholder={defaultName || 'Enter title...'}
-            />
-          ) : (
-            <h4 style={{
-              margin: 0,
-              fontSize: '12px',
-              fontWeight: '600',
+      {/* Inline header: title before the component's first row of controls */}
+      <div style={{ display: 'flex', alignItems: 'center', padding: '6px 10px', gap: '8px', backgroundColor: currentTheme.background, borderBottom: `1px solid ${currentTheme.border}` }}>
+        {isEditMode ? (
+          <input
+            type="text"
+            value={inputValue}
+            autoComplete="off"
+            spellCheck={false}
+            onChange={(e) => setInputValue(e.target.value)}
+            onBlur={(e) => onTitleChange?.(e.target.value)}
+            style={{
+              background: 'transparent',
+              border: `1px solid ${currentTheme.border}`,
+              borderRadius: '4px',
+              padding: '2px 6px',
               color: currentTheme.text,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}>
-              {displayName}
-            </h4>
-          )}
-        </div>
-
-        {/* Right: Component State Controls - visible only in edit mode */}
-        {isEditMode && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '2px',
-            marginLeft: '8px',
-            flexShrink: 0
+              fontSize: '12px',
+              fontWeight: 600,
+              outline: 'none',
+              maxWidth: '30%'
+            }}
+            placeholder={defaultName || 'Enter title...'}
+          />
+        ) : (
+          <span style={{
+            fontSize: '12px',
+            fontWeight: 600,
+            color: currentTheme.text,
+            whiteSpace: 'nowrap'
           }}>
-            {/* Minimize Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onComponentStateChange?.('minimized');
-              }}
-              style={{
-                width: '24px',
-                height: '24px',
-                minWidth: '24px',
-                minHeight: '24px',
-                flex: '0 0 24px',
-                boxSizing: 'border-box',
-                padding: '0',
-                border: `1px solid ${componentState === 'minimized' ? currentTheme.primary : currentTheme.border}`,
-                borderRadius: '4px',
-                backgroundColor: componentState === 'minimized' ? `${currentTheme.primary}20` : 'transparent',
-                color: componentState === 'minimized' ? currentTheme.primary : currentTheme.textSecondary,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease'
-              }}
-              title="Minimize"
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2">
-                <rect x="1" y="2" width="12" height="10" rx="1" />
-                <rect x="3" y="4" width="8" height="6" rx="0.5" fill="currentColor" opacity="0.3" />
-              </svg>
-            </button>
-
-            {/* Normal View Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onComponentStateChange?.('normal');
-              }}
-              style={{
-                width: '24px',
-                height: '24px',
-                minWidth: '24px',
-                minHeight: '24px',
-                flex: '0 0 24px',
-                boxSizing: 'border-box',
-                padding: '0',
-                border: `1px solid ${componentState === 'normal' ? currentTheme.primary : currentTheme.border}`,
-                borderRadius: '4px',
-                backgroundColor: componentState === 'normal' ? `${currentTheme.primary}20` : 'transparent',
-                color: componentState === 'normal' ? currentTheme.primary : currentTheme.textSecondary,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease'
-              }}
-              title="Normal View"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <line x1="3" y1="9" x2="21" y2="9" />
-                <line x1="9" y1="21" x2="9" y2="9" />
-              </svg>
-            </button>
-
-            {/* Maximize Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onComponentStateChange?.('maximized');
-              }}
-              style={{
-                width: '24px',
-                height: '24px',
-                minWidth: '24px',
-                minHeight: '24px',
-                flex: '0 0 24px',
-                boxSizing: 'border-box',
-                padding: '0',
-                border: `1px solid ${componentState === 'maximized' ? currentTheme.primary : currentTheme.border}`,
-                borderRadius: '4px',
-                backgroundColor: componentState === 'maximized' ? `${currentTheme.primary}20` : 'transparent',
-                color: componentState === 'maximized' ? currentTheme.primary : currentTheme.textSecondary,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease'
-              }}
-              title="Maximize"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-              </svg>
-            </button>
-
-            {/* Remove Button (X) */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove?.();
-              }}
-              style={{
-                width: '24px',
-                height: '24px',
-                minWidth: '24px',
-                minHeight: '24px',
-                flex: '0 0 24px',
-                boxSizing: 'border-box',
-                padding: '0',
-                border: `1px solid ${currentTheme.border}`,
-                borderRadius: '4px',
-                backgroundColor: 'transparent',
-                color: currentTheme.error || '#D69A82',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease'
-              }}
-              title="Remove"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+            {displayName}
+          </span>
+        )}
+        {/* Children should start right after the title */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {children}
+        </div>
+        {/* Edit controls floated right, only in edit mode */}
+        {isEditMode && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px' }}>
+            <button onClick={() => onComponentStateChange?.('minimized')} style={{ width: 24, height: 24, border: `1px solid ${componentState === 'minimized' ? currentTheme.primary : currentTheme.border}`, borderRadius: 4, background: 'transparent', color: componentState === 'minimized' ? currentTheme.primary : currentTheme.textSecondary, cursor: 'pointer' }} title="Minimize">–</button>
+            <button onClick={() => onComponentStateChange?.('normal')} style={{ width: 24, height: 24, border: `1px solid ${componentState === 'normal' ? currentTheme.primary : currentTheme.border}`, borderRadius: 4, background: 'transparent', color: componentState === 'normal' ? currentTheme.primary : currentTheme.textSecondary, cursor: 'pointer' }} title="Normal">□</button>
+            <button onClick={() => onComponentStateChange?.('maximized')} style={{ width: 24, height: 24, border: `1px solid ${componentState === 'maximized' ? currentTheme.primary : currentTheme.border}`, borderRadius: 4, background: 'transparent', color: componentState === 'maximized' ? currentTheme.primary : currentTheme.textSecondary, cursor: 'pointer' }} title="Maximize">▣</button>
+            <button onClick={onRemove} style={{ width: 24, height: 24, border: `1px solid ${currentTheme.border}`, borderRadius: 4, background: 'transparent', color: currentTheme.error || '#D69A82', cursor: 'pointer' }} title="Remove">×</button>
           </div>
         )}
       </div>
-
-      {/* Component Content */}
       {componentState === 'minimized' ? null : (
-        <div style={{
-          flex: 1,
-          overflow: 'auto',
-          position: 'relative'
-        }}>
-          {children}
-        </div>
+        <div style={{ flex: 1, overflow: 'auto', position: 'relative' }} />
       )}
     </div>
   );
