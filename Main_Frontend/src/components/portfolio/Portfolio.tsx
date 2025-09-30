@@ -13,6 +13,7 @@ export const Portfolio: React.FC<
         onTitleChange?: (t: string) => void;
         onStateChange?: (s: "minimized" | "normal" | "maximized") => void;
         onRemove?: () => void;
+        componentState?: "minimized" | "normal" | "maximized";
     }
 > = ({
     apiEndpoint = process.env.NODE_ENV === "development"
@@ -23,6 +24,7 @@ export const Portfolio: React.FC<
     onTitleChange,
     onStateChange,
     onRemove,
+    componentState = "normal",
 }) => {
     const { currentTheme } = useTheme();
     const [loading, setLoading] = useState(false);
@@ -145,7 +147,7 @@ export const Portfolio: React.FC<
                 {componentState === 'minimized' && isEditMode ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         {isEditMode ? (
-                            <input value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4 }} />
+                            <input aria-label="Component title" placeholder="Title" value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4 }} />
                         ) : (
                             <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text }}>{title}</span>
                         )}
@@ -166,6 +168,8 @@ export const Portfolio: React.FC<
                 >
                     {isEditMode ? (
                         <input
+                            aria-label="Component title"
+                            placeholder="Title"
                             value={title}
                             onChange={(e) => onTitleChange?.(e.target.value)}
                             style={{
@@ -444,6 +448,8 @@ export const Portfolio: React.FC<
                                 }}
                             >
                                 <input
+                                    aria-label="Select date"
+                                    title="Select date"
                                     type="date"
                                     value={selectedDate}
                                     onChange={(e) =>
@@ -557,39 +563,41 @@ export const Portfolio: React.FC<
                 {/* removed duplicate rendering; creation button now only appears under selector on the left column */}
             </div>
 
-            <div
-                style={{
-                    flex: 1,
-                    minHeight: 0,
-                    backgroundColor: currentTheme.background,
-                    padding: 12,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: currentTheme.textSecondary,
-                    fontSize: 12,
-                    borderTop: `1px solid ${currentTheme.border}20`,
-                }}
-            >
-                {selectedPortfolio ? (
-                    <div
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            border: `1px dashed ${currentTheme.border}`,
-                            borderRadius: 4,
-                            background: currentTheme.surface + "20",
-                        }}
-                    >
-                        Portfolio view is coming soon
-                    </div>
-                ) : (
-                    <div>Select a portfolio to view details</div>
-                )}
-            </div>
+            {componentState === "minimized" && isEditMode ? null : (
+                <div
+                    style={{
+                        flex: 1,
+                        minHeight: 0,
+                        backgroundColor: currentTheme.background,
+                        padding: 12,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: currentTheme.textSecondary,
+                        fontSize: 12,
+                        borderTop: `1px solid ${currentTheme.border}20`,
+                    }}
+                >
+                    {selectedPortfolio ? (
+                        <div
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                border: `1px dashed ${currentTheme.border}`,
+                                borderRadius: 4,
+                                background: currentTheme.surface + "20",
+                            }}
+                        >
+                            Portfolio view is coming soon
+                        </div>
+                    ) : (
+                        <div>Select a portfolio to view details</div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
