@@ -1615,12 +1615,12 @@ export function VolatilityAnalysis({
                     padding: "8px",
                     borderBottom: `1px solid ${currentTheme.border}`,
                     display: "flex",
-                    gap: "16px",
                     alignItems: "center",
+                    gap: "16px",
                 }}
             >
                 {componentState === 'minimized' && isEditMode ? (
-                    <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
                         {isEditMode ? (
                             <input value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4 }} />
                         ) : (
@@ -1631,226 +1631,42 @@ export function VolatilityAnalysis({
                             <button title="Maximize" onClick={() => onStateChange?.('maximized')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>▣</button>
                             <button title="Remove" onClick={() => onRemove?.()} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: '#D69A82', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>×</button>
                         </div>
-                    </>
+                    </div>
                 ) : (
-                <>
-                    {isEditMode ? (
-                        <input
-                            value={title}
-                            onChange={(e) => onTitleChange?.(e.target.value)}
-                            style={{
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: currentTheme.text,
-                                marginRight: 8,
-                                padding: "2px 6px",
-                                background: "transparent",
-                                border: `1px solid ${currentTheme.border}`,
-                                borderRadius: 4,
-                            }}
-                        />
-                    ) : (
-                        <span
-                            style={{
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: currentTheme.text,
-                                whiteSpace: "nowrap",
-                            }}
-                        >
-                            {title}
-                        </span>
-                    )}
-                    <div style={{ marginLeft: isEditMode ? 8 : undefined }}>
-                    <label
-                        style={{
-                            fontSize: "12px",
-                            color: currentTheme.textSecondary,
-                            marginRight: "8px",
-                        }}
-                    >
-                        Currency Pair:
-                    </label>
-                    <select
-                        value={selectedPair}
-                        onChange={(e) => {
-                            setSelectedPair(e.target.value);
-                            fetchSpotRates(); // Refresh spot rates when pair changes
-                        }}
-                        style={{
-                            backgroundColor: currentTheme.background,
-                            color: currentTheme.text,
-                            border: `1px solid ${currentTheme.border}`,
-                            borderRadius: "4px",
-                            padding: "4px 8px",
-                            fontSize: "12px",
-                        }}
-                    >
-                        {currencyPairs.map((pair) => (
-                            <option key={pair} value={pair}>
-                                {pair}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <button
-                    onClick={fetchData}
-                    disabled={loading}
-                    style={{
-                        backgroundColor: currentTheme.primary,
-                        color: currentTheme.background,
-                        border: "none",
-                        borderRadius: "4px",
-                        padding: "6px 12px",
-                        fontSize: "12px",
-                        cursor: loading ? "not-allowed" : "pointer",
-                        opacity: loading ? 0.7 : 1,
-                    }}
-                >
-                    {loading ? "Loading..." : "Refresh"}
-                </button>
-
-                <div
-                    style={{
-                        marginLeft: isEditMode ? undefined : "auto",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "16px",
-                        fontSize: "11px",
-                        color: currentTheme.textSecondary,
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                        }}
-                    >
-                        <span>Data Quality:</span>
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                padding: "2px 8px",
-                                borderRadius: "12px",
-                                backgroundColor:
-                                    getQualityColor(dataQualityScore) + "20",
-                                border: `1px solid ${getQualityColor(
-                                    dataQualityScore
-                                )}40`,
-                            }}
-                        >
-                            <div
-                                style={{
-                                    width: "6px",
-                                    height: "6px",
-                                    borderRadius: "50%",
-                                    backgroundColor:
-                                        getQualityColor(dataQualityScore),
-                                }}
-                            />
-                            <span
-                                style={{
-                                    color: getQualityColor(dataQualityScore),
-                                    fontWeight: "600",
-                                }}
-                            >
-                                {dataQualityScore}%
-                            </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%' }}>
+                        {isEditMode ? (
+                            <input value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4, marginRight: 8 }} />
+                        ) : (
+                            <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, whiteSpace: 'nowrap' }}>{title}</span>
+                        )}
+                        <div style={{ marginLeft: isEditMode ? 8 : undefined }}>
+                            <label style={{ fontSize: 12, color: currentTheme.textSecondary, marginRight: 8 }}>Currency Pair:</label>
+                            <select value={selectedPair} onChange={(e) => { setSelectedPair(e.target.value); fetchSpotRates(); }} style={{ backgroundColor: currentTheme.background, color: currentTheme.text, border: `1px solid ${currentTheme.border}`, borderRadius: 4, padding: '4px 8px', fontSize: 12 }}>
+                                {currencyPairs.map((pair) => (<option key={pair} value={pair}>{pair}</option>))}
+                            </select>
                         </div>
-                    </div>
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "4px",
-                        }}
-                    >
-                        <span>Updated:</span>
-                        <span style={{ fontWeight: "500" }}>
-                            {lastUpdate
-                                ? lastUpdate.toLocaleTimeString()
-                                : "Never"}
-                        </span>
-                    </div>
-                </>
-                )}
-                {isEditMode && (
-                    <div
-                        style={{
-                            marginLeft: "auto",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 4,
-                        }}
-                    >
-                        <button
-                            title="Minimize"
-                            onClick={() => onStateChange?.("minimized")}
-                            style={{
-                                width: 30,
-                                height: 30,
-                                border: `1px solid ${currentTheme.border}`,
-                                background: "transparent",
-                                color: currentTheme.textSecondary,
-                                borderRadius: 4,
-                                cursor: "pointer",
-                                fontSize: 14,
-                            }}
-                        >
-                            ▁
-                        </button>
-                        <button
-                            title="Normal"
-                            onClick={() => onStateChange?.("normal")}
-                            style={{
-                                width: 30,
-                                height: 30,
-                                border: `1px solid ${currentTheme.border}`,
-                                background: "transparent",
-                                color: currentTheme.textSecondary,
-                                borderRadius: 4,
-                                cursor: "pointer",
-                                fontSize: 14,
-                            }}
-                        >
-                            □
-                        </button>
-                        <button
-                            title="Maximize"
-                            onClick={() => onStateChange?.("maximized")}
-                            style={{
-                                width: 30,
-                                height: 30,
-                                border: `1px solid ${currentTheme.border}`,
-                                background: "transparent",
-                                color: currentTheme.textSecondary,
-                                borderRadius: 4,
-                                cursor: "pointer",
-                                fontSize: 14,
-                            }}
-                        >
-                            ▣
-                        </button>
-                        <button
-                            title="Remove"
-                            onClick={() => onRemove?.()}
-                            style={{
-                                width: 30,
-                                height: 30,
-                                border: `1px solid ${currentTheme.border}`,
-                                background: "transparent",
-                                color: "#D69A82",
-                                borderRadius: 4,
-                                cursor: "pointer",
-                                fontSize: 14,
-                            }}
-                        >
-                            ×
-                        </button>
+                        <button onClick={fetchData} disabled={loading} style={{ backgroundColor: currentTheme.primary, color: currentTheme.background, border: 'none', borderRadius: 4, padding: '6px 12px', fontSize: 12, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>{loading ? 'Loading...' : 'Refresh'}</button>
+                        <div style={{ marginLeft: isEditMode ? undefined : 'auto', display: 'flex', alignItems: 'center', gap: 16, fontSize: 11, color: currentTheme.textSecondary }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span>Data Quality:</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 12, backgroundColor: getQualityColor(dataQualityScore) + '20', border: `1px solid ${getQualityColor(dataQualityScore)}40` }}>
+                                    <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: getQualityColor(dataQualityScore) }} />
+                                    <span style={{ color: getQualityColor(dataQualityScore), fontWeight: 600 }}>{dataQualityScore}%</span>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <span>Updated:</span>
+                                <span style={{ fontWeight: 500 }}>{lastUpdate ? lastUpdate.toLocaleTimeString() : 'Never'}</span>
+                            </div>
+                        </div>
+                        {isEditMode && (
+                            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <button title="Minimize" onClick={() => onStateChange?.('minimized')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>▁</button>
+                                <button title="Normal" onClick={() => onStateChange?.('normal')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>□</button>
+                                <button title="Maximize" onClick={() => onStateChange?.('maximized')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>▣</button>
+                                <button title="Remove" onClick={() => onRemove?.()} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: '#D69A82', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>×</button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
