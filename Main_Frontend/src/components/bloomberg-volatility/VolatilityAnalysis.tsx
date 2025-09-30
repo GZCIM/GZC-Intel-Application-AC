@@ -75,11 +75,13 @@ export function VolatilityAnalysis({
     onTitleChange,
     onStateChange,
     onRemove,
+    componentState = "normal",
 }: VolatilityAnalysisProps & {
     isEditMode?: boolean;
     onTitleChange?: (t: string) => void;
     onStateChange?: (s: "minimized" | "normal" | "maximized") => void;
     onRemove?: () => void;
+    componentState?: "minimized" | "normal" | "maximized";
 } = {}) {
     const { currentTheme } = useTheme();
     const [loading, setLoading] = useState(false);
@@ -1622,7 +1624,7 @@ export function VolatilityAnalysis({
                 {componentState === 'minimized' && isEditMode ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
                         {isEditMode ? (
-                            <input value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4 }} />
+                            <input aria-label="Component title" placeholder="Title" value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4 }} />
                         ) : (
                             <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text }}>{title}</span>
                         )}
@@ -1635,13 +1637,13 @@ export function VolatilityAnalysis({
                 ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%' }}>
                         {isEditMode ? (
-                            <input value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4, marginRight: 8 }} />
+                            <input aria-label="Component title" placeholder="Title" value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4, marginRight: 8 }} />
                         ) : (
                             <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, whiteSpace: 'nowrap' }}>{title}</span>
                         )}
                         <div style={{ marginLeft: isEditMode ? 8 : undefined }}>
                             <label style={{ fontSize: 12, color: currentTheme.textSecondary, marginRight: 8 }}>Currency Pair:</label>
-                            <select value={selectedPair} onChange={(e) => { setSelectedPair(e.target.value); fetchSpotRates(); }} style={{ backgroundColor: currentTheme.background, color: currentTheme.text, border: `1px solid ${currentTheme.border}`, borderRadius: 4, padding: '4px 8px', fontSize: 12 }}>
+                            <select aria-label="Select currency pair" value={selectedPair} onChange={(e) => { setSelectedPair(e.target.value); fetchSpotRates(); }} style={{ backgroundColor: currentTheme.background, color: currentTheme.text, border: `1px solid ${currentTheme.border}`, borderRadius: 4, padding: '4px 8px', fontSize: 12 }}>
                                 {currencyPairs.map((pair) => (<option key={pair} value={pair}>{pair}</option>))}
                             </select>
                         </div>
@@ -1680,6 +1682,7 @@ export function VolatilityAnalysis({
             )}
 
             {/* Layout with full right side for 3D surface */}
+            {componentState === 'minimized' && isEditMode ? null : (
             <div
                 style={{
                     display: "flex",
@@ -2040,6 +2043,7 @@ export function VolatilityAnalysis({
                     </div>
                 </div>
             </div>
+            )}
         </div>
     );
 }
