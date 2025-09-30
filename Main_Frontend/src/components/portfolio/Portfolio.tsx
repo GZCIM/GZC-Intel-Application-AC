@@ -196,65 +196,73 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                     Virtual
                                 </button>
                         </div>
-                            <label
+                            {/* Use grid so the create button aligns under the select (not under the label) */}
+                            <div
                                 style={{
-                                    fontSize: "12px",
-                                    color: currentTheme.textSecondary,
-                                    marginRight: 8,
+                                    display: "grid",
+                                    gridTemplateColumns: "auto 1fr",
+                                    columnGap: 8,
+                                    rowGap: 6,
+                                    alignItems: "center",
                                 }}
                             >
-                                Portfolio:
-                            </label>
-                            <select
-                                value={selectedPortfolioId}
-                                onChange={(e) =>
-                                    setSelectedPortfolioId(e.target.value)
-                                }
-                                aria-label="Select portfolio"
-                                style={{
-                                    backgroundColor: currentTheme.background,
-                                    color: currentTheme.text,
-                                    border: `1px solid ${currentTheme.border}`,
-                                    borderRadius: 4,
-                                    padding: "4px 8px",
-                                    fontSize: 12,
-                                }}
-                            >
-                                {portfolios.length === 0 ? (
-                                    <option value="">Select Portfolio</option>
-                                ) : (
-                                    portfolios.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.name}
-                                        </option>
-                                    ))
+                                <label
+                                    style={{
+                                        fontSize: "12px",
+                                        color: currentTheme.textSecondary,
+                                    }}
+                                >
+                                    Portfolio:
+                                </label>
+                                <select
+                                    value={selectedPortfolioId}
+                                    onChange={(e) => setSelectedPortfolioId(e.target.value)}
+                                    aria-label="Select portfolio"
+                                    style={{
+                                        backgroundColor: currentTheme.background,
+                                        color: currentTheme.text,
+                                        border: `1px solid ${currentTheme.border}`,
+                                        borderRadius: 4,
+                                        padding: "4px 8px",
+                                        fontSize: 12,
+                                        justifySelf: "start",
+                                    }}
+                                >
+                                    {portfolios.length === 0 ? (
+                                        <option value="">Select Portfolio</option>
+                                    ) : (
+                                        portfolios.map((p) => (
+                                            <option key={p.id} value={p.id}>
+                                                {p.name}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
+                                {portfolioMode === "virtual" && (
+                                    <button
+                                        type="button"
+                                        onClick={() => console.log("Create new virtual portfolio")}
+                                        title="Create New Portfolio"
+                                        style={{
+                                            justifySelf: "start",
+                                            display: "inline-flex",
+                                            gap: 6,
+                                            padding: "6px 12px",
+                                            backgroundColor: currentTheme.surface,
+                                            color: currentTheme.text,
+                                            border: `1px solid ${currentTheme.border}`,
+                                            borderRadius: 4,
+                                            fontSize: 12,
+                                            cursor: "pointer",
+                                            width: "max-content",
+                                            boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                                        }}
+                                    >
+                                        + Create New Portfolio
+                                    </button>
                                 )}
-                            </select>
                             </div>
-                        {portfolioMode === "virtual" && (
-                            <button
-                                type="button"
-                                onClick={() => console.log("Create new virtual portfolio")}
-                                title="Create New Portfolio"
-                                style={{
-                                    alignSelf: "flex-start",
-                                    display: "inline-flex",
-                                    gap: 6,
-                                    padding: "6px 12px",
-                                    backgroundColor: currentTheme.surface,
-                                    color: currentTheme.text,
-                                    border: `1px solid ${currentTheme.border}`,
-                                    borderRadius: 4,
-                                    fontSize: 12,
-                                    cursor: "pointer",
-                                    width: "max-content",
-                                    boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-                                    marginTop: 0,
-                                }}
-                            >
-                                + Create New Portfolio
-                            </button>
-                        )}
+                        </div>
                     </div>
                     {/* Right controls on same line */}
                     <div
