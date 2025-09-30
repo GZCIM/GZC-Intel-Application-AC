@@ -391,11 +391,16 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                 rawCustomTitle && rawCustomTitle.trim().length > 0
                     ? rawCustomTitle
                     : meta.displayName;
+            // Special-case Portfolio: render without shared header and pass inline title
+            if (componentId === 'portfolio') {
+                return (
+                    <ComponentErrorBoundary componentName={`${meta.displayName} (${componentId})`} showError={true}>
+                        <Component {...props} title={headerTitle} />
+                    </ComponentErrorBoundary>
+                );
+            }
             return (
-                <ComponentErrorBoundary
-                    componentName={`${meta.displayName} (${componentId})`}
-                    showError={true}
-                >
+                <ComponentErrorBoundary componentName={`${meta.displayName} (${componentId})`} showError={true}>
                     <ComponentHeaderWrapper
                         componentId={componentId}
                         instanceId={instanceId}
@@ -404,10 +409,7 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                         componentState={componentState}
                         onComponentStateChange={onComponentStateChange}
                         onTitleChange={(title) => {
-                            const nextProps = {
-                                ...(props as any),
-                                customTitle: title,
-                            };
+                            const nextProps = { ...(props as any), customTitle: title };
                             onPropsUpdate?.(nextProps);
                         }}
                         onRemove={onRemove}

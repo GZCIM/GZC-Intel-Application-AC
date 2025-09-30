@@ -4,12 +4,14 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 interface PortfolioProps {
     apiEndpoint?: string;
+    title?: string;
 }
 
 export const Portfolio: React.FC<PortfolioProps> = ({
     apiEndpoint = process.env.NODE_ENV === "development"
         ? "http://localhost:8080"
         : "/api/bloomberg",
+    title = "Portfolio",
 }) => {
     const { currentTheme } = useTheme();
     const [loading, setLoading] = useState(false);
@@ -125,7 +127,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     overflow: "visible",
                 }}
             >
-                {/* Row 1: Left column (toggle+selector) and right controls */}
+                {/* Row 1: Inline title + controls */}
                 <div
                     style={{
                         display: "flex",
@@ -133,6 +135,18 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         gap: 12,
                     }}
                 >
+                    <span
+                        style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: currentTheme.text,
+                            marginRight: 8,
+                            whiteSpace: "nowrap",
+                            paddingTop: 4,
+                        }}
+                    >
+                        {title}
+                    </span>
                     <div
                         style={{
                             display: "flex",
@@ -234,7 +248,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                         type="button"
                                         onClick={() => console.log("Create new virtual portfolio")}
                                         title="Create New Portfolio"
-                                        style={{
+                                style={{
                                             position: "absolute",
                                             top: "calc(100% + 6px)",
                                             left: 0,
@@ -246,11 +260,11 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                             border: `1px solid ${currentTheme.border}`,
                                             borderRadius: 4,
                                             fontSize: 12,
-                                            cursor: "pointer",
+                                    cursor: "pointer",
                                             width: "max-content",
                                             boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-                                        }}
-                                    >
+                                }}
+                            >
                                         + Create New Portfolio
                                     </button>
                                 )}
