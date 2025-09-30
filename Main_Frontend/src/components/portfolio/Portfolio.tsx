@@ -156,7 +156,7 @@ export const Portfolio: React.FC<
                         </div>
                     </div>
                 ) : (
-                {/* Row 1: Inline title + controls */}
+                // Row 1: Inline title + controls
                 <div
                     style={{
                         display: "flex",
