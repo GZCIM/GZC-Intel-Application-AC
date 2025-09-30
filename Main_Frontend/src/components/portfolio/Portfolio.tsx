@@ -24,27 +24,20 @@ export const Portfolio: React.FC<PortfolioProps> = ({
         "active"
     );
 
-    // Load persisted mode/date from localStorage
+    // Load persisted mode/date from localStorage (force default Active on first render)
     useEffect(() => {
         try {
             const savedMode = localStorage.getItem("portfolio.dataMode");
-            if (
-                savedMode === "live" ||
-                savedMode === "eod" ||
-                savedMode === "date"
-            ) {
+            if (savedMode === "live" || savedMode === "eod" || savedMode === "date") {
                 setDataMode(savedMode);
             }
             const savedDate = localStorage.getItem("portfolio.selectedDate");
             if (savedDate) {
                 setSelectedDate(savedDate);
             }
-            const savedPMode = localStorage.getItem("portfolio.mode");
-            if (savedPMode === "active" || savedPMode === "virtual") {
-                setPortfolioMode(savedPMode);
-            } else {
-                setPortfolioMode("active");
-            }
+            // Always default to Active when component loads
+            setPortfolioMode("active");
+            localStorage.setItem("portfolio.mode", "active");
         } catch (_) {}
     }, []);
 
@@ -254,6 +247,9 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                     borderRadius: 4,
                                     fontSize: 12,
                                     cursor: "pointer",
+                                    width: "max-content",
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                                    marginTop: 0,
                                 }}
                             >
                                 + Create New Portfolio
