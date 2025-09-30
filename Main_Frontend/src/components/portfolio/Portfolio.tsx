@@ -127,11 +127,11 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     padding: "8px",
                     borderBottom: `1px solid ${currentTheme.border}`,
                     display: "flex",
-                    gap: "12px",
-                    alignItems: "center",
+                    flexDirection: "column",
+                    gap: 8,
                 }}
             >
-                {/* Left controls: Active/Virtual toggle and portfolio select */}
+                {/* Row 1: Left controls and Right controls */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     {/* Active/Virtual toggle */}
                     <div style={{ display: "flex", gap: 6 }}>
@@ -140,10 +140,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                             onClick={() => setPortfolioMode("active")}
                             style={{
                                 padding: "4px 8px",
-                                backgroundColor:
-                                    portfolioMode === "active"
-                                        ? currentTheme.success || "#6aa84f"
-                                        : "#1e1e1e",
+                                backgroundColor: "#1e1e1e",
                                 color:
                                     portfolioMode === "active"
                                         ? "#ffffff"
@@ -164,10 +161,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                             onClick={() => setPortfolioMode("virtual")}
                             style={{
                                 padding: "4px 8px",
-                                backgroundColor:
-                                    portfolioMode === "virtual"
-                                        ? currentTheme.success || "#6aa84f"
-                                        : "#1e1e1e",
+                                backgroundColor: "#1e1e1e",
                                 color:
                                     portfolioMode === "virtual"
                                         ? "#ffffff"
@@ -218,16 +212,16 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         )}
                     </select>
 
-                    {/* Show create action when in Virtual portfolio mode */}
-                    {portfolioMode === "virtual" && (
+                </div>
+
+                {/* Row 2: Create action when in Virtual portfolio mode, placed below */}
+                {portfolioMode === "virtual" && (
+                    <div>
                         <button
                             type="button"
-                            onClick={() =>
-                                console.log("Create new virtual portfolio")
-                            }
+                            onClick={() => console.log("Create new virtual portfolio")}
                             title="Create New Portfolio"
                             style={{
-                                marginLeft: 10,
                                 padding: "6px 12px",
                                 backgroundColor: currentTheme.surface,
                                 color: currentTheme.text,
@@ -239,7 +233,8 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         >
                             + Create New Portfolio
                         </button>
-                    )}
+                    </div>
+                )}
             </div>
 
                 {/* Right controls: Sync DB, Live/EOD/Date, Date control */}
@@ -273,10 +268,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                             onClick={() => setDataMode("live")}
                             style={{
                                 padding: "4px 8px",
-                                backgroundColor:
-                                    dataMode === "live"
-                                        ? currentTheme.success || "#6aa84f"
-                                        : "#1e1e1e",
+                                backgroundColor: "#1e1e1e",
                                 color:
                                     dataMode === "live"
                                         ? "#ffffff"
@@ -296,10 +288,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                             onClick={() => setDataMode("eod")}
                             style={{
                                 padding: "4px 8px",
-                                backgroundColor:
-                                    dataMode === "eod"
-                                        ? currentTheme.success || "#6aa84f"
-                                        : "#1e1e1e",
+                                backgroundColor: "#1e1e1e",
                                 color:
                                     dataMode === "eod"
                                         ? "#ffffff"
@@ -319,10 +308,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                             onClick={() => setDataMode("date")}
                         style={{
                                 padding: "4px 8px",
-                            backgroundColor:
-                                    dataMode === "date"
-                                        ? currentTheme.success || "#6aa84f"
-                                        : "#1e1e1e",
+                            backgroundColor: "#1e1e1e",
                             color:
                                     dataMode === "date"
                                         ? "#ffffff"
