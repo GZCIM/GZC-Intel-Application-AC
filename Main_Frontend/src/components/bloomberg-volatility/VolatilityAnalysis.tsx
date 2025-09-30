@@ -1853,7 +1853,6 @@ export function VolatilityAnalysis({
                         </button>
                     </div>
                 )}
-                )}
             </div>
 
             {error && (
