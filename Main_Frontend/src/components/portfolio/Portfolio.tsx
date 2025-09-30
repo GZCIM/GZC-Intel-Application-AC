@@ -212,23 +212,34 @@ export const Portfolio: React.FC<PortfolioProps> = ({
 
                     {/* Show create action when in Virtual portfolio mode */}
                     {portfolioMode === "virtual" && (
-                        <button
-                            type="button"
-                            onClick={() => console.log("Create new virtual portfolio")}
+                        <div
                             style={{
-                                marginLeft: 8,
-                                padding: "4px 10px",
-                                backgroundColor: (currentTheme.success || "#6aa84f") + "33",
-                                color: currentTheme.text,
-                                border: `1px solid ${currentTheme.border}66`,
+                                display: "block",
+                                marginTop: 6,
+                                backgroundColor: currentTheme.surface,
+                                border: `1px solid ${currentTheme.border}`,
                                 borderRadius: 4,
-                                fontSize: 12,
-                                cursor: "pointer",
+                                boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
                             }}
-                            title="Create New Portfolio"
                         >
-                            + Create New Portfolio
-                        </button>
+                            <button
+                                type="button"
+                                onClick={() => console.log("Create new virtual portfolio")}
+                                style={{
+                                    width: "100%",
+                                    textAlign: "left",
+                                    padding: "8px 12px",
+                                    background: "transparent",
+                                    color: currentTheme.text,
+                                    border: "none",
+                                    fontSize: 12,
+                                    cursor: "pointer",
+                                }}
+                                title="Create New Portfolio"
+                            >
+                                + Create New Portfolio
+                            </button>
+                        </div>
                     )}
                 </div>
 
