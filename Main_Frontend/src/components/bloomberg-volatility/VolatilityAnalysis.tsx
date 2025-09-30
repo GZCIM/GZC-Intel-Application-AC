@@ -71,7 +71,9 @@ export function VolatilityAnalysis({
             : "http://localhost:8080"
         : BLOOMBERG_ENDPOINTS.PROXY, // Use proxy to avoid mixed content issues
     title = "Volatility Analysis",
-}: VolatilityAnalysisProps = {}) {
+    isEditMode = false,
+    onTitleChange,
+}: VolatilityAnalysisProps & { isEditMode?: boolean; onTitleChange?: (t: string) => void } = {}) {
     const { currentTheme } = useTheme();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -1610,7 +1612,24 @@ export function VolatilityAnalysis({
                     alignItems: "center",
                 }}
             >
-                <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, whiteSpace: "nowrap" }}>{title}</span>
+                {isEditMode ? (
+                    <input
+                        value={title}
+                        onChange={(e) => onTitleChange?.(e.target.value)}
+                        style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: currentTheme.text,
+                            marginRight: 8,
+                            padding: '2px 6px',
+                            background: 'transparent',
+                            border: `1px solid ${currentTheme.border}`,
+                            borderRadius: 4,
+                        }}
+                    />
+                ) : (
+                    <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, whiteSpace: "nowrap" }}>{title}</span>
+                )}
                 <div>
                     <label
                         style={{

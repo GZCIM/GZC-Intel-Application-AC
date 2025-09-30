@@ -7,11 +7,13 @@ interface PortfolioProps {
     title?: string;
 }
 
-export const Portfolio: React.FC<PortfolioProps> = ({
+export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitleChange?: (t: string) => void }> = ({
     apiEndpoint = process.env.NODE_ENV === "development"
         ? "http://localhost:8080"
         : "/api/bloomberg",
     title = "Portfolio",
+    isEditMode = false,
+    onTitleChange,
 }) => {
     const { currentTheme } = useTheme();
     const [loading, setLoading] = useState(false);
@@ -135,18 +137,35 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         gap: 12,
                     }}
                 >
-                    <span
-                        style={{
-                            fontSize: 12,
-                            fontWeight: 600,
-                            color: currentTheme.text,
-                            marginRight: 8,
-                            whiteSpace: "nowrap",
-                            paddingTop: 4,
-                        }}
-                    >
-                        {title}
-                    </span>
+                    {isEditMode ? (
+                        <input
+                            value={title}
+                            onChange={(e) => onTitleChange?.(e.target.value)}
+                            style={{
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: currentTheme.text,
+                                marginRight: 8,
+                                padding: '2px 6px',
+                                background: 'transparent',
+                                border: `1px solid ${currentTheme.border}`,
+                                borderRadius: 4,
+                            }}
+                        />
+                    ) : (
+                        <span
+                            style={{
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: currentTheme.text,
+                                marginRight: 8,
+                                whiteSpace: "nowrap",
+                                paddingTop: 4,
+                            }}
+                        >
+                            {title}
+                        </span>
+                    )}
                     <div
                         style={{
                             display: "flex",

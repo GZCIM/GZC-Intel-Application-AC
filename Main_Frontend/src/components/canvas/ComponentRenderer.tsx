@@ -399,50 +399,22 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                             {/* Edit controls overlay (kept on edit screen) */}
                             {isEditMode && (
                                 <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 4, zIndex: 5 }}>
-                                    <button
-                                        title="Minimize"
-                                        onClick={() => onComponentStateChange?.('minimized')}
-                                        style={{ padding: '2px 6px', fontSize: 11, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'inherit', borderRadius: 4, cursor: 'pointer' }}
-                                    >
-                                        Min
-                                    </button>
-                                    <button
-                                        title="Normal"
-                                        onClick={() => onComponentStateChange?.('normal')}
-                                        style={{ padding: '2px 6px', fontSize: 11, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'inherit', borderRadius: 4, cursor: 'pointer' }}
-                                    >
-                                        Norm
-                                    </button>
-                                    <button
-                                        title="Maximize"
-                                        onClick={() => onComponentStateChange?.('maximized')}
-                                        style={{ padding: '2px 6px', fontSize: 11, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'inherit', borderRadius: 4, cursor: 'pointer' }}
-                                    >
-                                        Max
-                                    </button>
-                                    <button
-                                        title="Edit title"
-                                        onClick={() => {
-                                            const next = prompt('Enter title', headerTitle || meta.displayName);
-                                            if (next != null) {
-                                                const nextProps = { ...(props as any), customTitle: next };
-                                                onPropsUpdate?.(nextProps);
-                                            }
-                                        }}
-                                        style={{ padding: '2px 6px', fontSize: 11, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'inherit', borderRadius: 4, cursor: 'pointer' }}
-                                    >
-                                        Title
-                                    </button>
-                                    <button
-                                        title="Remove"
-                                        onClick={onRemove}
-                                        style={{ padding: '2px 6px', fontSize: 11, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#D69A82', borderRadius: 4, cursor: 'pointer' }}
-                                    >
-                                        ×
-                                    </button>
+                                    {/* Old square icon buttons */}
+                                    <button title="Minimize" onClick={() => onComponentStateChange?.('minimized')} style={{ width: 24, height: 24, border: '1px solid rgba(255,255,255,0.25)', background: 'transparent', color: 'inherit', borderRadius: 4, cursor: 'pointer' }}>▁</button>
+                                    <button title="Normal" onClick={() => onComponentStateChange?.('normal')} style={{ width: 24, height: 24, border: '1px solid rgba(255,255,255,0.25)', background: 'transparent', color: 'inherit', borderRadius: 4, cursor: 'pointer' }}>□</button>
+                                    <button title="Maximize" onClick={() => onComponentStateChange?.('maximized')} style={{ width: 24, height: 24, border: '1px solid rgba(255,255,255,0.25)', background: 'transparent', color: 'inherit', borderRadius: 4, cursor: 'pointer' }}>▣</button>
+                                    <button title="Remove" onClick={onRemove} style={{ width: 24, height: 24, border: '1px solid rgba(255,255,255,0.25)', background: 'transparent', color: '#D69A82', borderRadius: 4, cursor: 'pointer' }}>×</button>
                                 </div>
                             )}
-                            <Component {...props} title={headerTitle} />
+                            <Component
+                                {...props}
+                                title={headerTitle}
+                                isEditMode={isEditMode}
+                                onTitleChange={(nextTitle: string) => {
+                                    const nextProps = { ...(props as any), customTitle: nextTitle };
+                                    onPropsUpdate?.(nextProps);
+                                }}
+                            />
                         </div>
                     </ComponentErrorBoundary>
                 );
