@@ -181,8 +181,8 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => setPortfolioMode("virtual")}
-                                    style={{
-                                        padding: "4px 8px",
+                            style={{
+                                padding: "4px 8px",
                                         backgroundColor: "#1e1e1e",
                                         color:
                                             portfolioMode === "virtual"
@@ -202,7 +202,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                 >
                                     Virtual
                                 </button>
-                            </div>
+                        </div>
                             <label
                                 style={{
                                     fontSize: "12px",
@@ -237,30 +237,27 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                     ))
                                 )}
                             </select>
-                        </div>
-                        {portfolioMode === "virtual" && (
-                            <div>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        console.log(
-                                            "Create new virtual portfolio"
-                                        )
-                                    }
-                                    title="Create New Portfolio"
-                                    style={{
-                                        padding: "6px 12px",
-                                        backgroundColor: currentTheme.surface,
-                                        color: currentTheme.text,
-                                        border: `1px solid ${currentTheme.border}`,
-                                        borderRadius: 4,
-                                        fontSize: 12,
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    + Create New Portfolio
-                                </button>
                             </div>
+                        {portfolioMode === "virtual" && (
+                            <button
+                                type="button"
+                                onClick={() => console.log("Create new virtual portfolio")}
+                                title="Create New Portfolio"
+                                style={{
+                                    alignSelf: "flex-start",
+                                    display: "inline-flex",
+                                    gap: 6,
+                                    padding: "6px 12px",
+                                    backgroundColor: currentTheme.surface,
+                                    color: currentTheme.text,
+                                    border: `1px solid ${currentTheme.border}`,
+                                    borderRadius: 4,
+                                    fontSize: 12,
+                                    cursor: "pointer",
+                                }}
+                            >
+                                + Create New Portfolio
+                            </button>
                         )}
                     </div>
                     {/* Right controls on same line */}
@@ -292,7 +289,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         <div style={{ display: "flex", gap: 6 }}>
                             <button
                                 onClick={() => setDataMode("live")}
-                                style={{
+                            style={{
                                     padding: "4px 8px",
                                     backgroundColor: "#1e1e1e",
                                     color:
@@ -313,12 +310,12 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                             >
                                 Live
                             </button>
-                            <button
+                                    <button
                                 onClick={() => setDataMode("eod")}
-                                style={{
+                                        style={{
                                     padding: "4px 8px",
                                     backgroundColor: "#1e1e1e",
-                                    color:
+                                            color:
                                         dataMode === "eod"
                                             ? "#ffffff"
                                             : currentTheme.textSecondary,
@@ -331,14 +328,14 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                             : `1px solid ${currentTheme.border}66`,
                                     borderRadius: 4,
                                     fontSize: 11,
-                                    cursor: "pointer",
-                                }}
-                            >
+                                            cursor: "pointer",
+                                        }}
+                                    >
                                 EOD
-                            </button>
+                                    </button>
                             <button
                                 onClick={() => setDataMode("date")}
-                                style={{
+                            style={{
                                     padding: "4px 8px",
                                     backgroundColor: "#1e1e1e",
                                     color:
@@ -354,27 +351,27 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                             : `1px solid ${currentTheme.border}66`,
                                     borderRadius: 4,
                                     fontSize: 11,
-                                    cursor: "pointer",
-                                }}
-                            >
+                                cursor: "pointer",
+                            }}
+                        >
                                 Date
                             </button>
-                        </div>
+                    </div>
                         {dataMode === "date" ? (
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
                                     gap: 6,
-                                }}
-                            >
-                                <input
+                    }}
+                >
+                    <input
                                     type="date"
                                     value={selectedDate}
-                                    onChange={(e) =>
+                        onChange={(e) =>
                                         setSelectedDate(e.target.value)
-                                    }
-                                    style={{
+                        }
+                        style={{
                                         padding: "4px 8px",
                                         backgroundColor: "#0f0f0f",
                                         color: "#eaeaea",
@@ -387,7 +384,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         ) : (
                             <div
                                 title="Date"
-                                style={{
+                        style={{
                                     padding: "4px 8px",
                                     backgroundColor: "#1e1e1e",
                                     color: currentTheme.textSecondary,
