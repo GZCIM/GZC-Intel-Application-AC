@@ -1659,7 +1659,7 @@ export function VolatilityAnalysis({
                     >
                         {title}
                     </span>
-                ))
+                )}
                 <div style={{ marginLeft: isEditMode ? 8 : undefined }}>
                     <label
                         style={{
