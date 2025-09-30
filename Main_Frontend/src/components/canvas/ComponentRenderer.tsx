@@ -397,15 +397,25 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                 componentId === "bloomberg-volatility"
             ) {
                 return (
-                    <ComponentErrorBoundary componentName={`${meta.displayName} (${componentId})`} showError={true}>
+                    <ComponentErrorBoundary
+                        componentName={`${meta.displayName} (${componentId})`}
+                        showError={true}
+                    >
                         <Component
                             {...props}
                             title={headerTitle}
                             isEditMode={isEditMode}
                             onTitleChange={(nextTitle: string) => {
-                                const nextProps = { ...(props as any), customTitle: nextTitle };
+                                const nextProps = {
+                                    ...(props as any),
+                                    customTitle: nextTitle,
+                                };
                                 onPropsUpdate?.(nextProps);
                             }}
+                            onStateChange={(state: "minimized" | "normal" | "maximized") => {
+                                onComponentStateChange?.(state);
+                            }}
+                            onRemove={onRemove}
                         />
                     </ComponentErrorBoundary>
                 );

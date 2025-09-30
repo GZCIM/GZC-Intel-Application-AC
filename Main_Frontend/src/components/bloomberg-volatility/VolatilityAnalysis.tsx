@@ -73,9 +73,13 @@ export function VolatilityAnalysis({
     title = "Volatility Analysis",
     isEditMode = false,
     onTitleChange,
+    onStateChange,
+    onRemove,
 }: VolatilityAnalysisProps & {
     isEditMode?: boolean;
     onTitleChange?: (t: string) => void;
+    onStateChange?: (s: "minimized" | "normal" | "maximized") => void;
+    onRemove?: () => void;
 } = {}) {
     const { currentTheme } = useTheme();
     const [loading, setLoading] = useState(false);
@@ -1759,11 +1763,74 @@ export function VolatilityAnalysis({
                     </div>
                 </div>
                 {isEditMode && (
-                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <button title="Minimize" onClick={() => console.log('minimize')} style={{ width: 24, height: 24, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer' }}>▁</button>
-                        <button title="Normal" onClick={() => console.log('normal')} style={{ width: 24, height: 24, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer' }}>□</button>
-                        <button title="Maximize" onClick={() => console.log('maximize')} style={{ width: 24, height: 24, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer' }}>▣</button>
-                        <button title="Remove" onClick={() => console.log('remove')} style={{ width: 24, height: 24, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: '#D69A82', borderRadius: 4, cursor: 'pointer' }}>×</button>
+                    <div
+                        style={{
+                            marginLeft: "auto",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
+                        }}
+                    >
+                        <button
+                            title="Minimize"
+                            onClick={() => onStateChange?.("minimized")}
+                            style={{
+                                width: 24,
+                                height: 24,
+                                border: `1px solid ${currentTheme.border}`,
+                                background: "transparent",
+                                color: currentTheme.textSecondary,
+                                borderRadius: 4,
+                                cursor: "pointer",
+                            }}
+                        >
+                            ▁
+                        </button>
+                        <button
+                            title="Normal"
+                            onClick={() => onStateChange?.("normal")}
+                            style={{
+                                width: 24,
+                                height: 24,
+                                border: `1px solid ${currentTheme.border}`,
+                                background: "transparent",
+                                color: currentTheme.textSecondary,
+                                borderRadius: 4,
+                                cursor: "pointer",
+                            }}
+                        >
+                            □
+                        </button>
+                        <button
+                            title="Maximize"
+                            onClick={() => onStateChange?.("maximized")}
+                            style={{
+                                width: 24,
+                                height: 24,
+                                border: `1px solid ${currentTheme.border}`,
+                                background: "transparent",
+                                color: currentTheme.textSecondary,
+                                borderRadius: 4,
+                                cursor: "pointer",
+                            }}
+                        >
+                            ▣
+                        </button>
+                        <button
+                            title="Remove"
+                            onClick={() => onRemove?.()}
+                            style={{
+                                width: 24,
+                                height: 24,
+                                border: `1px solid ${currentTheme.border}`,
+                                background: "transparent",
+                                color: "#D69A82",
+                                borderRadius: 4,
+                                cursor: "pointer",
+                            }}
+                        >
+                            ×
+                        </button>
                     </div>
                 )}
             </div>

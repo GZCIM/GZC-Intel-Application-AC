@@ -11,6 +11,8 @@ export const Portfolio: React.FC<
     PortfolioProps & {
         isEditMode?: boolean;
         onTitleChange?: (t: string) => void;
+        onStateChange?: (s: "minimized" | "normal" | "maximized") => void;
+        onRemove?: () => void;
     }
 > = ({
     apiEndpoint = process.env.NODE_ENV === "development"
@@ -19,6 +21,8 @@ export const Portfolio: React.FC<
     title = "Portfolio",
     isEditMode = false,
     onTitleChange,
+    onStateChange,
+    onRemove,
 }) => {
     const { currentTheme } = useTheme();
     const [loading, setLoading] = useState(false);
@@ -468,56 +472,64 @@ export const Portfolio: React.FC<
                         >
                             <button
                                 title="Minimize"
-                                onClick={() => console.log('minimize')}
+                                onClick={() => onStateChange?.("minimized")}
                                 style={{
                                     width: 24,
                                     height: 24,
                                     border: `1px solid ${currentTheme.border}`,
-                                    background: 'transparent',
+                                    background: "transparent",
                                     color: currentTheme.textSecondary,
                                     borderRadius: 4,
-                                    cursor: 'pointer',
+                                    cursor: "pointer",
                                 }}
-                            >▁</button>
+                            >
+                                ▁
+                            </button>
                             <button
                                 title="Normal"
-                                onClick={() => console.log('normal')}
+                                onClick={() => onStateChange?.("normal")}
                                 style={{
                                     width: 24,
                                     height: 24,
                                     border: `1px solid ${currentTheme.border}`,
-                                    background: 'transparent',
+                                    background: "transparent",
                                     color: currentTheme.textSecondary,
                                     borderRadius: 4,
-                                    cursor: 'pointer',
+                                    cursor: "pointer",
                                 }}
-                            >□</button>
+                            >
+                                □
+                            </button>
                             <button
                                 title="Maximize"
-                                onClick={() => console.log('maximize')}
+                                onClick={() => onStateChange?.("maximized")}
                                 style={{
                                     width: 24,
                                     height: 24,
                                     border: `1px solid ${currentTheme.border}`,
-                                    background: 'transparent',
+                                    background: "transparent",
                                     color: currentTheme.textSecondary,
                                     borderRadius: 4,
-                                    cursor: 'pointer',
+                                    cursor: "pointer",
                                 }}
-                            >▣</button>
+                            >
+                                ▣
+                            </button>
                             <button
                                 title="Remove"
-                                onClick={() => console.log('remove')}
+                                onClick={() => onRemove?.()}
                                 style={{
                                     width: 24,
                                     height: 24,
                                     border: `1px solid ${currentTheme.border}`,
-                                    background: 'transparent',
-                                    color: '#D69A82',
+                                    background: "transparent",
+                                    color: "#D69A82",
                                     borderRadius: 4,
-                                    cursor: 'pointer',
+                                    cursor: "pointer",
                                 }}
-                            >×</button>
+                            >
+                                ×
+                            </button>
                         </div>
                     )}
                 </div>
