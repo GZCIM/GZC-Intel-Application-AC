@@ -122,6 +122,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     display: "flex",
                     flexDirection: "column",
                     gap: 8,
+                    overflow: "visible",
                 }}
             >
                 {/* Row 1: Left column (toggle+selector) and right controls */}
@@ -196,24 +197,15 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                     Virtual
                                 </button>
                         </div>
-                            {/* Use grid so the create button aligns under the select (not under the label) */}
-                            <div
+                            <label
                                 style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "auto 1fr",
-                                    columnGap: 8,
-                                    rowGap: 6,
-                                    alignItems: "center",
+                                    fontSize: "12px",
+                                    color: currentTheme.textSecondary,
                                 }}
                             >
-                                <label
-                                    style={{
-                                        fontSize: "12px",
-                                        color: currentTheme.textSecondary,
-                                    }}
-                                >
-                                    Portfolio:
-                                </label>
+                                Portfolio:
+                            </label>
+                            <div style={{ position: "relative", display: "inline-block" }}>
                                 <select
                                     value={selectedPortfolioId}
                                     onChange={(e) => setSelectedPortfolioId(e.target.value)}
@@ -225,7 +217,6 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                         borderRadius: 4,
                                         padding: "4px 8px",
                                         fontSize: 12,
-                                        justifySelf: "start",
                                     }}
                                 >
                                     {portfolios.length === 0 ? (
@@ -244,7 +235,9 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                         onClick={() => console.log("Create new virtual portfolio")}
                                         title="Create New Portfolio"
                                         style={{
-                                            justifySelf: "start",
+                                            position: "absolute",
+                                            top: "calc(100% + 6px)",
+                                            left: 0,
                                             display: "inline-flex",
                                             gap: 6,
                                             padding: "6px 12px",
