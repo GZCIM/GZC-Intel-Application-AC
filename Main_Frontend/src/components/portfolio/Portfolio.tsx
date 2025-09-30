@@ -132,95 +132,121 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                 }}
             >
                 {/* Row 1: Left column (toggle+selector) and right controls */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 12,
+                    }}
+                >
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 6,
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                            }}
+                        >
                             <div style={{ display: "flex", gap: 6 }}>
-                        <button
-                            type="button"
-                            onClick={() => setPortfolioMode("active")}
-                            style={{
-                                padding: "4px 8px",
-                                backgroundColor: "#1e1e1e",
-                                color:
-                                    portfolioMode === "active"
-                                        ? "#ffffff"
-                                        : currentTheme.textSecondary,
-                                border:
-                                    portfolioMode === "active"
-                                        ? `1px solid ${
-                                              currentTheme.success || "#6aa84f"
-                                          }`
-                                        : `1px solid ${currentTheme.border}66`,
-                                borderRadius: 4,
-                                fontSize: 11,
-                                cursor: "pointer",
-                            }}
-                        >
-                            Active
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setPortfolioMode("virtual")}
-                            style={{
-                                padding: "4px 8px",
-                                backgroundColor: "#1e1e1e",
-                                color:
-                                    portfolioMode === "virtual"
-                                        ? "#ffffff"
-                                        : currentTheme.textSecondary,
-                                border:
-                                    portfolioMode === "virtual"
-                                        ? `1px solid ${
-                                              currentTheme.success || "#6aa84f"
-                                          }`
-                                        : `1px solid ${currentTheme.border}66`,
-                                borderRadius: 4,
-                                fontSize: 11,
-                                cursor: "pointer",
-                            }}
-                        >
-                            Virtual
-                        </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setPortfolioMode("active")}
+                                    style={{
+                                        padding: "4px 8px",
+                                        backgroundColor: "#1e1e1e",
+                                        color:
+                                            portfolioMode === "active"
+                                                ? "#ffffff"
+                                                : currentTheme.textSecondary,
+                                        border:
+                                            portfolioMode === "active"
+                                                ? `1px solid ${
+                                                      currentTheme.success ||
+                                                      "#6aa84f"
+                                                  }`
+                                                : `1px solid ${currentTheme.border}66`,
+                                        borderRadius: 4,
+                                        fontSize: 11,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    Active
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setPortfolioMode("virtual")}
+                                    style={{
+                                        padding: "4px 8px",
+                                        backgroundColor: "#1e1e1e",
+                                        color:
+                                            portfolioMode === "virtual"
+                                                ? "#ffffff"
+                                                : currentTheme.textSecondary,
+                                        border:
+                                            portfolioMode === "virtual"
+                                                ? `1px solid ${
+                                                      currentTheme.success ||
+                                                      "#6aa84f"
+                                                  }`
+                                                : `1px solid ${currentTheme.border}66`,
+                                        borderRadius: 4,
+                                        fontSize: 11,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    Virtual
+                                </button>
                             </div>
                             <label
-                        style={{
-                            fontSize: "12px",
-                            color: currentTheme.textSecondary,
-                            marginRight: 8,
-                        }}
-                    >
-                        Portfolio:
-                    </label>
-                    <select
-                        value={selectedPortfolioId}
-                        onChange={(e) => setSelectedPortfolioId(e.target.value)}
-                        aria-label="Select portfolio"
-                        style={{
-                            backgroundColor: currentTheme.background,
-                            color: currentTheme.text,
-                            border: `1px solid ${currentTheme.border}`,
-                            borderRadius: 4,
-                            padding: "4px 8px",
-                            fontSize: 12,
-                        }}
-                    >
-                        {portfolios.length === 0 ? (
-                            <option value="">Select Portfolio</option>
-                        ) : (
-                            portfolios.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name}
-                                </option>
-                            ))
-                        )}
-                    </select>
+                                style={{
+                                    fontSize: "12px",
+                                    color: currentTheme.textSecondary,
+                                    marginRight: 8,
+                                }}
+                            >
+                                Portfolio:
+                            </label>
+                            <select
+                                value={selectedPortfolioId}
+                                onChange={(e) =>
+                                    setSelectedPortfolioId(e.target.value)
+                                }
+                                aria-label="Select portfolio"
+                                style={{
+                                    backgroundColor: currentTheme.background,
+                                    color: currentTheme.text,
+                                    border: `1px solid ${currentTheme.border}`,
+                                    borderRadius: 4,
+                                    padding: "4px 8px",
+                                    fontSize: 12,
+                                }}
+                            >
+                                {portfolios.length === 0 ? (
+                                    <option value="">Select Portfolio</option>
+                                ) : (
+                                    portfolios.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
                         </div>
                         {portfolioMode === "virtual" && (
                             <div>
                                 <button
                                     type="button"
-                                    onClick={() => console.log("Create new virtual portfolio")}
+                                    onClick={() =>
+                                        console.log(
+                                            "Create new virtual portfolio"
+                                        )
+                                    }
                                     title="Create New Portfolio"
                                     style={{
                                         padding: "6px 12px",
@@ -376,29 +402,8 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     </div>
                 </div>
 
-                {/* Row 2: Create action when in Virtual portfolio mode, placed below */}
-                {portfolioMode === "virtual" && (
-                    <div>
-                        <button
-                            type="button"
-                            onClick={() =>
-                                console.log("Create new virtual portfolio")
-                            }
-                            title="Create New Portfolio"
-                            style={{
-                                padding: "6px 12px",
-                                backgroundColor: currentTheme.surface,
-                                color: currentTheme.text,
-                                border: `1px solid ${currentTheme.border}`,
-                                borderRadius: 4,
-                                fontSize: 12,
-                                cursor: "pointer",
-                            }}
-                        >
-                            + Create New Portfolio
-                        </button>
-                    </div>
-                )}
+                {/* Row 2: Create action when in Virtual portfolio mode, placed below (single instance) */}
+                {/* removed duplicate rendering; creation button now only appears under selector on the left column */}
             </div>
 
             <div
