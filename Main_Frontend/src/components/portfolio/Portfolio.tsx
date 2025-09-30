@@ -365,6 +365,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
             </div>
 
             <div
+                /* content area */
                 style={{
                     flex: 1,
                     minHeight: 0,
