@@ -1633,7 +1633,7 @@ export function VolatilityAnalysis({
                         </div>
                     </>
                 ) : (
-                {isEditMode ? (
+                (isEditMode ? (
                     <input
                         value={title}
                         onChange={(e) => onTitleChange?.(e.target.value)}
@@ -1659,7 +1659,7 @@ export function VolatilityAnalysis({
                     >
                         {title}
                     </span>
-                )}
+                ))
                 <div style={{ marginLeft: isEditMode ? 8 : undefined }}>
                     <label
                         style={{
