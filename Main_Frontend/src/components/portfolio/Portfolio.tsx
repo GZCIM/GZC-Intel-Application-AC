@@ -21,7 +21,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
     const [dataMode, setDataMode] = useState<"live" | "eod" | "date">("live");
     const [selectedDate, setSelectedDate] = useState<string>("");
     const [portfolioMode, setPortfolioMode] = useState<"active" | "virtual">(
-        "active"
+        "virtual"
     );
 
     // Load persisted mode/date from localStorage
@@ -42,6 +42,8 @@ export const Portfolio: React.FC<PortfolioProps> = ({
             const savedPMode = localStorage.getItem("portfolio.mode");
             if (savedPMode === "active" || savedPMode === "virtual") {
                 setPortfolioMode(savedPMode);
+            } else {
+                setPortfolioMode("virtual");
             }
         } catch (_) {}
     }, []);
@@ -184,7 +186,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     </div>
 
                     <label
-                        style={{
+                            style={{
                             fontSize: "12px",
                             color: currentTheme.textSecondary,
                             marginRight: 8,
@@ -196,7 +198,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         value={selectedPortfolioId}
                         onChange={(e) => setSelectedPortfolioId(e.target.value)}
                         aria-label="Select portfolio"
-                        style={{
+                                        style={{
                             backgroundColor: currentTheme.background,
                             color: currentTheme.text,
                             border: `1px solid ${currentTheme.border}`,
@@ -238,7 +240,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                             + Create New Portfolio
                         </button>
                     )}
-                </div>
+            </div>
 
                 {/* Right controls: Sync DB, Live/EOD/Date, Date control */}
                 <div
@@ -279,7 +281,10 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                     dataMode === "live"
                                         ? "#ffffff"
                                         : currentTheme.textSecondary,
-                                border: `1px solid ${currentTheme.border}66`,
+                                border:
+                                    dataMode === "live"
+                                        ? `1px solid ${currentTheme.success || "#6aa84f"}`
+                                        : `1px solid ${currentTheme.border}66`,
                                 borderRadius: 4,
                                 fontSize: 11,
                                 cursor: "pointer",
@@ -299,7 +304,10 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                     dataMode === "eod"
                                         ? "#ffffff"
                                         : currentTheme.textSecondary,
-                                border: `1px solid ${currentTheme.border}66`,
+                                border:
+                                    dataMode === "eod"
+                                        ? `1px solid ${currentTheme.success || "#6aa84f"}`
+                                        : `1px solid ${currentTheme.border}66`,
                                 borderRadius: 4,
                                 fontSize: 11,
                                 cursor: "pointer",
@@ -309,24 +317,27 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         </button>
                         <button
                             onClick={() => setDataMode("date")}
-                            style={{
+                        style={{
                                 padding: "4px 8px",
-                                backgroundColor:
+                            backgroundColor:
                                     dataMode === "date"
                                         ? currentTheme.success || "#6aa84f"
                                         : "#1e1e1e",
-                                color:
+                            color:
                                     dataMode === "date"
                                         ? "#ffffff"
                                         : currentTheme.textSecondary,
-                                border: `1px solid ${currentTheme.border}66`,
+                                border:
+                                    dataMode === "date"
+                                        ? `1px solid ${currentTheme.success || "#6aa84f"}`
+                                        : `1px solid ${currentTheme.border}66`,
                                 borderRadius: 4,
                                 fontSize: 11,
-                                cursor: "pointer",
-                            }}
-                        >
+                            cursor: "pointer",
+                        }}
+                    >
                             Date
-                        </button>
+                    </button>
                     </div>
                     {dataMode === "date" ? (
                         <div
@@ -355,7 +366,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     ) : (
                         <div
                             title="Date"
-                            style={{
+                        style={{
                                 padding: "4px 8px",
                                 backgroundColor: "#1e1e1e",
                                 color: currentTheme.textSecondary,
