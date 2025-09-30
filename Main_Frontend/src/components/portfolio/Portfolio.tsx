@@ -7,7 +7,12 @@ interface PortfolioProps {
     title?: string;
 }
 
-export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitleChange?: (t: string) => void }> = ({
+export const Portfolio: React.FC<
+    PortfolioProps & {
+        isEditMode?: boolean;
+        onTitleChange?: (t: string) => void;
+    }
+> = ({
     apiEndpoint = process.env.NODE_ENV === "development"
         ? "http://localhost:8080"
         : "/api/bloomberg",
@@ -32,7 +37,11 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
     useEffect(() => {
         try {
             const savedMode = localStorage.getItem("portfolio.dataMode");
-            if (savedMode === "live" || savedMode === "eod" || savedMode === "date") {
+            if (
+                savedMode === "live" ||
+                savedMode === "eod" ||
+                savedMode === "date"
+            ) {
                 setDataMode(savedMode);
             }
             const savedDate = localStorage.getItem("portfolio.selectedDate");
@@ -146,8 +155,8 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                                 fontWeight: 600,
                                 color: currentTheme.text,
                                 marginRight: 8,
-                                padding: '2px 6px',
-                                background: 'transparent',
+                                padding: "2px 6px",
+                                background: "transparent",
                                 border: `1px solid ${currentTheme.border}`,
                                 borderRadius: 4,
                             }}
@@ -178,6 +187,7 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                                 display: "flex",
                                 alignItems: "center",
                                 gap: 8,
+                                justifyContent: isEditMode ? "flex-start" : undefined,
                             }}
                         >
                             <div style={{ display: "flex", gap: 6 }}>
@@ -208,8 +218,8 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                                 <button
                                     type="button"
                                     onClick={() => setPortfolioMode("virtual")}
-                            style={{
-                                padding: "4px 8px",
+                                    style={{
+                                        padding: "4px 8px",
                                         backgroundColor: "#1e1e1e",
                                         color:
                                             portfolioMode === "virtual"
@@ -229,7 +239,7 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                                 >
                                     Virtual
                                 </button>
-                        </div>
+                            </div>
                             <label
                                 style={{
                                     fontSize: "12px",
@@ -238,13 +248,21 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                             >
                                 Portfolio:
                             </label>
-                            <div style={{ position: "relative", display: "inline-block" }}>
+                            <div
+                                style={{
+                                    position: "relative",
+                                    display: "inline-block",
+                                }}
+                            >
                                 <select
                                     value={selectedPortfolioId}
-                                    onChange={(e) => setSelectedPortfolioId(e.target.value)}
+                                    onChange={(e) =>
+                                        setSelectedPortfolioId(e.target.value)
+                                    }
                                     aria-label="Select portfolio"
                                     style={{
-                                        backgroundColor: currentTheme.background,
+                                        backgroundColor:
+                                            currentTheme.background,
                                         color: currentTheme.text,
                                         border: `1px solid ${currentTheme.border}`,
                                         borderRadius: 4,
@@ -253,7 +271,9 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                                     }}
                                 >
                                     {portfolios.length === 0 ? (
-                                        <option value="">Select Portfolio</option>
+                                        <option value="">
+                                            Select Portfolio
+                                        </option>
                                     ) : (
                                         portfolios.map((p) => (
                                             <option key={p.id} value={p.id}>
@@ -265,25 +285,33 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                                 {portfolioMode === "virtual" && (
                                     <button
                                         type="button"
-                                        onClick={() => console.log("Create new virtual portfolio")}
+                                        onClick={() =>
+                                            console.log(
+                                                "Create new virtual portfolio"
+                                            )
+                                        }
                                         title="Create New Portfolio"
-                                style={{
+                                        style={{
                                             position: "absolute",
                                             top: "calc(100% + 6px)",
                                             left: 0,
                                             display: "inline-flex",
                                             gap: 6,
                                             padding: "6px 12px",
-                                        backgroundColor: currentTheme.surface,
-                                        color: currentTheme.success || "#6aa84f",
+                                            backgroundColor:
+                                                currentTheme.surface,
+                                            color:
+                                                currentTheme.success ||
+                                                "#6aa84f",
                                             border: `1px solid ${currentTheme.border}`,
                                             borderRadius: 4,
                                             fontSize: 12,
-                                    cursor: "pointer",
+                                            cursor: "pointer",
                                             width: "max-content",
-                                            boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-                                }}
-                            >
+                                            boxShadow:
+                                                "0 1px 3px rgba(0,0,0,0.3)",
+                                        }}
+                                    >
                                         + Create New Portfolio
                                     </button>
                                 )}
@@ -293,7 +321,7 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                     {/* Right controls on same line */}
                     <div
                         style={{
-                            marginLeft: "auto",
+                            marginLeft: isEditMode ? undefined : "auto",
                             display: "flex",
                             alignItems: "center",
                             gap: 8,
@@ -319,7 +347,7 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                         <div style={{ display: "flex", gap: 6 }}>
                             <button
                                 onClick={() => setDataMode("live")}
-                            style={{
+                                style={{
                                     padding: "4px 8px",
                                     backgroundColor: "#1e1e1e",
                                     color:
@@ -340,12 +368,12 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                             >
                                 Live
                             </button>
-                                    <button
+                            <button
                                 onClick={() => setDataMode("eod")}
-                                        style={{
+                                style={{
                                     padding: "4px 8px",
                                     backgroundColor: "#1e1e1e",
-                                            color:
+                                    color:
                                         dataMode === "eod"
                                             ? "#ffffff"
                                             : currentTheme.textSecondary,
@@ -358,14 +386,14 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                                             : `1px solid ${currentTheme.border}66`,
                                     borderRadius: 4,
                                     fontSize: 11,
-                                            cursor: "pointer",
-                                        }}
-                                    >
+                                    cursor: "pointer",
+                                }}
+                            >
                                 EOD
-                                    </button>
+                            </button>
                             <button
                                 onClick={() => setDataMode("date")}
-                            style={{
+                                style={{
                                     padding: "4px 8px",
                                     backgroundColor: "#1e1e1e",
                                     color:
@@ -381,27 +409,27 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                                             : `1px solid ${currentTheme.border}66`,
                                     borderRadius: 4,
                                     fontSize: 11,
-                                cursor: "pointer",
-                            }}
-                        >
+                                    cursor: "pointer",
+                                }}
+                            >
                                 Date
                             </button>
-                    </div>
+                        </div>
                         {dataMode === "date" ? (
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
                                     gap: 6,
-                    }}
-                >
-                    <input
+                                }}
+                            >
+                                <input
                                     type="date"
                                     value={selectedDate}
-                        onChange={(e) =>
+                                    onChange={(e) =>
                                         setSelectedDate(e.target.value)
-                        }
-                        style={{
+                                    }
+                                    style={{
                                         padding: "4px 8px",
                                         backgroundColor: "#0f0f0f",
                                         color: "#eaeaea",
@@ -414,7 +442,7 @@ export const Portfolio: React.FC<PortfolioProps & { isEditMode?: boolean; onTitl
                         ) : (
                             <div
                                 title="Date"
-                        style={{
+                                style={{
                                     padding: "4px 8px",
                                     backgroundColor: "#1e1e1e",
                                     color: currentTheme.textSecondary,

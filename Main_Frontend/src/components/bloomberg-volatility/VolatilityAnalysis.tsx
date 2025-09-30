@@ -73,7 +73,10 @@ export function VolatilityAnalysis({
     title = "Volatility Analysis",
     isEditMode = false,
     onTitleChange,
-}: VolatilityAnalysisProps & { isEditMode?: boolean; onTitleChange?: (t: string) => void } = {}) {
+}: VolatilityAnalysisProps & {
+    isEditMode?: boolean;
+    onTitleChange?: (t: string) => void;
+} = {}) {
     const { currentTheme } = useTheme();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -1621,16 +1624,25 @@ export function VolatilityAnalysis({
                             fontWeight: 600,
                             color: currentTheme.text,
                             marginRight: 8,
-                            padding: '2px 6px',
-                            background: 'transparent',
+                            padding: "2px 6px",
+                            background: "transparent",
                             border: `1px solid ${currentTheme.border}`,
                             borderRadius: 4,
                         }}
                     />
                 ) : (
-                    <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, whiteSpace: "nowrap" }}>{title}</span>
+                    <span
+                        style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: currentTheme.text,
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {title}
+                    </span>
                 )}
-                <div>
+                <div style={{ marginLeft: isEditMode ? 8 : undefined }}>
                     <label
                         style={{
                             fontSize: "12px",
@@ -1682,7 +1694,7 @@ export function VolatilityAnalysis({
 
                 <div
                     style={{
-                        marginLeft: "auto",
+                        marginLeft: isEditMode ? undefined : "auto",
                         display: "flex",
                         alignItems: "center",
                         gap: "16px",
