@@ -212,7 +212,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         )}
                     </select>
 
-                </div>
+                        </div>
 
                 {/* Row 2: Create action when in Virtual portfolio mode, placed below */}
                 {portfolioMode === "virtual" && (
@@ -304,7 +304,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         >
                             EOD
                         </button>
-                        <button
+                    <button
                             onClick={() => setDataMode("date")}
                         style={{
                                 padding: "4px 8px",
@@ -327,7 +327,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     </div>
                     {dataMode === "date" ? (
                         <div
-                            style={{
+                        style={{
                                 display: "flex",
                                 alignItems: "center",
                                 gap: 6,
@@ -350,17 +350,14 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                             />
                         </div>
                     ) : (
-                        <div
-                            title="Date"
-                        style={{
-                                padding: "4px 8px",
-                                backgroundColor: "#1e1e1e",
-                                color: currentTheme.textSecondary,
-                                border: `1px solid ${currentTheme.border}66`,
-                                borderRadius: 4,
-                                fontSize: 11,
-                            }}
-                        >
+                        <div title="Date" style={{
+                            padding: "4px 8px",
+                            backgroundColor: "#1e1e1e",
+                            color: currentTheme.textSecondary,
+                            border: `1px solid ${currentTheme.border}66`,
+                            borderRadius: 4,
+                            fontSize: 11,
+                        }}>
                             {formatDateBadge(selectedDate)}
                         </div>
                     )}
