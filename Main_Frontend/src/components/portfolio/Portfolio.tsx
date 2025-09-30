@@ -364,9 +364,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                 </div>
             </div>
 
-            <div
-                /* content area */
-                style={{
+            <div style={{
                     flex: 1,
                     minHeight: 0,
                     backgroundColor: currentTheme.background,
