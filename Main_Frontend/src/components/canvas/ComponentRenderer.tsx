@@ -391,8 +391,8 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                 rawCustomTitle && rawCustomTitle.trim().length > 0
                     ? rawCustomTitle
                     : meta.displayName;
-            // Special-case Portfolio: render without shared header and pass inline title
-            if (componentId === 'portfolio') {
+            // Special-case components: render without shared header and pass inline title
+            if (componentId === 'portfolio' || componentId === 'bloomberg-volatility') {
                 return (
                     <ComponentErrorBoundary componentName={`${meta.displayName} (${componentId})`} showError={true}>
                         <Component {...props} title={headerTitle} />

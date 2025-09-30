@@ -51,6 +51,7 @@ const STANDARD_TENORS = [
 interface VolatilityAnalysisProps {
     theme?: "light" | "dark";
     apiEndpoint?: string;
+    title?: string;
 }
 
 // Bloomberg API endpoints
@@ -69,6 +70,7 @@ export function VolatilityAnalysis({
             ? ""
             : "http://localhost:8080"
         : BLOOMBERG_ENDPOINTS.PROXY, // Use proxy to avoid mixed content issues
+    title = "Volatility Analysis",
 }: VolatilityAnalysisProps = {}) {
     const { currentTheme } = useTheme();
     const [loading, setLoading] = useState(false);
@@ -1598,7 +1600,7 @@ export function VolatilityAnalysis({
                 height: "100%",
             }}
         >
-            {/* Header */}
+            {/* Inline title + Header */}
             <div
                 style={{
                     padding: "8px",
@@ -1608,6 +1610,7 @@ export function VolatilityAnalysis({
                     alignItems: "center",
                 }}
             >
+                <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, whiteSpace: "nowrap" }}>{title}</span>
                 <div>
                     <label
                         style={{
