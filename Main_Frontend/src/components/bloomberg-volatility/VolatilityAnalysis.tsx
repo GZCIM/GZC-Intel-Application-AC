@@ -1609,7 +1609,7 @@ export function VolatilityAnalysis({
                 height: "100%",
             }}
         >
-            {/* Inline title + Header */}
+            {/* Inline title + header (rebuilt) */}
             <div
                 style={{
                     padding: "8px",
