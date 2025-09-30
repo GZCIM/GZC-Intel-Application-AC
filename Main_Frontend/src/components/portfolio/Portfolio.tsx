@@ -187,7 +187,9 @@ export const Portfolio: React.FC<
                                 display: "flex",
                                 alignItems: "center",
                                 gap: 8,
-                                justifyContent: isEditMode ? "flex-start" : undefined,
+                                justifyContent: isEditMode
+                                    ? "flex-start"
+                                    : undefined,
                             }}
                         >
                             <div style={{ display: "flex", gap: 6 }}>
@@ -455,6 +457,69 @@ export const Portfolio: React.FC<
                             </div>
                         )}
                     </div>
+                    {isEditMode && (
+                        <div
+                            style={{
+                                marginLeft: "auto",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 4,
+                            }}
+                        >
+                            <button
+                                title="Minimize"
+                                onClick={() => console.log('minimize')}
+                                style={{
+                                    width: 24,
+                                    height: 24,
+                                    border: `1px solid ${currentTheme.border}`,
+                                    background: 'transparent',
+                                    color: currentTheme.textSecondary,
+                                    borderRadius: 4,
+                                    cursor: 'pointer',
+                                }}
+                            >▁</button>
+                            <button
+                                title="Normal"
+                                onClick={() => console.log('normal')}
+                                style={{
+                                    width: 24,
+                                    height: 24,
+                                    border: `1px solid ${currentTheme.border}`,
+                                    background: 'transparent',
+                                    color: currentTheme.textSecondary,
+                                    borderRadius: 4,
+                                    cursor: 'pointer',
+                                }}
+                            >□</button>
+                            <button
+                                title="Maximize"
+                                onClick={() => console.log('maximize')}
+                                style={{
+                                    width: 24,
+                                    height: 24,
+                                    border: `1px solid ${currentTheme.border}`,
+                                    background: 'transparent',
+                                    color: currentTheme.textSecondary,
+                                    borderRadius: 4,
+                                    cursor: 'pointer',
+                                }}
+                            >▣</button>
+                            <button
+                                title="Remove"
+                                onClick={() => console.log('remove')}
+                                style={{
+                                    width: 24,
+                                    height: 24,
+                                    border: `1px solid ${currentTheme.border}`,
+                                    background: 'transparent',
+                                    color: '#D69A82',
+                                    borderRadius: 4,
+                                    cursor: 'pointer',
+                                }}
+                            >×</button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Row 2: Create action when in Virtual portfolio mode, placed below (single instance) */}
