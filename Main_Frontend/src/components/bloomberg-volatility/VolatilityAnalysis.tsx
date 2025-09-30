@@ -1633,34 +1633,35 @@ export function VolatilityAnalysis({
                         </div>
                     </>
                 ) : (
-                (isEditMode ? (
-                    <input
-                        value={title}
-                        onChange={(e) => onTitleChange?.(e.target.value)}
-                        style={{
-                            fontSize: 12,
-                            fontWeight: 600,
-                            color: currentTheme.text,
-                            marginRight: 8,
-                            padding: "2px 6px",
-                            background: "transparent",
-                            border: `1px solid ${currentTheme.border}`,
-                            borderRadius: 4,
-                        }}
-                    />
-                ) : (
-                    <span
-                        style={{
-                            fontSize: 12,
-                            fontWeight: 600,
-                            color: currentTheme.text,
-                            whiteSpace: "nowrap",
-                        }}
-                    >
-                        {title}
-                    </span>
-                ))
-                <div style={{ marginLeft: isEditMode ? 8 : undefined }}>
+                <>
+                    {isEditMode ? (
+                        <input
+                            value={title}
+                            onChange={(e) => onTitleChange?.(e.target.value)}
+                            style={{
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: currentTheme.text,
+                                marginRight: 8,
+                                padding: "2px 6px",
+                                background: "transparent",
+                                border: `1px solid ${currentTheme.border}`,
+                                borderRadius: 4,
+                            }}
+                        />
+                    ) : (
+                        <span
+                            style={{
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: currentTheme.text,
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {title}
+                        </span>
+                    )}
+                    <div style={{ marginLeft: isEditMode ? 8 : undefined }}>
                     <label
                         style={{
                             fontSize: "12px",
@@ -1775,7 +1776,8 @@ export function VolatilityAnalysis({
                                 : "Never"}
                         </span>
                     </div>
-                </div>
+                </>
+                )}
                 {isEditMode && (
                     <div
                         style={{
