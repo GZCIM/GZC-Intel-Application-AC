@@ -67,7 +67,7 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
       overflow: 'visible'
     }}>
       {/* Inline header: title before the component's first row of controls */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '6px 10px', gap: '8px', backgroundColor: currentTheme.background, borderBottom: `1px solid ${currentTheme.border}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '6px 10px', gap: '6px', backgroundColor: currentTheme.background, borderBottom: `1px solid ${currentTheme.border}` }}>
         {isEditMode ? (
           <input
             type="text"
