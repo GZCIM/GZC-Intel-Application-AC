@@ -1619,6 +1619,20 @@ export function VolatilityAnalysis({
                     alignItems: "center",
                 }}
             >
+                {componentState === 'minimized' && isEditMode ? (
+                    <>
+                        {isEditMode ? (
+                            <input value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4 }} />
+                        ) : (
+                            <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text }}>{title}</span>
+                        )}
+                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <button title="Normal" onClick={() => onStateChange?.('normal')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>□</button>
+                            <button title="Maximize" onClick={() => onStateChange?.('maximized')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>▣</button>
+                            <button title="Remove" onClick={() => onRemove?.()} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: '#D69A82', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>×</button>
+                        </div>
+                    </>
+                ) : (
                 {isEditMode ? (
                     <input
                         value={title}
@@ -1836,6 +1850,7 @@ export function VolatilityAnalysis({
                             ×
                         </button>
                     </div>
+                )}
                 )}
             </div>
 

@@ -405,6 +405,7 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                             {...props}
                             title={headerTitle}
                             isEditMode={isEditMode}
+                            componentState={componentState}
                             onTitleChange={(nextTitle: string) => {
                                 const nextProps = {
                                     ...(props as any),
@@ -412,7 +413,9 @@ export const ComponentRenderer = React.memo<ComponentRendererProps>(
                                 };
                                 onPropsUpdate?.(nextProps);
                             }}
-                            onStateChange={(state: "minimized" | "normal" | "maximized") => {
+                            onStateChange={(
+                                state: "minimized" | "normal" | "maximized"
+                            ) => {
                                 onComponentStateChange?.(state);
                             }}
                             onRemove={onRemove}
