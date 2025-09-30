@@ -131,9 +131,11 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                     gap: 8,
                 }}
             >
-                {/* Row 1: Left controls and portfolio select, plus right controls */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ display: "flex", gap: 6 }}>
+                {/* Row 1: Left column (toggle+selector) and right controls */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <div style={{ display: "flex", gap: 6 }}>
                         <button
                             type="button"
                             onClick={() => setPortfolioMode("active")}
@@ -180,8 +182,8 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         >
                             Virtual
                         </button>
-                        </div>
-                    <label
+                            </div>
+                            <label
                         style={{
                             fontSize: "12px",
                             color: currentTheme.textSecondary,
@@ -194,12 +196,12 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                         value={selectedPortfolioId}
                         onChange={(e) => setSelectedPortfolioId(e.target.value)}
                         aria-label="Select portfolio"
-                                style={{
+                        style={{
                             backgroundColor: currentTheme.background,
                             color: currentTheme.text,
                             border: `1px solid ${currentTheme.border}`,
                             borderRadius: 4,
-                                    padding: "4px 8px",
+                            padding: "4px 8px",
                             fontSize: 12,
                         }}
                     >
@@ -213,134 +215,166 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                             ))
                         )}
                     </select>
+                        </div>
+                        {portfolioMode === "virtual" && (
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={() => console.log("Create new virtual portfolio")}
+                                    title="Create New Portfolio"
+                                    style={{
+                                        padding: "6px 12px",
+                                        backgroundColor: currentTheme.surface,
+                                        color: currentTheme.text,
+                                        border: `1px solid ${currentTheme.border}`,
+                                        borderRadius: 4,
+                                        fontSize: 12,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    + Create New Portfolio
+                                </button>
+                            </div>
+                        )}
+                    </div>
                     {/* Right controls on same line */}
-                    <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-                    <button
-                        onClick={() => console.log("Portfolio: Sync DB")}
-                        title="Sync DB"
+                    <div
                         style={{
-                            padding: "4px 12px",
-                            backgroundColor: "#5da0ea",
-                            color: "#ffffff",
-                            border: `1px solid #3b82f6`,
-                            borderRadius: 4,
-                            fontSize: 11,
-                            fontWeight: 600,
-                            cursor: "pointer",
-                            boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.2)",
+                            marginLeft: "auto",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
                         }}
                     >
-                        Sync DB
-                    </button>
-                    <div style={{ display: "flex", gap: 6 }}>
                         <button
-                            onClick={() => setDataMode("live")}
-                                style={{
-                                    padding: "4px 8px",
-                                backgroundColor: "#1e1e1e",
-                                color:
-                                    dataMode === "live"
-                                        ? "#ffffff"
-                                        : currentTheme.textSecondary,
-                                border:
-                                    dataMode === "live"
-                                        ? `1px solid ${
-                                              currentTheme.success || "#6aa84f"
-                                          }`
-                                        : `1px solid ${currentTheme.border}66`,
+                            onClick={() => console.log("Portfolio: Sync DB")}
+                            title="Sync DB"
+                            style={{
+                                padding: "4px 12px",
+                                backgroundColor: "#5da0ea",
+                                color: "#ffffff",
+                                border: `1px solid #3b82f6`,
                                 borderRadius: 4,
                                 fontSize: 11,
+                                fontWeight: 600,
+                                cursor: "pointer",
+                                boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.2)",
+                            }}
+                        >
+                            Sync DB
+                        </button>
+                        <div style={{ display: "flex", gap: 6 }}>
+                            <button
+                                onClick={() => setDataMode("live")}
+                                style={{
+                                    padding: "4px 8px",
+                                    backgroundColor: "#1e1e1e",
+                                    color:
+                                        dataMode === "live"
+                                            ? "#ffffff"
+                                            : currentTheme.textSecondary,
+                                    border:
+                                        dataMode === "live"
+                                            ? `1px solid ${
+                                                  currentTheme.success ||
+                                                  "#6aa84f"
+                                              }`
+                                            : `1px solid ${currentTheme.border}66`,
+                                    borderRadius: 4,
+                                    fontSize: 11,
                                     cursor: "pointer",
                                 }}
-                        >
-                            Live
-                        </button>
-                        <button
-                            onClick={() => setDataMode("eod")}
-                            style={{
-                                padding: "4px 8px",
-                                backgroundColor: "#1e1e1e",
-                                color:
-                                    dataMode === "eod"
-                                        ? "#ffffff"
-                                        : currentTheme.textSecondary,
-                                border:
-                                    dataMode === "eod"
-                                        ? `1px solid ${
-                                              currentTheme.success || "#6aa84f"
-                                          }`
-                                        : `1px solid ${currentTheme.border}66`,
-                                borderRadius: 4,
-                                fontSize: 11,
-                                cursor: "pointer",
-                            }}
-                        >
-                            EOD
-                        </button>
-                        <button
-                            onClick={() => setDataMode("date")}
-                            style={{
-                                padding: "4px 8px",
-                                backgroundColor: "#1e1e1e",
-                                color:
-                                    dataMode === "date"
-                                        ? "#ffffff"
-                                        : currentTheme.textSecondary,
-                                border:
-                                    dataMode === "date"
-                                        ? `1px solid ${
-                                              currentTheme.success || "#6aa84f"
-                                          }`
-                                        : `1px solid ${currentTheme.border}66`,
-                                borderRadius: 4,
-                                fontSize: 11,
-                                cursor: "pointer",
-                            }}
-                        >
-                            Date
-                        </button>
-                    </div>
-                    {dataMode === "date" ? (
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                            }}
-                        >
-                            <input
-                                type="date"
-                                value={selectedDate}
-                                onChange={(e) =>
-                                    setSelectedDate(e.target.value)
-                                }
+                            >
+                                Live
+                            </button>
+                            <button
+                                onClick={() => setDataMode("eod")}
                                 style={{
                                     padding: "4px 8px",
-                                    backgroundColor: "#0f0f0f",
-                                    color: "#eaeaea",
+                                    backgroundColor: "#1e1e1e",
+                                    color:
+                                        dataMode === "eod"
+                                            ? "#ffffff"
+                                            : currentTheme.textSecondary,
+                                    border:
+                                        dataMode === "eod"
+                                            ? `1px solid ${
+                                                  currentTheme.success ||
+                                                  "#6aa84f"
+                                              }`
+                                            : `1px solid ${currentTheme.border}66`,
+                                    borderRadius: 4,
+                                    fontSize: 11,
+                                    cursor: "pointer",
+                                }}
+                            >
+                                EOD
+                            </button>
+                            <button
+                                onClick={() => setDataMode("date")}
+                                style={{
+                                    padding: "4px 8px",
+                                    backgroundColor: "#1e1e1e",
+                                    color:
+                                        dataMode === "date"
+                                            ? "#ffffff"
+                                            : currentTheme.textSecondary,
+                                    border:
+                                        dataMode === "date"
+                                            ? `1px solid ${
+                                                  currentTheme.success ||
+                                                  "#6aa84f"
+                                              }`
+                                            : `1px solid ${currentTheme.border}66`,
+                                    borderRadius: 4,
+                                    fontSize: 11,
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Date
+                            </button>
+                        </div>
+                        {dataMode === "date" ? (
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                }}
+                            >
+                                <input
+                                    type="date"
+                                    value={selectedDate}
+                                    onChange={(e) =>
+                                        setSelectedDate(e.target.value)
+                                    }
+                                    style={{
+                                        padding: "4px 8px",
+                                        backgroundColor: "#0f0f0f",
+                                        color: "#eaeaea",
+                                        border: `1px solid ${currentTheme.border}66`,
+                                        borderRadius: 4,
+                                        fontSize: 11,
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <div
+                                title="Date"
+                                style={{
+                                    padding: "4px 8px",
+                                    backgroundColor: "#1e1e1e",
+                                    color: currentTheme.textSecondary,
                                     border: `1px solid ${currentTheme.border}66`,
                                     borderRadius: 4,
                                     fontSize: 11,
                                 }}
-                            />
-                        </div>
-                    ) : (
-                        <div
-                            title="Date"
-                                        style={{
-                                padding: "4px 8px",
-                                backgroundColor: "#1e1e1e",
-                                color: currentTheme.textSecondary,
-                                border: `1px solid ${currentTheme.border}66`,
-                                borderRadius: 4,
-                                fontSize: 11,
-                            }}
-                        >
-                            {formatDateBadge(selectedDate)}
-                        </div>
-                    )}
+                            >
+                                {formatDateBadge(selectedDate)}
+                            </div>
+                        )}
                     </div>
-                        </div>
+                </div>
 
                 {/* Row 2: Create action when in Virtual portfolio mode, placed below */}
                 {portfolioMode === "virtual" && (
