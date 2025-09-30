@@ -146,7 +146,10 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                     portfolioMode === "active"
                                         ? "#ffffff"
                                         : currentTheme.textSecondary,
-                                border: `1px solid ${currentTheme.border}66`,
+                                border:
+                                    portfolioMode === "active"
+                                        ? `1px solid ${currentTheme.success || "#6aa84f"}`
+                                        : `1px solid ${currentTheme.border}66`,
                                 borderRadius: 4,
                                 fontSize: 11,
                                 cursor: "pointer",
@@ -167,7 +170,10 @@ export const Portfolio: React.FC<PortfolioProps> = ({
                                     portfolioMode === "virtual"
                                         ? "#ffffff"
                                         : currentTheme.textSecondary,
-                                border: `1px solid ${currentTheme.border}66`,
+                                border:
+                                    portfolioMode === "virtual"
+                                        ? `1px solid ${currentTheme.success || "#6aa84f"}`
+                                        : `1px solid ${currentTheme.border}66`,
                                 borderRadius: 4,
                                 fontSize: 11,
                                 cursor: "pointer",
@@ -212,34 +218,25 @@ export const Portfolio: React.FC<PortfolioProps> = ({
 
                     {/* Show create action when in Virtual portfolio mode */}
                     {portfolioMode === "virtual" && (
-                        <div
+                        <button
+                            type="button"
+                            onClick={() =>
+                                console.log("Create new virtual portfolio")
+                            }
+                            title="Create New Portfolio"
                             style={{
-                                display: "block",
-                                marginTop: 6,
+                                marginLeft: 10,
+                                padding: "6px 12px",
                                 backgroundColor: currentTheme.surface,
+                                color: currentTheme.text,
                                 border: `1px solid ${currentTheme.border}`,
                                 borderRadius: 4,
-                                boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+                                fontSize: 12,
+                                cursor: "pointer",
                             }}
                         >
-                            <button
-                                type="button"
-                                onClick={() => console.log("Create new virtual portfolio")}
-                                style={{
-                                    width: "100%",
-                                    textAlign: "left",
-                                    padding: "8px 12px",
-                                    background: "transparent",
-                                    color: currentTheme.text,
-                                    border: "none",
-                                    fontSize: 12,
-                                    cursor: "pointer",
-                                }}
-                                title="Create New Portfolio"
-                            >
-                                + Create New Portfolio
-                            </button>
-                        </div>
+                            + Create New Portfolio
+                        </button>
                     )}
                 </div>
 
