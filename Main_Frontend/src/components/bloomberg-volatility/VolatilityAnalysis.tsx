@@ -1775,13 +1775,14 @@ export function VolatilityAnalysis({
                             title="Minimize"
                             onClick={() => onStateChange?.("minimized")}
                             style={{
-                                width: 24,
-                                height: 24,
+                                width: 30,
+                                height: 30,
                                 border: `1px solid ${currentTheme.border}`,
                                 background: "transparent",
                                 color: currentTheme.textSecondary,
                                 borderRadius: 4,
                                 cursor: "pointer",
+                                fontSize: 14,
                             }}
                         >
                             ▁
@@ -1790,13 +1791,14 @@ export function VolatilityAnalysis({
                             title="Normal"
                             onClick={() => onStateChange?.("normal")}
                             style={{
-                                width: 24,
-                                height: 24,
+                                width: 30,
+                                height: 30,
                                 border: `1px solid ${currentTheme.border}`,
                                 background: "transparent",
                                 color: currentTheme.textSecondary,
                                 borderRadius: 4,
                                 cursor: "pointer",
+                                fontSize: 14,
                             }}
                         >
                             □
@@ -1805,13 +1807,14 @@ export function VolatilityAnalysis({
                             title="Maximize"
                             onClick={() => onStateChange?.("maximized")}
                             style={{
-                                width: 24,
-                                height: 24,
+                                width: 30,
+                                height: 30,
                                 border: `1px solid ${currentTheme.border}`,
                                 background: "transparent",
                                 color: currentTheme.textSecondary,
                                 borderRadius: 4,
                                 cursor: "pointer",
+                                fontSize: 14,
                             }}
                         >
                             ▣
@@ -1820,13 +1823,14 @@ export function VolatilityAnalysis({
                             title="Remove"
                             onClick={() => onRemove?.()}
                             style={{
-                                width: 24,
-                                height: 24,
+                                width: 30,
+                                height: 30,
                                 border: `1px solid ${currentTheme.border}`,
                                 background: "transparent",
                                 color: "#D69A82",
                                 borderRadius: 4,
                                 cursor: "pointer",
+                                fontSize: 14,
                             }}
                         >
                             ×
