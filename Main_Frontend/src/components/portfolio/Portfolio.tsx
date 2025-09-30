@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -27,6 +27,18 @@ export const Portfolio: React.FC<
     componentState = "normal",
 }) => {
     const { currentTheme } = useTheme();
+    const lastNonMaximizedStateRef = useRef<"minimized" | "normal">("normal");
+    const handleTitleDoubleClick = () => {
+        if (componentState === "maximized") {
+            onStateChange?.(lastNonMaximizedStateRef.current);
+        } else {
+            // Remember current non-maximized state and maximize
+            if (componentState === "minimized" || componentState === "normal") {
+                lastNonMaximizedStateRef.current = componentState;
+            }
+            onStateChange?.("maximized");
+        }
+    };
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [portfolios, setPortfolios] = useState<
@@ -157,6 +169,24 @@ export const Portfolio: React.FC<
                             <button title="Remove" onClick={() => onRemove?.()} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: '#D69A82', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>×</button>
                         </div>
                     </div>
+                ) : componentState === 'minimized' && !isEditMode ? (
+                    <div
+                        style={{ display: 'flex', alignItems: 'center' }}
+                        onDoubleClick={handleTitleDoubleClick}
+                        title="Double-click to maximize"
+                    >
+                        <span
+                            style={{
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: currentTheme.text,
+                                whiteSpace: 'nowrap',
+                                paddingTop: 2,
+                            }}
+                        >
+                            {title}
+                        </span>
+                    </div>
                 ) : (
                 // Row 1: Inline title + controls
                 <div
@@ -185,6 +215,8 @@ export const Portfolio: React.FC<
                         />
                     ) : (
                         <span
+                            onDoubleClick={handleTitleDoubleClick}
+                            title="Double-click to maximize"
                             style={{
                                 fontSize: 12,
                                 fontWeight: 600,
@@ -563,7 +595,7 @@ export const Portfolio: React.FC<
                 {/* removed duplicate rendering; creation button now only appears under selector on the left column */}
             </div>
 
-            {componentState === "minimized" && isEditMode ? null : (
+            {componentState === "minimized" ? null : (
                 <div
                     style={{
                         flex: 1,

@@ -84,6 +84,17 @@ export function VolatilityAnalysis({
     componentState?: "minimized" | "normal" | "maximized";
 } = {}) {
     const { currentTheme } = useTheme();
+    const lastNonMaximizedStateRef = useRef<"minimized" | "normal">("normal");
+    const handleTitleDoubleClick = () => {
+        if (componentState === "maximized") {
+            onStateChange?.(lastNonMaximizedStateRef.current);
+        } else {
+            if (componentState === "minimized" || componentState === "normal") {
+                lastNonMaximizedStateRef.current = componentState;
+            }
+            onStateChange?.("maximized");
+        }
+    };
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedPair, setSelectedPair] = useState("EURUSD");
@@ -1634,12 +1645,26 @@ export function VolatilityAnalysis({
                             <button title="Remove" onClick={() => onRemove?.()} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: '#D69A82', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>×</button>
                         </div>
                     </div>
+                ) : componentState === 'minimized' && !isEditMode ? (
+                    <div
+                        style={{ display: 'flex', alignItems: 'center', width: '100%' }}
+                        onDoubleClick={handleTitleDoubleClick}
+                        title="Double-click to maximize"
+                    >
+                        <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, whiteSpace: 'nowrap' }}>{title}</span>
+                    </div>
                 ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%' }}>
                         {isEditMode ? (
                             <input aria-label="Component title" placeholder="Title" value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4, marginRight: 8 }} />
                         ) : (
-                            <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, whiteSpace: 'nowrap' }}>{title}</span>
+                            <span
+                                onDoubleClick={handleTitleDoubleClick}
+                                title="Double-click to maximize"
+                                style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, whiteSpace: 'nowrap' }}
+                            >
+                                {title}
+                            </span>
                         )}
                         <div style={{ marginLeft: isEditMode ? 8 : undefined }}>
                             <label style={{ fontSize: 12, color: currentTheme.textSecondary, marginRight: 8 }}>Currency Pair:</label>
@@ -1682,7 +1707,7 @@ export function VolatilityAnalysis({
             )}
 
             {/* Layout with full right side for 3D surface */}
-            {componentState === 'minimized' && isEditMode ? null : (
+            {componentState === 'minimized' ? null : (
             <div
                 style={{
                     display: "flex",
