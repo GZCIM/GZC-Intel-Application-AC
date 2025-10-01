@@ -296,14 +296,7 @@ export const Portfolio: React.FC<
                                     Virtual
                                 </button>
                             </div>
-                            <label
-                                style={{
-                                    fontSize: "12px",
-                                    color: currentTheme.textSecondary,
-                                }}
-                            >
-                                Portfolio:
-                            </label>
+                            {/* Removed redundant "Portfolio:" label per request */}
                             <div
                                 style={{
                                     position: "relative",
