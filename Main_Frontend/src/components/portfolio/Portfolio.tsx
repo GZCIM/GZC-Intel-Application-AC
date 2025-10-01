@@ -50,6 +50,40 @@ export const Portfolio: React.FC<
     const [portfolioMode, setPortfolioMode] = useState<"active" | "virtual">(
         "active"
     );
+    // Temporary debug views for FX trades APIs
+    const [fxTrades, setFxTrades] = useState<any[] | null>(null);
+    const [fxOptions, setFxOptions] = useState<any[] | null>(null);
+    const [fxLoading, setFxLoading] = useState<"none" | "trades" | "options">(
+        "none"
+    );
+
+    const loadFxTrades = async () => {
+        try {
+            setFxLoading("trades");
+            const resp = await axios.get(`/api/db/fx/trades`, {
+                params: { limit: 100 },
+            });
+            setFxTrades(resp.data?.data || []);
+        } catch (_) {
+            setFxTrades([]);
+        } finally {
+            setFxLoading("none");
+        }
+    };
+
+    const loadFxOptions = async () => {
+        try {
+            setFxLoading("options");
+            const resp = await axios.get(`/api/db/fx/options`, {
+                params: { limit: 100 },
+            });
+            setFxOptions(resp.data?.data || []);
+        } catch (_) {
+            setFxOptions([]);
+        } finally {
+            setFxLoading("none");
+        }
+    };
 
     // Load persisted mode/date from localStorage (force default Active on first render)
     useEffect(() => {
@@ -393,6 +427,41 @@ export const Portfolio: React.FC<
                         >
                             Sync DB
                         </button>
+                        {/* Temporary data buttons */}
+                        <div style={{ display: "flex", gap: 6 }}>
+                            <button
+                                onClick={loadFxTrades}
+                                title="Load FX Trades"
+                                style={{
+                                    padding: "4px 8px",
+                                    backgroundColor: "#1e1e1e",
+                                    color: "#eaeaea",
+                                    border: `1px solid ${currentTheme.border}66`,
+                                    borderRadius: 4,
+                                    fontSize: 11,
+                                    cursor: "pointer",
+                                    opacity: fxLoading === "trades" ? 0.6 : 1,
+                                }}
+                            >
+                                {fxLoading === "trades" ? "Trades…" : "FX Trades"}
+                            </button>
+                            <button
+                                onClick={loadFxOptions}
+                                title="Load FX Option Trades"
+                                style={{
+                                    padding: "4px 8px",
+                                    backgroundColor: "#1e1e1e",
+                                    color: "#eaeaea",
+                                    border: `1px solid ${currentTheme.border}66`,
+                                    borderRadius: 4,
+                                    fontSize: 11,
+                                    cursor: "pointer",
+                                    opacity: fxLoading === "options" ? 0.6 : 1,
+                                }}
+                            >
+                                {fxLoading === "options" ? "Options…" : "FX Options"}
+                            </button>
+                        </div>
                         <div style={{ display: "flex", gap: 6 }}>
                             <button
                                 onClick={() => setDataMode("live")}
@@ -596,31 +665,35 @@ export const Portfolio: React.FC<
                         backgroundColor: currentTheme.background,
                         padding: 12,
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        alignItems: "stretch",
+                        justifyContent: "stretch",
                         color: currentTheme.textSecondary,
                         fontSize: 12,
                         borderTop: `1px solid ${currentTheme.border}20`,
                     }}
                 >
-                    {selectedPortfolio ? (
-                        <div
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                border: `1px dashed ${currentTheme.border}`,
-                                borderRadius: 4,
-                                background: currentTheme.surface + "20",
-                            }}
-                        >
-                            Portfolio view is coming soon
+                    <div style={{ flex: 1, display: "flex", gap: 12 }}>
+                        <div style={{ flex: 1, border: `1px dashed ${currentTheme.border}`, borderRadius: 4, padding: 8 }}>
+                            <div style={{ fontWeight: 600, color: currentTheme.text, marginBottom: 6 }}>FX Trades (first 10)</div>
+                            {fxTrades && fxTrades.length > 0 ? (
+                                <div style={{ maxHeight: 220, overflow: "auto", fontSize: 11 }}>
+                                    <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>{JSON.stringify(fxTrades.slice(0, 10), null, 2)}</pre>
+                                </div>
+                            ) : (
+                                <div style={{ color: currentTheme.textSecondary }}>No data loaded</div>
+                            )}
                         </div>
-                    ) : (
-                        <div>Select a portfolio to view details</div>
-                    )}
+                        <div style={{ flex: 1, border: `1px dashed ${currentTheme.border}`, borderRadius: 4, padding: 8 }}>
+                            <div style={{ fontWeight: 600, color: currentTheme.text, marginBottom: 6 }}>FX Option Trades (first 10)</div>
+                            {fxOptions && fxOptions.length > 0 ? (
+                                <div style={{ maxHeight: 220, overflow: "auto", fontSize: 11 }}>
+                                    <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>{JSON.stringify(fxOptions.slice(0, 10), null, 2)}</pre>
+                                </div>
+                            ) : (
+                                <div style={{ color: currentTheme.textSecondary }}>No data loaded</div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
