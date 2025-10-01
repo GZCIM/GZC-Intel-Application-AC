@@ -8,12 +8,16 @@ load_dotenv()
 # PostgreSQL connection settings
 DB_HOST = os.getenv("POSTGRES_HOST", "gzcdevserver.postgres.database.azure.com")
 DB_PORT = os.getenv("POSTGRES_PORT", "5432")
-DB_NAME = os.getenv("POSTGRES_DB", "gzc_intel")
+DB_NAME = os.getenv("POSTGRES_DB", "gzc_platform")
 
 # Always use password authentication for now (until managed identity is configured)
-DB_USER = os.getenv("POSTGRES_USER", "mikael") 
+DB_USER = os.getenv("POSTGRES_USER", "mikael")
 DB_PASS = os.getenv("POSTGRES_PASSWORD", "Ii89rra137+*")
-DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DB_SSLMODE = os.getenv("POSTGRES_SSLMODE", "require")
+ssl_query = f"?sslmode={DB_SSLMODE}" if DB_SSLMODE else ""
+DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}{ssl_query}"
 
-print(f"Connecting to PostgreSQL as: {DB_USER.split('@')[0] if '@' in DB_USER else DB_USER}")
+print(
+    f"Connecting to PostgreSQL as: {DB_USER.split('@')[0] if '@' in DB_USER else DB_USER}"
+)
 engine: Engine = create_engine(DATABASE_URL)
