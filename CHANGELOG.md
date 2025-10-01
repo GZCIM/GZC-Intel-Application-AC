@@ -109,3 +109,6 @@
 
 *Maintained by Claude Code*
 *Last Updated: 2025-01-09*
+
+## 2025-10-01
+- CI: No-op change to trigger Container Apps redeploy
