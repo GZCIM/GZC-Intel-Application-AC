@@ -23,7 +23,7 @@ preferences_bp = Blueprint('preferences', __name__, url_prefix='/api/preferences
 
 # Database configuration
 DB_HOST = os.getenv("POSTGRES_HOST", "gzcdevserver.postgres.database.azure.com")
-DB_NAME = os.getenv("POSTGRES_DB", "gzc_intel")
+DB_NAME = os.getenv("POSTGRES_DB", "gzc_platform")
 DB_USER = os.getenv("POSTGRES_USER", "gzcadmin")
 DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "")
 DB_PORT = os.getenv("POSTGRES_PORT", "5432")

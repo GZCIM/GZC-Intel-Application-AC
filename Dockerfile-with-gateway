@@ -135,7 +135,7 @@ stdout_logfile=/dev/stdout \n\
 stdout_logfile_maxbytes=0 \n\
 stderr_logfile=/dev/stderr \n\
 stderr_logfile_maxbytes=0 \n\
-environment=PYTHONUNBUFFERED="1",PORT="5300",POSTGRES_HOST="gzcdevserver.postgres.database.azure.com",POSTGRES_PORT="5432",POSTGRES_DB="gzc_intel",POSTGRES_USER="mikael",POSTGRES_PASSWORD="Ii89rra137+*",AZURE_AD_TENANT_ID="8274c97d-de9d-4328-98cf-2d4ee94bf104",AZURE_AD_CLIENT_ID="a873f2d7-2ab9-4d59-a54c-90859226bf2e",BYPASS_AUTH_FOR_PORTFOLIO="1"' > /etc/supervisor/conf.d/supervisord.conf
+environment=PYTHONUNBUFFERED="1",PORT="5300",POSTGRES_HOST="gzcdevserver.postgres.database.azure.com",POSTGRES_PORT="5432",POSTGRES_DB="gzc_platform",POSTGRES_USER="mikael",POSTGRES_PASSWORD="Ii89rra137+*",AZURE_AD_TENANT_ID="8274c97d-de9d-4328-98cf-2d4ee94bf104",AZURE_AD_CLIENT_ID="a873f2d7-2ab9-4d59-a54c-90859226bf2e",BYPASS_AUTH_FOR_PORTFOLIO="1"' > /etc/supervisor/conf.d/supervisord.conf
 
 # Expose port 80 for the application
 EXPOSE 80

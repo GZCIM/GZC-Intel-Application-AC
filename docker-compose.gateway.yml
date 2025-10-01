@@ -40,7 +40,7 @@ services:
     container_name: gzc-fastapi
     environment:
       - POSTGRES_HOST=postgres
-      - POSTGRES_DB=gzc_intel
+      - POSTGRES_DB=gzc_platform
       - POSTGRES_USER=gzc_user
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - AZURE_AD_CLIENT_ID=${AZURE_AD_CLIENT_ID}
@@ -75,7 +75,7 @@ services:
     image: postgres:15-alpine
     container_name: gzc-postgres
     environment:
-      - POSTGRES_DB=gzc_intel
+      - POSTGRES_DB=gzc_platform
       - POSTGRES_USER=gzc_user
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:

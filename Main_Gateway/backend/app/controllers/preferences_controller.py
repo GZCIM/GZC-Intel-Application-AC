@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api/preferences", tags=["preferences"])
 # Database configuration
 DB_CONFIG = {
     'host': os.getenv('POSTGRES_HOST', 'gzcdevserver.postgres.database.azure.com'),
-    'database': os.getenv('POSTGRES_DB', 'gzc_intel'),
+    'database': os.getenv('POSTGRES_DB', 'gzc_platform'),
     'user': os.getenv('POSTGRES_USER', 'mikael'),
     'password': os.getenv('POSTGRES_PASSWORD', 'Ii89rra137+*'),
     'port': os.getenv('POSTGRES_PORT', '5432')

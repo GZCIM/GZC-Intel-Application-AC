@@ -249,7 +249,7 @@ deploy_fastapi() {
             AZURE_AD_CLIENT_ID=a873f2d7-2ab9-4d59-a54c-90859226bf2e \
             POSTGRES_HOST=gzcdevserver.postgres.database.azure.com \
             POSTGRES_PORT=5432 \
-            POSTGRES_DB=gzc_intel \
+            POSTGRES_DB=gzc_platform \
             POSTGRES_USER=mikael \
             POSTGRES_PASSWORD=secretref:postgres-password \
             REDIS_HOST=gzc-redis \
