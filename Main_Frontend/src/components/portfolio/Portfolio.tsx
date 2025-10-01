@@ -53,6 +53,7 @@ export const Portfolio: React.FC<
     // Temporary debug views for FX trades APIs
     const [fxTrades, setFxTrades] = useState<any[] | null>(null);
     const [fxOptions, setFxOptions] = useState<any[] | null>(null);
+    const [fxError, setFxError] = useState<string | null>(null);
     const [fxLoading, setFxLoading] = useState<"none" | "trades" | "options">(
         "none"
     );
@@ -64,8 +65,10 @@ export const Portfolio: React.FC<
                 params: { limit: 100 },
             });
             setFxTrades(resp.data?.data || []);
+            setFxError(null);
         } catch (_) {
             setFxTrades([]);
+            setFxError("Failed to load FX trades. Are you signed in?");
         } finally {
             setFxLoading("none");
         }
@@ -78,12 +81,21 @@ export const Portfolio: React.FC<
                 params: { limit: 100 },
             });
             setFxOptions(resp.data?.data || []);
+            setFxError(null);
         } catch (_) {
             setFxOptions([]);
+            setFxError("Failed to load FX option trades. Are you signed in?");
         } finally {
             setFxLoading("none");
         }
     };
+
+    // Auto-load on first render
+    useEffect(() => {
+        loadFxTrades();
+        loadFxOptions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Load persisted mode/date from localStorage (force default Active on first render)
     useEffect(() => {
@@ -190,416 +202,51 @@ export const Portfolio: React.FC<
                     overflow: "visible",
                 }}
             >
-                {componentState === 'minimized' && isEditMode ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        {isEditMode ? (
-                            <input aria-label="Component title" placeholder="Title" value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4 }} />
-                        ) : (
-                            <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text }}>{title}</span>
-                        )}
-                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <button title="Normal" onClick={() => onStateChange?.('normal')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>□</button>
-                            <button title="Maximize" onClick={() => onStateChange?.('maximized')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>▣</button>
-                            <button title="Remove" onClick={() => onRemove?.()} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: '#D69A82', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>×</button>
-                        </div>
-                    </div>
-                ) : componentState === 'minimized' && !isEditMode ? (
-                    <div
-                        style={{ display: 'flex', alignItems: 'center' }}
-                        onDoubleClick={handleTitleDoubleClick}
-                        title="Double-click to maximize"
-                    >
-                        <span
-                            style={{
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: currentTheme.text,
-                                whiteSpace: 'nowrap',
-                                paddingTop: 2,
-                            }}
-                        >
-                            {title}
-                        </span>
-                    </div>
-                ) : (
-                // Row 1: Inline title + controls
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 12,
-                    }}
-                >
-                    {isEditMode ? (
-                        <input
-                            aria-label="Component title"
-                            placeholder="Title"
-                            value={title}
-                            onChange={(e) => onTitleChange?.(e.target.value)}
-                            style={{
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: currentTheme.text,
-                                marginRight: 8,
-                                padding: "2px 6px",
-                                background: "transparent",
-                                border: `1px solid ${currentTheme.border}`,
-                                borderRadius: 4,
-                            }}
-                        />
-                    ) : (
-                        <span
-                            onDoubleClick={handleTitleDoubleClick}
-                            title="Double-click to maximize"
-                            style={{
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: currentTheme.text,
-                                marginRight: 8,
-                                whiteSpace: "nowrap",
-                                paddingTop: 4,
-                            }}
-                        >
-                            {title}
-                        </span>
-                    )}
+                {componentState === "minimized" && isEditMode ? (
                     <div
                         style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 6,
-                        }}
-                    >
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 8,
-                                justifyContent: isEditMode
-                                    ? "flex-start"
-                                    : undefined,
-                            }}
-                        >
-                            <div style={{ display: "flex", gap: 6 }}>
-                                <button
-                                    type="button"
-                                    onClick={() => setPortfolioMode("active")}
-                                    style={{
-                                        padding: "4px 8px",
-                                        backgroundColor: "#1e1e1e",
-                                        color:
-                                            portfolioMode === "active"
-                                                ? "#ffffff"
-                                                : currentTheme.textSecondary,
-                                        border:
-                                            portfolioMode === "active"
-                                                ? `1px solid ${
-                                                      currentTheme.success ||
-                                                      "#6aa84f"
-                                                  }`
-                                                : `1px solid ${currentTheme.border}66`,
-                                        borderRadius: 4,
-                                        fontSize: 11,
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    Active
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setPortfolioMode("virtual")}
-                                    style={{
-                                        padding: "4px 8px",
-                                        backgroundColor: "#1e1e1e",
-                                        color:
-                                            portfolioMode === "virtual"
-                                                ? "#ffffff"
-                                                : currentTheme.textSecondary,
-                                        border:
-                                            portfolioMode === "virtual"
-                                                ? `1px solid ${
-                                                      currentTheme.success ||
-                                                      "#6aa84f"
-                                                  }`
-                                                : `1px solid ${currentTheme.border}66`,
-                                        borderRadius: 4,
-                                        fontSize: 11,
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    Virtual
-                                </button>
-                            </div>
-                            {/* Removed redundant "Portfolio:" label per request */}
-                            <div
-                                style={{
-                                    position: "relative",
-                                    display: "inline-block",
-                                }}
-                            >
-                                <select
-                                    value={selectedPortfolioId}
-                                    onChange={(e) =>
-                                        setSelectedPortfolioId(e.target.value)
-                                    }
-                                    aria-label="Select portfolio"
-                                    style={{
-                                        backgroundColor:
-                                            currentTheme.background,
-                                        color: currentTheme.text,
-                                        border: `1px solid ${currentTheme.border}`,
-                                        borderRadius: 4,
-                                        padding: "4px 8px",
-                                        fontSize: 12,
-                                    }}
-                                >
-                                    {portfolios.length === 0 ? (
-                                        <option value="">
-                                            Select Portfolio
-                                        </option>
-                                    ) : (
-                                        portfolios.map((p) => (
-                                            <option key={p.id} value={p.id}>
-                                                {p.name}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                                {portfolioMode === "virtual" && (
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            console.log(
-                                                "Create new virtual portfolio"
-                                            )
-                                        }
-                                        title="Create New Portfolio"
-                                        style={{
-                                            position: "absolute",
-                                            top: "calc(100% + 6px)",
-                                            left: 0,
-                                            display: "inline-flex",
-                                            gap: 6,
-                                            padding: "6px 12px",
-                                            backgroundColor:
-                                                currentTheme.surface,
-                                            color:
-                                                currentTheme.success ||
-                                                "#6aa84f",
-                                            border: `1px solid ${currentTheme.border}`,
-                                            borderRadius: 4,
-                                            fontSize: 12,
-                                            cursor: "pointer",
-                                            width: "max-content",
-                                            boxShadow:
-                                                "0 1px 3px rgba(0,0,0,0.3)",
-                                        }}
-                                    >
-                                        + Create New Portfolio
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                    {/* Right controls on same line */}
-                    <div
-                        style={{
-                            marginLeft: isEditMode ? undefined : "auto",
                             display: "flex",
                             alignItems: "center",
-                            gap: 8,
+                            gap: 12,
                         }}
                     >
-                        <button
-                            onClick={() => console.log("Portfolio: Sync DB")}
-                            title="Sync DB"
-                            style={{
-                                padding: "4px 12px",
-                                backgroundColor: "#5da0ea",
-                                color: "#ffffff",
-                                border: `1px solid #3b82f6`,
-                                borderRadius: 4,
-                                fontSize: 11,
-                                fontWeight: 600,
-                                cursor: "pointer",
-                                boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.2)",
-                            }}
-                        >
-                            Sync DB
-                        </button>
-                        {/* Temporary data buttons */}
-                        <div style={{ display: "flex", gap: 6 }}>
-                            <button
-                                onClick={loadFxTrades}
-                                title="Load FX Trades"
+                        {isEditMode ? (
+                            <input
+                                aria-label="Component title"
+                                placeholder="Title"
+                                value={title}
+                                onChange={(e) =>
+                                    onTitleChange?.(e.target.value)
+                                }
                                 style={{
-                                    padding: "4px 8px",
-                                    backgroundColor: "#1e1e1e",
-                                    color: "#eaeaea",
-                                    border: `1px solid ${currentTheme.border}66`,
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: currentTheme.text,
+                                    padding: "2px 6px",
+                                    background: "transparent",
+                                    border: `1px solid ${currentTheme.border}`,
                                     borderRadius: 4,
-                                    fontSize: 11,
-                                    cursor: "pointer",
-                                    opacity: fxLoading === "trades" ? 0.6 : 1,
                                 }}
-                            >
-                                {fxLoading === "trades" ? "Trades…" : "FX Trades"}
-                            </button>
-                            <button
-                                onClick={loadFxOptions}
-                                title="Load FX Option Trades"
-                                style={{
-                                    padding: "4px 8px",
-                                    backgroundColor: "#1e1e1e",
-                                    color: "#eaeaea",
-                                    border: `1px solid ${currentTheme.border}66`,
-                                    borderRadius: 4,
-                                    fontSize: 11,
-                                    cursor: "pointer",
-                                    opacity: fxLoading === "options" ? 0.6 : 1,
-                                }}
-                            >
-                                {fxLoading === "options" ? "Options…" : "FX Options"}
-                            </button>
-                        </div>
-                        <div style={{ display: "flex", gap: 6 }}>
-                            <button
-                                onClick={() => setDataMode("live")}
-                                style={{
-                                    padding: "4px 8px",
-                                    backgroundColor: "#1e1e1e",
-                                    color:
-                                        dataMode === "live"
-                                            ? "#ffffff"
-                                            : currentTheme.textSecondary,
-                                    border:
-                                        dataMode === "live"
-                                            ? `1px solid ${
-                                                  currentTheme.success ||
-                                                  "#6aa84f"
-                                              }`
-                                            : `1px solid ${currentTheme.border}66`,
-                                    borderRadius: 4,
-                                    fontSize: 11,
-                                    cursor: "pointer",
-                                }}
-                            >
-                                Live
-                            </button>
-                            <button
-                                onClick={() => setDataMode("eod")}
-                                style={{
-                                    padding: "4px 8px",
-                                    backgroundColor: "#1e1e1e",
-                                    color:
-                                        dataMode === "eod"
-                                            ? "#ffffff"
-                                            : currentTheme.textSecondary,
-                                    border:
-                                        dataMode === "eod"
-                                            ? `1px solid ${
-                                                  currentTheme.success ||
-                                                  "#6aa84f"
-                                              }`
-                                            : `1px solid ${currentTheme.border}66`,
-                                    borderRadius: 4,
-                                    fontSize: 11,
-                                    cursor: "pointer",
-                                }}
-                            >
-                                EOD
-                            </button>
-                            <button
-                                onClick={() => setDataMode("date")}
-                                style={{
-                                    padding: "4px 8px",
-                                    backgroundColor: "#1e1e1e",
-                                    color:
-                                        dataMode === "date"
-                                            ? "#ffffff"
-                                            : currentTheme.textSecondary,
-                                    border:
-                                        dataMode === "date"
-                                            ? `1px solid ${
-                                                  currentTheme.success ||
-                                                  "#6aa84f"
-                                              }`
-                                            : `1px solid ${currentTheme.border}66`,
-                                    borderRadius: 4,
-                                    fontSize: 11,
-                                    cursor: "pointer",
-                                }}
-                            >
-                                Date
-                            </button>
-                        </div>
-                        {dataMode === "date" ? (
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                }}
-                            >
-                                <input
-                                    aria-label="Select date"
-                                    title="Select date"
-                                    type="date"
-                                    value={selectedDate}
-                                    onChange={(e) =>
-                                        setSelectedDate(e.target.value)
-                                    }
-                                    style={{
-                                        padding: "4px 8px",
-                                        backgroundColor: "#0f0f0f",
-                                        color: "#eaeaea",
-                                        border: `1px solid ${currentTheme.border}66`,
-                                        borderRadius: 4,
-                                        fontSize: 11,
-                                    }}
-                                />
-                            </div>
+                            />
                         ) : (
-                            <div
-                                title="Date"
+                            <span
                                 style={{
-                                    padding: "4px 8px",
-                                    backgroundColor: "#1e1e1e",
-                                    color: currentTheme.textSecondary,
-                                    border: `1px solid ${currentTheme.border}66`,
-                                    borderRadius: 4,
-                                    fontSize: 11,
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: currentTheme.text,
                                 }}
                             >
-                                {formatDateBadge(selectedDate)}
-                            </div>
+                                {title}
+                            </span>
                         )}
-                    </div>
-                    {isEditMode && (
                         <div
                             style={{
                                 marginLeft: "auto",
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 4,
+                                gap: 6,
                             }}
                         >
-                            <button
-                                title="Minimize"
-                                onClick={() => onStateChange?.("minimized")}
-                                style={{
-                                    width: 30,
-                                    height: 30,
-                                    border: `1px solid ${currentTheme.border}`,
-                                    background: "transparent",
-                                    color: currentTheme.textSecondary,
-                                    borderRadius: 4,
-                                    cursor: "pointer",
-                                    fontSize: 14,
-                                }}
-                            >
-                                ▁
-                            </button>
                             <button
                                 title="Normal"
                                 onClick={() => onStateChange?.("normal")}
@@ -649,8 +296,471 @@ export const Portfolio: React.FC<
                                 ×
                             </button>
                         </div>
-                    )}
-                </div>
+                    </div>
+                ) : componentState === "minimized" && !isEditMode ? (
+                    <div
+                        style={{ display: "flex", alignItems: "center" }}
+                        onDoubleClick={handleTitleDoubleClick}
+                        title="Double-click to maximize"
+                    >
+                        <span
+                            style={{
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: currentTheme.text,
+                                whiteSpace: "nowrap",
+                                paddingTop: 2,
+                            }}
+                        >
+                            {title}
+                        </span>
+                    </div>
+                ) : (
+                    // Row 1: Inline title + controls
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 12,
+                        }}
+                    >
+                        {isEditMode ? (
+                            <input
+                                aria-label="Component title"
+                                placeholder="Title"
+                                value={title}
+                                onChange={(e) =>
+                                    onTitleChange?.(e.target.value)
+                                }
+                                style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: currentTheme.text,
+                                    marginRight: 8,
+                                    padding: "2px 6px",
+                                    background: "transparent",
+                                    border: `1px solid ${currentTheme.border}`,
+                                    borderRadius: 4,
+                                }}
+                            />
+                        ) : (
+                            <span
+                                onDoubleClick={handleTitleDoubleClick}
+                                title="Double-click to maximize"
+                                style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: currentTheme.text,
+                                    marginRight: 8,
+                                    whiteSpace: "nowrap",
+                                    paddingTop: 4,
+                                }}
+                            >
+                                {title}
+                            </span>
+                        )}
+                        <div
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 6,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    justifyContent: isEditMode
+                                        ? "flex-start"
+                                        : undefined,
+                                }}
+                            >
+                                <div style={{ display: "flex", gap: 6 }}>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setPortfolioMode("active")
+                                        }
+                                        style={{
+                                            padding: "4px 8px",
+                                            backgroundColor: "#1e1e1e",
+                                            color:
+                                                portfolioMode === "active"
+                                                    ? "#ffffff"
+                                                    : currentTheme.textSecondary,
+                                            border:
+                                                portfolioMode === "active"
+                                                    ? `1px solid ${
+                                                          currentTheme.success ||
+                                                          "#6aa84f"
+                                                      }`
+                                                    : `1px solid ${currentTheme.border}66`,
+                                            borderRadius: 4,
+                                            fontSize: 11,
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        Active
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setPortfolioMode("virtual")
+                                        }
+                                        style={{
+                                            padding: "4px 8px",
+                                            backgroundColor: "#1e1e1e",
+                                            color:
+                                                portfolioMode === "virtual"
+                                                    ? "#ffffff"
+                                                    : currentTheme.textSecondary,
+                                            border:
+                                                portfolioMode === "virtual"
+                                                    ? `1px solid ${
+                                                          currentTheme.success ||
+                                                          "#6aa84f"
+                                                      }`
+                                                    : `1px solid ${currentTheme.border}66`,
+                                            borderRadius: 4,
+                                            fontSize: 11,
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        Virtual
+                                    </button>
+                                </div>
+                                {/* Removed redundant "Portfolio:" label per request */}
+                                <div
+                                    style={{
+                                        position: "relative",
+                                        display: "inline-block",
+                                    }}
+                                >
+                                    <select
+                                        value={selectedPortfolioId}
+                                        onChange={(e) =>
+                                            setSelectedPortfolioId(
+                                                e.target.value
+                                            )
+                                        }
+                                        aria-label="Select portfolio"
+                                        style={{
+                                            backgroundColor:
+                                                currentTheme.background,
+                                            color: currentTheme.text,
+                                            border: `1px solid ${currentTheme.border}`,
+                                            borderRadius: 4,
+                                            padding: "4px 8px",
+                                            fontSize: 12,
+                                        }}
+                                    >
+                                        {portfolios.length === 0 ? (
+                                            <option value="">
+                                                Select Portfolio
+                                            </option>
+                                        ) : (
+                                            portfolios.map((p) => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.name}
+                                                </option>
+                                            ))
+                                        )}
+                                    </select>
+                                    {portfolioMode === "virtual" && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                console.log(
+                                                    "Create new virtual portfolio"
+                                                )
+                                            }
+                                            title="Create New Portfolio"
+                                            style={{
+                                                position: "absolute",
+                                                top: "calc(100% + 6px)",
+                                                left: 0,
+                                                display: "inline-flex",
+                                                gap: 6,
+                                                padding: "6px 12px",
+                                                backgroundColor:
+                                                    currentTheme.surface,
+                                                color:
+                                                    currentTheme.success ||
+                                                    "#6aa84f",
+                                                border: `1px solid ${currentTheme.border}`,
+                                                borderRadius: 4,
+                                                fontSize: 12,
+                                                cursor: "pointer",
+                                                width: "max-content",
+                                                boxShadow:
+                                                    "0 1px 3px rgba(0,0,0,0.3)",
+                                            }}
+                                        >
+                                            + Create New Portfolio
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        {/* Right controls on same line */}
+                        <div
+                            style={{
+                                marginLeft: isEditMode ? undefined : "auto",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                            }}
+                        >
+                            <button
+                                onClick={() =>
+                                    console.log("Portfolio: Sync DB")
+                                }
+                                title="Sync DB"
+                                style={{
+                                    padding: "4px 12px",
+                                    backgroundColor: "#5da0ea",
+                                    color: "#ffffff",
+                                    border: `1px solid #3b82f6`,
+                                    borderRadius: 4,
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    cursor: "pointer",
+                                    boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.2)",
+                                }}
+                            >
+                                Sync DB
+                            </button>
+                            {/* Temporary data buttons */}
+                            <div style={{ display: "flex", gap: 6 }}>
+                                <button
+                                    onClick={loadFxTrades}
+                                    title="Load FX Trades"
+                                    style={{
+                                        padding: "4px 8px",
+                                        backgroundColor: "#1e1e1e",
+                                        color: "#eaeaea",
+                                        border: `1px solid ${currentTheme.border}66`,
+                                        borderRadius: 4,
+                                        fontSize: 11,
+                                        cursor: "pointer",
+                                        opacity:
+                                            fxLoading === "trades" ? 0.6 : 1,
+                                    }}
+                                >
+                                    {fxLoading === "trades"
+                                        ? "Trades…"
+                                        : "FX Trades"}
+                                </button>
+                                <button
+                                    onClick={loadFxOptions}
+                                    title="Load FX Option Trades"
+                                    style={{
+                                        padding: "4px 8px",
+                                        backgroundColor: "#1e1e1e",
+                                        color: "#eaeaea",
+                                        border: `1px solid ${currentTheme.border}66`,
+                                        borderRadius: 4,
+                                        fontSize: 11,
+                                        cursor: "pointer",
+                                        opacity:
+                                            fxLoading === "options" ? 0.6 : 1,
+                                    }}
+                                >
+                                    {fxLoading === "options"
+                                        ? "Options…"
+                                        : "FX Options"}
+                                </button>
+                            </div>
+                            <div style={{ display: "flex", gap: 6 }}>
+                                <button
+                                    onClick={() => setDataMode("live")}
+                                    style={{
+                                        padding: "4px 8px",
+                                        backgroundColor: "#1e1e1e",
+                                        color:
+                                            dataMode === "live"
+                                                ? "#ffffff"
+                                                : currentTheme.textSecondary,
+                                        border:
+                                            dataMode === "live"
+                                                ? `1px solid ${
+                                                      currentTheme.success ||
+                                                      "#6aa84f"
+                                                  }`
+                                                : `1px solid ${currentTheme.border}66`,
+                                        borderRadius: 4,
+                                        fontSize: 11,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    Live
+                                </button>
+                                <button
+                                    onClick={() => setDataMode("eod")}
+                                    style={{
+                                        padding: "4px 8px",
+                                        backgroundColor: "#1e1e1e",
+                                        color:
+                                            dataMode === "eod"
+                                                ? "#ffffff"
+                                                : currentTheme.textSecondary,
+                                        border:
+                                            dataMode === "eod"
+                                                ? `1px solid ${
+                                                      currentTheme.success ||
+                                                      "#6aa84f"
+                                                  }`
+                                                : `1px solid ${currentTheme.border}66`,
+                                        borderRadius: 4,
+                                        fontSize: 11,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    EOD
+                                </button>
+                                <button
+                                    onClick={() => setDataMode("date")}
+                                    style={{
+                                        padding: "4px 8px",
+                                        backgroundColor: "#1e1e1e",
+                                        color:
+                                            dataMode === "date"
+                                                ? "#ffffff"
+                                                : currentTheme.textSecondary,
+                                        border:
+                                            dataMode === "date"
+                                                ? `1px solid ${
+                                                      currentTheme.success ||
+                                                      "#6aa84f"
+                                                  }`
+                                                : `1px solid ${currentTheme.border}66`,
+                                        borderRadius: 4,
+                                        fontSize: 11,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    Date
+                                </button>
+                            </div>
+                            {dataMode === "date" ? (
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 6,
+                                    }}
+                                >
+                                    <input
+                                        aria-label="Select date"
+                                        title="Select date"
+                                        type="date"
+                                        value={selectedDate}
+                                        onChange={(e) =>
+                                            setSelectedDate(e.target.value)
+                                        }
+                                        style={{
+                                            padding: "4px 8px",
+                                            backgroundColor: "#0f0f0f",
+                                            color: "#eaeaea",
+                                            border: `1px solid ${currentTheme.border}66`,
+                                            borderRadius: 4,
+                                            fontSize: 11,
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <div
+                                    title="Date"
+                                    style={{
+                                        padding: "4px 8px",
+                                        backgroundColor: "#1e1e1e",
+                                        color: currentTheme.textSecondary,
+                                        border: `1px solid ${currentTheme.border}66`,
+                                        borderRadius: 4,
+                                        fontSize: 11,
+                                    }}
+                                >
+                                    {formatDateBadge(selectedDate)}
+                                </div>
+                            )}
+                        </div>
+                        {isEditMode && (
+                            <div
+                                style={{
+                                    marginLeft: "auto",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 4,
+                                }}
+                            >
+                                <button
+                                    title="Minimize"
+                                    onClick={() => onStateChange?.("minimized")}
+                                    style={{
+                                        width: 30,
+                                        height: 30,
+                                        border: `1px solid ${currentTheme.border}`,
+                                        background: "transparent",
+                                        color: currentTheme.textSecondary,
+                                        borderRadius: 4,
+                                        cursor: "pointer",
+                                        fontSize: 14,
+                                    }}
+                                >
+                                    ▁
+                                </button>
+                                <button
+                                    title="Normal"
+                                    onClick={() => onStateChange?.("normal")}
+                                    style={{
+                                        width: 30,
+                                        height: 30,
+                                        border: `1px solid ${currentTheme.border}`,
+                                        background: "transparent",
+                                        color: currentTheme.textSecondary,
+                                        borderRadius: 4,
+                                        cursor: "pointer",
+                                        fontSize: 14,
+                                    }}
+                                >
+                                    □
+                                </button>
+                                <button
+                                    title="Maximize"
+                                    onClick={() => onStateChange?.("maximized")}
+                                    style={{
+                                        width: 30,
+                                        height: 30,
+                                        border: `1px solid ${currentTheme.border}`,
+                                        background: "transparent",
+                                        color: currentTheme.textSecondary,
+                                        borderRadius: 4,
+                                        cursor: "pointer",
+                                        fontSize: 14,
+                                    }}
+                                >
+                                    ▣
+                                </button>
+                                <button
+                                    title="Remove"
+                                    onClick={() => onRemove?.()}
+                                    style={{
+                                        width: 30,
+                                        height: 30,
+                                        border: `1px solid ${currentTheme.border}`,
+                                        background: "transparent",
+                                        color: "#D69A82",
+                                        borderRadius: 4,
+                                        cursor: "pointer",
+                                        fontSize: 14,
+                                    }}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 {/* Row 2: Create action when in Virtual portfolio mode, placed below (single instance) */}
@@ -673,24 +783,102 @@ export const Portfolio: React.FC<
                     }}
                 >
                     <div style={{ flex: 1, display: "flex", gap: 12 }}>
-                        <div style={{ flex: 1, border: `1px dashed ${currentTheme.border}`, borderRadius: 4, padding: 8 }}>
-                            <div style={{ fontWeight: 600, color: currentTheme.text, marginBottom: 6 }}>FX Trades (first 10)</div>
-                            {fxTrades && fxTrades.length > 0 ? (
-                                <div style={{ maxHeight: 220, overflow: "auto", fontSize: 11 }}>
-                                    <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>{JSON.stringify(fxTrades.slice(0, 10), null, 2)}</pre>
+                        <div
+                            style={{
+                                flex: 1,
+                                border: `1px dashed ${currentTheme.border}`,
+                                borderRadius: 4,
+                                padding: 8,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    fontWeight: 600,
+                                    color: currentTheme.text,
+                                    marginBottom: 6,
+                                }}
+                            >
+                                FX Trades (first 10)
+                            </div>
+                            {fxError ? (
+                                <div style={{ color: '#D69A82' }}>{fxError}</div>
+                            ) : fxTrades && fxTrades.length > 0 ? (
+                                <div
+                                    style={{
+                                        maxHeight: 220,
+                                        overflow: "auto",
+                                        fontSize: 11,
+                                    }}
+                                >
+                                    <pre
+                                        style={{
+                                            margin: 0,
+                                            whiteSpace: "pre-wrap",
+                                        }}
+                                    >
+                                        {JSON.stringify(
+                                            fxTrades.slice(0, 10),
+                                            null,
+                                            2
+                                        )}
+                                    </pre>
                                 </div>
                             ) : (
-                                <div style={{ color: currentTheme.textSecondary }}>No data loaded</div>
+                                <div
+                                    style={{
+                                        color: currentTheme.textSecondary,
+                                    }}
+                                >
+                                    No data loaded
+                                </div>
                             )}
                         </div>
-                        <div style={{ flex: 1, border: `1px dashed ${currentTheme.border}`, borderRadius: 4, padding: 8 }}>
-                            <div style={{ fontWeight: 600, color: currentTheme.text, marginBottom: 6 }}>FX Option Trades (first 10)</div>
+                        <div
+                            style={{
+                                flex: 1,
+                                border: `1px dashed ${currentTheme.border}`,
+                                borderRadius: 4,
+                                padding: 8,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    fontWeight: 600,
+                                    color: currentTheme.text,
+                                    marginBottom: 6,
+                                }}
+                            >
+                                FX Option Trades (first 10)
+                            </div>
                             {fxOptions && fxOptions.length > 0 ? (
-                                <div style={{ maxHeight: 220, overflow: "auto", fontSize: 11 }}>
-                                    <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>{JSON.stringify(fxOptions.slice(0, 10), null, 2)}</pre>
+                                <div
+                                    style={{
+                                        maxHeight: 220,
+                                        overflow: "auto",
+                                        fontSize: 11,
+                                    }}
+                                >
+                                    <pre
+                                        style={{
+                                            margin: 0,
+                                            whiteSpace: "pre-wrap",
+                                        }}
+                                    >
+                                        {JSON.stringify(
+                                            fxOptions.slice(0, 10),
+                                            null,
+                                            2
+                                        )}
+                                    </pre>
                                 </div>
                             ) : (
-                                <div style={{ color: currentTheme.textSecondary }}>No data loaded</div>
+                                <div
+                                    style={{
+                                        color: currentTheme.textSecondary,
+                                    }}
+                                >
+                                    No data loaded
+                                </div>
                             )}
                         </div>
                     </div>
