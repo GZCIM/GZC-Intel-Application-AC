@@ -14,20 +14,16 @@ CREATE TABLE IF NOT EXISTS gzc_fund (
 CREATE INDEX IF NOT EXISTS idx_gzc_fund_name ON gzc_fund(FundName);
 
 -- Step 3: Insert GMF and GCF records from legacy table
--- Note: Adjust the source table reference based on your actual database schema
+-- Actual table structure: FundId, FundNameShort, FundNameFull
 INSERT INTO gzc_fund (Id, FundName, Description, mod_user, mod_timestamp)
 SELECT 
-    FundId as Id,
-    FundName,
-    CASE 
-        WHEN FundId = 1 THEN 'GMF Fund - Global Macro Fund'
-        WHEN FundId = 6 THEN 'GCF Fund - Global Credit Fund'
-        ELSE FundName || ' Fund'
-    END as Description,
+    "FundId" as Id,
+    "FundNameShort" as FundName,
+    "FundNameFull" as Description,
     'migration' as mod_user,
     CURRENT_TIMESTAMP as mod_timestamp
-FROM gzc_platform.leg.tblFund 
-WHERE FundId IN (1, 6)  -- Only GMF and GCF
+FROM leg."tblFund" 
+WHERE "FundId" IN (1, 6)  -- Only GMF and GCF
 ON CONFLICT (Id) DO UPDATE SET
     FundName = EXCLUDED.FundName,
     Description = EXCLUDED.Description,
@@ -46,5 +42,5 @@ ORDER BY Id;
 
 -- Expected output:
 -- Id | FundName | Description                    | mod_user  | mod_timestamp
--- 1  | GMF      | GMF Fund - Global Macro Fund   | migration | [timestamp]
--- 6  | GCF      | GCF Fund - Global Credit Fund  | migration | [timestamp]
+-- 1  | GMF      | Global Macro Fund              | migration | [timestamp]
+-- 6  | GCF      | Global Currencies Fund         | migration | [timestamp]
