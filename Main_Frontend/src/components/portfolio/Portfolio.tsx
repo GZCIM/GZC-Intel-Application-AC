@@ -491,44 +491,47 @@ export const Portfolio: React.FC<
                                         </select>
                                     </div>
                                 )}
-                                {/* Removed redundant "Portfolio:" label per request */}
-                                <div
-                                    style={{
-                                        position: "relative",
-                                        display: "inline-block",
-                                    }}
-                                >
-                                    <select
-                                        value={selectedPortfolioId}
-                                        onChange={(e) =>
-                                            setSelectedPortfolioId(
-                                                e.target.value
-                                            )
-                                        }
-                                        aria-label="Select portfolio"
+                                {/* Portfolio selector visible only in Virtual mode */}
+                                {portfolioMode === "virtual" && (
+                                    <div
                                         style={{
-                                            backgroundColor:
-                                                currentTheme.background,
-                                            color: currentTheme.text,
-                                            border: `1px solid ${currentTheme.border}`,
-                                            borderRadius: 4,
-                                            padding: "4px 8px",
-                                            fontSize: 12,
+                                            position: "relative",
+                                            display: "inline-block",
                                         }}
                                     >
-                                        {portfolios.length === 0 ? (
-                                            <option value="">
-                                                Select Portfolio
-                                            </option>
-                                        ) : (
-                                            portfolios.map((p) => (
-                                                <option key={p.id} value={p.id}>
-                                                    {p.name}
+                                        <select
+                                            value={selectedPortfolioId}
+                                            onChange={(e) =>
+                                                setSelectedPortfolioId(
+                                                    e.target.value
+                                                )
+                                            }
+                                            aria-label="Select portfolio"
+                                            style={{
+                                                backgroundColor:
+                                                    currentTheme.background,
+                                                color: currentTheme.text,
+                                                border: `1px solid ${currentTheme.border}`,
+                                                borderRadius: 4,
+                                                padding: "4px 8px",
+                                                fontSize: 12,
+                                            }}
+                                        >
+                                            {portfolios.length === 0 ? (
+                                                <option value="">
+                                                    Select Portfolio
                                                 </option>
-                                            ))
-                                        )}
-                                    </select>
-                                    {portfolioMode === "virtual" && (
+                                            ) : (
+                                                portfolios.map((p) => (
+                                                    <option
+                                                        key={p.id}
+                                                        value={p.id}
+                                                    >
+                                                        {p.name}
+                                                    </option>
+                                                ))
+                                            )}
+                                        </select>
                                         <button
                                             type="button"
                                             onClick={() =>
@@ -560,8 +563,8 @@ export const Portfolio: React.FC<
                                         >
                                             + Create New Portfolio
                                         </button>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                         {/* Right controls on same line */}
