@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
-import { apiClient as portfolioApi, setPortfolioAuthTokenProvider } from "../../utils/axios";
+import {
+    apiClient as portfolioApi,
+    setPortfolioAuthTokenProvider,
+} from "../../utils/axios";
 import { useAuthContext } from "../../modules/ui-library/context/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -53,6 +56,7 @@ export const Portfolio: React.FC<
     const [portfolioMode, setPortfolioMode] = useState<"active" | "virtual">(
         "active"
     );
+    const [selectedFundId, setSelectedFundId] = useState<string>("0"); // 0=ALL, 1=GMF, 6=GCF
     // Temporary debug views for FX trades APIs
     const [fxTrades, setFxTrades] = useState<any[] | null>(null);
     const [fxOptions, setFxOptions] = useState<any[] | null>(null);
@@ -121,6 +125,14 @@ export const Portfolio: React.FC<
             // Always default to Active when component loads
             setPortfolioMode("active");
             localStorage.setItem("portfolio.mode", "active");
+
+            const savedFund = localStorage.getItem("portfolio.fundId");
+            if (savedFund === "0" || savedFund === "1" || savedFund === "6") {
+                setSelectedFundId(savedFund);
+            } else {
+                setSelectedFundId("0");
+                localStorage.setItem("portfolio.fundId", "0");
+            }
         } catch (_) {}
     }, []);
 
@@ -144,6 +156,12 @@ export const Portfolio: React.FC<
             localStorage.setItem("portfolio.mode", portfolioMode);
         } catch (_) {}
     }, [portfolioMode]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem("portfolio.fundId", selectedFundId);
+        } catch (_) {}
+    }, [selectedFundId]);
 
     const formatDateBadge = (value?: string) => {
         try {
@@ -196,18 +214,18 @@ export const Portfolio: React.FC<
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
-                }}
-            >
-                <div
-                    style={{
+            }}
+        >
+            <div
+                style={{
                     padding: "8px",
                     borderBottom: `1px solid ${currentTheme.border}`,
-                        display: "flex",
+                    display: "flex",
                     flexDirection: "column",
                     gap: 8,
                     overflow: "visible",
-                    }}
-                >
+                }}
+            >
                 {componentState === "minimized" && isEditMode ? (
                     <div
                         style={{
@@ -236,7 +254,7 @@ export const Portfolio: React.FC<
                             />
                         ) : (
                             <span
-                            style={{
+                                style={{
                                     fontSize: 12,
                                     fontWeight: 600,
                                     color: currentTheme.text,
@@ -285,22 +303,22 @@ export const Portfolio: React.FC<
                             >
                                 ▣
                             </button>
-                        <button
+                            <button
                                 title="Remove"
                                 onClick={() => onRemove?.()}
-                            style={{
+                                style={{
                                     width: 30,
                                     height: 30,
                                     border: `1px solid ${currentTheme.border}`,
                                     background: "transparent",
                                     color: "#D69A82",
                                     borderRadius: 4,
-                                cursor: "pointer",
+                                    cursor: "pointer",
                                     fontSize: 14,
-                            }}
-                        >
+                                }}
+                            >
                                 ×
-                        </button>
+                            </button>
                         </div>
                     </div>
                 ) : componentState === "minimized" && !isEditMode ? (
@@ -323,9 +341,9 @@ export const Portfolio: React.FC<
                     </div>
                 ) : (
                     // Row 1: Inline title + controls
-                        <div
-                            style={{
-                                display: "flex",
+                    <div
+                        style={{
+                            display: "flex",
                             alignItems: "flex-start",
                             gap: 12,
                         }}
@@ -335,10 +353,10 @@ export const Portfolio: React.FC<
                                 aria-label="Component title"
                                 placeholder="Title"
                                 value={title}
-                            onChange={(e) =>
+                                onChange={(e) =>
                                     onTitleChange?.(e.target.value)
-                            }
-                            style={{
+                                }
+                                style={{
                                     fontSize: 12,
                                     fontWeight: 600,
                                     color: currentTheme.text,
@@ -365,17 +383,17 @@ export const Portfolio: React.FC<
                                 {title}
                             </span>
                         )}
-            <div
-                style={{
+                        <div
+                            style={{
                                 display: "flex",
                                 flexDirection: "column",
                                 gap: 6,
-                }}
-            >
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
                                     gap: 8,
                                     justifyContent: isEditMode
                                         ? "flex-start"
@@ -387,8 +405,8 @@ export const Portfolio: React.FC<
                                         type="button"
                                         onClick={() =>
                                             setPortfolioMode("active")
-                        }
-                        style={{
+                                        }
+                                        style={{
                                             padding: "4px 8px",
                                             backgroundColor: "#1e1e1e",
                                             color:
@@ -413,8 +431,8 @@ export const Portfolio: React.FC<
                                         type="button"
                                         onClick={() =>
                                             setPortfolioMode("virtual")
-                        }
-                        style={{
+                                        }
+                                        style={{
                                             padding: "4px 8px",
                                             backgroundColor: "#1e1e1e",
                                             color:
@@ -430,12 +448,49 @@ export const Portfolio: React.FC<
                                                     : `1px solid ${currentTheme.border}66`,
                                             borderRadius: 4,
                                             fontSize: 11,
-                            cursor: "pointer",
-                        }}
-                    >
+                                            cursor: "pointer",
+                                        }}
+                                    >
                                         Virtual
                                     </button>
                                 </div>
+                                {portfolioMode === "active" && (
+                                    <div style={{ display: "flex", gap: 6 }}>
+                                        <label
+                                            htmlFor="portfolio-fund-select"
+                                            style={{
+                                                color: currentTheme.textSecondary,
+                                                fontSize: 12,
+                                                paddingTop: 4,
+                                            }}
+                                        >
+                                            Fund
+                                        </label>
+                                        <select
+                                            id="portfolio-fund-select"
+                                            value={selectedFundId}
+                                            onChange={(e) =>
+                                                setSelectedFundId(
+                                                    e.target.value
+                                                )
+                                            }
+                                            aria-label="Select fund"
+                                            style={{
+                                                backgroundColor:
+                                                    currentTheme.background,
+                                                color: currentTheme.text,
+                                                border: `1px solid ${currentTheme.border}`,
+                                                borderRadius: 4,
+                                                padding: "4px 8px",
+                                                fontSize: 12,
+                                            }}
+                                        >
+                                            <option value="0">ALL</option>
+                                            <option value="1">GMF</option>
+                                            <option value="6">GCF</option>
+                                        </select>
+                                    </div>
+                                )}
                                 {/* Removed redundant "Portfolio:" label per request */}
                                 <div
                                     style={{
@@ -472,24 +527,24 @@ export const Portfolio: React.FC<
                                                 </option>
                                             ))
                                         )}
-                    </select>
+                                    </select>
                                     {portfolioMode === "virtual" && (
-                    <button
+                                        <button
                                             type="button"
-                        onClick={() =>
+                                            onClick={() =>
                                                 console.log(
                                                     "Create new virtual portfolio"
                                                 )
                                             }
                                             title="Create New Portfolio"
-                        style={{
+                                            style={{
                                                 position: "absolute",
                                                 top: "calc(100% + 6px)",
                                                 left: 0,
                                                 display: "inline-flex",
                                                 gap: 6,
-                            padding: "6px 12px",
-                            backgroundColor:
+                                                padding: "6px 12px",
+                                                backgroundColor:
                                                     currentTheme.surface,
                                                 color:
                                                     currentTheme.success ||
@@ -584,7 +639,7 @@ export const Portfolio: React.FC<
                                     style={{
                                         padding: "4px 8px",
                                         backgroundColor: "#1e1e1e",
-                            color:
+                                        color:
                                             dataMode === "live"
                                                 ? "#ffffff"
                                                 : currentTheme.textSecondary,
@@ -597,14 +652,14 @@ export const Portfolio: React.FC<
                                                 : `1px solid ${currentTheme.border}66`,
                                         borderRadius: 4,
                                         fontSize: 11,
-                            cursor: "pointer",
-                        }}
-                    >
+                                        cursor: "pointer",
+                                    }}
+                                >
                                     Live
-                    </button>
+                                </button>
                                 <button
                                     onClick={() => setDataMode("eod")}
-                        style={{
+                                    style={{
                                         padding: "4px 8px",
                                         backgroundColor: "#1e1e1e",
                                         color:
@@ -627,7 +682,7 @@ export const Portfolio: React.FC<
                                 </button>
                                 <button
                                     onClick={() => setDataMode("date")}
-                style={{
+                                    style={{
                                         padding: "4px 8px",
                                         backgroundColor: "#1e1e1e",
                                         color:
@@ -650,10 +705,10 @@ export const Portfolio: React.FC<
                                 </button>
                             </div>
                             {dataMode === "date" ? (
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
                                         gap: 6,
                                     }}
                                 >
@@ -675,8 +730,8 @@ export const Portfolio: React.FC<
                                         }}
                                     />
                                 </div>
-                ) : (
-                    <div
+                            ) : (
+                                <div
                                     title="Date"
                                     style={{
                                         padding: "4px 8px",
@@ -735,7 +790,7 @@ export const Portfolio: React.FC<
                                 <button
                                     title="Maximize"
                                     onClick={() => onStateChange?.("maximized")}
-                        style={{
+                                    style={{
                                         width: 30,
                                         height: 30,
                                         border: `1px solid ${currentTheme.border}`,
@@ -751,14 +806,14 @@ export const Portfolio: React.FC<
                                 <button
                                     title="Remove"
                                     onClick={() => onRemove?.()}
-                                style={{
+                                    style={{
                                         width: 30,
                                         height: 30,
                                         border: `1px solid ${currentTheme.border}`,
                                         background: "transparent",
                                         color: "#D69A82",
                                         borderRadius: 4,
-                                    cursor: "pointer",
+                                        cursor: "pointer",
                                         fontSize: 14,
                                     }}
                                 >
@@ -795,10 +850,10 @@ export const Portfolio: React.FC<
                                 border: `1px dashed ${currentTheme.border}`,
                                 borderRadius: 4,
                                 padding: 8,
-                                }}
-                            >
-                                <div
-                                    style={{
+                            }}
+                        >
+                            <div
+                                style={{
                                     fontWeight: 600,
                                     color: currentTheme.text,
                                     marginBottom: 6,
@@ -819,8 +874,8 @@ export const Portfolio: React.FC<
                                     }}
                                 >
                                     <pre
-                                            style={{
-                                                margin: 0,
+                                        style={{
+                                            margin: 0,
                                             whiteSpace: "pre-wrap",
                                         }}
                                     >
@@ -833,14 +888,14 @@ export const Portfolio: React.FC<
                                 </div>
                             ) : (
                                 <div
-                                            style={{
+                                    style={{
                                         color: currentTheme.textSecondary,
                                     }}
                                 >
                                     No data loaded
                                 </div>
                             )}
-                                    </div>
+                        </div>
                         <div
                             style={{
                                 flex: 1,
@@ -850,14 +905,14 @@ export const Portfolio: React.FC<
                             }}
                         >
                             <div
-                                        style={{
+                                style={{
                                     fontWeight: 600,
                                     color: currentTheme.text,
                                     marginBottom: 6,
                                 }}
                             >
                                 FX Option Trades (first 10)
-                                </div>
+                            </div>
                             {fxOptions && fxOptions.length > 0 ? (
                                 <div
                                     style={{
@@ -886,9 +941,9 @@ export const Portfolio: React.FC<
                                     }}
                                 >
                                     No data loaded
-                    </div>
-                )}
-            </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
