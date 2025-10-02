@@ -136,3 +136,4 @@ After setup:
 2. Explore table structures
 3. Use for database schema analysis
 4. Leverage for code generation with database context
+

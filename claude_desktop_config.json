@@ -1,9 +1,9 @@
 {
   "mcpServers": {
     "postgres": {
-      "command": "node",
+      "command": "npx",
       "args": [
-        "postgres-mcp-server.js"
+        "@modelcontextprotocol/server-postgres"
       ],
       "env": {
         "POSTGRES_CONNECTION_STRING": "postgresql://mikael:Ii89rra137+*@gzcdevserver.postgres.database.azure.com:5432/gzc_platform?sslmode=require"
@@ -21,6 +21,16 @@
       "args": [
         "@modelcontextprotocol/server-memory"
       ]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-brave-search"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "YOUR_BRAVE_API_KEY"
+      }
     }
   }
 }
+

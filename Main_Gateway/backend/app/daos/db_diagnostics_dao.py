@@ -113,5 +113,3 @@ class DBDiagnosticsDAO:
                     "primary_keys": list(pks),
                 }
             return result
-
-

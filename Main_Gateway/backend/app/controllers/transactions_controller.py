@@ -11,7 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/unmatched", status_code=200)
-async def get_unmatched_transactions(request: Request, current_user: dict = Depends(validate_token)):
+async def get_unmatched_transactions(
+    request: Request, current_user: dict = Depends(validate_token)
+):
     """
     Fetch all unmatched transactions, optionally filtered by `currentDate`.
     """
@@ -21,12 +23,16 @@ async def get_unmatched_transactions(request: Request, current_user: dict = Depe
         unmatched_df = dao.get_unmatched_transactions(current_date)
         return {"status": "success", "data": unmatched_df.to_dict(orient="records")}
     except Exception as e:
-        logger.exception("[TransactionsController] Failed to fetch unmatched transactions")
+        logger.exception(
+            "[TransactionsController] Failed to fetch unmatched transactions"
+        )
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/all", status_code=200)
-async def get_all_transactions(request: Request, current_user: dict = Depends(validate_token)):
+async def get_all_transactions(
+    request: Request, current_user: dict = Depends(validate_token)
+):
     """
     Fetch all transactions, optionally filtered by `currentDate`.
     """
@@ -41,7 +47,12 @@ async def get_all_transactions(request: Request, current_user: dict = Depends(va
 
 
 @router.get("/fx-trades", status_code=200)
-async def get_fx_trades(request: Request, current_user: dict = Depends(validate_token), limit: int = Query(100, ge=1, le=5000), offset: int = Query(0, ge=0)):
+async def get_fx_trades(
+    request: Request,
+    current_user: dict = Depends(validate_token),
+    limit: int = Query(100, ge=1, le=5000),
+    offset: int = Query(0, ge=0),
+):
     try:
         data = FXTradesDAO().list_fx_trades(limit=limit, offset=offset)
         return {"status": "success", "count": len(data), "data": data}
@@ -51,7 +62,12 @@ async def get_fx_trades(request: Request, current_user: dict = Depends(validate_
 
 
 @router.get("/fx-option-trades", status_code=200)
-async def get_fx_option_trades(request: Request, current_user: dict = Depends(validate_token), limit: int = Query(100, ge=1, le=5000), offset: int = Query(0, ge=0)):
+async def get_fx_option_trades(
+    request: Request,
+    current_user: dict = Depends(validate_token),
+    limit: int = Query(100, ge=1, le=5000),
+    offset: int = Query(0, ge=0),
+):
     try:
         data = FXTradesDAO().list_fx_option_trades(limit=limit, offset=offset)
         return {"status": "success", "count": len(data), "data": data}

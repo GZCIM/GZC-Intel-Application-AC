@@ -12,7 +12,9 @@ class FXTradesDAO:
             """
         )
         with engine.connect() as conn:
-            rows = conn.execute(query, {"limit": limit, "offset": offset}).mappings().all()
+            rows = (
+                conn.execute(query, {"limit": limit, "offset": offset}).mappings().all()
+            )
             return [dict(r) for r in rows]
 
     def list_fx_option_trades(self, limit: int = 1000, offset: int = 0):
@@ -24,7 +26,8 @@ class FXTradesDAO:
             """
         )
         with engine.connect() as conn:
-            rows = conn.execute(query, {"limit": limit, "offset": offset}).mappings().all()
+            rows = (
+                conn.execute(query, {"limit": limit, "offset": offset}).mappings().all()
+            )
             return [dict(r) for r in rows]
-
 

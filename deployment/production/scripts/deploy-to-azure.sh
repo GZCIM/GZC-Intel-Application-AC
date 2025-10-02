@@ -39,38 +39,38 @@ log_step() {
 # Function to check prerequisites
 check_prerequisites() {
     log_step "Checking prerequisites..."
-    
+
     # Check Azure CLI
     if ! command -v az &> /dev/null; then
         log_error "Azure CLI is not installed"
         exit 1
     fi
-    
+
     # Check Docker
     if ! command -v docker &> /dev/null; then
         log_error "Docker is not installed"
         exit 1
     fi
-    
+
     # Check if logged in to Azure
     if ! az account show &> /dev/null; then
         log_error "Not logged in to Azure. Please run 'az login'"
         exit 1
     fi
-    
+
     # Check if logged in to ACR
     if ! az acr login --name $ACR_NAME &> /dev/null; then
         log_error "Failed to login to Azure Container Registry: $ACR_NAME"
         exit 1
     fi
-    
+
     log_info "Prerequisites check passed"
 }
 
 # Function to create secrets in Key Vault
 create_secrets() {
     log_step "Creating secrets in Azure Key Vault..."
-    
+
     # Generate JWT secret if not exists
     JWT_SECRET=$(openssl rand -base64 32)
     az keyvault secret set \
@@ -78,7 +78,7 @@ create_secrets() {
         --name "gzc-jwt-secret" \
         --value "$JWT_SECRET" \
         --output none
-    
+
     # Generate Redis password if not exists
     REDIS_PASSWORD=$(openssl rand -base64 24)
     az keyvault secret set \
@@ -86,23 +86,23 @@ create_secrets() {
         --name "gzc-redis-password" \
         --value "$REDIS_PASSWORD" \
         --output none
-    
+
     # Set PostgreSQL password (using existing from env)
     az keyvault secret set \
         --vault-name $KEYVAULT_NAME \
         --name "gzc-postgres-password" \
         --value "Ii89rra137+*" \
         --output none
-    
+
     log_info "Secrets created in Key Vault"
 }
 
 # Function to build and push Docker images
 build_and_push_images() {
     log_step "Building and pushing Docker images..."
-    
+
     local VERSION=$(date +"%Y%m%d-%H%M%S")
-    
+
     # Build Nginx gateway image
     log_info "Building Nginx gateway image..."
     cat > Dockerfile.gateway <<EOF
@@ -132,7 +132,7 @@ EOF
     docker build -f Dockerfile.gateway -t $ACR_NAME.azurecr.io/gzc-intel-gateway:$VERSION -t $ACR_NAME.azurecr.io/gzc-intel-gateway:latest .
     docker push $ACR_NAME.azurecr.io/gzc-intel-gateway:$VERSION
     docker push $ACR_NAME.azurecr.io/gzc-intel-gateway:latest
-    
+
     # Build frontend image
     log_info "Building frontend image..."
     cd Main_Frontend
@@ -140,7 +140,7 @@ EOF
     docker push $ACR_NAME.azurecr.io/gzc-intel-frontend:$VERSION
     docker push $ACR_NAME.azurecr.io/gzc-intel-frontend:latest
     cd ..
-    
+
     # Build FastAPI backend image
     log_info "Building FastAPI backend image..."
     cd Main_Gateway/backend
@@ -148,7 +148,7 @@ EOF
     docker push $ACR_NAME.azurecr.io/gzc-intel-backend:$VERSION
     docker push $ACR_NAME.azurecr.io/gzc-intel-backend:latest
     cd ../..
-    
+
     # Build WebSocket backend image
     log_info "Building WebSocket backend image..."
     cd FSS_Socket/backend
@@ -156,10 +156,10 @@ EOF
     docker push $ACR_NAME.azurecr.io/gzc-intel-websocket:$VERSION
     docker push $ACR_NAME.azurecr.io/gzc-intel-websocket:latest
     cd ../..
-    
+
     # Clean up
     rm -f Dockerfile.gateway
-    
+
     log_info "Images built and pushed successfully"
     echo "VERSION=$VERSION" > deployment/production/.version
 }
@@ -167,7 +167,7 @@ EOF
 # Function to create Container Apps Environment
 create_environment() {
     log_step "Creating Container Apps Environment..."
-    
+
     # Create environment if it doesn't exist
     if ! az containerapp env show --name $ENVIRONMENT_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
         az containerapp env create \
@@ -179,7 +179,7 @@ create_environment() {
                 --workspace-name gzc-logs \
                 --query customerId -o tsv 2>/dev/null || echo "") \
             --output none
-        
+
         log_info "Container Apps Environment created"
     else
         log_info "Container Apps Environment already exists"
@@ -189,17 +189,17 @@ create_environment() {
 # Function to deploy PostgreSQL
 deploy_postgresql() {
     log_step "Setting up PostgreSQL..."
-    
+
     # PostgreSQL is already running on gzcdevserver.postgres.database.azure.com
     # Just ensure the database exists
-    
+
     log_info "PostgreSQL is already configured"
 }
 
 # Function to deploy Redis
 deploy_redis() {
     log_step "Deploying Redis..."
-    
+
     az containerapp create \
         --name gzc-redis \
         --resource-group $RESOURCE_GROUP \
@@ -216,16 +216,16 @@ deploy_redis() {
         --command redis-server \
         --args '--requirepass $REDIS_PASSWORD --maxmemory 512mb --maxmemory-policy allkeys-lru' \
         --output none
-    
+
     log_info "Redis deployed"
 }
 
 # Function to deploy FastAPI backend
 deploy_fastapi() {
     log_step "Deploying FastAPI backend..."
-    
+
     local VERSION=$(cat deployment/production/.version | cut -d= -f2)
-    
+
     az containerapp create \
         --name gzc-fastapi-backend \
         --resource-group $RESOURCE_GROUP \
@@ -258,16 +258,16 @@ deploy_fastapi() {
             JWT_SECRET=secretref:jwt-secret \
             BYPASS_AUTH_FOR_PORTFOLIO=0 \
         --output none
-    
+
     log_info "FastAPI backend deployed"
 }
 
 # Function to deploy WebSocket backend
 deploy_websocket() {
     log_step "Deploying WebSocket backend..."
-    
+
     local VERSION=$(cat deployment/production/.version | cut -d= -f2)
-    
+
     az containerapp create \
         --name gzc-websocket-backend \
         --resource-group $RESOURCE_GROUP \
@@ -291,16 +291,16 @@ deploy_websocket() {
             WS_HEARTBEAT_INTERVAL=30 \
             WS_MAX_CONNECTIONS=1000 \
         --output none
-    
+
     log_info "WebSocket backend deployed"
 }
 
 # Function to deploy frontend
 deploy_frontend() {
     log_step "Deploying frontend..."
-    
+
     local VERSION=$(cat deployment/production/.version | cut -d= -f2)
-    
+
     az containerapp create \
         --name gzc-frontend \
         --resource-group $RESOURCE_GROUP \
@@ -318,20 +318,20 @@ deploy_frontend() {
             VITE_CLIENT_ID=a873f2d7-2ab9-4d59-a54c-90859226bf2e \
             VITE_TENANT_ID=8274c97d-de9d-4328-98cf-2d4ee94bf104 \
         --output none
-    
+
     log_info "Frontend deployed"
 }
 
 # Function to deploy API Gateway
 deploy_gateway() {
     log_step "Deploying API Gateway..."
-    
+
     local VERSION=$(cat deployment/production/.version | cut -d= -f2)
-    
+
     # First, generate self-signed certificates for initial deployment
     log_info "Generating initial certificates..."
     mkdir -p /tmp/certs
-    
+
     # Generate certificates
     openssl genrsa -out /tmp/certs/privkey.pem 2048
     openssl req -new -key /tmp/certs/privkey.pem \
@@ -343,7 +343,7 @@ deploy_gateway() {
         -out /tmp/certs/fullchain.pem
     cp /tmp/certs/fullchain.pem /tmp/certs/chain.pem
     openssl dhparam -out /tmp/certs/dhparam.pem 2048
-    
+
     # Create certificate secrets
     az containerapp secret set \
         --name gzc-gateway \
@@ -354,7 +354,7 @@ deploy_gateway() {
             ssl-chain="$(cat /tmp/certs/chain.pem | base64 -w 0)" \
             ssl-dhparam="$(cat /tmp/certs/dhparam.pem | base64 -w 0)" \
         --output none 2>/dev/null || true
-    
+
     # Deploy gateway
     az containerapp create \
         --name gzc-gateway \
@@ -380,17 +380,17 @@ deploy_gateway() {
             BACKEND_HOST=gzc-fastapi-backend \
             WEBSOCKET_HOST=gzc-websocket-backend \
         --output none
-    
+
     # Clean up temporary certificates
     rm -rf /tmp/certs
-    
+
     log_info "API Gateway deployed"
 }
 
 # Function to configure custom domain and SSL
 configure_ssl() {
     log_step "Configuring SSL certificates..."
-    
+
     log_warning "SSL configuration requires manual setup with Let's Encrypt or Azure certificates"
     log_info "For production, please:"
     log_info "1. Configure custom domain in Azure Container Apps"
@@ -401,35 +401,35 @@ configure_ssl() {
 # Function to run health checks
 run_health_checks() {
     log_step "Running health checks..."
-    
+
     local APP_URL="https://$APP_NAME.delightfulground-653e61be.eastus.azurecontainerapps.io"
-    
+
     log_info "Waiting for deployment to be ready..."
     sleep 30
-    
+
     # Check gateway health
     if curl -f -k "$APP_URL/health" &> /dev/null; then
         log_info "✅ Gateway health check passed"
     else
         log_error "❌ Gateway health check failed"
     fi
-    
+
     # Check if frontend is accessible
     if curl -f -k "$APP_URL/" &> /dev/null; then
         log_info "✅ Frontend accessibility check passed"
     else
         log_error "❌ Frontend accessibility check failed"
     fi
-    
+
     log_info "Health checks completed"
 }
 
 # Function to display deployment summary
 display_summary() {
     log_step "Deployment Summary"
-    
+
     local APP_URL="https://$APP_NAME.delightfulground-653e61be.eastus.azurecontainerapps.io"
-    
+
     echo -e "${GREEN}============================================${NC}"
     echo -e "${GREEN} GZC Intel Application Deployment Complete ${NC}"
     echo -e "${GREEN}============================================${NC}"
@@ -453,7 +453,7 @@ display_summary() {
 # Main execution
 main() {
     log_info "Starting GZC Intel Application deployment to Azure..."
-    
+
     check_prerequisites
     create_secrets
     build_and_push_images

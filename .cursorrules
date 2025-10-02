@@ -1,9 +1,9 @@
 {
   "mcpServers": {
     "postgres": {
-      "command": "npx",
+      "command": "node",
       "args": [
-        "@modelcontextprotocol/server-postgres"
+        "postgres-mcp-server.js"
       ],
       "env": {
         "POSTGRES_CONNECTION_STRING": "postgresql://mikael:Ii89rra137+*@gzcdevserver.postgres.database.azure.com:5432/gzc_platform?sslmode=require"
@@ -24,3 +24,4 @@
     }
   }
 }
+

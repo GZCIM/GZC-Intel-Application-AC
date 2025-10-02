@@ -16,13 +16,13 @@ CREATE INDEX IF NOT EXISTS idx_gzc_fund_name ON gzc_fund(FundName);
 -- Step 3: Insert GMF and GCF records from legacy table
 -- Actual table structure: FundId, FundNameShort, FundNameFull
 INSERT INTO gzc_fund (Id, FundName, Description, mod_user, mod_timestamp)
-SELECT 
+SELECT
     "FundId" as Id,
     "FundNameShort" as FundName,
     "FundNameFull" as Description,
     'migration' as mod_user,
     CURRENT_TIMESTAMP as mod_timestamp
-FROM leg."tblFund" 
+FROM leg."tblFund"
 WHERE "FundId" IN (1, 6)  -- Only GMF and GCF
 ON CONFLICT (Id) DO UPDATE SET
     FundName = EXCLUDED.FundName,
@@ -31,13 +31,13 @@ ON CONFLICT (Id) DO UPDATE SET
     mod_timestamp = EXCLUDED.mod_timestamp;
 
 -- Step 4: Verify the migration
-SELECT 
+SELECT
     Id,
     FundName,
     Description,
     mod_user,
     mod_timestamp
-FROM gzc_fund 
+FROM gzc_fund
 ORDER BY Id;
 
 -- Expected output:

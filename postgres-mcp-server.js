@@ -1,0 +1,235 @@
+#!/usr/bin/env node
+
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
+import { Client } from 'pg';
+
+const server = new Server(
+  {
+    name: 'postgres-mcp-server',
+    version: '1.0.0',
+  },
+  {
+    capabilities: {
+      tools: {},
+    },
+  }
+);
+
+let client = null;
+
+// Initialize database connection
+async function initConnection() {
+  if (!client) {
+    const connectionString = process.env.POSTGRES_CONNECTION_STRING || 
+      'postgresql://mikael:Ii89rra137+*@gzcdevserver.postgres.database.azure.com:5432/gzc_platform?sslmode=require';
+    
+    client = new Client({
+      connectionString: connectionString,
+    });
+    
+    try {
+      await client.connect();
+      console.error('Connected to PostgreSQL database');
+    } catch (error) {
+      console.error('Failed to connect to database:', error.message);
+      client = null;
+    }
+  }
+  return client;
+}
+
+// List available tools
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  return {
+    tools: [
+      {
+        name: 'query_database',
+        description: 'Execute a SQL query on the PostgreSQL database',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'SQL query to execute',
+            },
+          },
+          required: ['query'],
+        },
+      },
+      {
+        name: 'list_tables',
+        description: 'List all tables in the database',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            schema: {
+              type: 'string',
+              description: 'Schema name (default: public)',
+              default: 'public',
+            },
+          },
+        },
+      },
+      {
+        name: 'describe_table',
+        description: 'Get table structure and column information',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            table_name: {
+              type: 'string',
+              description: 'Name of the table to describe',
+            },
+            schema: {
+              type: 'string',
+              description: 'Schema name (default: public)',
+              default: 'public',
+            },
+          },
+          required: ['table_name'],
+        },
+      },
+      {
+        name: 'get_table_data',
+        description: 'Get sample data from a table',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            table_name: {
+              type: 'string',
+              description: 'Name of the table',
+            },
+            schema: {
+              type: 'string',
+              description: 'Schema name (default: public)',
+              default: 'public',
+            },
+            limit: {
+              type: 'number',
+              description: 'Number of rows to return (default: 10)',
+              default: 10,
+            },
+          },
+          required: ['table_name'],
+        },
+      },
+    ],
+  };
+});
+
+// Handle tool calls
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params;
+  
+  try {
+    const dbClient = await initConnection();
+    if (!dbClient) {
+      throw new Error('Database connection not available');
+    }
+
+    switch (name) {
+      case 'query_database': {
+        const { query } = args;
+        const result = await dbClient.query(query);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                rows: result.rows,
+                rowCount: result.rowCount,
+                fields: result.fields?.map(f => ({ name: f.name, dataTypeID: f.dataTypeID })),
+              }, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'list_tables': {
+        const { schema = 'public' } = args;
+        const query = `
+          SELECT table_name, table_type
+          FROM information_schema.tables 
+          WHERE table_schema = $1
+          ORDER BY table_name;
+        `;
+        const result = await dbClient.query(query, [schema]);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result.rows, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'describe_table': {
+        const { table_name, schema = 'public' } = args;
+        const query = `
+          SELECT 
+            column_name,
+            data_type,
+            is_nullable,
+            column_default,
+            character_maximum_length,
+            numeric_precision,
+            numeric_scale
+          FROM information_schema.columns 
+          WHERE table_schema = $1 AND table_name = $2
+          ORDER BY ordinal_position;
+        `;
+        const result = await dbClient.query(query, [schema, table_name]);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result.rows, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'get_table_data': {
+        const { table_name, schema = 'public', limit = 10 } = args;
+        const query = `SELECT * FROM "${schema}"."${table_name}" LIMIT $1;`;
+        const result = await dbClient.query(query, [limit]);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result.rows, null, 2),
+            },
+          ],
+        };
+      }
+
+      default:
+        throw new Error(`Unknown tool: ${name}`);
+    }
+  } catch (error) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error: ${error.message}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+});
+
+// Start the server
+async function main() {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error('PostgreSQL MCP Server running');
+}
+
+main().catch(console.error);

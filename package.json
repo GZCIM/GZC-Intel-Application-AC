@@ -1,8 +1,18 @@
 {
+  "name": "postgres-mcp-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Custom PostgreSQL MCP Server for GZC Intel Application",
+  "main": "postgres-mcp-server.js",
+  "scripts": {
+    "start": "node postgres-mcp-server.js",
+    "test": "node test-mcp-server.js"
+  },
   "dependencies": {
-    "express": "^5.1.0",
-    "http-proxy": "^1.18.1",
-    "http-proxy-middleware": "^3.0.5",
-    "puppeteer": "^24.16.0"
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "pg": "^8.11.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
