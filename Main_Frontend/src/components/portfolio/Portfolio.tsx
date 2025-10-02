@@ -56,7 +56,7 @@ export const Portfolio: React.FC<
     const [portfolioMode, setPortfolioMode] = useState<"active" | "virtual">(
         "active"
     );
-    const [selectedFundId, setSelectedFundId] = useState<string>("0"); // 0=ALL, 1=GMF, 6=GCF
+    const [selectedFundId, setSelectedFundId] = useState<string>("1"); // 0=ALL, 1=GMF, 6=GCF
     // Temporary debug views for FX trades APIs
     const [fxTrades, setFxTrades] = useState<any[] | null>(null);
     const [fxOptions, setFxOptions] = useState<any[] | null>(null);
@@ -70,7 +70,7 @@ export const Portfolio: React.FC<
             setFxLoading("trades");
             // use authorized client so bearer token is attached
             const resp = await portfolioApi.get(`/api/db/fx/trades`, {
-                params: { limit: 100 },
+                params: { limit: 100, fundId: selectedFundId },
             });
             setFxTrades(resp.data?.data || []);
             setFxError(null);
@@ -86,7 +86,7 @@ export const Portfolio: React.FC<
         try {
             setFxLoading("options");
             const resp = await portfolioApi.get(`/api/db/fx/options`, {
-                params: { limit: 100 },
+                params: { limit: 100, fundId: selectedFundId },
             });
             setFxOptions(resp.data?.data || []);
             setFxError(null);
@@ -105,7 +105,7 @@ export const Portfolio: React.FC<
         loadFxTrades();
         loadFxOptions();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [selectedFundId]);
 
     // Load persisted mode/date from localStorage (force default Active on first render)
     useEffect(() => {
@@ -130,8 +130,8 @@ export const Portfolio: React.FC<
             if (savedFund === "0" || savedFund === "1" || savedFund === "6") {
                 setSelectedFundId(savedFund);
             } else {
-                setSelectedFundId("0");
-                localStorage.setItem("portfolio.fundId", "0");
+                setSelectedFundId("1");
+                localStorage.setItem("portfolio.fundId", "1");
             }
         } catch (_) {}
     }, []);
