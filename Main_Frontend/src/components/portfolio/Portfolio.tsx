@@ -344,7 +344,7 @@ export const Portfolio: React.FC<
                     <div
                         style={{
                             display: "flex",
-                            alignItems: "flex-start",
+                            alignItems: "center",
                             gap: 12,
                         }}
                     >
@@ -386,7 +386,8 @@ export const Portfolio: React.FC<
                         <div
                             style={{
                                 display: "flex",
-                                flexDirection: "column",
+                                flexDirection: "row",
+                                alignItems: "center",
                                 gap: 6,
                             }}
                         >
@@ -461,7 +462,7 @@ export const Portfolio: React.FC<
                                             style={{
                                                 color: currentTheme.textSecondary,
                                                 fontSize: 12,
-                                                paddingTop: 4,
+                                                paddingTop: 0,
                                             }}
                                         >
                                             Fund
