@@ -456,13 +456,20 @@ export const Portfolio: React.FC<
                                     </button>
                                 </div>
                                 {portfolioMode === "active" && (
-                                    <div style={{ display: "flex", gap: 6 }}>
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            gap: 6,
+                                            alignItems: "center",
+                                        }}
+                                    >
                                         <label
                                             htmlFor="portfolio-fund-select"
                                             style={{
                                                 color: currentTheme.textSecondary,
                                                 fontSize: 12,
                                                 paddingTop: 0,
+                                                lineHeight: "22px",
                                             }}
                                         >
                                             Fund
