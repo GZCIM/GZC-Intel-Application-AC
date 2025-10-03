@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException, Query, Depends
 from app.auth.azure_auth import validate_token
 from app.daos.db_diagnostics_dao import DBDiagnosticsDAO
 from app.daos.fx_trades_dao import FXTradesDAO
-from app.daos.funds_dao import FundsDAO
 
 router = APIRouter(prefix="/api/db", tags=["DB Health"])
 
@@ -60,11 +59,3 @@ def db_fx_option_trades(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.get("/funds", status_code=200)
-def db_list_funds(current_user: dict = Depends(validate_token)):
-    try:
-        data = FundsDAO().list_funds()
-        return {"status": "ok", "count": len(data), "data": data}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
