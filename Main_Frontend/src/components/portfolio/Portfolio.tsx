@@ -53,19 +53,21 @@ export const Portfolio: React.FC<
     const [selectedPortfolioId, setSelectedPortfolioId] = useState<string>("");
     const [dataMode, setDataMode] = useState<"live" | "eod">("live");
     const [selectedDate, setSelectedDate] = useState<string>("");
+    const prevBusinessDate = () => {
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        const wd = d.getDay();
+        if (wd === 0) d.setDate(d.getDate() - 2);
+        if (wd === 6) d.setDate(d.getDate() - 1);
+        return d;
+    };
+
     const effectiveDate = useMemo(() => {
         const today = new Date();
         const fmt = (d: Date) => d.toISOString().slice(0, 10);
         if (dataMode === "eod") {
             if (selectedDate) return selectedDate; // allow manual override for EOD
-            // previous working day (Mon->Fri). Holidays can be added later.
-            const d = new Date(today);
-            d.setDate(d.getDate() - 1);
-            // if Sat(6) move to Fri, if Sun(0) move to Fri as well
-            const wd = d.getDay();
-            if (wd === 0) d.setDate(d.getDate() - 2);
-            if (wd === 6) d.setDate(d.getDate() - 1);
-            return fmt(d);
+            return fmt(prevBusinessDate());
         }
         return fmt(today);
     }, [dataMode, selectedDate]);
@@ -736,7 +738,15 @@ export const Portfolio: React.FC<
                                     Live
                                 </button>
                                 <button
-                                    onClick={() => setDataMode("eod")}
+                                    onClick={() => {
+                                        setDataMode("eod");
+                                        if (!selectedDate) {
+                                            const d = prevBusinessDate()
+                                                .toISOString()
+                                                .slice(0, 10);
+                                            setSelectedDate(d);
+                                        }
+                                    }}
                                     style={{
                                         padding: "4px 8px",
                                         backgroundColor: "#1e1e1e",
@@ -771,7 +781,7 @@ export const Portfolio: React.FC<
                                         aria-label="Select EOD date"
                                         title="Select EOD date"
                                         type="date"
-                                        value={selectedDate}
+                                        value={selectedDate || effectiveDate}
                                         onChange={(e) =>
                                             setSelectedDate(e.target.value)
                                         }
@@ -782,6 +792,7 @@ export const Portfolio: React.FC<
                                             border: `1px solid ${currentTheme.border}`,
                                             borderRadius: 4,
                                             fontSize: 11,
+                                            colorScheme: "dark",
                                         }}
                                     />
                                 </div>
