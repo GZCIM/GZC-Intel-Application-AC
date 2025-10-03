@@ -777,9 +777,9 @@ export const Portfolio: React.FC<
                                         }
                                         style={{
                                             padding: "4px 8px",
-                                            backgroundColor: "#0f0f0f",
-                                            color: "#eaeaea",
-                                            border: `1px solid ${currentTheme.border}66`,
+                                            backgroundColor: currentTheme.background,
+                                            color: currentTheme.text,
+                                            border: `1px solid ${currentTheme.border}`,
                                             borderRadius: 4,
                                             fontSize: 11,
                                         }}
