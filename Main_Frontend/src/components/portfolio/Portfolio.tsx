@@ -57,6 +57,7 @@ export const Portfolio: React.FC<
         "active"
     );
     const [selectedFundId, setSelectedFundId] = useState<string>("1"); // 0=ALL, 1=GMF, 6=GCF
+    const [funds, setFunds] = useState<Array<{ id: number; short_name: string; full_name: string }>>([]);
     // Temporary debug views for FX trades APIs
     const [fxTrades, setFxTrades] = useState<any[] | null>(null);
     const [fxOptions, setFxOptions] = useState<any[] | null>(null);
@@ -106,6 +107,24 @@ export const Portfolio: React.FC<
         loadFxOptions();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedFundId]);
+
+    // Load funds once on mount
+    useEffect(() => {
+        (async () => {
+            try {
+                const resp = await portfolioApi.get(`/api/db/funds`);
+                const list = (resp.data?.data || []).map((f: any) => ({
+                    id: Number(f.id),
+                    short_name: String(f.short_name),
+                    full_name: String(f.full_name),
+                }));
+                setFunds(list);
+            } catch (e) {
+                // keep fallback hardcoded options
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Load persisted mode/date from localStorage (force default Active on first render)
     useEffect(() => {
@@ -494,8 +513,11 @@ export const Portfolio: React.FC<
                                             }}
                                         >
                                             <option value="0">ALL</option>
-                                            <option value="1">GMF</option>
-                                            <option value="6">GCF</option>
+                                            {(funds.length ? funds : [{ id: 1, short_name: "GMF", full_name: "Global Macro Fund" }, { id: 6, short_name: "GCF", full_name: "Global Currencies Fund" }]).map((f) => (
+                                                <option key={f.id} value={String(f.id)}>
+                                                    {f.short_name}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                 )}
