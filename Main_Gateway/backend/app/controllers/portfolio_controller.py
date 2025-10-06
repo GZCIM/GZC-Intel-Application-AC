@@ -5,7 +5,7 @@ from app.auth.azure_auth import validate_token
 from app.daos.portfolio_dao import PortfolioDAO
 import logging
 
-router = APIRouter(prefix="/portfolio", tags=["Portfolio"])
+router = APIRouter(prefix="/api/portfolio", tags=["Portfolio"])
 logger = logging.getLogger(__name__)
 
 
