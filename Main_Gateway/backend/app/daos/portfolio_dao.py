@@ -122,3 +122,67 @@ class PortfolioDAO:
         df = pd.DataFrame(mock_data)
         logger.info(f"Generated {len(df)} mock portfolio positions")
         return df
+
+    def get_fx_positions(
+        self,
+        selected_date: str,
+        fund_id: int | None = None,
+        limit: int = 5000,
+        offset: int = 0,
+    ):
+        """
+        Return FX forward positions from public.gzc_fx_trade where maturity_date >= selected_date.
+        If fund_id is provided and not 0, also filter by fund_id.
+        """
+        base_sql = """
+            SELECT *
+            FROM public.gzc_fx_trade
+            WHERE maturity_date >= :selected_date
+        """
+        params: dict[str, object] = {
+            "selected_date": selected_date,
+            "limit": limit,
+            "offset": offset,
+        }
+        if fund_id is not None and fund_id != 0:
+            base_sql += " AND fund_id = :fund_id"
+            params["fund_id"] = fund_id
+        base_sql += (
+            " ORDER BY maturity_date ASC, trade_id DESC LIMIT :limit OFFSET :offset"
+        )
+        query = text(base_sql)
+        with self.engine.connect() as conn:
+            rows = conn.execute(query, params).mappings().all()
+            return [dict(r) for r in rows]
+
+    def get_fx_option_positions(
+        self,
+        selected_date: str,
+        fund_id: int | None = None,
+        limit: int = 5000,
+        offset: int = 0,
+    ):
+        """
+        Return FX option positions from public.gzc_fx_option_trade where maturity_date >= selected_date.
+        If fund_id is provided and not 0, also filter by fund_id.
+        """
+        base_sql = """
+            SELECT *
+            FROM public.gzc_fx_option_trade
+            WHERE maturity_date >= :selected_date
+        """
+        params: dict[str, object] = {
+            "selected_date": selected_date,
+            "limit": limit,
+            "offset": offset,
+        }
+        if fund_id is not None and fund_id != 0:
+            base_sql += " AND fund_id = :fund_id"
+            params["fund_id"] = fund_id
+        base_sql += (
+            " ORDER BY maturity_date ASC, trade_id DESC LIMIT :limit OFFSET :offset"
+        )
+        query = text(base_sql)
+        with self.engine.connect() as conn:
+            rows = conn.execute(query, params).mappings().all()
+            return [dict(r) for r in rows]

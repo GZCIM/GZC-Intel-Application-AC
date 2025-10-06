@@ -58,4 +58,3 @@ def db_fx_option_trades(
         return {"status": "ok", "count": len(data), "data": data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-

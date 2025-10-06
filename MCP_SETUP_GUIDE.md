@@ -10,7 +10,7 @@ This configuration sets up Model Context Protocol (MCP) servers to enable Claude
 # Install PostgreSQL MCP server
 npm install -g @modelcontextprotocol/server-postgres
 
-# Install filesystem MCP server  
+# Install filesystem MCP server
 npm install -g @modelcontextprotocol/server-filesystem
 
 # Install memory MCP server
@@ -106,7 +106,7 @@ For production deployment, consider using environment variables:
 
 ```bash
 export POSTGRES_HOST="your-production-host"
-export POSTGRES_USER="your-production-user"  
+export POSTGRES_USER="your-production-user"
 export POSTGRES_PASSWORD="your-production-password"
 export POSTGRES_DB="your-production-database"
 ```
