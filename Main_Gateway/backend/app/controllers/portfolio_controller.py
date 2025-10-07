@@ -167,8 +167,10 @@ async def get_fx_positions(
                 need_dates.append(mtd.isoformat())
             if not use_trade(dtd):
                 need_dates.append(dtd.isoformat())
-            # Today price is taken from trade; if you want live pricer, include today too
-            # need_dates.append(today.isoformat())
+            # Always include today for pricer-based pricing
+            need_dates.append(today.isoformat())
+            # Always include today for pricer-based pricing
+            need_dates.append(today.isoformat())
 
             if need_dates and PRICER_BASE_URL:
                 symbol = f"{str(t.get('trade_currency')).upper()}/{str(t.get('settlement_currency')).upper()}"
@@ -205,7 +207,7 @@ async def get_fx_positions(
                     "ytd_price": None,
                     "mtd_price": None,
                     "dtd_price": None,
-                    "today_price": t.get("price"),
+                    "today_price": None,
                 }
             )
 
@@ -227,6 +229,7 @@ async def get_fx_positions(
                     "dtd_price": t["dtd_price"]
                     if t["dtd_price"] is not None
                     else price_for(dtd, t.get("today_price"), fetched),
+                    "today_price": (fetched.get(t["today_date"]) if fetched else (0 if not PRICER_BASE_URL else None)),
                 }
             )
 
@@ -358,7 +361,7 @@ async def get_fx_option_positions(
                     "ytd_price": None,
                     "mtd_price": None,
                     "dtd_price": None,
-                    "today_price": t.get("premium"),
+                    "today_price": None,
                 }
             )
 
@@ -379,6 +382,7 @@ async def get_fx_option_positions(
                     "dtd_price": t["dtd_price"]
                     if t["dtd_price"] is not None
                     else price_for(dtd, t.get("today_price"), fetched),
+                    "today_price": (fetched.get(t["today_date"]) if fetched else (0 if not PRICER_BASE_URL else None)),
                 }
             )
 
