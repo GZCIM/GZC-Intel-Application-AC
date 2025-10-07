@@ -42,20 +42,26 @@ def _prev_business_day(d):
 
 def _last_business_day_of_month(d):
     from datetime import date, timedelta
+
     # Move to first day of next month, then step back to last day, then adjust for weekend
     year = d.year + (1 if d.month == 12 else 0)
     month = 1 if d.month == 12 else d.month + 1
     first_next = date(year, month, 1)
     last_day = first_next - timedelta(days=1)
-    return _prev_business_day(last_day + timedelta(days=1))  # prev biz from next day of last_day
+    return _prev_business_day(
+        last_day + timedelta(days=1)
+    )  # prev biz from next day of last_day
 
 
 def _last_business_day_of_year(d):
     from datetime import date
+
     dec31 = date(d.year - 1 if d.month == 1 and d.day == 1 else d.year, 12, 31)
     # If the selected date is in year Y, we want last business day of previous year (Y-1)
     prev_year_dec31 = date(d.year - 1, 12, 31)
-    return _prev_business_day(prev_year_dec31 + __import__('datetime').timedelta(days=1))
+    return _prev_business_day(
+        prev_year_dec31 + __import__("datetime").timedelta(days=1)
+    )
 
 
 def _bulk_price(request_items: list[dict]) -> dict[str, dict[str, float]]:
@@ -222,9 +228,9 @@ async def get_fx_positions(
                     "eod_date": dtd.isoformat(),
                     "today_date": today.isoformat(),
                     # placeholders; will fill after pricer call
-                    "ytd_price": None,
-                    "mtd_price": None,
-                    "dtd_price": None,
+                    "eoy_price": None,
+                    "eom_price": None,
+                    "eod_price": None,
                     "today_price": None,
                 }
             )
@@ -236,19 +242,19 @@ async def get_fx_positions(
             rid = f"fx-{t.get('trade_id')}"
             fetched = fetched_map.get(rid)
             # Use TRADE price as fallback when trade_date >= ref_date
-            ytd_price = (
-                t["ytd_price"]
-                if t["ytd_price"] is not None
+            eoy_price = (
+                t["eoy_price"]
+                if t["eoy_price"] is not None
                 else price_for(eoy, t.get("price"), fetched)
             )
-            mtd_price = (
-                t["mtd_price"]
-                if t["mtd_price"] is not None
+            eom_price = (
+                t["eom_price"]
+                if t["eom_price"] is not None
                 else price_for(eom, t.get("price"), fetched)
             )
-            dtd_price = (
-                t["dtd_price"]
-                if t["dtd_price"] is not None
+            eod_price = (
+                t["eod_price"]
+                if t["eod_price"] is not None
                 else price_for(dtd, t.get("price"), fetched)
             )
             today_price = (
@@ -270,17 +276,17 @@ async def get_fx_positions(
             out.append(
                 {
                     **t,
-                    "ytd_price": ytd_price,
-                    "mtd_price": mtd_price,
-                    "dtd_price": dtd_price,
+                    "eoy_price": eoy_price,
+                    "eom_price": eom_price,
+                    "eod_price": eod_price,
                     "today_price": today_price,
                     "eoy_date": t["eoy_date"],
                     "eom_date": t["eom_date"],
                     "eod_date": t["eod_date"],
                     "itd_pnl": pnl_since(trade_price),
-                    "ytd_pnl": pnl_since(ytd_price),
-                    "mtd_pnl": pnl_since(mtd_price),
-                    "dtd_pnl": pnl_since(dtd_price),
+                    "ytd_pnl": pnl_since(eoy_price),
+                    "mtd_pnl": pnl_since(eom_price),
+                    "dtd_pnl": pnl_since(eod_price),
                 }
             )
 
@@ -409,9 +415,9 @@ async def get_fx_option_positions(
                     "eom_date": eom.isoformat(),
                     "eod_date": dtd.isoformat(),
                     "today_date": today.isoformat(),
-                    "ytd_price": None,
-                    "mtd_price": None,
-                    "dtd_price": None,
+                    "eoy_price": None,
+                    "eom_price": None,
+                    "eod_price": None,
                     "today_price": None,
                 }
             )
@@ -422,19 +428,19 @@ async def get_fx_option_positions(
             rid = f"fxopt-{t.get('trade_id')}"
             fetched = fetched_map.get(rid)
             # Use TRADE premium as fallback when trade_date >= ref_date
-            ytd_price = (
-                t["ytd_price"]
-                if t["ytd_price"] is not None
+            eoy_price = (
+                t["eoy_price"]
+                if t["eoy_price"] is not None
                 else price_for(eoy, t.get("premium"), fetched)
             )
-            mtd_price = (
-                t["mtd_price"]
-                if t["mtd_price"] is not None
+            eom_price = (
+                t["eom_price"]
+                if t["eom_price"] is not None
                 else price_for(eom, t.get("premium"), fetched)
             )
-            dtd_price = (
-                t["dtd_price"]
-                if t["dtd_price"] is not None
+            eod_price = (
+                t["eod_price"]
+                if t["eod_price"] is not None
                 else price_for(dtd, t.get("premium"), fetched)
             )
             today_price = (
@@ -456,14 +462,14 @@ async def get_fx_option_positions(
             out.append(
                 {
                     **t,
-                    "ytd_price": ytd_price,
-                    "mtd_price": mtd_price,
-                    "dtd_price": dtd_price,
+                    "eoy_price": eoy_price,
+                    "eom_price": eom_price,
+                    "eod_price": eod_price,
                     "today_price": today_price,
                     "itd_pnl": pnl_since(trade_price),
-                    "ytd_pnl": pnl_since(ytd_price),
-                    "mtd_pnl": pnl_since(mtd_price),
-                    "dtd_pnl": pnl_since(dtd_price),
+                    "ytd_pnl": pnl_since(eoy_price),
+                    "mtd_pnl": pnl_since(eom_price),
+                    "dtd_pnl": pnl_since(eod_price),
                 }
             )
 
