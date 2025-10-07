@@ -173,10 +173,10 @@ class PortfolioDAO:
             "offset": offset,
         }
         if fund_id is not None and fund_id != 0:
-            base_sql += " AND fund_id = :fund_id"
+            base_sql += " AND t.fund_id = :fund_id"
             params["fund_id"] = fund_id
         base_sql += (
-            " ORDER BY maturity_date ASC, trade_id DESC LIMIT :limit OFFSET :offset"
+            " ORDER BY t.maturity_date ASC, t.trade_id DESC LIMIT :limit OFFSET :offset"
         )
         query = text(base_sql)
         with self.engine.connect() as conn:
@@ -235,10 +235,10 @@ class PortfolioDAO:
             "offset": offset,
         }
         if fund_id is not None and fund_id != 0:
-            base_sql += " AND fund_id = :fund_id"
+            base_sql += " AND t.fund_id = :fund_id"
             params["fund_id"] = fund_id
         base_sql += (
-            " ORDER BY maturity_date ASC, trade_id DESC LIMIT :limit OFFSET :offset"
+            " ORDER BY t.maturity_date ASC, t.trade_id DESC LIMIT :limit OFFSET :offset"
         )
         query = text(base_sql)
         with self.engine.connect() as conn:
@@ -246,4 +246,3 @@ class PortfolioDAO:
             return [dict(r) for r in rows]
 
     # Removed ref price extraction per request. Calculation engine will supply DTD/MTD/YTD; DB returns trade-side fields only.
-
