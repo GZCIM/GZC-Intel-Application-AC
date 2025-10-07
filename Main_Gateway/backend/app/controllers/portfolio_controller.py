@@ -273,9 +273,12 @@ async def get_fx_positions(
                     return None
                 return (float(price) - float(ref_p)) * qty * dir_factor
 
+            # Avoid duplicating DB price field; expose it as trade_price instead
+            base = {k: v for k, v in t.items() if k != "price"}
             out.append(
                 {
-                    **t,
+                    **base,
+                    "trade_price": trade_price,
                     "eoy_price": eoy_price,
                     "eom_price": eom_price,
                     "eod_price": eod_price,
@@ -459,9 +462,12 @@ async def get_fx_option_positions(
                     return None
                 return (float(price) - float(ref_p)) * qty * dir_factor
 
+            # Avoid duplicating DB premium field; expose it as trade_price instead
+            base = {k: v for k, v in t.items() if k != "premium"}
             out.append(
                 {
-                    **t,
+                    **base,
+                    "trade_price": trade_price,
                     "eoy_price": eoy_price,
                     "eom_price": eom_price,
                     "eod_price": eod_price,
