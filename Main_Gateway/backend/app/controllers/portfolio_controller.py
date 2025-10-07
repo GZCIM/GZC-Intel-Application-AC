@@ -257,7 +257,7 @@ async def get_fx_positions(
                 if t["eod_price"] is not None
                 else price_for(dtd, t.get("price"), fetched)
             )
-            today_price = (
+            price = (
                 fetched.get(t["today_date"])
                 if fetched
                 else (0 if not PRICER_BASE_URL else None)
@@ -269,9 +269,9 @@ async def get_fx_positions(
             dir_factor = 1.0 if side == "buy" else -1.0
 
             def pnl_since(ref_p):
-                if ref_p is None or today_price is None:
+                if ref_p is None or price is None:
                     return None
-                return (float(today_price) - float(ref_p)) * qty * dir_factor
+                return (float(price) - float(ref_p)) * qty * dir_factor
 
             out.append(
                 {
@@ -279,7 +279,7 @@ async def get_fx_positions(
                     "eoy_price": eoy_price,
                     "eom_price": eom_price,
                     "eod_price": eod_price,
-                    "price": today_price,
+                    "price": price,
                     "eoy_date": t["eoy_date"],
                     "eom_date": t["eom_date"],
                     "eod_date": t["eod_date"],
@@ -443,7 +443,7 @@ async def get_fx_option_positions(
                 if t["eod_price"] is not None
                 else price_for(dtd, t.get("premium"), fetched)
             )
-            today_price = (
+            price = (
                 fetched.get(t["today_date"])
                 if fetched
                 else (0 if not PRICER_BASE_URL else None)
@@ -455,9 +455,9 @@ async def get_fx_option_positions(
             dir_factor = 1.0 if side == "buy" else -1.0
 
             def pnl_since(ref_p):
-                if ref_p is None or today_price is None:
+                if ref_p is None or price is None:
                     return None
-                return (float(today_price) - float(ref_p)) * qty * dir_factor
+                return (float(price) - float(ref_p)) * qty * dir_factor
 
             out.append(
                 {
@@ -465,7 +465,7 @@ async def get_fx_option_positions(
                     "eoy_price": eoy_price,
                     "eom_price": eom_price,
                     "eod_price": eod_price,
-                    "price": today_price,
+                    "price": price,
                     "itd_pnl": pnl_since(trade_price),
                     "ytd_pnl": pnl_since(eoy_price),
                     "mtd_pnl": pnl_since(eom_price),
