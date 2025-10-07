@@ -166,6 +166,7 @@ class PortfolioDAO:
             LEFT JOIN public.gzc_fx_trade pt
                 ON pt.trade_id = pln.current_trade_id
             WHERE t.maturity_date::date >= (:selected_date)::date
+              AND t.trade_date::date    <= (:selected_date)::date
         """
         params: dict[str, object] = {
             "selected_date": selected_date,
@@ -228,6 +229,7 @@ class PortfolioDAO:
             LEFT JOIN public.gzc_fx_option_trade pt
                 ON pt.trade_id = pln.current_trade_id
             WHERE t.maturity_date::date >= (:selected_date)::date
+              AND t.trade_date::date    <= (:selected_date)::date
         """
         params: dict[str, object] = {
             "selected_date": selected_date,
