@@ -1,12 +1,41 @@
 # app/controllers/portfolio_controller.py
 
 from fastapi import APIRouter, Depends, Request, HTTPException, status
+import os
 from app.auth.azure_auth import validate_token
 from app.daos.portfolio_dao import PortfolioDAO
 import logging
 
 router = APIRouter(prefix="/api/portfolio", tags=["Portfolio"])
 logger = logging.getLogger(__name__)
+
+# External pricer microservice configuration (inside VPN)
+# Configure via environment variables:
+#  - PRICER_BASE_URL: base URL to the pricer service (e.g., https://pricer.internal:8443)
+#  - PRICER_TIMEOUT_MS: optional HTTP timeout in milliseconds (default 5000)
+PRICER_BASE_URL = os.getenv("PRICER_BASE_URL", "")
+try:
+    PRICER_TIMEOUT_MS = int(os.getenv("PRICER_TIMEOUT_MS", "5000"))
+except Exception:
+    PRICER_TIMEOUT_MS = 5000
+
+
+def _get_pricer_url(path: str) -> str:
+    base = (PRICER_BASE_URL or "").rstrip("/")
+    p = path.lstrip("/")
+    return f"{base}/{p}" if base else ""
+
+
+def _prev_business_day(d):
+    from datetime import timedelta
+    # Simple weekend-only logic; holidays can be added later
+    dtd = d - timedelta(days=1)
+    wd = dtd.weekday()
+    if wd == 6:  # Sunday -> Friday
+        dtd = dtd - timedelta(days=2)
+    elif wd == 5:  # Saturday -> Friday
+        dtd = dtd - timedelta(days=1)
+    return dtd
 
 
 @router.get("/", status_code=200)
@@ -66,11 +95,47 @@ async def get_fx_positions(
                     status_code=400, detail="'fundId' must be an integer"
                 )
 
-        # Per requirement: calculation engine will supply DTD/MTD/YTD. Return DB trade records only.
-        data = PortfolioDAO().get_fx_positions(
-            selected_date=selected_date, fund_id=fund_id
-        )
-        return {"status": "success", "count": len(data), "data": data}
+        # Baseline: DB trade records only
+        data = PortfolioDAO().get_fx_positions(selected_date=selected_date, fund_id=fund_id)
+
+        # Compute ref dates and attach placeholders; pricing integration will fill later
+        from datetime import datetime
+        today = datetime.strptime(selected_date, "%Y-%m-%d").date()
+        dtd = _prev_business_day(today)
+        mtd = today.replace(day=1)
+        ytd = today.replace(month=1, day=1)
+
+        enriched = []
+        for t in data:
+            trade_date = (t.get("trade_date") or today)
+            try:
+                if isinstance(trade_date, str):
+                    trade_date = datetime.fromisoformat(trade_date[:10]).date()
+            except Exception:
+                trade_date = today
+
+            def use_trade(ref_date):
+                return trade_date >= ref_date
+
+            # If pricer is not configured, return 0 for required ref dates; if trade_date >= ref_date use trade price
+            def price_for(ref_date, trade_price_value):
+                if use_trade(ref_date):
+                    return trade_price_value
+                return 0 if not PRICER_BASE_URL else None
+
+            enriched.append({
+                **t,
+                "ytd_date": ytd.isoformat(),
+                "mtd_date": mtd.isoformat(),
+                "dtd_date": dtd.isoformat(),
+                "today_date": today.isoformat(),
+                "ytd_price": price_for(ytd, t.get("price")),
+                "mtd_price": price_for(mtd, t.get("price")),
+                "dtd_price": price_for(dtd, t.get("price")),
+                "today_price": t.get("price"),
+            })
+
+        return {"status": "success", "count": len(enriched), "data": enriched}
     except HTTPException:
         raise
     except Exception as e:
@@ -125,11 +190,44 @@ async def get_fx_option_positions(
                     status_code=400, detail="'fundId' must be an integer"
                 )
 
-        # Per requirement: calculation engine will supply DTD/MTD/YTD. Return DB trade records only.
-        data = PortfolioDAO().get_fx_option_positions(
-            selected_date=selected_date, fund_id=fund_id
-        )
-        return {"status": "success", "count": len(data), "data": data}
+        data = PortfolioDAO().get_fx_option_positions(selected_date=selected_date, fund_id=fund_id)
+
+        from datetime import datetime
+        today = datetime.strptime(selected_date, "%Y-%m-%d").date()
+        dtd = _prev_business_day(today)
+        mtd = today.replace(day=1)
+        ytd = today.replace(month=1, day=1)
+
+        enriched = []
+        for t in data:
+            trade_date = (t.get("trade_date") or today)
+            try:
+                if isinstance(trade_date, str):
+                    trade_date = datetime.fromisoformat(trade_date[:10]).date()
+            except Exception:
+                trade_date = today
+
+            def use_trade(ref_date):
+                return trade_date >= ref_date
+
+            def price_for(ref_date, trade_price_value):
+                if use_trade(ref_date):
+                    return trade_price_value
+                return 0 if not PRICER_BASE_URL else None
+
+            enriched.append({
+                **t,
+                "ytd_date": ytd.isoformat(),
+                "mtd_date": mtd.isoformat(),
+                "dtd_date": dtd.isoformat(),
+                "today_date": today.isoformat(),
+                "ytd_price": price_for(ytd, t.get("premium")),
+                "mtd_price": price_for(mtd, t.get("premium")),
+                "dtd_price": price_for(dtd, t.get("premium")),
+                "today_price": t.get("premium"),
+            })
+
+        return {"status": "success", "count": len(enriched), "data": enriched}
     except HTTPException:
         raise
     except Exception as e:
