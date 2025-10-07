@@ -98,9 +98,19 @@ export const Portfolio: React.FC<
             });
             setFxTrades(resp.data?.data || []);
             setFxError(null);
-        } catch (_) {
+        } catch (err: any) {
             setFxTrades([]);
-            setFxError("Failed to load FX positions. Are you signed in?");
+            const status = err?.response?.status;
+            const detail = err?.response?.data?.detail || err?.message;
+            setFxError(
+                status
+                    ? `FX positions error ${status}: ${
+                          typeof detail === "string"
+                              ? detail
+                              : JSON.stringify(detail)
+                      }`
+                    : "Failed to load FX positions. Are you signed in?"
+            );
         } finally {
             setFxLoading("none");
         }
@@ -120,10 +130,18 @@ export const Portfolio: React.FC<
             );
             setFxOptions(resp.data?.data || []);
             setFxError(null);
-        } catch (_) {
+        } catch (err: any) {
             setFxOptions([]);
+            const status = err?.response?.status;
+            const detail = err?.response?.data?.detail || err?.message;
             setFxError(
-                "Failed to load FX option positions. Are you signed in?"
+                status
+                    ? `FX options error ${status}: ${
+                          typeof detail === "string"
+                              ? detail
+                              : JSON.stringify(detail)
+                      }`
+                    : "Failed to load FX option positions. Are you signed in?"
             );
         } finally {
             setFxLoading("none");
@@ -158,7 +176,11 @@ export const Portfolio: React.FC<
                 } catch (_) {}
             } catch (e) {
                 // If token retrieval fails, still attempt loads; axios interceptor will attach if later available
-                try { console.warn('[Portfolio] Proceeding without pre-fetched token'); } catch (_) {}
+                try {
+                    console.warn(
+                        "[Portfolio] Proceeding without pre-fetched token"
+                    );
+                } catch (_) {}
             }
             // Load data once token is ready
             await loadFxTrades();

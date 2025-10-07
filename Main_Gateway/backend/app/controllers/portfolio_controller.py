@@ -39,9 +39,13 @@ async def get_fx_positions(
     """
     try:
         # Debug: verify Authorization header presence and length
-        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        auth_header = request.headers.get("authorization") or request.headers.get(
+            "Authorization"
+        )
         if not auth_header:
-            logger.warning("[PortfolioController] Missing Authorization header on /fx-positions request")
+            logger.warning(
+                "[PortfolioController] Missing Authorization header on /fx-positions request"
+            )
         else:
             logger.info(
                 f"[PortfolioController] Authorization header present (len={len(auth_header)}), scheme={auth_header.split(' ')[0]}"
@@ -71,7 +75,14 @@ async def get_fx_positions(
         raise
     except Exception as e:
         logger.exception("[PortfolioController] Failed to fetch FX positions")
-        raise HTTPException(status_code=500, detail=str(e))
+        # Return structured error details so frontend console can display the root cause
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": str(e),
+                "type": e.__class__.__name__,
+            },
+        )
 
 
 @router.get("/fx-option-positions", status_code=200)
@@ -87,9 +98,13 @@ async def get_fx_option_positions(
     """
     try:
         # Debug: verify Authorization header presence and length
-        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        auth_header = request.headers.get("authorization") or request.headers.get(
+            "Authorization"
+        )
         if not auth_header:
-            logger.warning("[PortfolioController] Missing Authorization header on /fx-option-positions request")
+            logger.warning(
+                "[PortfolioController] Missing Authorization header on /fx-option-positions request"
+            )
         else:
             logger.info(
                 f"[PortfolioController] Authorization header present (len={len(auth_header)}), scheme={auth_header.split(' ')[0]}"
@@ -119,4 +134,10 @@ async def get_fx_option_positions(
         raise
     except Exception as e:
         logger.exception("[PortfolioController] Failed to fetch FX option positions")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": str(e),
+                "type": e.__class__.__name__,
+            },
+        )
