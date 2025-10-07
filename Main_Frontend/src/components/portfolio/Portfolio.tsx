@@ -130,12 +130,49 @@ export const Portfolio: React.FC<
         }
     };
 
-    // Auto-load on first render
+    // Auto-load on first render and when fund/date changes
     useEffect(() => {
-        // configure token provider so apiClient adds Authorization header
+        let mounted = true;
+        // Configure token provider so apiClient adds Authorization header
         setPortfolioAuthTokenProvider(auth.getToken);
-        loadFxTrades();
-        loadFxOptions();
+
+        // Listen for 401s from axios and surface a friendly error
+        const onAuthError = () => {
+            if (!mounted) return;
+            setFxError("Failed to load FX positions. Are you signed in?");
+        };
+        window.addEventListener(
+            "portfolio-auth-error",
+            onAuthError as EventListener
+        );
+
+        (async () => {
+            try {
+                // Proactively ensure token is available before first calls
+                const token = await auth.getToken();
+                try {
+                    console.debug(
+                        "[Portfolio] MSAL token acquired, length:",
+                        token?.length || 0
+                    );
+                } catch (_) {}
+            } catch (e) {
+                // If token retrieval fails, set error and skip calls; user likely needs to sign in
+                setFxError("Failed to load FX positions. Are you signed in?");
+                return;
+            }
+            // Load data once token is ready
+            await loadFxTrades();
+            await loadFxOptions();
+        })();
+
+        return () => {
+            mounted = false;
+            window.removeEventListener(
+                "portfolio-auth-error",
+                onAuthError as EventListener
+            );
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedFundId, effectiveDate]);
 
