@@ -217,19 +217,34 @@ async def get_fx_positions(
         for t in enriched:
             rid = f"fx-{t.get('trade_id')}"
             fetched = fetched_map.get(rid)
+            ytd_price = t["ytd_price"] if t["ytd_price"] is not None else price_for(ytd, t.get("today_price"), fetched)
+            mtd_price = t["mtd_price"] if t["mtd_price"] is not None else price_for(mtd, t.get("today_price"), fetched)
+            dtd_price = t["dtd_price"] if t["dtd_price"] is not None else price_for(dtd, t.get("today_price"), fetched)
+            today_price = (
+                fetched.get(t["today_date"]) if fetched else (0 if not PRICER_BASE_URL else None)
+            )
+
+            trade_price = t.get("price")
+            qty = float(t.get("quantity") or 0)
+            side = str(t.get("position") or "").strip().lower()
+            dir_factor = 1.0 if side == "buy" else -1.0
+
+            def pnl_since(ref_p):
+                if ref_p is None or today_price is None:
+                    return None
+                return (float(today_price) - float(ref_p)) * qty * dir_factor
+
             out.append(
                 {
                     **t,
-                    "ytd_price": t["ytd_price"]
-                    if t["ytd_price"] is not None
-                    else price_for(ytd, t.get("today_price"), fetched),
-                    "mtd_price": t["mtd_price"]
-                    if t["mtd_price"] is not None
-                    else price_for(mtd, t.get("today_price"), fetched),
-                    "dtd_price": t["dtd_price"]
-                    if t["dtd_price"] is not None
-                    else price_for(dtd, t.get("today_price"), fetched),
-                    "today_price": (fetched.get(t["today_date"]) if fetched else (0 if not PRICER_BASE_URL else None)),
+                    "ytd_price": ytd_price,
+                    "mtd_price": mtd_price,
+                    "dtd_price": dtd_price,
+                    "today_price": today_price,
+                    "itd_pnl": pnl_since(trade_price),
+                    "ytd_pnl": pnl_since(ytd_price),
+                    "mtd_pnl": pnl_since(mtd_price),
+                    "dtd_pnl": pnl_since(dtd_price),
                 }
             )
 
@@ -370,19 +385,34 @@ async def get_fx_option_positions(
         for t in enriched:
             rid = f"fxopt-{t.get('trade_id')}"
             fetched = fetched_map.get(rid)
+            ytd_price = t["ytd_price"] if t["ytd_price"] is not None else price_for(ytd, t.get("today_price"), fetched)
+            mtd_price = t["mtd_price"] if t["mtd_price"] is not None else price_for(mtd, t.get("today_price"), fetched)
+            dtd_price = t["dtd_price"] if t["dtd_price"] is not None else price_for(dtd, t.get("today_price"), fetched)
+            today_price = (
+                fetched.get(t["today_date"]) if fetched else (0 if not PRICER_BASE_URL else None)
+            )
+
+            trade_price = t.get("premium")
+            qty = float(t.get("quantity") or 0)
+            side = str(t.get("position") or "").strip().lower()
+            dir_factor = 1.0 if side == "buy" else -1.0
+
+            def pnl_since(ref_p):
+                if ref_p is None or today_price is None:
+                    return None
+                return (float(today_price) - float(ref_p)) * qty * dir_factor
+
             out.append(
                 {
                     **t,
-                    "ytd_price": t["ytd_price"]
-                    if t["ytd_price"] is not None
-                    else price_for(ytd, t.get("today_price"), fetched),
-                    "mtd_price": t["mtd_price"]
-                    if t["mtd_price"] is not None
-                    else price_for(mtd, t.get("today_price"), fetched),
-                    "dtd_price": t["dtd_price"]
-                    if t["dtd_price"] is not None
-                    else price_for(dtd, t.get("today_price"), fetched),
-                    "today_price": (fetched.get(t["today_date"]) if fetched else (0 if not PRICER_BASE_URL else None)),
+                    "ytd_price": ytd_price,
+                    "mtd_price": mtd_price,
+                    "dtd_price": dtd_price,
+                    "today_price": today_price,
+                    "itd_pnl": pnl_since(trade_price),
+                    "ytd_pnl": pnl_since(ytd_price),
+                    "mtd_pnl": pnl_since(mtd_price),
+                    "dtd_pnl": pnl_since(dtd_price),
                 }
             )
 
