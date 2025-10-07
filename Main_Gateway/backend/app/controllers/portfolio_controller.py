@@ -149,6 +149,8 @@ async def get_fx_positions(
             try:
                 if isinstance(trade_date, str):
                     trade_date = datetime.fromisoformat(trade_date[:10]).date()
+                elif hasattr(trade_date, "date"):
+                    trade_date = trade_date.date()
             except Exception:
                 trade_date = today
 
@@ -171,15 +173,21 @@ async def get_fx_positions(
             if need_dates and PRICER_BASE_URL:
                 symbol = f"{str(t.get('trade_currency')).upper()}/{str(t.get('settlement_currency')).upper()}"
                 # If tenor is derivable add it; else omit
-                req_items.append({
-                    "type": "fx_forward",
-                    "id": request_id,
-                    "symbol": symbol,
-                    "maturityDate": str(t.get("maturity_date"))[:10] if t.get("maturity_date") else None,
-                    "dates": need_dates,
-                })
+                req_items.append(
+                    {
+                        "type": "fx_forward",
+                        "id": request_id,
+                        "symbol": symbol,
+                        "maturityDate": str(t.get("maturity_date"))[:10]
+                        if t.get("maturity_date")
+                        else None,
+                        "dates": need_dates,
+                    }
+                )
 
-            def price_for(ref_date, trade_price_value, fetched: dict[str, float] | None):
+            def price_for(
+                ref_date, trade_price_value, fetched: dict[str, float] | None
+            ):
                 if use_trade(ref_date):
                     return trade_price_value
                 if fetched is None:
@@ -207,12 +215,20 @@ async def get_fx_positions(
         for t in enriched:
             rid = f"fx-{t.get('trade_id')}"
             fetched = fetched_map.get(rid)
-            out.append({
-                **t,
-                "ytd_price": t["ytd_price"] if t["ytd_price"] is not None else price_for(ytd, t.get("today_price"), fetched),
-                "mtd_price": t["mtd_price"] if t["mtd_price"] is not None else price_for(mtd, t.get("today_price"), fetched),
-                "dtd_price": t["dtd_price"] if t["dtd_price"] is not None else price_for(dtd, t.get("today_price"), fetched),
-            })
+            out.append(
+                {
+                    **t,
+                    "ytd_price": t["ytd_price"]
+                    if t["ytd_price"] is not None
+                    else price_for(ytd, t.get("today_price"), fetched),
+                    "mtd_price": t["mtd_price"]
+                    if t["mtd_price"] is not None
+                    else price_for(mtd, t.get("today_price"), fetched),
+                    "dtd_price": t["dtd_price"]
+                    if t["dtd_price"] is not None
+                    else price_for(dtd, t.get("today_price"), fetched),
+                }
+            )
 
         return {"status": "success", "count": len(out), "data": out}
     except HTTPException:
@@ -287,6 +303,8 @@ async def get_fx_option_positions(
             try:
                 if isinstance(trade_date, str):
                     trade_date = datetime.fromisoformat(trade_date[:10]).date()
+                elif hasattr(trade_date, "date"):
+                    trade_date = trade_date.date()
             except Exception:
                 trade_date = today
 
@@ -304,20 +322,26 @@ async def get_fx_option_positions(
 
             if need_dates and PRICER_BASE_URL:
                 underlying = f"{str(t.get('underlying_trade_currency')).upper()}/{str(t.get('underlying_settlement_currency')).upper()}"
-                req_items.append({
-                    "type": "fx_option",
-                    "id": request_id,
-                    "underlying": underlying,
-                    "optionType": t.get("option_type"),
-                    "style": t.get("option_style"),
-                    "strike": t.get("strike"),
-                    "strikeCurrency": t.get("strike_currency"),
-                    "maturityDate": str(t.get("maturity_date"))[:10] if t.get("maturity_date") else None,
-                    "cut": t.get("cut"),
-                    "dates": need_dates,
-                })
+                req_items.append(
+                    {
+                        "type": "fx_option",
+                        "id": request_id,
+                        "underlying": underlying,
+                        "optionType": t.get("option_type"),
+                        "style": t.get("option_style"),
+                        "strike": t.get("strike"),
+                        "strikeCurrency": t.get("strike_currency"),
+                        "maturityDate": str(t.get("maturity_date"))[:10]
+                        if t.get("maturity_date")
+                        else None,
+                        "cut": t.get("cut"),
+                        "dates": need_dates,
+                    }
+                )
 
-            def price_for(ref_date, trade_price_value, fetched: dict[str, float] | None):
+            def price_for(
+                ref_date, trade_price_value, fetched: dict[str, float] | None
+            ):
                 if use_trade(ref_date):
                     return trade_price_value
                 if fetched is None:
@@ -343,12 +367,20 @@ async def get_fx_option_positions(
         for t in enriched:
             rid = f"fxopt-{t.get('trade_id')}"
             fetched = fetched_map.get(rid)
-            out.append({
-                **t,
-                "ytd_price": t["ytd_price"] if t["ytd_price"] is not None else price_for(ytd, t.get("today_price"), fetched),
-                "mtd_price": t["mtd_price"] if t["mtd_price"] is not None else price_for(mtd, t.get("today_price"), fetched),
-                "dtd_price": t["dtd_price"] if t["dtd_price"] is not None else price_for(dtd, t.get("today_price"), fetched),
-            })
+            out.append(
+                {
+                    **t,
+                    "ytd_price": t["ytd_price"]
+                    if t["ytd_price"] is not None
+                    else price_for(ytd, t.get("today_price"), fetched),
+                    "mtd_price": t["mtd_price"]
+                    if t["mtd_price"] is not None
+                    else price_for(mtd, t.get("today_price"), fetched),
+                    "dtd_price": t["dtd_price"]
+                    if t["dtd_price"] is not None
+                    else price_for(dtd, t.get("today_price"), fetched),
+                }
+            )
 
         return {"status": "success", "count": len(out), "data": out}
     except HTTPException:
