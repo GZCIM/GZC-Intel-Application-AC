@@ -1,7 +1,7 @@
 # app/controllers/portfolio_controller.py
 
 from fastapi import APIRouter, Depends, Request, HTTPException, status
-from app.auth.azure_auth import validate_token_relaxed as validate_token
+from app.auth.azure_auth import validate_token
 from app.daos.portfolio_dao import PortfolioDAO
 import logging
 
@@ -38,6 +38,14 @@ async def get_fx_positions(
       - fundId: integer, 0 = ALL (no fund filter)
     """
     try:
+        # Debug: verify Authorization header presence and length
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        if not auth_header:
+            logger.warning("[PortfolioController] Missing Authorization header on /fx-positions request")
+        else:
+            logger.info(
+                f"[PortfolioController] Authorization header present (len={len(auth_header)}), scheme={auth_header.split(' ')[0]}"
+            )
         selected_date = request.query_params.get("date")
         if not selected_date:
             raise HTTPException(
@@ -78,6 +86,14 @@ async def get_fx_option_positions(
       - fundId: integer, 0 = ALL (no fund filter)
     """
     try:
+        # Debug: verify Authorization header presence and length
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        if not auth_header:
+            logger.warning("[PortfolioController] Missing Authorization header on /fx-option-positions request")
+        else:
+            logger.info(
+                f"[PortfolioController] Authorization header present (len={len(auth_header)}), scheme={auth_header.split(' ')[0]}"
+            )
         selected_date = request.query_params.get("date")
         if not selected_date:
             raise HTTPException(
