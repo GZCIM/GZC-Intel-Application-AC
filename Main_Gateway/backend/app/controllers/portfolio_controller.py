@@ -227,11 +227,11 @@ async def get_fx_positions(
                     "eom_date": eom.isoformat(),
                     "eod_date": dtd.isoformat(),
                     "today_date": today.isoformat(),
-                    # placeholders; will fill after pricer call
+                    # keep DB price intact; store as trade_price for downstream use
+                    "trade_price": t.get("price"),
                     "eoy_price": None,
                     "eom_price": None,
                     "eod_price": None,
-                    "price": None,
                 }
             )
 
@@ -245,17 +245,17 @@ async def get_fx_positions(
             eoy_price = (
                 t["eoy_price"]
                 if t["eoy_price"] is not None
-                else price_for(eoy, t.get("price"), fetched)
+                else price_for(eoy, t.get("trade_price"), fetched)
             )
             eom_price = (
                 t["eom_price"]
                 if t["eom_price"] is not None
-                else price_for(eom, t.get("price"), fetched)
+                else price_for(eom, t.get("trade_price"), fetched)
             )
             eod_price = (
                 t["eod_price"]
                 if t["eod_price"] is not None
-                else price_for(dtd, t.get("price"), fetched)
+                else price_for(dtd, t.get("trade_price"), fetched)
             )
             price = (
                 fetched.get(t["today_date"])
@@ -263,7 +263,7 @@ async def get_fx_positions(
                 else (0 if not PRICER_BASE_URL else None)
             )
 
-            trade_price = t.get("price")
+            trade_price = t.get("trade_price")
             qty = float(t.get("quantity") or 0)
             side = str(t.get("position") or "").strip().lower()
             dir_factor = 1.0 if side == "buy" else -1.0
@@ -418,10 +418,11 @@ async def get_fx_option_positions(
                     "eom_date": eom.isoformat(),
                     "eod_date": dtd.isoformat(),
                     "today_date": today.isoformat(),
+                    # keep DB premium intact; store as trade_price for downstream use
+                    "trade_price": t.get("premium"),
                     "eoy_price": None,
                     "eom_price": None,
                     "eod_price": None,
-                    "price": None,
                 }
             )
 
@@ -434,17 +435,17 @@ async def get_fx_option_positions(
             eoy_price = (
                 t["eoy_price"]
                 if t["eoy_price"] is not None
-                else price_for(eoy, t.get("premium"), fetched)
+                else price_for(eoy, t.get("trade_price"), fetched)
             )
             eom_price = (
                 t["eom_price"]
                 if t["eom_price"] is not None
-                else price_for(eom, t.get("premium"), fetched)
+                else price_for(eom, t.get("trade_price"), fetched)
             )
             eod_price = (
                 t["eod_price"]
                 if t["eod_price"] is not None
-                else price_for(dtd, t.get("premium"), fetched)
+                else price_for(dtd, t.get("trade_price"), fetched)
             )
             price = (
                 fetched.get(t["today_date"])
@@ -452,7 +453,7 @@ async def get_fx_option_positions(
                 else (0 if not PRICER_BASE_URL else None)
             )
 
-            trade_price = t.get("premium")
+            trade_price = t.get("trade_price")
             qty = float(t.get("quantity") or 0)
             side = str(t.get("position") or "").strip().lower()
             dir_factor = 1.0 if side == "buy" else -1.0
