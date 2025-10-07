@@ -54,6 +54,7 @@ async def get_fx_positions(
                     status_code=400, detail="'fundId' must be an integer"
                 )
 
+        # Per requirement: calculation engine will supply DTD/MTD/YTD. Return DB trade records only.
         data = PortfolioDAO().get_fx_positions(
             selected_date=selected_date, fund_id=fund_id
         )
@@ -93,6 +94,7 @@ async def get_fx_option_positions(
                     status_code=400, detail="'fundId' must be an integer"
                 )
 
+        # Per requirement: calculation engine will supply DTD/MTD/YTD. Return DB trade records only.
         data = PortfolioDAO().get_fx_option_positions(
             selected_date=selected_date, fund_id=fund_id
         )

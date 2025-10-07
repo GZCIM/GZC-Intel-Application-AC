@@ -135,9 +135,37 @@ class PortfolioDAO:
         If fund_id is provided and not 0, also filter by fund_id.
         """
         base_sql = """
-            SELECT *
-            FROM public.gzc_fx_trade
-            WHERE maturity_date >= :selected_date
+            SELECT
+                t.*,
+                ln.id AS lineage_id,
+                ln.operation AS lineage_operation,
+                ln.operation_timestamp AS lineage_operation_timestamp,
+                ln.original_trade_id AS lineage_original_trade_id,
+                ln.parent_lineage_id AS lineage_parent_lineage_id,
+                ot.trade_id AS original_trade_id,
+                ot.price AS original_trade_price,
+                ot.quantity AS original_trade_quantity,
+                pt.trade_id AS parent_trade_id,
+                pt.price AS parent_trade_price,
+                pt.quantity AS parent_trade_quantity
+            FROM public.gzc_fx_trade t
+            -- Latest lineage row for this trade (if any) by current_trade_id
+            LEFT JOIN LATERAL (
+                SELECT l.*
+                FROM public.gzc_fx_trade_lineage l
+                WHERE l.current_trade_id = t.trade_id
+                ORDER BY l.operation_timestamp DESC, l.id DESC
+                LIMIT 1
+            ) ln ON TRUE
+            -- Original trade referenced by lineage (if present)
+            LEFT JOIN public.gzc_fx_trade ot
+                ON ot.trade_id = ln.original_trade_id
+            -- Parent lineage -> parent current trade (if present)
+            LEFT JOIN public.gzc_fx_trade_lineage pln
+                ON pln.id = ln.parent_lineage_id
+            LEFT JOIN public.gzc_fx_trade pt
+                ON pt.trade_id = pln.current_trade_id
+            WHERE t.maturity_date >= :selected_date
         """
         params: dict[str, object] = {
             "selected_date": selected_date,
@@ -155,6 +183,8 @@ class PortfolioDAO:
             rows = conn.execute(query, params).mappings().all()
             return [dict(r) for r in rows]
 
+    # Removed ref price extraction per request. Calculation engine will supply DTD/MTD/YTD; DB returns trade price only.
+
     def get_fx_option_positions(
         self,
         selected_date: str,
@@ -167,9 +197,37 @@ class PortfolioDAO:
         If fund_id is provided and not 0, also filter by fund_id.
         """
         base_sql = """
-            SELECT *
-            FROM public.gzc_fx_option_trade
-            WHERE maturity_date >= :selected_date
+            SELECT
+                t.*,
+                ln.id AS lineage_id,
+                ln.operation AS lineage_operation,
+                ln.operation_timestamp AS lineage_operation_timestamp,
+                ln.original_trade_id AS lineage_original_trade_id,
+                ln.parent_lineage_id AS lineage_parent_lineage_id,
+                ot.trade_id AS original_trade_id,
+                ot.premium AS original_trade_price,
+                ot.quantity AS original_trade_quantity,
+                pt.trade_id AS parent_trade_id,
+                pt.premium AS parent_trade_price,
+                pt.quantity AS parent_trade_quantity
+            FROM public.gzc_fx_option_trade t
+            -- Latest lineage row for this option trade (if any) by current_trade_id
+            LEFT JOIN LATERAL (
+                SELECT l.*
+                FROM public.gzc_fx_option_trade_lineage l
+                WHERE l.current_trade_id = t.trade_id
+                ORDER BY l.operation_timestamp DESC, l.id DESC
+                LIMIT 1
+            ) ln ON TRUE
+            -- Original option trade referenced by lineage (if present)
+            LEFT JOIN public.gzc_fx_option_trade ot
+                ON ot.trade_id = ln.original_trade_id
+            -- Parent lineage -> parent current option trade (if present)
+            LEFT JOIN public.gzc_fx_option_trade_lineage pln
+                ON pln.id = ln.parent_lineage_id
+            LEFT JOIN public.gzc_fx_option_trade pt
+                ON pt.trade_id = pln.current_trade_id
+            WHERE t.maturity_date >= :selected_date
         """
         params: dict[str, object] = {
             "selected_date": selected_date,
@@ -186,3 +244,5 @@ class PortfolioDAO:
         with self.engine.connect() as conn:
             rows = conn.execute(query, params).mappings().all()
             return [dict(r) for r in rows]
+
+    # Removed ref price extraction per request. Calculation engine will supply DTD/MTD/YTD; DB returns trade-side fields only.
