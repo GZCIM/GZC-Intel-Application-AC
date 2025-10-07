@@ -231,7 +231,7 @@ async def get_fx_positions(
                     "eoy_price": None,
                     "eom_price": None,
                     "eod_price": None,
-                    "today_price": None,
+                    "price": None,
                 }
             )
 
@@ -279,7 +279,7 @@ async def get_fx_positions(
                     "eoy_price": eoy_price,
                     "eom_price": eom_price,
                     "eod_price": eod_price,
-                    "today_price": today_price,
+                    "price": today_price,
                     "eoy_date": t["eoy_date"],
                     "eom_date": t["eom_date"],
                     "eod_date": t["eod_date"],
@@ -418,7 +418,7 @@ async def get_fx_option_positions(
                     "eoy_price": None,
                     "eom_price": None,
                     "eod_price": None,
-                    "today_price": None,
+                    "price": None,
                 }
             )
 
@@ -465,7 +465,7 @@ async def get_fx_option_positions(
                     "eoy_price": eoy_price,
                     "eom_price": eom_price,
                     "eod_price": eod_price,
-                    "today_price": today_price,
+                    "price": today_price,
                     "itd_pnl": pnl_since(trade_price),
                     "ytd_pnl": pnl_since(eoy_price),
                     "mtd_pnl": pnl_since(eom_price),
