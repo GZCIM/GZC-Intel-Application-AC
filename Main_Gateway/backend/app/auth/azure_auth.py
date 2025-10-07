@@ -29,6 +29,7 @@ ISSUER = f"https://login.microsoftonline.com/{TENANT_ID}/v2.0"
 JWKS_URI = f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys"
 
 security = HTTPBearer()
+optional_security = HTTPBearer(auto_error=False)
 
 
 @lru_cache()
@@ -129,6 +130,25 @@ async def validate_token(
     except Exception as e:
         logger.error(f"Unexpected error validating token: {e}")
         raise HTTPException(status_code=401, detail="Token validation error")
+
+
+async def validate_token_relaxed(
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_security),
+):
+    """
+    Relaxed validator: if BYPASS_AUTH is enabled, allow requests without an
+    Authorization header and return a mock user. Otherwise, delegate to
+    validate_token.
+    """
+    if BYPASS_AUTH and (credentials is None or not credentials.scheme or not credentials.credentials):
+        logger.warning("Bypassing auth (relaxed): no token provided, returning mock user")
+        return {"sub": "mock-user", "roles": ["mock"], "aud": CLIENT_ID}
+
+    if credentials is None:
+        raise HTTPException(status_code=401, detail="Missing Authorization header")
+
+    # Delegate to strict validator for normal behavior
+    return await validate_token(credentials)  # type: ignore[arg-type]
 
 
 async def validate_token_ws(websocket: WebSocket):

@@ -1,7 +1,7 @@
 # app/controllers/portfolio_controller.py
 
 from fastapi import APIRouter, Depends, Request, HTTPException, status
-from app.auth.azure_auth import validate_token
+from app.auth.azure_auth import validate_token_relaxed as validate_token
 from app.daos.portfolio_dao import PortfolioDAO
 import logging
 
