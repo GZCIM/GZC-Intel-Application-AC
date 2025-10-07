@@ -157,9 +157,8 @@ export const Portfolio: React.FC<
                     );
                 } catch (_) {}
             } catch (e) {
-                // If token retrieval fails, set error and skip calls; user likely needs to sign in
-                setFxError("Failed to load FX positions. Are you signed in?");
-                return;
+                // If token retrieval fails, still attempt loads; axios interceptor will attach if later available
+                try { console.warn('[Portfolio] Proceeding without pre-fetched token'); } catch (_) {}
             }
             // Load data once token is ready
             await loadFxTrades();
