@@ -217,11 +217,26 @@ async def get_fx_positions(
         for t in enriched:
             rid = f"fx-{t.get('trade_id')}"
             fetched = fetched_map.get(rid)
-            ytd_price = t["ytd_price"] if t["ytd_price"] is not None else price_for(ytd, t.get("today_price"), fetched)
-            mtd_price = t["mtd_price"] if t["mtd_price"] is not None else price_for(mtd, t.get("today_price"), fetched)
-            dtd_price = t["dtd_price"] if t["dtd_price"] is not None else price_for(dtd, t.get("today_price"), fetched)
+            # Use TRADE price as fallback when trade_date >= ref_date
+            ytd_price = (
+                t["ytd_price"]
+                if t["ytd_price"] is not None
+                else price_for(ytd, t.get("price"), fetched)
+            )
+            mtd_price = (
+                t["mtd_price"]
+                if t["mtd_price"] is not None
+                else price_for(mtd, t.get("price"), fetched)
+            )
+            dtd_price = (
+                t["dtd_price"]
+                if t["dtd_price"] is not None
+                else price_for(dtd, t.get("price"), fetched)
+            )
             today_price = (
-                fetched.get(t["today_date"]) if fetched else (0 if not PRICER_BASE_URL else None)
+                fetched.get(t["today_date"])
+                if fetched
+                else (0 if not PRICER_BASE_URL else None)
             )
 
             trade_price = t.get("price")
@@ -385,11 +400,26 @@ async def get_fx_option_positions(
         for t in enriched:
             rid = f"fxopt-{t.get('trade_id')}"
             fetched = fetched_map.get(rid)
-            ytd_price = t["ytd_price"] if t["ytd_price"] is not None else price_for(ytd, t.get("today_price"), fetched)
-            mtd_price = t["mtd_price"] if t["mtd_price"] is not None else price_for(mtd, t.get("today_price"), fetched)
-            dtd_price = t["dtd_price"] if t["dtd_price"] is not None else price_for(dtd, t.get("today_price"), fetched)
+            # Use TRADE premium as fallback when trade_date >= ref_date
+            ytd_price = (
+                t["ytd_price"]
+                if t["ytd_price"] is not None
+                else price_for(ytd, t.get("premium"), fetched)
+            )
+            mtd_price = (
+                t["mtd_price"]
+                if t["mtd_price"] is not None
+                else price_for(mtd, t.get("premium"), fetched)
+            )
+            dtd_price = (
+                t["dtd_price"]
+                if t["dtd_price"] is not None
+                else price_for(dtd, t.get("premium"), fetched)
+            )
             today_price = (
-                fetched.get(t["today_date"]) if fetched else (0 if not PRICER_BASE_URL else None)
+                fetched.get(t["today_date"])
+                if fetched
+                else (0 if not PRICER_BASE_URL else None)
             )
 
             trade_price = t.get("premium")
