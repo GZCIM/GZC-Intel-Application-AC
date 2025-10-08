@@ -84,6 +84,7 @@ export function VolatilityAnalysis({
     componentState?: "minimized" | "normal" | "maximized";
 } = {}) {
     const { currentTheme } = useTheme();
+    const [quickMenuOpen, setQuickMenuOpen] = useState(false);
     const lastNonMaximizedStateRef = useRef<"minimized" | "normal">("normal");
     const handleTitleDoubleClick = () => {
         if (componentState === "maximized") {
@@ -1669,6 +1670,24 @@ export function VolatilityAnalysis({
                                 {title}
                             </span>
                         )}
+                        {/* Compact quick-controls button for very narrow edit mode */}
+                        {isEditMode && window.innerWidth <= 1000 && (
+                            <button
+                                onClick={() => setQuickMenuOpen((v) => !v)}
+                                title="Quick Controls"
+                                style={{
+                                    padding: "4px 8px",
+                                    backgroundColor: currentTheme.surface,
+                                    color: currentTheme.textSecondary,
+                                    border: `1px solid ${currentTheme.border}`,
+                                    borderRadius: 4,
+                                    fontSize: 11,
+                                    cursor: "pointer",
+                                }}
+                            >
+                                ⋯
+                            </button>
+                        )}
                         {(!isEditMode || (isEditMode && window.innerWidth > 1000)) && (
                         <div style={{ marginLeft: isEditMode ? 8 : undefined }}>
                             <label style={{ fontSize: 12, color: currentTheme.textSecondary, marginRight: 8 }}>Currency Pair:</label>
@@ -1699,6 +1718,31 @@ export function VolatilityAnalysis({
                                 <button title="Normal" onClick={() => onStateChange?.('normal')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>□</button>
                                 <button title="Maximize" onClick={() => onStateChange?.('maximized')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>▣</button>
                                 <button title="Remove" onClick={() => onRemove?.()} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: '#D69A82', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>×</button>
+                            </div>
+                        )}
+
+                        {/* Quick controls dropdown panel */}
+                        {isEditMode && quickMenuOpen && window.innerWidth <= 1000 && (
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 42,
+                                    left: 8,
+                                    background: currentTheme.surface,
+                                    border: `1px solid ${currentTheme.border}`,
+                                    borderRadius: 6,
+                                    padding: 8,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    zIndex: 10,
+                                }}
+                            >
+                                <label style={{ fontSize: 12, color: currentTheme.textSecondary }}>Pair:</label>
+                                <select aria-label="Select currency pair (compact)" value={selectedPair} onChange={(e) => { setSelectedPair(e.target.value); fetchSpotRates(); }} style={{ backgroundColor: currentTheme.background, color: currentTheme.text, border: `1px solid ${currentTheme.border}`, borderRadius: 4, padding: '4px 6px', fontSize: 12 }}>
+                                    {currencyPairs.map((pair) => (<option key={pair} value={pair}>{pair}</option>))}
+                                </select>
+                                <button onClick={fetchData} disabled={loading} style={{ backgroundColor: currentTheme.primary, color: currentTheme.background, border: 'none', borderRadius: 4, padding: '6px 10px', fontSize: 12, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>Refresh</button>
                             </div>
                         )}
                     </div>
