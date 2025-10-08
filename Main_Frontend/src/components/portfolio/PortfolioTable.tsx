@@ -337,9 +337,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
     if (error) {
         return <div className="text-red-500 p-4">Error: {error}</div>;
-    }
+  }
 
-    return (
+  return (
         <div className="w-full">
             {/* Table Controls */}
             <div className="flex justify-between items-center mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded">
@@ -347,32 +347,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     <h3 className="text-lg font-semibold">
                         Portfolio Positions ({positions.length})
                     </h3>
-                    {!isEditing ? (
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        >
-                            Unlock Edit
-                        </button>
-                    ) : (
-                        <div className="flex gap-2">
-                            <button
-                                onClick={saveTableConfig}
-                                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
-                            >
-                                Lock Edit
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setLocalConfig(tableConfig);
-                                    setIsEditing(false);
-                                }}
-                                className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    )}
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                        {isEditing
+                            ? "Editing unlocked via Tools menu"
+                            : "Use Tools → Unlock Editing to configure columns"}
+                    </div>
                 </div>
 
                 {/* Column Visibility Controls */}
