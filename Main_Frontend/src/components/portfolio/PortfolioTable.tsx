@@ -78,6 +78,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const [positions, setPositions] = useState<PortfolioPosition[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isRetrying, setIsRetrying] = useState(false);
     const [tableConfig, setTableConfig] = useState<TableConfig | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
@@ -170,6 +171,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         }
     };
 
+    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
     const loadPositions = async () => {
         setLoading(true);
         setError(null);
@@ -204,13 +207,33 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
             setPositions([...fxPositions, ...fxOptionPositions]);
         } catch (err: any) {
-            setError(
-                err.response?.data?.detail?.error ||
-                    err.message ||
-                    "Failed to load positions"
-            );
+            const status = err?.response?.status;
+            if (status === 502) {
+                setError(
+                    "Backend temporarily unavailable (502). Please retry."
+                );
+            } else {
+                setError(
+                    err.response?.data?.detail?.error ||
+                        err.message ||
+                        "Failed to load positions"
+                );
+            }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const retryWithBackoff = async (attempts = 2) => {
+        setIsRetrying(true);
+        try {
+            for (let i = 0; i < attempts; i++) {
+                await loadPositions();
+                if (!error) break;
+                await sleep(500 * Math.pow(2, i));
+            }
+        } finally {
+            setIsRetrying(false);
         }
     };
 
@@ -342,12 +365,36 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         );
     }
 
-    if (error) {
-        return <div className="text-red-500 p-4">Error: {error}</div>;
-    }
+    if (error && positions.length === 0) {
+        return (
+            <div className="p-4">
+                <div className="mb-3 rounded border border-red-400 bg-red-50 text-red-700 px-3 py-2">
+                    {error}
+                </div>
+                <button
+                    onClick={() => retryWithBackoff(3)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-60"
+                    disabled={isRetrying}
+                >
+                    {isRetrying ? "Retrying..." : "Retry"}
+                </button>
+            </div>
+        );
+  }
 
-    return (
+  return (
         <div className="w-full">
+            {error && positions.length > 0 && (
+                <div className="mb-3 rounded border border-yellow-500 bg-yellow-50 text-yellow-700 px-3 py-2">
+                    {error}
+                    <button
+                        onClick={() => retryWithBackoff(2)}
+                        className="ml-3 px-2 py-0.5 bg-yellow-600 text-white rounded"
+                    >
+                        Retry
+                    </button>
+                </div>
+            )}
             {/* Table Controls - visible only while editing */}
             {isEditing && (
                 <div className="flex justify-between items-center mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded">
