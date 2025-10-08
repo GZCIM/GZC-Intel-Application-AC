@@ -1632,7 +1632,7 @@ export function VolatilityAnalysis({
                     alignItems: "center",
                     gap: "16px",
                     position: "relative",
-                    paddingRight: isEditMode ? 120 : undefined,
+                    paddingRight: isEditMode ? 140 : undefined,
                     minHeight: isEditMode ? 40 : undefined,
                 }}
             >
@@ -1658,7 +1658,7 @@ export function VolatilityAnalysis({
                         <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, whiteSpace: 'nowrap' }}>{title}</span>
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', flexWrap: 'nowrap' }}>
                         {isEditMode ? (
                             <input aria-label="Component title" placeholder="Title" value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4, marginRight: 8 }} />
                         ) : (
@@ -1713,7 +1713,7 @@ export function VolatilityAnalysis({
                             </div>
                         </div>
                         {isEditMode && (
-                            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <div style={{ position: 'absolute', right: 8, top: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <button title="Minimize" onClick={() => onStateChange?.('minimized')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>▁</button>
                                 <button title="Normal" onClick={() => onStateChange?.('normal')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>□</button>
                                 <button title="Maximize" onClick={() => onStateChange?.('maximized')} style={{ width: 30, height: 30, border: `1px solid ${currentTheme.border}`, background: 'transparent', color: currentTheme.textSecondary, borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>▣</button>
