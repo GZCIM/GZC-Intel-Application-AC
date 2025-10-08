@@ -900,14 +900,15 @@ export const Portfolio: React.FC<
                                 )}
                             </div>
                         </div>
-                        {/* Right controls on same line (hidden in edit mode to avoid overlap with floating window controls) */}
-                        {!(isEditMode || toolsEditing) && (
+                        {/* Right controls on same line */}
+                        {(!(isEditMode || toolsEditing) || headerWidth > 880) && (
                             <div
                                 style={{
-                                    marginLeft: "auto",
+                                    marginLeft: isEditMode ? undefined : "auto",
                                     display: "flex",
                                     alignItems: "center",
                                     gap: 8,
+                                    overflowX: "auto",
                                 }}
                             >
                             <button
