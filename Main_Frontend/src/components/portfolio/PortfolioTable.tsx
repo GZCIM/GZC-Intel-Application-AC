@@ -372,30 +372,38 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             )}
 
             {/* Table */}
-            <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300 dark:border-gray-600">
+            <div style={{ overflowX: "auto" }}>
+                <table
+                    style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        border: `1px solid ${theme.border}`,
+                        color: theme.text,
+                        background: theme.background,
+                    }}
+                >
                     <thead>
                         {table.getHeaderGroups().map((hg) => (
-                            <tr
-                                key={hg.id}
-                                className="bg-gray-100 dark:bg-gray-800"
-                            >
+                            <tr key={hg.id} style={{ background: theme.surfaceAlt }}>
                                 {hg.headers.map((header) => (
                                     <th
                                         key={header.id}
-                                        className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
-                                        style={{ width: header.getSize() }}
+                                        style={{
+                                            width: header.getSize(),
+                                            border: `1px solid ${theme.border}`,
+                                            padding: "8px 12px",
+                                            textAlign: "left",
+                                            cursor: "pointer",
+                                        }}
                                         onClick={header.column.getToggleSortingHandler()}
                                     >
-                                        <div className="flex items-center gap-1">
+                                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                                             {flexRender(
                                                 header.column.columnDef.header,
                                                 header.getContext()
                                             )}
-                                            {header.column.getIsSorted() ===
-                                                "asc" && "↑"}
-                                            {header.column.getIsSorted() ===
-                                                "desc" && "↓"}
+                                            {header.column.getIsSorted() === "asc" && "↑"}
+                                            {header.column.getIsSorted() === "desc" && "↓"}
                                         </div>
                                     </th>
                                 ))}
@@ -406,16 +414,17 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         {table.getRowModel().rows.map((row, idx) => (
                             <tr
                                 key={row.id}
-                                className={
-                                    idx % 2 === 0
-                                        ? "bg-white dark:bg-gray-900"
-                                        : "bg-gray-50 dark:bg-gray-800"
-                                }
+                                style={{
+                                    background: idx % 2 === 0 ? theme.surface : theme.background,
+                                }}
                             >
                                 {row.getVisibleCells().map((cell) => (
                                     <td
                                         key={cell.id}
-                                        className="border border-gray-300 dark:border-gray-600 px-3 py-2"
+                                        style={{
+                                            border: `1px solid ${theme.border}`,
+                                            padding: "8px 12px",
+                                        }}
                                     >
                                         {flexRender(
                                             cell.column.columnDef.cell,
@@ -428,37 +437,39 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     </tbody>
                     {/* PnL Summary Footer */}
                     <tfoot>
-                        <tr className="bg-blue-100 dark:bg-blue-900 font-semibold">
+                        <tr style={{ background: theme.surfaceAlt, fontWeight: 600 }}>
                             <td
                                 colSpan={table.getVisibleLeafColumns().length}
-                                className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center"
+                                style={{
+                                    border: `1px solid ${theme.border}`,
+                                    padding: "8px 12px",
+                                    textAlign: "center",
+                                }}
                             >
                                 P&L Summary
                             </td>
                         </tr>
-                        <tr className="bg-blue-50 dark:bg-blue-800">
+                        <tr style={{ background: theme.surface }}>
                             {table.getVisibleLeafColumns().map((col) => {
                                 const id = col.id;
-                                if (
-                                    id.endsWith("_pnl") ||
-                                    id.startsWith("pnl")
-                                ) {
+                                if (id.endsWith("_pnl") || id.startsWith("pnl")) {
                                     return (
                                         <td
                                             key={id}
-                                            className="border border-gray-300 dark:border-gray-600 px-3 py-2 font-semibold"
+                                            style={{
+                                                border: `1px solid ${theme.border}`,
+                                                padding: "8px 12px",
+                                                fontWeight: 600,
+                                            }}
                                         >
-                                            {formatValue(
-                                                (pnlSummary as any)[id] ?? null,
-                                                id
-                                            )}
+                                            {formatValue((pnlSummary as any)[id] ?? null, id)}
                                         </td>
                                     );
                                 }
                                 return (
                                     <td
                                         key={id}
-                                        className="border border-gray-300 dark:border-gray-600 px-3 py-2"
+                                        style={{ border: `1px solid ${theme.border}`, padding: "8px 12px" }}
                                     ></td>
                                 );
                             })}
