@@ -349,6 +349,10 @@ export const Portfolio: React.FC<
                     gap: 8,
                     overflow: "visible",
                     position: "relative",
+                    // Reserve space on the right for floating window controls during edit mode
+                    paddingRight: (isEditMode || toolsEditing) ? 140 : undefined,
+                    // Ensure enough height so inner controls are not overlapped vertically
+                    minHeight: (isEditMode || toolsEditing) ? 46 : undefined,
                 }}
             >
                 {(isEditMode || toolsEditing) && (
