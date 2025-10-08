@@ -55,6 +55,20 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
 
   // Always render a header with controls; for minimized, we'll hide children content below
 
+  // Responsive header helpers
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const [headerWidth, setHeaderWidth] = useState<number>(0);
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const el = headerRef.current;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) setHeaderWidth(entry.contentRect.width);
+    });
+    ro.observe(el);
+    setHeaderWidth(el.getBoundingClientRect().width);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <div style={{
       height: '100%',
@@ -67,7 +81,7 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
       overflow: 'visible'
     }}>
       {/* Inline header: title before the component's first row of controls */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '6px 10px', gap: '6px', backgroundColor: currentTheme.background, borderBottom: `1px solid ${currentTheme.border}` }}>
+      <div ref={headerRef} style={{ display: 'flex', alignItems: 'center', padding: '6px 10px', gap: '6px', backgroundColor: currentTheme.background, borderBottom: `1px solid ${currentTheme.border}`, position: 'relative', paddingRight: isEditMode ? 120 : undefined, minHeight: isEditMode ? 40 : undefined }}>
         {isEditMode ? (
           <input
             type="text"
@@ -100,12 +114,12 @@ export const ComponentHeaderWrapper: React.FC<ComponentHeaderWrapperProps> = ({
           </span>
         )}
         {/* Children should start right after the title */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden' }}>
           {children}
         </div>
         {/* Edit controls floated right, only in edit mode */}
         {isEditMode && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px', position: 'absolute', right: 8, top: 6 }}>
             <button onClick={() => onComponentStateChange?.('minimized')} style={{ width: 24, height: 24, border: `1px solid ${componentState === 'minimized' ? currentTheme.primary : currentTheme.border}`, borderRadius: 4, background: 'transparent', color: componentState === 'minimized' ? currentTheme.primary : currentTheme.textSecondary, cursor: 'pointer' }} title="Minimize">–</button>
             <button onClick={() => onComponentStateChange?.('normal')} style={{ width: 24, height: 24, border: `1px solid ${componentState === 'normal' ? currentTheme.primary : currentTheme.border}`, borderRadius: 4, background: 'transparent', color: componentState === 'normal' ? currentTheme.primary : currentTheme.textSecondary, cursor: 'pointer' }} title="Normal">□</button>
             <button onClick={() => onComponentStateChange?.('maximized')} style={{ width: 24, height: 24, border: `1px solid ${componentState === 'maximized' ? currentTheme.primary : currentTheme.border}`, borderRadius: 4, background: 'transparent', color: componentState === 'maximized' ? currentTheme.primary : currentTheme.textSecondary, cursor: 'pointer' }} title="Maximize">▣</button>

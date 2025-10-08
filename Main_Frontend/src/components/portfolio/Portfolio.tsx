@@ -805,7 +805,9 @@ export const Portfolio: React.FC<
                                                         whiteSpace: "nowrap",
                                                     }}
                                                 >
-                                                    <option value="0">ALL</option>
+                                                    <option value="0">
+                                                        ALL
+                                                    </option>
                                                     {(funds.length
                                                         ? funds
                                                         : [
@@ -827,9 +829,7 @@ export const Portfolio: React.FC<
                                                     ).map((f) => (
                                                         <option
                                                             key={f.id}
-                                                            value={String(
-                                                                f.id
-                                                            )}
+                                                            value={String(f.id)}
                                                         >
                                                             {f.short_name}
                                                         </option>

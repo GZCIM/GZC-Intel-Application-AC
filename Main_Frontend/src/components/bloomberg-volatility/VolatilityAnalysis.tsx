@@ -1630,6 +1630,9 @@ export function VolatilityAnalysis({
                     display: "flex",
                     alignItems: "center",
                     gap: "16px",
+                    position: "relative",
+                    paddingRight: isEditMode ? 120 : undefined,
+                    minHeight: isEditMode ? 40 : undefined,
                 }}
             >
                 {componentState === 'minimized' && isEditMode ? (
@@ -1654,7 +1657,7 @@ export function VolatilityAnalysis({
                         <span style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, whiteSpace: 'nowrap' }}>{title}</span>
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%', whiteSpace: 'nowrap', overflow: 'hidden' }}>
                         {isEditMode ? (
                             <input aria-label="Component title" placeholder="Title" value={title} onChange={(e) => onTitleChange?.(e.target.value)} style={{ fontSize: 12, fontWeight: 600, color: currentTheme.text, padding: '2px 6px', background: 'transparent', border: `1px solid ${currentTheme.border}`, borderRadius: 4, marginRight: 8 }} />
                         ) : (
@@ -1666,13 +1669,17 @@ export function VolatilityAnalysis({
                                 {title}
                             </span>
                         )}
+                        {(!isEditMode || (isEditMode && window.innerWidth > 1000)) && (
                         <div style={{ marginLeft: isEditMode ? 8 : undefined }}>
                             <label style={{ fontSize: 12, color: currentTheme.textSecondary, marginRight: 8 }}>Currency Pair:</label>
                             <select aria-label="Select currency pair" value={selectedPair} onChange={(e) => { setSelectedPair(e.target.value); fetchSpotRates(); }} style={{ backgroundColor: currentTheme.background, color: currentTheme.text, border: `1px solid ${currentTheme.border}`, borderRadius: 4, padding: '4px 8px', fontSize: 12 }}>
                                 {currencyPairs.map((pair) => (<option key={pair} value={pair}>{pair}</option>))}
                             </select>
                         </div>
+                        )}
+                        {(!isEditMode || (isEditMode && window.innerWidth > 1100)) && (
                         <button onClick={fetchData} disabled={loading} style={{ backgroundColor: currentTheme.primary, color: currentTheme.background, border: 'none', borderRadius: 4, padding: '6px 12px', fontSize: 12, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>{loading ? 'Loading...' : 'Refresh'}</button>
+                        )}
                         <div style={{ marginLeft: isEditMode ? undefined : 'auto', display: 'flex', alignItems: 'center', gap: 16, fontSize: 11, color: currentTheme.textSecondary }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <span>Data Quality:</span>
