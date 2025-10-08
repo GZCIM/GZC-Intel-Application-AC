@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
     ColumnDef,
     getCoreRowModel,
@@ -82,6 +82,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const [tableConfig, setTableConfig] = useState<TableConfig | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
+    const headerRef = useRef<HTMLDivElement | null>(null);
+    const [headerWidth, setHeaderWidth] = useState<number>(0);
+    const [showColumnsPanel, setShowColumnsPanel] = useState<boolean>(false);
 
     // Component-scoped config identifiers
     const deviceType = "laptop";
@@ -118,6 +121,18 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     useEffect(() => {
         loadTableConfig();
     }, [fundId]);
+
+    // Track header width for responsive controls
+    useEffect(() => {
+        if (!headerRef.current) return;
+        const el = headerRef.current;
+        const ro = new ResizeObserver((entries) => {
+            for (const entry of entries) setHeaderWidth(entry.contentRect.width);
+        });
+        ro.observe(el);
+        setHeaderWidth(el.getBoundingClientRect().width);
+        return () => ro.disconnect();
+    }, [isEditing]);
 
     // Load positions when date/fund changes
     useEffect(() => {
@@ -397,7 +412,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             )}
             {/* Table Controls - visible only while editing */}
             {isEditing && (
-                <div className="flex justify-between items-center mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded" style={{overflowX: "auto"}}>
+                <div ref={headerRef} className="flex justify-between items-center mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded" style={{overflowX: "auto", position: "relative", paddingRight: 8}}>
                     <div className="flex items-center gap-4" style={{flexShrink: 0}}>
                         <h3 className="text-lg font-semibold">
                             Portfolio Positions ({positions.length})
@@ -405,7 +420,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     </div>
 
                     {/* Column Visibility Controls */}
-                    {localConfig && (
+                    {localConfig && headerWidth > 980 && (
                         <div className="flex flex-wrap gap-2" style={{minWidth: 420}}>
                             {localConfig.columns.map((col) => (
                                 <label
@@ -422,6 +437,47 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     {col.label}
                                 </label>
                             ))}
+                        </div>
+                    )}
+                    {localConfig && headerWidth <= 980 && (
+                        <button
+                            onClick={() => setShowColumnsPanel((v) => !v)}
+                            className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded border"
+                            title="Show column selector"
+                        >
+                            Columns
+                        </button>
+                    )}
+                    {localConfig && showColumnsPanel && headerWidth <= 980 && (
+                        <div
+                            style={{
+                                position: "absolute",
+                                top: "100%",
+                                right: 8,
+                                marginTop: 8,
+                                zIndex: 20,
+                                background: safeTheme.surface,
+                                color: safeTheme.text,
+                                border: `1px solid ${safeTheme.border}`,
+                                borderRadius: 6,
+                                padding: 8,
+                                maxHeight: 240,
+                                overflow: "auto",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+                            }}
+                        >
+                            <div className="flex flex-col gap-2">
+                                {localConfig.columns.map((col) => (
+                                    <label key={col.key} className="flex items-center gap-2 text-sm">
+                                        <input
+                                            type="checkbox"
+                                            checked={col.visible}
+                                            onChange={() => handleColumnToggle(col.key)}
+                                        />
+                                        {col.label}
+                                    </label>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>
