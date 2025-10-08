@@ -367,9 +367,9 @@ export const Portfolio: React.FC<
                     overflow: "visible",
                     position: "relative",
                     // Reserve space on the right for floating window controls during edit mode
-                    paddingRight: (isEditMode || toolsEditing) ? 140 : undefined,
+                    paddingRight: isEditMode || toolsEditing ? 140 : undefined,
                     // Ensure enough height so inner controls are not overlapped vertically
-                    minHeight: (isEditMode || toolsEditing) ? 46 : undefined,
+                    minHeight: isEditMode || toolsEditing ? 46 : undefined,
                 }}
                 ref={headerRef}
             >
@@ -775,52 +775,54 @@ export const Portfolio: React.FC<
                                             Fund
                                         </label>
                                         {/* In edit mode hide Fund when header is too narrow; show when wide or not editing */}
-                                        {( !(isEditMode || toolsEditing) || headerWidth > 680 ) && (
-                                        <select
-                                            id="portfolio-fund-select"
-                                            value={selectedFundId}
-                                            onChange={(e) =>
-                                                setSelectedFundId(
-                                                    e.target.value
-                                                )
-                                            }
-                                            aria-label="Select fund"
-                                            style={{
-                                                backgroundColor:
-                                                    currentTheme.background,
-                                                color: currentTheme.text,
-                                                border: `1px solid ${currentTheme.border}`,
-                                                borderRadius: 4,
-                                                padding: "4px 8px",
-                                                fontSize: 12,
-                                            }}
-                                        >
-                                            <option value="0">ALL</option>
-                                            {(funds.length
-                                                ? funds
-                                                : [
-                                                      {
-                                                          id: 1,
-                                                          short_name: "GMF",
-                                                          full_name:
-                                                              "Global Macro Fund",
-                                                      },
-                                                      {
-                                                          id: 6,
-                                                          short_name: "GCF",
-                                                          full_name:
-                                                              "Global Currencies Fund",
-                                                      },
-                                                  ]
-                                            ).map((f) => (
-                                                <option
-                                                    key={f.id}
-                                                    value={String(f.id)}
-                                                >
-                                                    {f.short_name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        {(!(isEditMode || toolsEditing) ||
+                                            headerWidth > 1000) && (
+                                            <select
+                                                id="portfolio-fund-select"
+                                                value={selectedFundId}
+                                                onChange={(e) =>
+                                                    setSelectedFundId(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                aria-label="Select fund"
+                                                style={{
+                                                    backgroundColor:
+                                                        currentTheme.background,
+                                                    color: currentTheme.text,
+                                                    border: `1px solid ${currentTheme.border}`,
+                                                    borderRadius: 4,
+                                                    padding: "4px 8px",
+                                                    fontSize: 12,
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                <option value="0">ALL</option>
+                                                {(funds.length
+                                                    ? funds
+                                                    : [
+                                                          {
+                                                              id: 1,
+                                                              short_name: "GMF",
+                                                              full_name:
+                                                                  "Global Macro Fund",
+                                                          },
+                                                          {
+                                                              id: 6,
+                                                              short_name: "GCF",
+                                                              full_name:
+                                                                  "Global Currencies Fund",
+                                                          },
+                                                      ]
+                                                ).map((f) => (
+                                                    <option
+                                                        key={f.id}
+                                                        value={String(f.id)}
+                                                    >
+                                                        {f.short_name}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         )}
                                     </div>
                                 )}
@@ -901,7 +903,8 @@ export const Portfolio: React.FC<
                             </div>
                         </div>
                         {/* Right controls on same line */}
-                        {(!(isEditMode || toolsEditing) || headerWidth > 880) && (
+                        {(!(isEditMode || toolsEditing) ||
+                            headerWidth > 880) && (
                             <div
                                 style={{
                                     marginLeft: isEditMode ? undefined : "auto",
@@ -911,165 +914,172 @@ export const Portfolio: React.FC<
                                     overflowX: "auto",
                                 }}
                             >
-                            <button
-                                onClick={() =>
-                                    console.log("Portfolio: Sync DB")
-                                }
-                                title="Sync DB"
-                                style={{
-                                    padding: "4px 12px",
-                                    backgroundColor: "#5da0ea",
-                                    color: "#ffffff",
-                                    border: `1px solid #3b82f6`,
-                                    borderRadius: 4,
-                                    fontSize: 11,
-                                    fontWeight: 600,
-                                    cursor: "pointer",
-                                    boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.2)",
-                                }}
-                            >
-                                Sync DB
-                            </button>
-                            {/* Temporary data buttons */}
-                            <div style={{ display: "flex", gap: 6 }}>
                                 <button
-                                    onClick={loadFxTrades}
-                                    title="Load FX Trades"
+                                    onClick={() =>
+                                        console.log("Portfolio: Sync DB")
+                                    }
+                                    title="Sync DB"
                                     style={{
-                                        padding: "4px 8px",
-                                        backgroundColor: "#1e1e1e",
-                                        color: "#eaeaea",
-                                        border: `1px solid ${currentTheme.border}66`,
+                                        padding: "4px 12px",
+                                        backgroundColor: "#5da0ea",
+                                        color: "#ffffff",
+                                        border: `1px solid #3b82f6`,
                                         borderRadius: 4,
                                         fontSize: 11,
+                                        fontWeight: 600,
                                         cursor: "pointer",
-                                        opacity:
-                                            fxLoading === "trades" ? 0.6 : 1,
+                                        boxShadow:
+                                            "inset 0 -1px 0 rgba(0,0,0,0.2)",
                                     }}
                                 >
-                                    {fxLoading === "trades"
-                                        ? "Trades…"
-                                        : "FX Trades"}
+                                    Sync DB
                                 </button>
-                                <button
-                                    onClick={loadFxOptions}
-                                    title="Load FX Option Trades"
-                                    style={{
-                                        padding: "4px 8px",
-                                        backgroundColor: "#1e1e1e",
-                                        color: "#eaeaea",
-                                        border: `1px solid ${currentTheme.border}66`,
-                                        borderRadius: 4,
-                                        fontSize: 11,
-                                        cursor: "pointer",
-                                        opacity:
-                                            fxLoading === "options" ? 0.6 : 1,
-                                    }}
-                                >
-                                    {fxLoading === "options"
-                                        ? "Options…"
-                                        : "FX Options"}
-                                </button>
-                            </div>
-                            <div style={{ display: "flex", gap: 6 }}>
-                                <button
-                                    onClick={() => setDataMode("live")}
-                                    style={{
-                                        padding: "4px 8px",
-                                        backgroundColor: "#1e1e1e",
-                                        color:
-                                            dataMode === "live"
-                                                ? "#ffffff"
-                                                : currentTheme.textSecondary,
-                                        border:
-                                            dataMode === "live"
-                                                ? `1px solid ${
-                                                      currentTheme.success ||
-                                                      "#6aa84f"
-                                                  }`
-                                                : `1px solid ${currentTheme.border}66`,
-                                        borderRadius: 4,
-                                        fontSize: 11,
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    Live
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setDataMode("eod");
-                                        if (!selectedDate) {
-                                            const d = prevBusinessDate()
-                                                .toISOString()
-                                                .slice(0, 10);
-                                            setSelectedDate(d);
-                                        }
-                                    }}
-                                    style={{
-                                        padding: "4px 8px",
-                                        backgroundColor: "#1e1e1e",
-                                        color:
-                                            dataMode === "eod"
-                                                ? "#ffffff"
-                                                : currentTheme.textSecondary,
-                                        border:
-                                            dataMode === "eod"
-                                                ? `1px solid ${
-                                                      currentTheme.success ||
-                                                      "#6aa84f"
-                                                  }`
-                                                : `1px solid ${currentTheme.border}66`,
-                                        borderRadius: 4,
-                                        fontSize: 11,
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    EOD
-                                </button>
-                            </div>
-                            {dataMode === "eod" ? (
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 6,
-                                    }}
-                                >
-                                    <input
-                                        aria-label="Select EOD date"
-                                        title="Select EOD date"
-                                        type="date"
-                                        value={selectedDate || effectiveDate}
-                                        onChange={(e) =>
-                                            setSelectedDate(e.target.value)
-                                        }
+                                {/* Temporary data buttons */}
+                                <div style={{ display: "flex", gap: 6 }}>
+                                    <button
+                                        onClick={loadFxTrades}
+                                        title="Load FX Trades"
                                         style={{
                                             padding: "4px 8px",
-                                            backgroundColor:
-                                                currentTheme.background,
-                                            color: currentTheme.text,
-                                            border: `1px solid ${currentTheme.border}`,
+                                            backgroundColor: "#1e1e1e",
+                                            color: "#eaeaea",
+                                            border: `1px solid ${currentTheme.border}66`,
                                             borderRadius: 4,
                                             fontSize: 11,
-                                            colorScheme: "dark",
+                                            cursor: "pointer",
+                                            opacity:
+                                                fxLoading === "trades"
+                                                    ? 0.6
+                                                    : 1,
                                         }}
-                                    />
+                                    >
+                                        {fxLoading === "trades"
+                                            ? "Trades…"
+                                            : "FX Trades"}
+                                    </button>
+                                    <button
+                                        onClick={loadFxOptions}
+                                        title="Load FX Option Trades"
+                                        style={{
+                                            padding: "4px 8px",
+                                            backgroundColor: "#1e1e1e",
+                                            color: "#eaeaea",
+                                            border: `1px solid ${currentTheme.border}66`,
+                                            borderRadius: 4,
+                                            fontSize: 11,
+                                            cursor: "pointer",
+                                            opacity:
+                                                fxLoading === "options"
+                                                    ? 0.6
+                                                    : 1,
+                                        }}
+                                    >
+                                        {fxLoading === "options"
+                                            ? "Options…"
+                                            : "FX Options"}
+                                    </button>
                                 </div>
-                            ) : (
-                                <div
-                                    title="Date"
-                                    style={{
-                                        padding: "4px 8px",
-                                        backgroundColor: "#1e1e1e",
-                                        color: currentTheme.textSecondary,
-                                        border: `1px solid ${currentTheme.border}66`,
-                                        borderRadius: 4,
-                                        fontSize: 11,
-                                    }}
-                                >
-                                    {formatDateBadge(effectiveDate)}
+                                <div style={{ display: "flex", gap: 6 }}>
+                                    <button
+                                        onClick={() => setDataMode("live")}
+                                        style={{
+                                            padding: "4px 8px",
+                                            backgroundColor: "#1e1e1e",
+                                            color:
+                                                dataMode === "live"
+                                                    ? "#ffffff"
+                                                    : currentTheme.textSecondary,
+                                            border:
+                                                dataMode === "live"
+                                                    ? `1px solid ${
+                                                          currentTheme.success ||
+                                                          "#6aa84f"
+                                                      }`
+                                                    : `1px solid ${currentTheme.border}66`,
+                                            borderRadius: 4,
+                                            fontSize: 11,
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        Live
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setDataMode("eod");
+                                            if (!selectedDate) {
+                                                const d = prevBusinessDate()
+                                                    .toISOString()
+                                                    .slice(0, 10);
+                                                setSelectedDate(d);
+                                            }
+                                        }}
+                                        style={{
+                                            padding: "4px 8px",
+                                            backgroundColor: "#1e1e1e",
+                                            color:
+                                                dataMode === "eod"
+                                                    ? "#ffffff"
+                                                    : currentTheme.textSecondary,
+                                            border:
+                                                dataMode === "eod"
+                                                    ? `1px solid ${
+                                                          currentTheme.success ||
+                                                          "#6aa84f"
+                                                      }`
+                                                    : `1px solid ${currentTheme.border}66`,
+                                            borderRadius: 4,
+                                            fontSize: 11,
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        EOD
+                                    </button>
                                 </div>
-                            )}
+                                {dataMode === "eod" ? (
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 6,
+                                        }}
+                                    >
+                                        <input
+                                            aria-label="Select EOD date"
+                                            title="Select EOD date"
+                                            type="date"
+                                            value={
+                                                selectedDate || effectiveDate
+                                            }
+                                            onChange={(e) =>
+                                                setSelectedDate(e.target.value)
+                                            }
+                                            style={{
+                                                padding: "4px 8px",
+                                                backgroundColor:
+                                                    currentTheme.background,
+                                                color: currentTheme.text,
+                                                border: `1px solid ${currentTheme.border}`,
+                                                borderRadius: 4,
+                                                fontSize: 11,
+                                                colorScheme: "dark",
+                                            }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div
+                                        title="Date"
+                                        style={{
+                                            padding: "4px 8px",
+                                            backgroundColor: "#1e1e1e",
+                                            color: currentTheme.textSecondary,
+                                            border: `1px solid ${currentTheme.border}66`,
+                                            borderRadius: 4,
+                                            fontSize: 11,
+                                        }}
+                                    >
+                                        {formatDateBadge(effectiveDate)}
+                                    </div>
+                                )}
                             </div>
                         )}
                         {/* window controls moved next to title for guaranteed visibility in edit mode */}
