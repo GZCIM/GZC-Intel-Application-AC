@@ -67,7 +67,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     isLive,
 }) => {
     const { getToken } = useAuthContext();
-    const { theme } = useTheme();
+    const { currentTheme: theme } = useTheme();
     const [positions, setPositions] = useState<PortfolioPosition[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -337,9 +337,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
     if (error) {
         return <div className="text-red-500 p-4">Error: {error}</div>;
-  }
+    }
 
-  return (
+    return (
         <div className="w-full">
             {/* Table Controls - visible only while editing */}
             {isEditing && (
@@ -361,7 +361,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     <input
                                         type="checkbox"
                                         checked={col.visible}
-                                        onChange={() => handleColumnToggle(col.key)}
+                                        onChange={() =>
+                                            handleColumnToggle(col.key)
+                                        }
                                     />
                                     {col.label}
                                 </label>
@@ -384,7 +386,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 >
                     <thead>
                         {table.getHeaderGroups().map((hg) => (
-                            <tr key={hg.id} style={{ background: theme.surfaceAlt }}>
+                            <tr
+                                key={hg.id}
+                                style={{ background: theme.surfaceAlt }}
+                            >
                                 {hg.headers.map((header) => (
                                     <th
                                         key={header.id}
@@ -397,13 +402,21 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                         }}
                                         onClick={header.column.getToggleSortingHandler()}
                                     >
-                                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 4,
+                                            }}
+                                        >
                                             {flexRender(
                                                 header.column.columnDef.header,
                                                 header.getContext()
                                             )}
-                                            {header.column.getIsSorted() === "asc" && "↑"}
-                                            {header.column.getIsSorted() === "desc" && "↓"}
+                                            {header.column.getIsSorted() ===
+                                                "asc" && "↑"}
+                                            {header.column.getIsSorted() ===
+                                                "desc" && "↓"}
                                         </div>
                                     </th>
                                 ))}
@@ -415,7 +428,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                             <tr
                                 key={row.id}
                                 style={{
-                                    background: idx % 2 === 0 ? theme.surface : theme.background,
+                                    background:
+                                        idx % 2 === 0
+                                            ? theme.surface
+                                            : theme.background,
                                 }}
                             >
                                 {row.getVisibleCells().map((cell) => (
@@ -437,7 +453,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     </tbody>
                     {/* PnL Summary Footer */}
                     <tfoot>
-                        <tr style={{ background: theme.surfaceAlt, fontWeight: 600 }}>
+                        <tr
+                            style={{
+                                background: theme.surfaceAlt,
+                                fontWeight: 600,
+                            }}
+                        >
                             <td
                                 colSpan={table.getVisibleLeafColumns().length}
                                 style={{
@@ -452,7 +473,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         <tr style={{ background: theme.surface }}>
                             {table.getVisibleLeafColumns().map((col) => {
                                 const id = col.id;
-                                if (id.endsWith("_pnl") || id.startsWith("pnl")) {
+                                if (
+                                    id.endsWith("_pnl") ||
+                                    id.startsWith("pnl")
+                                ) {
                                     return (
                                         <td
                                             key={id}
@@ -462,14 +486,20 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                 fontWeight: 600,
                                             }}
                                         >
-                                            {formatValue((pnlSummary as any)[id] ?? null, id)}
+                                            {formatValue(
+                                                (pnlSummary as any)[id] ?? null,
+                                                id
+                                            )}
                                         </td>
                                     );
                                 }
                                 return (
                                     <td
                                         key={id}
-                                        style={{ border: `1px solid ${theme.border}`, padding: "8px 12px" }}
+                                        style={{
+                                            border: `1px solid ${theme.border}`,
+                                            padding: "8px 12px",
+                                        }}
                                     ></td>
                                 );
                             })}
