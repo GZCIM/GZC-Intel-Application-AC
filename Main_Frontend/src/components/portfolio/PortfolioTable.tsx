@@ -1,4 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
+import {
+    ColumnDef,
+    getCoreRowModel,
+    getSortedRowModel,
+    SortingState,
+    useReactTable,
+    flexRender,
+} from "@tanstack/react-table";
 import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
 import axios from "axios";
@@ -70,6 +78,33 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     // Component-scoped config identifiers
     const deviceType = "laptop";
     const componentId = "portfolio-default";
+
+    // Sync with global Tools menu Unlock/Lock editing
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const detail = (e as CustomEvent).detail || {};
+            const unlocked = !!detail.unlocked;
+            if (unlocked) {
+                setIsEditing(true);
+            } else {
+                // On lock, persist current config if present
+                if (isEditing) {
+                    void saveTableConfig();
+                }
+                setIsEditing(false);
+            }
+        };
+        window.addEventListener(
+            "gzc:edit-mode-toggled",
+            handler as EventListener
+        );
+        return () =>
+            window.removeEventListener(
+                "gzc:edit-mode-toggled",
+                handler as EventListener
+            );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isEditing, localConfig, fundId]);
 
     // Load table configuration on mount
     useEffect(() => {
@@ -172,32 +207,63 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         }
     };
 
-    const visibleColumns = useMemo(() => {
-        return localConfig?.columns.filter((col) => col.visible) || [];
+    // Build TanStack columns from config
+    const columns = useMemo<ColumnDef<PortfolioPosition>[]>(() => {
+        const cfgCols = localConfig?.columns || [];
+        return cfgCols.map((c) => ({
+            id: c.key,
+            accessorKey: c.key as keyof PortfolioPosition,
+            header: c.label,
+            cell: (info) => formatValue(info.getValue() as any, c.key),
+            size: c.width,
+            enableHiding: true,
+            enableSorting: true,
+        }));
     }, [localConfig]);
 
-    const sortedPositions = useMemo(() => {
-        if (!localConfig?.sorting) return positions;
+    // Sorting state mapped from config
+    const [sorting, setSorting] = useState<SortingState>(() => {
+        const s = localConfig?.sorting;
+        return s ? [{ id: s.column, desc: s.direction === "desc" }] : [];
+    });
 
-        const { column, direction } = localConfig.sorting;
-        return [...positions].sort((a, b) => {
-            const aVal = a[column as keyof PortfolioPosition];
-            const bVal = b[column as keyof PortfolioPosition];
+    useEffect(() => {
+        const s = localConfig?.sorting;
+        setSorting(s ? [{ id: s.column, desc: s.direction === "desc" }] : []);
+    }, [localConfig?.sorting]);
 
-            if (aVal === null || aVal === undefined) return 1;
-            if (bVal === null || bVal === undefined) return -1;
+    const table = useReactTable({
+        data: positions,
+        columns,
+        state: { sorting },
+        onSortingChange: setSorting,
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        columnResizeMode: "onChange",
+    });
 
-            if (typeof aVal === "number" && typeof bVal === "number") {
-                return direction === "asc" ? aVal - bVal : bVal - aVal;
-            }
+    // Sync column visibility with config
+    useEffect(() => {
+        const vis: Record<string, boolean> = {};
+        (localConfig?.columns || []).forEach((c) => (vis[c.key] = !!c.visible));
+        table.setColumnVisibility(vis);
+    }, [localConfig?.columns, table]);
 
-            const aStr = String(aVal).toLowerCase();
-            const bStr = String(bVal).toLowerCase();
-            return direction === "asc"
-                ? aStr.localeCompare(bStr)
-                : bStr.localeCompare(aStr);
-        });
-    }, [positions, localConfig?.sorting]);
+    // Reflect sorting changes back into config while editing
+    useEffect(() => {
+        if (!localConfig) return;
+        if (sorting.length === 0) return;
+        const s = sorting[0];
+        const updated: TableConfig = {
+            ...localConfig,
+            sorting: {
+                column: s.id as string,
+                direction: s.desc ? "desc" : "asc",
+            },
+        };
+        setLocalConfig(updated);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sorting]);
 
     const pnlSummary = useMemo(() => {
         const summary = {
@@ -229,18 +295,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     };
 
     const handleSort = (columnKey: string) => {
-        if (!localConfig) return;
-
-        const currentSort = localConfig.sorting;
-        const newDirection =
-            currentSort.column === columnKey && currentSort.direction === "asc"
-                ? "desc"
-                : "asc";
-
-        setLocalConfig({
-            ...localConfig,
-            sorting: { column: columnKey, direction: newDirection },
-        });
+        const col = table.getColumn(columnKey);
+        if (col) col.toggleSorting();
     };
 
     const formatValue = (value: any, columnKey: string): string => {
@@ -343,50 +399,51 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             <div className="overflow-x-auto">
                 <table className="w-full border-collapse border border-gray-300 dark:border-gray-600">
                     <thead>
-                        <tr className="bg-gray-100 dark:bg-gray-800">
-                            {visibleColumns.map((col) => (
-                                <th
-                                    key={col.key}
-                                    className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
-                                    style={{ width: col.width }}
-                                    onClick={() => handleSort(col.key)}
-                                >
-                                    <div className="flex items-center gap-1">
-                                        {col.label}
-                                        {localConfig?.sorting.column ===
-                                            col.key && (
-                                            <span>
-                                                {localConfig.sorting
-                                                    .direction === "asc"
-                                                    ? "↑"
-                                                    : "↓"}
-                                            </span>
-                                        )}
-                                    </div>
-                                </th>
-                            ))}
-                        </tr>
+                        {table.getHeaderGroups().map((hg) => (
+                            <tr
+                                key={hg.id}
+                                className="bg-gray-100 dark:bg-gray-800"
+                            >
+                                {hg.headers.map((header) => (
+                                    <th
+                                        key={header.id}
+                                        className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
+                                        style={{ width: header.getSize() }}
+                                        onClick={header.column.getToggleSortingHandler()}
+                                    >
+                                        <div className="flex items-center gap-1">
+                                            {flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext()
+                                            )}
+                                            {header.column.getIsSorted() ===
+                                                "asc" && "↑"}
+                                            {header.column.getIsSorted() ===
+                                                "desc" && "↓"}
+                                        </div>
+                                    </th>
+                                ))}
+                            </tr>
+                        ))}
                     </thead>
                     <tbody>
-                        {sortedPositions.map((pos, index) => (
+                        {table.getRowModel().rows.map((row, idx) => (
                             <tr
-                                key={`${pos.trade_type}-${pos.trade_id}`}
+                                key={row.id}
                                 className={
-                                    index % 2 === 0
+                                    idx % 2 === 0
                                         ? "bg-white dark:bg-gray-900"
                                         : "bg-gray-50 dark:bg-gray-800"
                                 }
                             >
-                                {visibleColumns.map((col) => (
+                                {row.getVisibleCells().map((cell) => (
                                     <td
-                                        key={col.key}
+                                        key={cell.id}
                                         className="border border-gray-300 dark:border-gray-600 px-3 py-2"
                                     >
-                                        {formatValue(
-                                            pos[
-                                                col.key as keyof PortfolioPosition
-                                            ],
-                                            col.key
+                                        {flexRender(
+                                            cell.column.columnDef.cell,
+                                            cell.getContext()
                                         )}
                                     </td>
                                 ))}
@@ -397,35 +454,34 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     <tfoot>
                         <tr className="bg-blue-100 dark:bg-blue-900 font-semibold">
                             <td
-                                colSpan={visibleColumns.length}
+                                colSpan={table.getVisibleLeafColumns().length}
                                 className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center"
                             >
                                 P&L Summary
                             </td>
                         </tr>
                         <tr className="bg-blue-50 dark:bg-blue-800">
-                            {visibleColumns.map((col) => {
+                            {table.getVisibleLeafColumns().map((col) => {
+                                const id = col.id;
                                 if (
-                                    col.key.startsWith("pnl") ||
-                                    col.key.includes("_pnl")
+                                    id.endsWith("_pnl") ||
+                                    id.startsWith("pnl")
                                 ) {
-                                    const pnlKey =
-                                        col.key as keyof typeof pnlSummary;
                                     return (
                                         <td
-                                            key={col.key}
+                                            key={id}
                                             className="border border-gray-300 dark:border-gray-600 px-3 py-2 font-semibold"
                                         >
                                             {formatValue(
-                                                pnlSummary[pnlKey],
-                                                col.key
+                                                (pnlSummary as any)[id] ?? null,
+                                                id
                                             )}
                                         </td>
                                     );
                                 }
                                 return (
                                     <td
-                                        key={col.key}
+                                        key={id}
                                         className="border border-gray-300 dark:border-gray-600 px-3 py-2"
                                     ></td>
                                 );
