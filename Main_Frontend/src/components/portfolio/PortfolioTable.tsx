@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
 import axios from "axios";
 
@@ -58,7 +58,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     fundId,
     isLive,
 }) => {
-    const { auth } = useAuth();
+    const { getToken } = useAuthContext();
     const { theme } = useTheme();
     const [positions, setPositions] = useState<PortfolioPosition[]>([]);
     const [loading, setLoading] = useState(false);
@@ -66,6 +66,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const [tableConfig, setTableConfig] = useState<TableConfig | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
+
+    // Component-scoped config identifiers
+    const deviceType = "laptop";
+    const componentId = "portfolio-default";
 
     // Load table configuration on mount
     useEffect(() => {
@@ -81,11 +85,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
     const loadTableConfig = async () => {
         try {
-            const token = await auth.getToken();
-            const response = await axios.get("/api/table-config/portfolio", {
-                params: { fundId },
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const token = await getToken();
+            const response = await axios.get(
+                "/api/cosmos/portfolio-component-config",
+                {
+                    params: { deviceType, componentId, fundId },
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
 
             if (response.data.status === "success") {
                 setTableConfig(response.data.data);
@@ -100,12 +107,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         if (!localConfig) return;
 
         try {
-            const token = await auth.getToken();
+            const token = await getToken();
             await axios.post(
-                "/api/table-config/portfolio",
+                "/api/cosmos/portfolio-component-config",
                 {
+                    deviceType,
+                    componentId,
                     fundId,
-                    config: localConfig,
+                    tableConfig: localConfig,
                 },
                 {
                     headers: { Authorization: `Bearer ${token}` },
@@ -124,7 +133,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         setError(null);
 
         try {
-            const token = await auth.getToken();
+            const token = await getToken();
 
             // Load both FX and FX Options in parallel
             const [fxResponse, fxOptionsResponse] = await Promise.all([

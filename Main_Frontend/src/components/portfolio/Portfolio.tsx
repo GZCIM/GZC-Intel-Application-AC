@@ -4,7 +4,7 @@ import {
     apiClient as portfolioApi,
     setPortfolioAuthTokenProvider,
 } from "../../utils/axios";
-import { useAuthContext } from "../../modules/ui-library/context/AuthContext";
+import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
 import PortfolioTable from "./PortfolioTable";
 
