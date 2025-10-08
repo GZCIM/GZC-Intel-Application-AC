@@ -397,8 +397,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             )}
             {/* Table Controls - visible only while editing */}
             {isEditing && (
-                <div className="flex justify-between items-center mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded">
-                    <div className="flex items-center gap-4">
+                <div className="flex justify-between items-center mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded" style={{overflowX: "auto"}}>
+                    <div className="flex items-center gap-4" style={{flexShrink: 0}}>
                         <h3 className="text-lg font-semibold">
                             Portfolio Positions ({positions.length})
                         </h3>
@@ -406,7 +406,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
                     {/* Column Visibility Controls */}
                     {localConfig && (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2" style={{minWidth: 420}}>
                             {localConfig.columns.map((col) => (
                                 <label
                                     key={col.key}

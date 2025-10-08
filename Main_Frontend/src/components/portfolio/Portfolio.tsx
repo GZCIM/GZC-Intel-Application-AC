@@ -35,6 +35,8 @@ export const Portfolio: React.FC<
     const { currentTheme } = useTheme();
     const auth = useAuthContext();
     const [toolsEditing, setToolsEditing] = useState(false);
+    const headerRef = useRef<HTMLDivElement | null>(null);
+    const [headerWidth, setHeaderWidth] = useState<number>(0);
     const lastNonMaximizedStateRef = useRef<"minimized" | "normal">("normal");
     const handleTitleDoubleClick = () => {
         if (componentState === "maximized") {
@@ -87,6 +89,21 @@ export const Portfolio: React.FC<
     const [fxLoading, setFxLoading] = useState<"none" | "trades" | "options">(
         "none"
     );
+
+    // Track header width for responsive controls behavior
+    useEffect(() => {
+        if (!headerRef.current) return;
+        const el = headerRef.current;
+        const ro = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const cr = entry.contentRect;
+                setHeaderWidth(cr.width);
+            }
+        });
+        ro.observe(el);
+        setHeaderWidth(el.getBoundingClientRect().width);
+        return () => ro.disconnect();
+    }, []);
 
     const loadFxTrades = async () => {
         try {
@@ -354,6 +371,7 @@ export const Portfolio: React.FC<
                     // Ensure enough height so inner controls are not overlapped vertically
                     minHeight: (isEditMode || toolsEditing) ? 46 : undefined,
                 }}
+                ref={headerRef}
             >
                 {(isEditMode || toolsEditing) && (
                     <div
@@ -756,6 +774,8 @@ export const Portfolio: React.FC<
                                         >
                                             Fund
                                         </label>
+                                        {/* In edit mode hide Fund when header is too narrow; show when wide or not editing */}
+                                        {( !(isEditMode || toolsEditing) || headerWidth > 680 ) && (
                                         <select
                                             id="portfolio-fund-select"
                                             value={selectedFundId}
@@ -801,6 +821,7 @@ export const Portfolio: React.FC<
                                                 </option>
                                             ))}
                                         </select>
+                                        )}
                                     </div>
                                 )}
                                 {/* Portfolio selector visible only in Virtual mode */}
