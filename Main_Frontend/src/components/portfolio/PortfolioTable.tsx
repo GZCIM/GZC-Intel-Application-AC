@@ -347,11 +347,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     <h3 className="text-lg font-semibold">
                         Portfolio Positions ({positions.length})
                     </h3>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                        {isEditing
-                            ? "Editing unlocked via Tools menu"
-                            : "Use Tools → Unlock Editing to configure columns"}
-                    </div>
                 </div>
 
                 {/* Column Visibility Controls */}
