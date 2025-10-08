@@ -341,33 +341,35 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
   return (
         <div className="w-full">
-            {/* Table Controls */}
-            <div className="flex justify-between items-center mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded">
-                <div className="flex items-center gap-4">
-                    <h3 className="text-lg font-semibold">
-                        Portfolio Positions ({positions.length})
-                    </h3>
-                </div>
-
-                {/* Column Visibility Controls */}
-                {isEditing && localConfig && (
-                    <div className="flex flex-wrap gap-2">
-                        {localConfig.columns.map((col) => (
-                            <label
-                                key={col.key}
-                                className="flex items-center gap-1 text-sm"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={col.visible}
-                                    onChange={() => handleColumnToggle(col.key)}
-                                />
-                                {col.label}
-                            </label>
-                        ))}
+            {/* Table Controls - visible only while editing */}
+            {isEditing && (
+                <div className="flex justify-between items-center mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded">
+                    <div className="flex items-center gap-4">
+                        <h3 className="text-lg font-semibold">
+                            Portfolio Positions ({positions.length})
+                        </h3>
                     </div>
-                )}
-            </div>
+
+                    {/* Column Visibility Controls */}
+                    {localConfig && (
+                        <div className="flex flex-wrap gap-2">
+                            {localConfig.columns.map((col) => (
+                                <label
+                                    key={col.key}
+                                    className="flex items-center gap-1 text-sm"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={col.visible}
+                                        onChange={() => handleColumnToggle(col.key)}
+                                    />
+                                    {col.label}
+                                </label>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Table */}
             <div className="overflow-x-auto">
