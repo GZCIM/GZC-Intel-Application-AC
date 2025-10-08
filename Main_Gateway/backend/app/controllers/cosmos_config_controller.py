@@ -1588,6 +1588,261 @@ async def cosmos_health_check() -> Dict[str, Any]:
         return {"status": "error", "message": str(e)}
 
 
+# -------------------- Portfolio Component Table Config (embedded) --------------------
+
+
+def _default_portfolio_table_config() -> Dict[str, Any]:
+    """Default table configuration for Portfolio component."""
+    return {
+        "columns": [
+            {"key": "trade_type", "label": "Type", "visible": True, "width": 100},
+            {"key": "trade_id", "label": "Trade ID", "visible": True, "width": 120},
+            {"key": "trade_date", "label": "Trade Date", "visible": True, "width": 120},
+            {
+                "key": "maturity_date",
+                "label": "Maturity",
+                "visible": True,
+                "width": 120,
+            },
+            {"key": "quantity", "label": "Quantity", "visible": True, "width": 120},
+            {
+                "key": "trade_price",
+                "label": "Trade Price",
+                "visible": True,
+                "width": 120,
+            },
+            {"key": "price", "label": "Current Price", "visible": True, "width": 120},
+            {
+                "key": "trade_currency",
+                "label": "Trade CCY",
+                "visible": True,
+                "width": 100,
+            },
+            {
+                "key": "settlement_currency",
+                "label": "Settle CCY",
+                "visible": True,
+                "width": 100,
+            },
+            {"key": "position", "label": "Position", "visible": True, "width": 100},
+            {
+                "key": "counter_party_code",
+                "label": "Counterparty",
+                "visible": True,
+                "width": 120,
+            },
+            {"key": "eoy_price", "label": "EOY Price", "visible": False, "width": 120},
+            {"key": "eom_price", "label": "EOM Price", "visible": False, "width": 120},
+            {"key": "eod_price", "label": "EOD Price", "visible": False, "width": 120},
+            {"key": "itd_pnl", "label": "ITD P&L", "visible": True, "width": 120},
+            {"key": "ytd_pnl", "label": "YTD P&L", "visible": True, "width": 120},
+            {"key": "mtd_pnl", "label": "MTD P&L", "visible": True, "width": 120},
+            {"key": "dtd_pnl", "label": "DTD P&L", "visible": True, "width": 120},
+            {"key": "trader", "label": "Trader", "visible": False, "width": 100},
+            {"key": "note", "label": "Note", "visible": False, "width": 200},
+        ],
+        "sorting": {"column": "maturity_date", "direction": "asc"},
+        "grouping": [],
+        "filters": {},
+    }
+
+
+@router.get("/portfolio-component-config")
+async def get_portfolio_component_config(
+    deviceType: str,
+    componentId: str,
+    fundId: Optional[int] = None,
+    payload: Dict = Depends(validate_token),
+) -> Dict[str, Any]:
+    """
+    Load Portfolio component table config embedded inside user's device config document.
+    """
+    container = get_cosmos_container()
+    if not container:
+        raise HTTPException(status_code=503, detail="Cosmos DB not available")
+
+    device_type = (deviceType or "").strip().lower()
+    if device_type not in ["laptop", "mobile", "bigscreen"]:
+        raise HTTPException(
+            status_code=400, detail="deviceType must be laptop/mobile/bigscreen"
+        )
+    if not componentId:
+        raise HTTPException(status_code=400, detail="componentId is required")
+
+    # Resolve user id
+    user_email = (
+        payload.get("preferred_username")
+        or payload.get("email", "")
+        or payload.get("upn", "")
+    )
+    user_oid = payload.get("oid", "")
+    user_sub = payload.get("sub", "")
+    if user_email:
+        user_id = user_email.lower()
+    elif user_oid:
+        user_id = f"oid_{user_oid}"
+    else:
+        user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
+
+    device_config_id = f"{device_type}_{user_id}"
+
+    # Read device doc (pk by id first, then userId)
+    device_doc: Optional[Dict[str, Any]] = None
+    try:
+        device_doc = container.read_item(
+            item=device_config_id, partition_key=device_config_id
+        )
+    except exceptions.CosmosResourceNotFoundError:
+        try:
+            device_doc = container.read_item(
+                item=device_config_id, partition_key=user_id
+            )
+        except exceptions.CosmosResourceNotFoundError:
+            device_doc = None
+
+    if not device_doc:
+        return {"status": "success", "data": _default_portfolio_table_config()}
+
+    comp_states = (device_doc.get("config") or {}).get("componentStates") or []
+    for st in comp_states:
+        if not isinstance(st, dict):
+            continue
+        if st.get("type") == "portfolio" and st.get("componentId") == componentId:
+            st_fund = st.get("fundId")
+            if fundId is None or st_fund == fundId:
+                cfg = st.get("tableConfig")
+                if isinstance(cfg, dict):
+                    return {"status": "success", "data": cfg}
+
+    return {"status": "success", "data": _default_portfolio_table_config()}
+
+
+@router.post("/portfolio-component-config")
+async def save_portfolio_component_config(
+    body: Dict[str, Any], payload: Dict = Depends(validate_token)
+) -> Dict[str, Any]:
+    """
+    Save Portfolio component table config embedded under user's device config document.
+    Body: { deviceType, componentId, fundId?, tableConfig }
+    """
+    container = get_cosmos_container()
+    if not container:
+        raise HTTPException(status_code=503, detail="Cosmos DB not available")
+
+    device_type = (body.get("deviceType") or "").strip().lower()
+    component_id = (body.get("componentId") or "").strip()
+    fund_id = body.get("fundId")
+    table_config = body.get("tableConfig") or body.get("config")
+
+    if device_type not in ["laptop", "mobile", "bigscreen"]:
+        raise HTTPException(
+            status_code=400, detail="deviceType must be laptop/mobile/bigscreen"
+        )
+    if not component_id:
+        raise HTTPException(status_code=400, detail="componentId is required")
+    if table_config is None or not isinstance(table_config, dict):
+        raise HTTPException(status_code=400, detail="tableConfig is required")
+    if fund_id is not None:
+        try:
+            fund_id = int(fund_id)
+        except Exception:
+            raise HTTPException(
+                status_code=400, detail="fundId must be integer if provided"
+            )
+
+    # Resolve user id
+    user_email = (
+        payload.get("preferred_username")
+        or payload.get("email", "")
+        or payload.get("upn", "")
+    )
+    user_oid = payload.get("oid", "")
+    user_sub = payload.get("sub", "")
+    if user_email:
+        user_id = user_email.lower()
+    elif user_oid:
+        user_id = f"oid_{user_oid}"
+    else:
+        user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
+
+    device_config_id = f"{device_type}_{user_id}"
+    now = datetime.utcnow().isoformat()
+
+    # Load or init device doc
+    device_doc: Optional[Dict[str, Any]] = None
+    try:
+        device_doc = container.read_item(
+            item=device_config_id, partition_key=device_config_id
+        )
+    except exceptions.CosmosResourceNotFoundError:
+        try:
+            device_doc = container.read_item(
+                item=device_config_id, partition_key=user_id
+            )
+        except exceptions.CosmosResourceNotFoundError:
+            device_doc = {
+                "id": device_config_id,
+                "name": f"{device_type.title()} Configuration for {user_id}",
+                "type": "user-device-config",
+                "deviceType": device_type,
+                "userId": user_id,
+                "version": "1.0.0",
+                "config": {
+                    "tabs": [],
+                    "preferences": {},
+                    "windowState": {},
+                    "componentStates": [],
+                    "layouts": [],
+                },
+                "createdAt": now,
+                "updatedAt": now,
+            }
+
+    cfg = device_doc.get("config") or {}
+    comp_states = cfg.get("componentStates") or []
+
+    updated = False
+    for i, st in enumerate(comp_states):
+        if not isinstance(st, dict):
+            continue
+        if st.get("type") == "portfolio" and st.get("componentId") == component_id:
+            st_fund = st.get("fundId")
+            if fund_id is None or st_fund == fund_id:
+                comp_states[i] = {
+                    **st,
+                    "type": "portfolio",
+                    "componentId": component_id,
+                    "fundId": fund_id,
+                    "tableConfig": table_config,
+                    "updatedAt": now,
+                }
+                updated = True
+                break
+
+    if not updated:
+        comp_states.append(
+            {
+                "type": "portfolio",
+                "componentId": component_id,
+                "fundId": fund_id,
+                "tableConfig": table_config,
+                "createdAt": now,
+                "updatedAt": now,
+            }
+        )
+
+    device_doc["config"] = {**cfg, "componentStates": comp_states}
+    device_doc["updatedAt"] = now
+    saved = container.upsert_item(body=device_doc)
+
+    return {
+        "status": "success",
+        "deviceConfigId": device_config_id,
+        "componentId": component_id,
+        "updatedAt": saved.get("updatedAt", now),
+    }
+
+
 @router.post("/device-config/copy-to")
 async def copy_layout_to_other_user(
     copy_request: Dict[str, Any], payload: Dict = Depends(validate_token)
