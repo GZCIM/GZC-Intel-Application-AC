@@ -348,8 +348,87 @@ export const Portfolio: React.FC<
                     flexDirection: "column",
                     gap: 8,
                     overflow: "visible",
+                    position: "relative",
                 }}
             >
+                {(isEditMode || toolsEditing) && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            right: 8,
+                            top: 8,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
+                            zIndex: 2,
+                        }}
+                    >
+                        <button
+                            title="Minimize"
+                            onClick={() => onStateChange?.("minimized")}
+                            style={{
+                                width: 30,
+                                height: 30,
+                                border: `1px solid ${currentTheme.border}`,
+                                background: "transparent",
+                                color: currentTheme.textSecondary,
+                                borderRadius: 4,
+                                cursor: "pointer",
+                                fontSize: 14,
+                            }}
+                        >
+                            ▁
+                        </button>
+                        <button
+                            title="Normal"
+                            onClick={() => onStateChange?.("normal")}
+                            style={{
+                                width: 30,
+                                height: 30,
+                                border: `1px solid ${currentTheme.border}`,
+                                background: "transparent",
+                                color: currentTheme.textSecondary,
+                                borderRadius: 4,
+                                cursor: "pointer",
+                                fontSize: 14,
+                            }}
+                        >
+                            □
+                        </button>
+                        <button
+                            title="Maximize"
+                            onClick={() => onStateChange?.("maximized")}
+                            style={{
+                                width: 30,
+                                height: 30,
+                                border: `1px solid ${currentTheme.border}`,
+                                background: "transparent",
+                                color: currentTheme.textSecondary,
+                                borderRadius: 4,
+                                cursor: "pointer",
+                                fontSize: 14,
+                            }}
+                        >
+                            ▣
+                        </button>
+                        <button
+                            title="Remove"
+                            onClick={() => onRemove?.()}
+                            style={{
+                                width: 30,
+                                height: 30,
+                                border: `1px solid ${currentTheme.border}`,
+                                background: "transparent",
+                                color: "#D69A82",
+                                borderRadius: 4,
+                                cursor: "pointer",
+                                fontSize: 14,
+                            }}
+                        >
+                            ×
+                        </button>
+                    </div>
+                )}
                 {componentState === "minimized" && isEditMode ? (
                 <div
                     style={{
