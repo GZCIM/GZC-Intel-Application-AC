@@ -68,6 +68,13 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 }) => {
     const { getToken } = useAuthContext();
     const { currentTheme: theme } = useTheme();
+    const safeTheme = (theme as any) || {
+        border: "#333333",
+        text: "#eaeaea",
+        background: "#111111",
+        surface: "#1e1e1e",
+        surfaceAlt: "#2a2a2a",
+    };
     const [positions, setPositions] = useState<PortfolioPosition[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -379,23 +386,23 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     style={{
                         width: "100%",
                         borderCollapse: "collapse",
-                        border: `1px solid ${theme.border}`,
-                        color: theme.text,
-                        background: theme.background,
+                        border: `1px solid ${safeTheme.border}`,
+                        color: safeTheme.text,
+                        background: safeTheme.background,
                     }}
                 >
                     <thead>
                         {table.getHeaderGroups().map((hg) => (
                             <tr
                                 key={hg.id}
-                                style={{ background: theme.surfaceAlt }}
+                                style={{ background: safeTheme.surfaceAlt }}
                             >
                                 {hg.headers.map((header) => (
                                     <th
                                         key={header.id}
                                         style={{
                                             width: header.getSize(),
-                                            border: `1px solid ${theme.border}`,
+                                            border: `1px solid ${safeTheme.border}`,
                                             padding: "8px 12px",
                                             textAlign: "left",
                                             cursor: "pointer",
@@ -430,15 +437,15 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                 style={{
                                     background:
                                         idx % 2 === 0
-                                            ? theme.surface
-                                            : theme.background,
+                                            ? safeTheme.surface
+                                            : safeTheme.background,
                                 }}
                             >
                                 {row.getVisibleCells().map((cell) => (
                                     <td
                                         key={cell.id}
                                         style={{
-                                            border: `1px solid ${theme.border}`,
+                                            border: `1px solid ${safeTheme.border}`,
                                             padding: "8px 12px",
                                         }}
                                     >
@@ -455,14 +462,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     <tfoot>
                         <tr
                             style={{
-                                background: theme.surfaceAlt,
+                                background: safeTheme.surfaceAlt,
                                 fontWeight: 600,
                             }}
                         >
                             <td
                                 colSpan={table.getVisibleLeafColumns().length}
                                 style={{
-                                    border: `1px solid ${theme.border}`,
+                                    border: `1px solid ${safeTheme.border}`,
                                     padding: "8px 12px",
                                     textAlign: "center",
                                 }}
@@ -470,7 +477,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                 P&L Summary
                             </td>
                         </tr>
-                        <tr style={{ background: theme.surface }}>
+                        <tr style={{ background: safeTheme.surface }}>
                             {table.getVisibleLeafColumns().map((col) => {
                                 const id = col.id;
                                 if (
@@ -481,7 +488,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                         <td
                                             key={id}
                                             style={{
-                                                border: `1px solid ${theme.border}`,
+                                                border: `1px solid ${safeTheme.border}`,
                                                 padding: "8px 12px",
                                                 fontWeight: 600,
                                             }}
@@ -497,7 +504,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     <td
                                         key={id}
                                         style={{
-                                            border: `1px solid ${theme.border}`,
+                                            border: `1px solid ${safeTheme.border}`,
                                             padding: "8px 12px",
                                         }}
                                     ></td>
