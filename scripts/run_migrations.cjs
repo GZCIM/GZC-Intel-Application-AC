@@ -12,15 +12,12 @@ async function run() {
     const client = new Client({ connectionString: cs });
     await client.connect();
 
-    // Discover and run all .sql migrations in alphanumeric order
-    const dir = path.join("migrations");
-    const files = fs
-        .readdirSync(dir)
-        .filter((name) => name.toLowerCase().endsWith(".sql"))
-        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    const files = [
+        path.join("migrations", "002_create_fx_lineage_tables.sql"),
+        path.join("migrations", "003_create_portfolio_and_allocations.sql"),
+    ];
 
-    for (const name of files) {
-        const f = path.join(dir, name);
+    for (const f of files) {
         const sql = fs.readFileSync(f, "utf8");
         console.log(`\n-- Running ${f} --`);
         await client.query(sql);
@@ -34,3 +31,4 @@ run().catch((e) => {
     console.error(e.stack || e.message);
     process.exit(1);
 });
+

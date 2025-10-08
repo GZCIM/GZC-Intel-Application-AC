@@ -6,6 +6,7 @@ import {
 } from "../../utils/axios";
 import { useAuthContext } from "../../modules/ui-library/context/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import PortfolioTable from "./PortfolioTable";
 
 interface PortfolioProps {
     apiEndpoint?: string;
@@ -980,97 +981,11 @@ export const Portfolio: React.FC<
                                 padding: 8,
                             }}
                         >
-                            <div
-                                style={{
-                                    fontWeight: 600,
-                                    color: currentTheme.text,
-                                    marginBottom: 6,
-                                }}
-                            >
-                                FX Positions (first 10)
-                            </div>
-                            {fxError ? (
-                                <div style={{ color: "#D69A82" }}>
-                                    {fxError}
-                                </div>
-                            ) : fxTrades && fxTrades.length > 0 ? (
-                                <div
-                                    style={{
-                                        maxHeight: 220,
-                                        overflow: "auto",
-                                        fontSize: 11,
-                                    }}
-                                >
-                                    <pre
-                                        style={{
-                                            margin: 0,
-                                            whiteSpace: "pre-wrap",
-                                        }}
-                                    >
-                                        {JSON.stringify(
-                                            fxTrades.slice(0, 10),
-                                            null,
-                                            2
-                                        )}
-                                    </pre>
-                                </div>
-                            ) : (
-                                <div
-                                    style={{
-                                        color: currentTheme.textSecondary,
-                                    }}
-                                >
-                                    No data loaded
-                                </div>
-                            )}
-                        </div>
-                        <div
-                            style={{
-                                flex: 1,
-                                border: `1px dashed ${currentTheme.border}`,
-                                borderRadius: 4,
-                                padding: 8,
-                            }}
-                        >
-                            <div
-                                style={{
-                                    fontWeight: 600,
-                                    color: currentTheme.text,
-                                    marginBottom: 6,
-                                }}
-                            >
-                                FX Option Positions (first 10)
-                            </div>
-                            {fxOptions && fxOptions.length > 0 ? (
-                                <div
-                                    style={{
-                                        maxHeight: 220,
-                                        overflow: "auto",
-                                        fontSize: 11,
-                                    }}
-                                >
-                                    <pre
-                                        style={{
-                                            margin: 0,
-                                            whiteSpace: "pre-wrap",
-                                        }}
-                                    >
-                                        {JSON.stringify(
-                                            fxOptions.slice(0, 10),
-                                            null,
-                                            2
-                                        )}
-                                    </pre>
-                                </div>
-                            ) : (
-                                <div
-                                    style={{
-                                        color: currentTheme.textSecondary,
-                                    }}
-                                >
-                                    No data loaded
-                                </div>
-                            )}
+                            <PortfolioTable
+                                selectedDate={selectedDate || effectiveDate}
+                                fundId={selectedFundId || 0}
+                                isLive={dataMode === "live"}
+                            />
                         </div>
                     </div>
                 </div>

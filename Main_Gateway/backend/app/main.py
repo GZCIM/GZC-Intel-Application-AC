@@ -11,6 +11,7 @@ from app.controllers import (
     proxy_controller,
     db_controller,
     funds_controller,
+    table_config_controller,
 )
 from app.util.logger import configure_logging, get_logger
 from app.services.azure_managed_identity import get_azure_service
@@ -130,6 +131,7 @@ app.include_router(proxy_controller.router)
 app.include_router(cosmos_config_controller.router)
 app.include_router(db_controller.router)
 app.include_router(funds_controller.router)
+app.include_router(table_config_controller.router)
 
 
 # Application runs here
