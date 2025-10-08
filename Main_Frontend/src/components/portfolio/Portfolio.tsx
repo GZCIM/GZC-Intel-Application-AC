@@ -762,75 +762,82 @@ export const Portfolio: React.FC<
                                     )}
                                 </div>
                                 {portfolioMode === "active" && (
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            gap: 6,
-                                            alignItems: "center",
-                                        }}
-                                    >
-                                        <label
-                                            htmlFor="portfolio-fund-select"
-                                            style={{
-                                                color: currentTheme.textSecondary,
-                                                fontSize: 12,
-                                                paddingTop: 0,
-                                                lineHeight: "22px",
-                                            }}
-                                        >
-                                            Fund
-                                        </label>
-                                        {/* In edit mode hide Fund when header is too narrow; show when wide or not editing */}
+                                    <>
+                                        {/* Hide Fund block entirely when editing and header is narrow */}
                                         {(!(isEditMode || toolsEditing) ||
                                             headerWidth > 1000) && (
-                                            <select
-                                                id="portfolio-fund-select"
-                                                value={selectedFundId}
-                                                onChange={(e) =>
-                                                    setSelectedFundId(
-                                                        e.target.value
-                                                    )
-                                                }
-                                                aria-label="Select fund"
+                                            <div
                                                 style={{
-                                                    backgroundColor:
-                                                        currentTheme.background,
-                                                    color: currentTheme.text,
-                                                    border: `1px solid ${currentTheme.border}`,
-                                                    borderRadius: 4,
-                                                    padding: "4px 8px",
-                                                    fontSize: 12,
+                                                    display: "flex",
+                                                    gap: 6,
+                                                    alignItems: "center",
                                                     whiteSpace: "nowrap",
                                                 }}
                                             >
-                                                <option value="0">ALL</option>
-                                                {(funds.length
-                                                    ? funds
-                                                    : [
-                                                          {
-                                                              id: 1,
-                                                              short_name: "GMF",
-                                                              full_name:
-                                                                  "Global Macro Fund",
-                                                          },
-                                                          {
-                                                              id: 6,
-                                                              short_name: "GCF",
-                                                              full_name:
-                                                                  "Global Currencies Fund",
-                                                          },
-                                                      ]
-                                                ).map((f) => (
-                                                    <option
-                                                        key={f.id}
-                                                        value={String(f.id)}
-                                                    >
-                                                        {f.short_name}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                <label
+                                                    htmlFor="portfolio-fund-select"
+                                                    style={{
+                                                        color: currentTheme.textSecondary,
+                                                        fontSize: 12,
+                                                        paddingTop: 0,
+                                                        lineHeight: "22px",
+                                                    }}
+                                                >
+                                                    Fund
+                                                </label>
+                                                <select
+                                                    id="portfolio-fund-select"
+                                                    value={selectedFundId}
+                                                    onChange={(e) =>
+                                                        setSelectedFundId(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    aria-label="Select fund"
+                                                    style={{
+                                                        backgroundColor:
+                                                            currentTheme.background,
+                                                        color: currentTheme.text,
+                                                        border: `1px solid ${currentTheme.border}`,
+                                                        borderRadius: 4,
+                                                        padding: "4px 8px",
+                                                        fontSize: 12,
+                                                        whiteSpace: "nowrap",
+                                                    }}
+                                                >
+                                                    <option value="0">ALL</option>
+                                                    {(funds.length
+                                                        ? funds
+                                                        : [
+                                                              {
+                                                                  id: 1,
+                                                                  short_name:
+                                                                      "GMF",
+                                                                  full_name:
+                                                                      "Global Macro Fund",
+                                                              },
+                                                              {
+                                                                  id: 6,
+                                                                  short_name:
+                                                                      "GCF",
+                                                                  full_name:
+                                                                      "Global Currencies Fund",
+                                                              },
+                                                          ]
+                                                    ).map((f) => (
+                                                        <option
+                                                            key={f.id}
+                                                            value={String(
+                                                                f.id
+                                                            )}
+                                                        >
+                                                            {f.short_name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         )}
-                                    </div>
+                                    </>
                                 )}
                                 {/* Portfolio selector visible only in Virtual mode */}
                                 {portfolioMode === "virtual" && (
