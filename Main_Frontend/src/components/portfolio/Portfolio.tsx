@@ -696,6 +696,9 @@ export const Portfolio: React.FC<
                                     display: "flex",
                                     alignItems: "center",
                                     gap: 8,
+                                    whiteSpace: "nowrap",
+                                    minWidth: 0,
+                                    overflow: "hidden",
                                     justifyContent: isEditMode
                                         ? "flex-start"
                                         : undefined,
@@ -728,32 +731,35 @@ export const Portfolio: React.FC<
                                     >
                                         Active
                                     </button>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setPortfolioMode("virtual")
-                                        }
-                                        style={{
-                                            padding: "4px 8px",
-                                            backgroundColor: "#1e1e1e",
-                                            color:
-                                                portfolioMode === "virtual"
-                                                    ? "#ffffff"
-                                                    : currentTheme.textSecondary,
-                                            border:
-                                                portfolioMode === "virtual"
-                                                    ? `1px solid ${
-                                                          currentTheme.success ||
-                                                          "#6aa84f"
-                                                      }`
-                                                    : `1px solid ${currentTheme.border}66`,
-                                            borderRadius: 4,
-                                            fontSize: 11,
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        Virtual
-                                    </button>
+                                    {(!(isEditMode || toolsEditing) ||
+                                        headerWidth > 900) && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setPortfolioMode("virtual")
+                                            }
+                                            style={{
+                                                padding: "4px 8px",
+                                                backgroundColor: "#1e1e1e",
+                                                color:
+                                                    portfolioMode === "virtual"
+                                                        ? "#ffffff"
+                                                        : currentTheme.textSecondary,
+                                                border:
+                                                    portfolioMode === "virtual"
+                                                        ? `1px solid ${
+                                                              currentTheme.success ||
+                                                              "#6aa84f"
+                                                          }`
+                                                        : `1px solid ${currentTheme.border}66`,
+                                                borderRadius: 4,
+                                                fontSize: 11,
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            Virtual
+                                        </button>
+                                    )}
                                 </div>
                                 {portfolioMode === "active" && (
                                     <div
