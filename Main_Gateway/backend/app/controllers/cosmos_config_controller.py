@@ -1685,6 +1685,26 @@ async def get_portfolio_component_config(
         user_id = f"sub_{user_sub}" if user_sub else "unknown_user"
 
     device_config_id = f"{device_type}_{user_id}"
+    try:
+        tc_cols = (table_config or {}).get("columns") or []
+        eom_col = next(
+            (c for c in tc_cols if isinstance(c, dict) and c.get("key") == "eom_price"),
+            {},
+        )
+        logger.info(
+            "[CosmosConfig] Saving portfolio tableConfig device=%s component=%s fundId=%s eom_price.visible=%s",
+            device_config_id,
+            component_id,
+            fund_id,
+            eom_col.get("visible"),
+        )
+    except Exception:
+        logger.info(
+            "[CosmosConfig] Saving portfolio tableConfig device=%s component=%s fundId=%s",
+            device_config_id,
+            component_id,
+            fund_id,
+        )
 
     # Read device doc (pk by id first, then userId)
     device_doc: Optional[Dict[str, Any]] = None
@@ -1870,6 +1890,7 @@ async def save_portfolio_component_config(
         "deviceConfigId": device_config_id,
         "componentId": component_id,
         "updatedAt": saved.get("updatedAt", now),
+        "columns": table_config.get("columns"),
     }
 
 
