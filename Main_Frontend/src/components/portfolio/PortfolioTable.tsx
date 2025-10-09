@@ -472,11 +472,73 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         <h3 className="text-lg font-semibold">
                             Portfolio Positions ({positions.length})
                         </h3>
-                        {/* Tabs will be rendered at the bottom in edit mode */}
+                        {/* Tabs rendered in header (edit mode) */}
+                        <div style={{ display: "flex", gap: 6 }}>
+                            <button
+                                onClick={() => setActiveTab('view')}
+                                style={{
+                                    padding: "6px 10px",
+                                    background:
+                                        activeTab === 'view'
+                                            ? safeTheme.surfaceAlt
+                                            : "transparent",
+                                    color: safeTheme.text,
+                                    border: `1px solid ${safeTheme.border}`,
+                                    borderBottom:
+                                        activeTab === 'view'
+                                            ? `1px solid ${safeTheme.surfaceAlt}`
+                                            : `1px solid ${safeTheme.border}`,
+                                    borderRadius: 4,
+                                    fontSize: 12,
+                                }}
+                            >
+                                View
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('group')}
+                                style={{
+                                    padding: "6px 10px",
+                                    background:
+                                        activeTab === 'group'
+                                            ? safeTheme.surfaceAlt
+                                            : "transparent",
+                                    color: safeTheme.text,
+                                    border: `1px solid ${safeTheme.border}`,
+                                    borderBottom:
+                                        activeTab === 'group'
+                                            ? `1px solid ${safeTheme.surfaceAlt}`
+                                            : `1px solid ${safeTheme.border}`,
+                                    borderRadius: 4,
+                                    fontSize: 12,
+                                }}
+                            >
+                                Group By
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('sum')}
+                                style={{
+                                    padding: "6px 10px",
+                                    background:
+                                        activeTab === 'sum'
+                                            ? safeTheme.surfaceAlt
+                                            : "transparent",
+                                    color: safeTheme.text,
+                                    border: `1px solid ${safeTheme.border}`,
+                                    borderBottom:
+                                        activeTab === 'sum'
+                                            ? `1px solid ${safeTheme.surfaceAlt}`
+                                            : `1px solid ${safeTheme.border}`,
+                                    borderRadius: 4,
+                                    fontSize: 12,
+                                }}
+                            >
+                                Sum
+                            </button>
+                        </div>
                     </div>
 
                     {/* Column Visibility Controls */}
-                    {localConfig && headerWidth > 980 && (
+                    {localConfig && headerWidth > 980 && activeTab === 'view' && (
                         <div
                             className="flex flex-wrap gap-2"
                             style={{ minWidth: 420 }}
