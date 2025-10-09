@@ -87,7 +87,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const headerRef = useRef<HTMLDivElement | null>(null);
     const [headerWidth, setHeaderWidth] = useState<number>(0);
     // Edit-mode tabs: view/group/sum
-    const [activeTab, setActiveTab] = useState<'view' | 'group' | 'sum'>('view');
+    const [activeTab, setActiveTab] = useState<"view" | "group" | "sum">(
+        "view"
+    );
     const numericKeys = [
         "quantity",
         "trade_price",
@@ -475,17 +477,17 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         {/* Tabs rendered in header (edit mode) */}
                         <div style={{ display: "flex", gap: 6 }}>
                             <button
-                                onClick={() => setActiveTab('view')}
+                                onClick={() => setActiveTab("view")}
                                 style={{
                                     padding: "6px 10px",
                                     background:
-                                        activeTab === 'view'
+                                        activeTab === "view"
                                             ? safeTheme.surfaceAlt
                                             : "transparent",
                                     color: safeTheme.text,
                                     border: `1px solid ${safeTheme.border}`,
                                     borderBottom:
-                                        activeTab === 'view'
+                                        activeTab === "view"
                                             ? `1px solid ${safeTheme.surfaceAlt}`
                                             : `1px solid ${safeTheme.border}`,
                                     borderRadius: 4,
@@ -495,17 +497,17 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                 View
                             </button>
                             <button
-                                onClick={() => setActiveTab('group')}
+                                onClick={() => setActiveTab("group")}
                                 style={{
                                     padding: "6px 10px",
                                     background:
-                                        activeTab === 'group'
+                                        activeTab === "group"
                                             ? safeTheme.surfaceAlt
                                             : "transparent",
                                     color: safeTheme.text,
                                     border: `1px solid ${safeTheme.border}`,
                                     borderBottom:
-                                        activeTab === 'group'
+                                        activeTab === "group"
                                             ? `1px solid ${safeTheme.surfaceAlt}`
                                             : `1px solid ${safeTheme.border}`,
                                     borderRadius: 4,
@@ -515,17 +517,17 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                 Group By
                             </button>
                             <button
-                                onClick={() => setActiveTab('sum')}
+                                onClick={() => setActiveTab("sum")}
                                 style={{
                                     padding: "6px 10px",
                                     background:
-                                        activeTab === 'sum'
+                                        activeTab === "sum"
                                             ? safeTheme.surfaceAlt
                                             : "transparent",
                                     color: safeTheme.text,
                                     border: `1px solid ${safeTheme.border}`,
                                     borderBottom:
-                                        activeTab === 'sum'
+                                        activeTab === "sum"
                                             ? `1px solid ${safeTheme.surfaceAlt}`
                                             : `1px solid ${safeTheme.border}`,
                                     borderRadius: 4,
@@ -537,34 +539,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         </div>
                     </div>
 
-                    {/* Column Visibility Controls */}
-                    {localConfig && headerWidth > 980 && activeTab === 'view' && (
-                        <div
-                            className="flex flex-wrap gap-2"
-                            style={{ minWidth: 420 }}
-                        >
-                            {localConfig.columns.map((col) => (
-                                <label
-                                    key={col.key}
-                                    className="flex items-center gap-1 text-sm"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={col.visible}
-                                        onChange={() =>
-                                            handleColumnToggle(col.key)
-                                        }
-                                    />
-                                    {col.label}
-                                </label>
-                            ))}
-                        </div>
-                    )}
+                    {/* Inline column list disabled; panels are rendered below tabs */}
                     {/* Column panel now rendered below header to push table down */}
                 </div>
             )}
 
-            {/* panels moved to footer area below */}
+            {/* Panels rendered below header tabs (ensure above table) */}
+            <div style={{ position: "relative", zIndex: 1 }}>
+            </div>
 
             {/* Table */}
             <div
@@ -572,6 +554,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     overflowX: "auto",
                     overflowY: positions.length > 20 ? "auto" : "visible",
                     maxHeight: positions.length > 20 ? "60vh" : "none",
+                    position: "relative",
+                    zIndex: 0,
                 }}
             >
                 <table
@@ -677,75 +661,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </table>
             </div>
 
-            {/* Footer controls (edit mode only) - tabs */}
-            {isEditing && localConfig && (
-                <div style={{ marginTop: 8 }}>
-                    <div
-                        style={{
-                            display: "flex",
-                            gap: 6,
-                            borderBottom: `1px solid ${safeTheme.border}`,
-                        }}
-                    >
-                        <button
-                            onClick={() => setActiveTab('view')}
-                            style={{
-                                padding: "6px 10px",
-                                background: activeTab === 'view'
-                                    ? safeTheme.surfaceAlt
-                                    : "transparent",
-                                color: safeTheme.text,
-                                border: `1px solid ${safeTheme.border}`,
-                                borderBottom: activeTab === 'view'
-                                    ? `1px solid ${safeTheme.surfaceAlt}`
-                                    : `1px solid ${safeTheme.border}`,
-                                borderRadius: 4,
-                                fontSize: 12,
-                            }}
-                        >
-                            View
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('group')}
-                            style={{
-                                padding: "6px 10px",
-                                background: activeTab === 'group'
-                                    ? safeTheme.surfaceAlt
-                                    : "transparent",
-                                color: safeTheme.text,
-                                border: `1px solid ${safeTheme.border}`,
-                                borderBottom: activeTab === 'group'
-                                    ? `1px solid ${safeTheme.surfaceAlt}`
-                                    : `1px solid ${safeTheme.border}`,
-                                borderRadius: 4,
-                                fontSize: 12,
-                            }}
-                        >
-                            Group By
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('sum')}
-                            style={{
-                                padding: "6px 10px",
-                                background: activeTab === 'sum'
-                                    ? safeTheme.surfaceAlt
-                                    : "transparent",
-                                color: safeTheme.text,
-                                border: `1px solid ${safeTheme.border}`,
-                                borderBottom: activeTab === 'sum'
-                                    ? `1px solid ${safeTheme.surfaceAlt}`
-                                    : `1px solid ${safeTheme.border}`,
-                                borderRadius: 4,
-                                fontSize: 12,
-                            }}
-                        >
-                            Sum
-                        </button>
-                    </div>
-                </div>
-            )}
+            {/* Footer controls removed as tabs are in header */}
 
-            {isEditing && localConfig && activeTab === 'view' && (
+            {isEditing && localConfig && activeTab === "view" && (
                 <div
                     style={{
                         marginTop: 8,
@@ -787,7 +705,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </div>
             )}
 
-            {isEditing && localConfig && activeTab === 'group' && (
+            {isEditing && localConfig && activeTab === "group" && (
                 <div
                     style={{
                         marginTop: 8,
@@ -842,7 +760,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </div>
             )}
 
-            {isEditing && localConfig && activeTab === 'sum' && (
+            {isEditing && localConfig && activeTab === "sum" && (
                 <div
                     style={{
                         marginTop: 8,
