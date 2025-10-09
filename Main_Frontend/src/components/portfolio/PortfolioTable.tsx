@@ -59,6 +59,7 @@ interface PortfolioTableProps {
     selectedDate: string;
     fundId: number;
     isLive: boolean;
+    externalEditing?: boolean;
 }
 
 const PortfolioTable: React.FC<PortfolioTableProps> = ({
@@ -90,8 +91,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const deviceType = "laptop";
     const componentId = "portfolio-default";
 
-    // Sync with global Tools menu Unlock/Lock editing
+    // Sync with global Tools menu Unlock/Lock editing (and external prop)
     useEffect(() => {
+        if (typeof externalEditing === 'boolean') {
+            setIsEditing(externalEditing);
+        }
         const handler = (e: Event) => {
             const detail = (e as CustomEvent).detail || {};
             const unlocked = !!detail.unlocked;
@@ -115,7 +119,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 handler as EventListener
             );
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isEditing, localConfig, fundId]);
+    }, [externalEditing, isEditing, localConfig, fundId]);
 
     // Load table configuration on mount
     useEffect(() => {
