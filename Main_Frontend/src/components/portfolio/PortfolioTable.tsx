@@ -424,9 +424,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </button>
             </div>
         );
-    }
+  }
 
-    return (
+  return (
         <div className="w-full">
             {/* Quick data summary to verify loads */}
             {positions.length > 0 && (
@@ -485,7 +485,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             ? safeTheme.surfaceAlt
                                             : "transparent",
                                     color: safeTheme.text,
-                                    border: `1px solid ${safeTheme.border}`,
+                                    border: `2px solid ${activeTab === "view" ? (theme?.success || "#6aa84f") : safeTheme.border}`,
                                     borderBottom:
                                         activeTab === "view"
                                             ? `1px solid ${safeTheme.surfaceAlt}`
@@ -505,7 +505,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             ? safeTheme.surfaceAlt
                                             : "transparent",
                                     color: safeTheme.text,
-                                    border: `1px solid ${safeTheme.border}`,
+                                    border: `2px solid ${activeTab === "group" ? (theme?.success || "#6aa84f") : safeTheme.border}`,
                                     borderBottom:
                                         activeTab === "group"
                                             ? `1px solid ${safeTheme.surfaceAlt}`
@@ -525,7 +525,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             ? safeTheme.surfaceAlt
                                             : "transparent",
                                     color: safeTheme.text,
-                                    border: `1px solid ${safeTheme.border}`,
+                                    border: `2px solid ${activeTab === "sum" ? (theme?.success || "#6aa84f") : safeTheme.border}`,
                                     borderBottom:
                                         activeTab === "sum"
                                             ? `1px solid ${safeTheme.surfaceAlt}`
