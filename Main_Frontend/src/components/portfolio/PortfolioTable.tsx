@@ -423,9 +423,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </button>
             </div>
         );
-    }
+  }
 
-    return (
+  return (
         <div className="w-full">
             {/* Quick data summary to verify loads */}
             {positions.length > 0 && (
@@ -473,27 +473,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         <h3 className="text-lg font-semibold">
                             Portfolio Positions ({positions.length})
                         </h3>
-                        {/* Ensure a quick access 'View' button is visible in edit mode */}
-                        {localConfig && (
-                            <button
-                                onClick={() => {
-                                    setShowColumnsPanel((v) => !v);
-                                    setShowGroupPanel(false);
-                                    setShowSumPanel(false);
-                                }}
-                                title="View options"
-                                style={{
-                                    padding: "4px 10px",
-                                    backgroundColor: safeTheme.background,
-                                    color: safeTheme.text,
-                                    border: `1px solid ${safeTheme.border}`,
-                                    borderRadius: 4,
-                                    fontSize: 12,
-                                }}
-                            >
-                                View
-                            </button>
-                        )}
+                        {/* Tabs will be rendered at the bottom in edit mode */}
                     </div>
 
                     {/* Column Visibility Controls */}
@@ -629,63 +609,65 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </table>
             </div>
 
-            {/* Footer controls (edit mode only) */}
+            {/* Footer controls (edit mode only) - tabs */}
             {isEditing && localConfig && (
-                <div style={{ display: "flex", gap: 8, marginTop: 8, marginBottom: 0 }}>
-                    <button
-                        onClick={() => {
-                            setShowColumnsPanel((v) => !v);
-                            setShowGroupPanel(false);
-                            setShowSumPanel(false);
-                        }}
-                        title="View options"
-                        style={{
-                            padding: "4px 10px",
-                            backgroundColor: safeTheme.background,
-                            color: safeTheme.text,
-                            border: `1px solid ${safeTheme.border}`,
-                            borderRadius: 4,
-                            fontSize: 12,
-                        }}
-                    >
-                        View
-                    </button>
-                    <button
-                        onClick={() => {
-                            setShowGroupPanel((v) => !v);
-                            setShowColumnsPanel(false);
-                            setShowSumPanel(false);
-                        }}
-                        title="Group By"
-                        style={{
-                            padding: "4px 10px",
-                            backgroundColor: safeTheme.background,
-                            color: safeTheme.text,
-                            border: `1px solid ${safeTheme.border}`,
-                            borderRadius: 4,
-                            fontSize: 12,
-                        }}
-                    >
-                        Group By
-                    </button>
-                    <button
-                        onClick={() => {
-                            setShowSumPanel((v) => !v);
-                            setShowColumnsPanel(false);
-                            setShowGroupPanel(false);
-                        }}
-                        title="Sum Options"
-                        style={{
-                            padding: "4px 10px",
-                            backgroundColor: safeTheme.background,
-                            color: safeTheme.text,
-                            border: `1px solid ${safeTheme.border}`,
-                            borderRadius: 4,
-                            fontSize: 12,
-                        }}
-                    >
-                        Sum
-                    </button>
+                <div style={{ marginTop: 8 }}>
+                    <div style={{ display: "flex", gap: 6, borderBottom: `1px solid ${safeTheme.border}` }}>
+                        <button
+                            onClick={() => {
+                                setShowColumnsPanel(true);
+                                setShowGroupPanel(false);
+                                setShowSumPanel(false);
+                            }}
+                            style={{
+                                padding: "6px 10px",
+                                background: showColumnsPanel ? safeTheme.surfaceAlt : "transparent",
+                                color: safeTheme.text,
+                                border: `1px solid ${safeTheme.border}`,
+                                borderBottom: showColumnsPanel ? `1px solid ${safeTheme.surfaceAlt}` : `1px solid ${safeTheme.border}`,
+                                borderRadius: 4,
+                                fontSize: 12,
+                            }}
+                        >
+                            View
+                        </button>
+                        <button
+                            onClick={() => {
+                                setShowColumnsPanel(false);
+                                setShowGroupPanel(true);
+                                setShowSumPanel(false);
+                            }}
+                            style={{
+                                padding: "6px 10px",
+                                background: showGroupPanel ? safeTheme.surfaceAlt : "transparent",
+                                color: safeTheme.text,
+                                border: `1px solid ${safeTheme.border}`,
+                                borderBottom: showGroupPanel ? `1px solid ${safeTheme.surfaceAlt}` : `1px solid ${safeTheme.border}`,
+                                borderRadius: 4,
+                                fontSize: 12,
+                            }}
+                        >
+                            Group By
+                        </button>
+                        <button
+                            onClick={() => {
+                                setShowColumnsPanel(false);
+                                setShowGroupPanel(false);
+                                setShowSumPanel(true);
+                            }}
+                            style={{
+                                padding: "6px 10px",
+                                background: showSumPanel ? safeTheme.surfaceAlt : "transparent",
+                                color: safeTheme.text,
+                                border: `1px solid ${safeTheme.border}`,
+                                borderBottom: showSumPanel ? `1px solid ${safeTheme.surfaceAlt}` : `1px solid ${safeTheme.border}`,
+                                borderRadius: 4,
+                                fontSize: 12,
+                            }}
+                        >
+                            Sum
+                        </button>
+                    </div>
                 </div>
             )}
 
