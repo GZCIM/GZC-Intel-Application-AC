@@ -420,11 +420,13 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             {isEditing && (
                 <div
                     ref={headerRef}
-                    className="flex justify-between items-center mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded"
+                    className="flex justify-between items-center mb-4 p-4 rounded"
                     style={{
                         overflowX: "auto",
                         position: "relative",
                         paddingRight: 8,
+                        background: safeTheme.surface,
+                        border: `1px solid ${safeTheme.border}`,
                     }}
                 >
                     <div
