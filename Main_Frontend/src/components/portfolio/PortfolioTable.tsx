@@ -434,6 +434,16 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         <h3 className="text-lg font-semibold">
                             Portfolio Positions ({positions.length})
                         </h3>
+                        {/* Narrow-mode Columns button placed on the left */}
+                        {localConfig && headerWidth <= 980 && (
+                            <button
+                                onClick={() => setShowColumnsPanel((v) => !v)}
+                                className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded border"
+                                title="Show column selector"
+                            >
+                                Columns
+                            </button>
+                        )}
                     </div>
 
                     {/* Column Visibility Controls */}
@@ -459,20 +469,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                             ))}
                         </div>
                     )}
-                    {localConfig && headerWidth <= 980 && (
-                        <button
-                            onClick={() => setShowColumnsPanel((v) => !v)}
-                            className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded border"
-                            title="Show column selector"
-                        >
-                            Columns
-                        </button>
-                    )}
                     {localConfig && showColumnsPanel && headerWidth <= 980 && (
                         <div
                             style={{
                                 position: "absolute",
                                 top: "100%",
+                                left: 8,
                                 right: 8,
                                 marginTop: 8,
                                 zIndex: 2000,
