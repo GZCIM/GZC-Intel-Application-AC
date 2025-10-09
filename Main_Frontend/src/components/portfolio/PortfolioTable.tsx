@@ -481,13 +481,21 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                 border: `1px solid ${safeTheme.border}`,
                                 borderRadius: 6,
                                 padding: 10,
-                                maxHeight: 240,
+                                maxHeight: 260,
                                 overflow: "auto",
                                 boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                                minWidth: 320,
+                                minWidth: 560,
                             }}
                         >
-                            <div className="flex flex-col gap-2" aria-label="Columns selector">
+                            <div
+                                aria-label="Columns selector"
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns:
+                                        "repeat(auto-fit, minmax(160px, 1fr))",
+                                    gap: 10,
+                                }}
+                            >
                                 {localConfig.columns.map((col) => (
                                     <label
                                         key={col.key}
