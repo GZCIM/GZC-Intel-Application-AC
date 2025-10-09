@@ -401,9 +401,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </button>
             </div>
         );
-    }
+  }
 
-    return (
+  return (
         <div className="w-full">
             {error && positions.length > 0 && (
                 <div className="mb-3 rounded border border-yellow-500 bg-yellow-50 text-yellow-700 px-3 py-2">
@@ -469,53 +469,49 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                             ))}
                         </div>
                     )}
-                    {localConfig && showColumnsPanel && headerWidth <= 980 && (
-                        <div
-                            style={{
-                                position: "absolute",
-                                top: "100%",
-                                left: 8,
-                                right: 8,
-                                marginTop: 8,
-                                zIndex: 2000,
-                                background: safeTheme.surface,
-                                color: safeTheme.text,
-                                border: `1px solid ${safeTheme.border}`,
-                                borderRadius: 6,
-                                padding: 10,
-                                maxHeight: 260,
-                                overflow: "auto",
-                                boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                                minWidth: 560,
-                            }}
-                        >
-                            <div
-                                aria-label="Columns selector"
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns:
-                                        "repeat(auto-fit, minmax(160px, 1fr))",
-                                    gap: 10,
-                                }}
+                    {/* Column panel now rendered below header to push table down */}
+                </div>
+            )}
+
+            {localConfig && showColumnsPanel && headerWidth <= 980 && (
+                <div
+                    style={{
+                        marginTop: 8,
+                        zIndex: 1,
+                        background: safeTheme.surface,
+                        color: safeTheme.text,
+                        border: `1px solid ${safeTheme.border}`,
+                        borderRadius: 6,
+                        padding: 10,
+                        maxHeight: 260,
+                        overflow: "auto",
+                        boxShadow: "0 8px 18px rgba(0,0,0,0.15)",
+                        width: "100%",
+                    }}
+                >
+                    <div
+                        aria-label="Columns selector"
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns:
+                                "repeat(auto-fit, minmax(160px, 1fr))",
+                            gap: 10,
+                        }}
+                    >
+                        {localConfig.columns.map((col) => (
+                            <label
+                                key={col.key}
+                                className="flex items-center gap-2 text-sm"
                             >
-                                {localConfig.columns.map((col) => (
-                                    <label
-                                        key={col.key}
-                                        className="flex items-center gap-2 text-sm"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={col.visible}
-                                            onChange={() =>
-                                                handleColumnToggle(col.key)
-                                            }
-                                        />
-                                        {col.label}
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                                <input
+                                    type="checkbox"
+                                    checked={col.visible}
+                                    onChange={() => handleColumnToggle(col.key)}
+                                />
+                                {col.label}
+                            </label>
+                        ))}
+                    </div>
                 </div>
             )}
 
