@@ -438,8 +438,15 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         {localConfig && headerWidth <= 980 && (
                             <button
                                 onClick={() => setShowColumnsPanel((v) => !v)}
-                                className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded border"
                                 title="Show column selector"
+                                style={{
+                                    padding: "4px 10px",
+                                    backgroundColor: safeTheme.background,
+                                    color: safeTheme.text,
+                                    border: `1px solid ${safeTheme.border}`,
+                                    borderRadius: 4,
+                                    fontSize: 12,
+                                }}
                             >
                                 Columns
                             </button>
