@@ -437,7 +437,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         opacity: 0.8,
                     }}
                 >
-                    Records: {positions.length} • FX Forwards: {tradeTypeCounts["FX Forward"] || 0} • FX Options: {tradeTypeCounts["FX Option"] || 0}
+                    Records: {positions.length} • FX Forwards:{" "}
+                    {tradeTypeCounts["FX Forward"] || 0} • FX Options:{" "}
+                    {tradeTypeCounts["FX Option"] || 0}
                 </div>
             )}
             {error && positions.length > 0 && (
@@ -646,7 +648,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
             {/* Footer controls (edit mode only) */}
             {isEditing && localConfig && (
-                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <div style={{ display: "flex", gap: 8, marginTop: 8, marginBottom: 0 }}>
                     <button
                         onClick={() => {
                             setShowColumnsPanel((v) => !v);
@@ -812,6 +814,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         borderRadius: 6,
                         padding: 10,
                         width: "100%",
+                        marginBottom: 0,
                     }}
                 >
                     <div
@@ -860,7 +863,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     {c.label}
                                 </label>
                             ))}
-                    </div>
+            </div>
                 </div>
             )}
         </div>
