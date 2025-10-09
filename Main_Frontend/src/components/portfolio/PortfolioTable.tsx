@@ -94,7 +94,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
     // Sync with global Tools menu Unlock/Lock editing (and external prop)
     useEffect(() => {
-        if (typeof externalEditing === 'boolean') {
+        if (typeof externalEditing === "boolean") {
             setIsEditing(externalEditing);
         }
         const handler = (e: Event) => {
@@ -132,7 +132,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         if (!headerRef.current) return;
         const el = headerRef.current;
         const ro = new ResizeObserver((entries) => {
-            for (const entry of entries) setHeaderWidth(entry.contentRect.width);
+            for (const entry of entries)
+                setHeaderWidth(entry.contentRect.width);
         });
         ro.observe(el);
         setHeaderWidth(el.getBoundingClientRect().width);
@@ -400,9 +401,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </button>
             </div>
         );
-  }
+    }
 
-  return (
+    return (
         <div className="w-full">
             {error && positions.length > 0 && (
                 <div className="mb-3 rounded border border-yellow-500 bg-yellow-50 text-yellow-700 px-3 py-2">
@@ -417,8 +418,19 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             )}
             {/* Table Controls - visible only while editing */}
             {isEditing && (
-                <div ref={headerRef} className="flex justify-between items-center mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded" style={{overflowX: "auto", position: "relative", paddingRight: 8}}>
-                    <div className="flex items-center gap-4" style={{flexShrink: 0}}>
+                <div
+                    ref={headerRef}
+                    className="flex justify-between items-center mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded"
+                    style={{
+                        overflowX: "auto",
+                        position: "relative",
+                        paddingRight: 8,
+                    }}
+                >
+                    <div
+                        className="flex items-center gap-4"
+                        style={{ flexShrink: 0 }}
+                    >
                         <h3 className="text-lg font-semibold">
                             Portfolio Positions ({positions.length})
                         </h3>
@@ -426,7 +438,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
                     {/* Column Visibility Controls */}
                     {localConfig && headerWidth > 980 && (
-                        <div className="flex flex-wrap gap-2" style={{minWidth: 420}}>
+                        <div
+                            className="flex flex-wrap gap-2"
+                            style={{ minWidth: 420 }}
+                        >
                             {localConfig.columns.map((col) => (
                                 <label
                                     key={col.key}
@@ -460,24 +475,30 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                 top: "100%",
                                 right: 8,
                                 marginTop: 8,
-                                zIndex: 20,
+                                zIndex: 2000,
                                 background: safeTheme.surface,
                                 color: safeTheme.text,
                                 border: `1px solid ${safeTheme.border}`,
                                 borderRadius: 6,
-                                padding: 8,
+                                padding: 10,
                                 maxHeight: 240,
                                 overflow: "auto",
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+                                boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                                minWidth: 320,
                             }}
                         >
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-2" aria-label="Columns selector">
                                 {localConfig.columns.map((col) => (
-                                    <label key={col.key} className="flex items-center gap-2 text-sm">
+                                    <label
+                                        key={col.key}
+                                        className="flex items-center gap-2 text-sm"
+                                    >
                                         <input
                                             type="checkbox"
                                             checked={col.visible}
-                                            onChange={() => handleColumnToggle(col.key)}
+                                            onChange={() =>
+                                                handleColumnToggle(col.key)
+                                            }
                                         />
                                         {col.label}
                                     </label>
