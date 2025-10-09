@@ -545,8 +545,148 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             )}
 
             {/* Panels rendered below header tabs (ensure above table) */}
-            <div style={{ position: "relative", zIndex: 1 }}>
-            </div>
+            {isEditing && localConfig && activeTab === "view" && (
+                <div
+                    style={{
+                        marginTop: 8,
+                        zIndex: 2,
+                        background: safeTheme.surface,
+                        color: safeTheme.text,
+                        border: `1px solid ${safeTheme.border}`,
+                        borderRadius: 6,
+                        padding: 10,
+                        maxHeight: 260,
+                        overflow: "auto",
+                        boxShadow: "0 8px 18px rgba(0,0,0,0.15)",
+                        width: "100%",
+                    }}
+                >
+                    <div
+                        aria-label="Columns selector"
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns:
+                                "repeat(auto-fit, minmax(160px, 1fr))",
+                            gap: 10,
+                        }}
+                    >
+                        {localConfig.columns.map((col) => (
+                            <label
+                                key={col.key}
+                                className="flex items-center gap-2 text-sm"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={col.visible}
+                                    onChange={() => handleColumnToggle(col.key)}
+                                />
+                                {col.label}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {isEditing && localConfig && activeTab === "group" && (
+                <div
+                    style={{
+                        marginTop: 8,
+                        zIndex: 2,
+                        background: safeTheme.surface,
+                        color: safeTheme.text,
+                        border: `1px solid ${safeTheme.border}`,
+                        borderRadius: 6,
+                        padding: 10,
+                        width: "100%",
+                    }}
+                >
+                    <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                        {localConfig.columns.map((c) => (
+                            <label key={c.key} className="flex items-center gap-2 text-sm">
+                                <input
+                                    type="radio"
+                                    name="groupBy"
+                                    checked={localConfig.grouping?.[0] === c.key}
+                                    onChange={() =>
+                                        setLocalConfig({
+                                            ...localConfig,
+                                            grouping: c.key ? [c.key] : [],
+                                        })
+                                    }
+                                />
+                                {c.label}
+                            </label>
+                        ))}
+                        <button
+                            onClick={() => setLocalConfig({ ...localConfig, grouping: [] })}
+                            style={{
+                                padding: "4px 10px",
+                                background: "transparent",
+                                border: `1px solid ${safeTheme.border}`,
+                                color: safeTheme.text,
+                                borderRadius: 4,
+                                fontSize: 12,
+                                marginLeft: 8,
+                            }}
+                        >
+                            Clear Grouping
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {isEditing && localConfig && activeTab === "sum" && (
+                <div
+                    style={{
+                        marginTop: 8,
+                        zIndex: 2,
+                        background: safeTheme.surface,
+                        color: safeTheme.text,
+                        border: `1px solid ${safeTheme.border}`,
+                        borderRadius: 6,
+                        padding: 10,
+                        width: "100%",
+                    }}
+                >
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))",
+                            gap: 10,
+                        }}
+                    >
+                        {localConfig.columns
+                            .filter((c) => numericKeys.includes(c.key))
+                            .map((c) => (
+                                <label key={c.key} className="flex items-center gap-2 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(
+                                            (localConfig.filters?.sumColumns || []).includes(
+                                                c.key
+                                            )
+                                        )}
+                                        onChange={(e) => {
+                                            const current = new Set(
+                                                (localConfig.filters?.sumColumns as string[]) || []
+                                            );
+                                            if (e.target.checked) current.add(c.key);
+                                            else current.delete(c.key);
+                                            setLocalConfig({
+                                                ...localConfig,
+                                                filters: {
+                                                    ...(localConfig.filters || {}),
+                                                    sumColumns: Array.from(current),
+                                                },
+                                            });
+                                        }}
+                                    />
+                                    {c.label}
+                                </label>
+                            ))}
+                    </div>
+                </div>
+            )}
 
             {/* Table */}
             <div
