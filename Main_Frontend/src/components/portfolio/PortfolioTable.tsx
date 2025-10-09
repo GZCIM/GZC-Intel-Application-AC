@@ -60,6 +60,8 @@ interface PortfolioTableProps {
     fundId: number;
     isLive: boolean;
     externalEditing?: boolean;
+    componentId?: string;
+    deviceType?: "laptop" | "mobile" | "bigscreen";
 }
 
 const PortfolioTable: React.FC<PortfolioTableProps> = ({
@@ -67,6 +69,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     fundId,
     isLive,
     externalEditing,
+    componentId,
+    deviceType,
 }) => {
     const { getToken } = useAuthContext();
     const { currentTheme: theme } = useTheme();
@@ -104,8 +108,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     ];
 
     // Component-scoped config identifiers
-    const deviceType = "laptop";
-    const componentId = "portfolio-default";
+    const resolvedDeviceType = (deviceType ||
+        (window as any)?.deviceConfig?.getInfo?.()?.deviceType ||
+        "bigscreen") as "laptop" | "mobile" | "bigscreen";
+    const resolvedComponentId =
+        componentId || (window as any)?.componentId || "portfolio-default";
 
     // Sync with global Tools menu Unlock/Lock editing (and external prop)
     useEffect(() => {
@@ -168,7 +175,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             const response = await axios.get(
                 "/api/cosmos/portfolio-component-config",
                 {
-                    params: { deviceType, componentId, fundId },
+                    params: {
+                        deviceType: resolvedDeviceType,
+                        componentId: resolvedComponentId,
+                        fundId,
+                    },
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
@@ -190,8 +201,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             await axios.post(
                 "/api/cosmos/portfolio-component-config",
                 {
-                    deviceType,
-                    componentId,
+                    deviceType: resolvedDeviceType,
+                    componentId: resolvedComponentId,
                     fundId,
                     tableConfig: localConfig,
                 },
