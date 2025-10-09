@@ -473,7 +473,27 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         <h3 className="text-lg font-semibold">
                             Portfolio Positions ({positions.length})
                         </h3>
-                        {/* header buttons removed; moved to footer */}
+                        {/* Ensure a quick access 'View' button is visible in edit mode */}
+                        {localConfig && (
+                            <button
+                                onClick={() => {
+                                    setShowColumnsPanel((v) => !v);
+                                    setShowGroupPanel(false);
+                                    setShowSumPanel(false);
+                                }}
+                                title="View options"
+                                style={{
+                                    padding: "4px 10px",
+                                    backgroundColor: safeTheme.background,
+                                    color: safeTheme.text,
+                                    border: `1px solid ${safeTheme.border}`,
+                                    borderRadius: 4,
+                                    fontSize: 12,
+                                }}
+                            >
+                                View
+                            </button>
+                        )}
                     </div>
 
                     {/* Column Visibility Controls */}
@@ -589,58 +609,21 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                             </tr>
                         ))}
                     </tbody>
-                    {/* PnL Summary Footer */}
+                    {/* PnL Summary Footer (compact) */}
                     <tfoot>
-                        <tr
-                            style={{
-                                background: safeTheme.surfaceAlt,
-                                fontWeight: 600,
-                            }}
-                        >
+                        <tr style={{ background: safeTheme.surfaceAlt }}>
                             <td
                                 colSpan={table.getVisibleLeafColumns().length}
                                 style={{
                                     border: `1px solid ${safeTheme.border}`,
-                                    padding: "8px 12px",
-                                    textAlign: "center",
+                                    padding: "4px 8px",
+                                    textAlign: "right",
+                                    fontWeight: 600,
+                                    fontSize: 12,
                                 }}
                             >
-                                P&L Summary
+                                ITD: {formatValue(pnlSummary.itd_pnl, "itd_pnl")} • YTD: {formatValue(pnlSummary.ytd_pnl, "ytd_pnl")} • MTD: {formatValue(pnlSummary.mtd_pnl, "mtd_pnl")} • DTD: {formatValue(pnlSummary.dtd_pnl, "dtd_pnl")}
                             </td>
-                        </tr>
-                        <tr style={{ background: safeTheme.surface }}>
-                            {table.getVisibleLeafColumns().map((col) => {
-                                const id = col.id;
-                                if (
-                                    id.endsWith("_pnl") ||
-                                    id.startsWith("pnl")
-                                ) {
-                                    return (
-                                        <td
-                                            key={id}
-                                            style={{
-                                                border: `1px solid ${safeTheme.border}`,
-                                                padding: "8px 12px",
-                                                fontWeight: 600,
-                                            }}
-                                        >
-                                            {formatValue(
-                                                (pnlSummary as any)[id] ?? null,
-                                                id
-                                            )}
-                                        </td>
-                                    );
-                                }
-                                return (
-                                    <td
-                                        key={id}
-                                        style={{
-                                            border: `1px solid ${safeTheme.border}`,
-                                            padding: "8px 12px",
-                                        }}
-                                    ></td>
-                                );
-                            })}
                         </tr>
                     </tfoot>
                 </table>
