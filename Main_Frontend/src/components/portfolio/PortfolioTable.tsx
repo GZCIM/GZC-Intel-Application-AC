@@ -87,6 +87,20 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const headerRef = useRef<HTMLDivElement | null>(null);
     const [headerWidth, setHeaderWidth] = useState<number>(0);
     const [showColumnsPanel, setShowColumnsPanel] = useState<boolean>(false);
+    const [showGroupPanel, setShowGroupPanel] = useState<boolean>(false);
+    const [showSumPanel, setShowSumPanel] = useState<boolean>(false);
+    const numericKeys = [
+        "quantity",
+        "trade_price",
+        "price",
+        "eoy_price",
+        "eom_price",
+        "eod_price",
+        "itd_pnl",
+        "ytd_pnl",
+        "mtd_pnl",
+        "dtd_pnl",
+    ];
 
     // Component-scoped config identifiers
     const deviceType = "laptop";
@@ -439,8 +453,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         {/* Narrow-mode Columns button placed on the left */}
                         {localConfig && headerWidth <= 980 && (
                             <button
-                                onClick={() => setShowColumnsPanel((v) => !v)}
-                                title="Show column selector"
+                                onClick={() => {
+                                    setShowColumnsPanel((v) => !v);
+                                    setShowGroupPanel(false);
+                                    setShowSumPanel(false);
+                                }}
+                                title="View options"
                                 style={{
                                     padding: "4px 10px",
                                     backgroundColor: safeTheme.background,
@@ -450,7 +468,47 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     fontSize: 12,
                                 }}
                             >
-                                Columns
+                                View
+                            </button>
+                        )}
+                        {localConfig && headerWidth <= 980 && (
+                            <button
+                                onClick={() => {
+                                    setShowGroupPanel((v) => !v);
+                                    setShowColumnsPanel(false);
+                                    setShowSumPanel(false);
+                                }}
+                                title="Group By"
+                                style={{
+                                    padding: "4px 10px",
+                                    backgroundColor: safeTheme.background,
+                                    color: safeTheme.text,
+                                    border: `1px solid ${safeTheme.border}`,
+                                    borderRadius: 4,
+                                    fontSize: 12,
+                                }}
+                            >
+                                Group By
+                            </button>
+                        )}
+                        {localConfig && headerWidth <= 980 && (
+                            <button
+                                onClick={() => {
+                                    setShowSumPanel((v) => !v);
+                                    setShowColumnsPanel(false);
+                                    setShowGroupPanel(false);
+                                }}
+                                title="Sum Options"
+                                style={{
+                                    padding: "4px 10px",
+                                    backgroundColor: safeTheme.background,
+                                    color: safeTheme.text,
+                                    border: `1px solid ${safeTheme.border}`,
+                                    borderRadius: 4,
+                                    fontSize: 12,
+                                }}
+                            >
+                                Sum
                             </button>
                         )}
                     </div>
@@ -520,6 +578,109 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                 {col.label}
                             </label>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Group By panel */}
+            {localConfig && showGroupPanel && headerWidth <= 980 && (
+                <div
+                    style={{
+                        marginTop: 8,
+                        zIndex: 1,
+                        background: safeTheme.surface,
+                        color: safeTheme.text,
+                        border: `1px solid ${safeTheme.border}`,
+                        borderRadius: 6,
+                        padding: 10,
+                        width: "100%",
+                    }}
+                >
+                    <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                        {localConfig.columns.map((c) => (
+                            <label key={c.key} className="flex items-center gap-2 text-sm">
+                                <input
+                                    type="radio"
+                                    name="groupBy"
+                                    checked={localConfig.grouping?.[0] === c.key}
+                                    onChange={() =>
+                                        setLocalConfig({
+                                            ...localConfig,
+                                            grouping: c.key ? [c.key] : [],
+                                        })
+                                    }
+                                />
+                                {c.label}
+                            </label>
+                        ))}
+                        <button
+                            onClick={() => setLocalConfig({ ...localConfig, grouping: [] })}
+                            style={{
+                                padding: "4px 10px",
+                                background: "transparent",
+                                border: `1px solid ${safeTheme.border}`,
+                                color: safeTheme.text,
+                                borderRadius: 4,
+                                fontSize: 12,
+                                marginLeft: 8,
+                            }}
+                        >
+                            Clear Grouping
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Sum panel */}
+            {localConfig && showSumPanel && headerWidth <= 980 && (
+                <div
+                    style={{
+                        marginTop: 8,
+                        zIndex: 1,
+                        background: safeTheme.surface,
+                        color: safeTheme.text,
+                        border: `1px solid ${safeTheme.border}`,
+                        borderRadius: 6,
+                        padding: 10,
+                        width: "100%",
+                    }}
+                >
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))",
+                            gap: 10,
+                        }}
+                    >
+                        {localConfig.columns
+                            .filter((c) => numericKeys.includes(c.key))
+                            .map((c) => (
+                                <label key={c.key} className="flex items-center gap-2 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(
+                                            (localConfig.filters?.sumColumns || []).includes(
+                                                c.key
+                                            )
+                                        )}
+                                        onChange={(e) => {
+                                            const current = new Set(
+                                                (localConfig.filters?.sumColumns as string[]) || []
+                                            );
+                                            if (e.target.checked) current.add(c.key);
+                                            else current.delete(c.key);
+                                            setLocalConfig({
+                                                ...localConfig,
+                                                filters: {
+                                                    ...(localConfig.filters || {}),
+                                                    sumColumns: Array.from(current),
+                                                },
+                                            });
+                                        }}
+                                    />
+                                    {c.label}
+                                </label>
+                            ))}
                     </div>
                 </div>
             )}
