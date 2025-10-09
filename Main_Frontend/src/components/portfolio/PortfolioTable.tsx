@@ -424,9 +424,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </button>
             </div>
         );
-    }
+  }
 
-    return (
+  return (
         <div className="w-full">
             {/* Quick data summary to verify loads */}
             {positions.length > 0 && (
@@ -720,6 +720,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     maxHeight: positions.length > 20 ? "60vh" : "none",
                     position: "relative",
                     zIndex: 0,
+                    WebkitOverflowScrolling: "touch",
+                    scrollbarGutter: "stable both-edges",
                 }}
             >
                 <table
