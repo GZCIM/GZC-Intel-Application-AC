@@ -86,9 +86,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
     const headerRef = useRef<HTMLDivElement | null>(null);
     const [headerWidth, setHeaderWidth] = useState<number>(0);
-    const [showColumnsPanel, setShowColumnsPanel] = useState<boolean>(false);
-    const [showGroupPanel, setShowGroupPanel] = useState<boolean>(false);
-    const [showSumPanel, setShowSumPanel] = useState<boolean>(false);
+    // Edit-mode tabs: view/group/sum
+    const [activeTab, setActiveTab] = useState<'view' | 'group' | 'sum'>('view');
     const numericKeys = [
         "quantity",
         "trade_price",
@@ -423,9 +422,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </button>
             </div>
         );
-  }
+    }
 
-  return (
+    return (
         <div className="w-full">
             {/* Quick data summary to verify loads */}
             {positions.length > 0 && (
@@ -602,7 +601,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     fontSize: 12,
                                 }}
                             >
-                                ITD: {formatValue(pnlSummary.itd_pnl, "itd_pnl")} • YTD: {formatValue(pnlSummary.ytd_pnl, "ytd_pnl")} • MTD: {formatValue(pnlSummary.mtd_pnl, "mtd_pnl")} • DTD: {formatValue(pnlSummary.dtd_pnl, "dtd_pnl")}
+                                ITD:{" "}
+                                {formatValue(pnlSummary.itd_pnl, "itd_pnl")} •
+                                YTD:{" "}
+                                {formatValue(pnlSummary.ytd_pnl, "ytd_pnl")} •
+                                MTD:{" "}
+                                {formatValue(pnlSummary.mtd_pnl, "mtd_pnl")} •
+                                DTD:{" "}
+                                {formatValue(pnlSummary.dtd_pnl, "dtd_pnl")}
                             </td>
                         </tr>
                     </tfoot>
@@ -612,19 +618,25 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             {/* Footer controls (edit mode only) - tabs */}
             {isEditing && localConfig && (
                 <div style={{ marginTop: 8 }}>
-                    <div style={{ display: "flex", gap: 6, borderBottom: `1px solid ${safeTheme.border}` }}>
+                    <div
+                        style={{
+                            display: "flex",
+                            gap: 6,
+                            borderBottom: `1px solid ${safeTheme.border}`,
+                        }}
+                    >
                         <button
-                            onClick={() => {
-                                setShowColumnsPanel(true);
-                                setShowGroupPanel(false);
-                                setShowSumPanel(false);
-                            }}
+                            onClick={() => setActiveTab('view')}
                             style={{
                                 padding: "6px 10px",
-                                background: showColumnsPanel ? safeTheme.surfaceAlt : "transparent",
+                                background: activeTab === 'view'
+                                    ? safeTheme.surfaceAlt
+                                    : "transparent",
                                 color: safeTheme.text,
                                 border: `1px solid ${safeTheme.border}`,
-                                borderBottom: showColumnsPanel ? `1px solid ${safeTheme.surfaceAlt}` : `1px solid ${safeTheme.border}`,
+                                borderBottom: activeTab === 'view'
+                                    ? `1px solid ${safeTheme.surfaceAlt}`
+                                    : `1px solid ${safeTheme.border}`,
                                 borderRadius: 4,
                                 fontSize: 12,
                             }}
@@ -632,17 +644,17 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                             View
                         </button>
                         <button
-                            onClick={() => {
-                                setShowColumnsPanel(false);
-                                setShowGroupPanel(true);
-                                setShowSumPanel(false);
-                            }}
+                            onClick={() => setActiveTab('group')}
                             style={{
                                 padding: "6px 10px",
-                                background: showGroupPanel ? safeTheme.surfaceAlt : "transparent",
+                                background: activeTab === 'group'
+                                    ? safeTheme.surfaceAlt
+                                    : "transparent",
                                 color: safeTheme.text,
                                 border: `1px solid ${safeTheme.border}`,
-                                borderBottom: showGroupPanel ? `1px solid ${safeTheme.surfaceAlt}` : `1px solid ${safeTheme.border}`,
+                                borderBottom: activeTab === 'group'
+                                    ? `1px solid ${safeTheme.surfaceAlt}`
+                                    : `1px solid ${safeTheme.border}`,
                                 borderRadius: 4,
                                 fontSize: 12,
                             }}
@@ -650,17 +662,17 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                             Group By
                         </button>
                         <button
-                            onClick={() => {
-                                setShowColumnsPanel(false);
-                                setShowGroupPanel(false);
-                                setShowSumPanel(true);
-                            }}
+                            onClick={() => setActiveTab('sum')}
                             style={{
                                 padding: "6px 10px",
-                                background: showSumPanel ? safeTheme.surfaceAlt : "transparent",
+                                background: activeTab === 'sum'
+                                    ? safeTheme.surfaceAlt
+                                    : "transparent",
                                 color: safeTheme.text,
                                 border: `1px solid ${safeTheme.border}`,
-                                borderBottom: showSumPanel ? `1px solid ${safeTheme.surfaceAlt}` : `1px solid ${safeTheme.border}`,
+                                borderBottom: activeTab === 'sum'
+                                    ? `1px solid ${safeTheme.surfaceAlt}`
+                                    : `1px solid ${safeTheme.border}`,
                                 borderRadius: 4,
                                 fontSize: 12,
                             }}
@@ -671,7 +683,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </div>
             )}
 
-            {isEditing && localConfig && showColumnsPanel && (
+            {isEditing && localConfig && activeTab === 'view' && (
                 <div
                     style={{
                         marginTop: 8,
@@ -713,7 +725,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </div>
             )}
 
-            {isEditing && localConfig && showGroupPanel && (
+            {isEditing && localConfig && activeTab === 'group' && (
                 <div
                     style={{
                         marginTop: 8,
@@ -768,7 +780,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </div>
             )}
 
-            {isEditing && localConfig && showSumPanel && (
+            {isEditing && localConfig && activeTab === 'sum' && (
                 <div
                     style={{
                         marginTop: 8,
@@ -828,7 +840,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     {c.label}
                                 </label>
                             ))}
-            </div>
+                    </div>
                 </div>
             )}
         </div>
