@@ -450,67 +450,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         <h3 className="text-lg font-semibold">
                             Portfolio Positions ({positions.length})
                         </h3>
-                        {/* Narrow-mode Columns button placed on the left */}
-                        {localConfig && headerWidth <= 980 && (
-                            <button
-                                onClick={() => {
-                                    setShowColumnsPanel((v) => !v);
-                                    setShowGroupPanel(false);
-                                    setShowSumPanel(false);
-                                }}
-                                title="View options"
-                                style={{
-                                    padding: "4px 10px",
-                                    backgroundColor: safeTheme.background,
-                                    color: safeTheme.text,
-                                    border: `1px solid ${safeTheme.border}`,
-                                    borderRadius: 4,
-                                    fontSize: 12,
-                                }}
-                            >
-                                View
-                            </button>
-                        )}
-                        {localConfig && headerWidth <= 980 && (
-                            <button
-                                onClick={() => {
-                                    setShowGroupPanel((v) => !v);
-                                    setShowColumnsPanel(false);
-                                    setShowSumPanel(false);
-                                }}
-                                title="Group By"
-                                style={{
-                                    padding: "4px 10px",
-                                    backgroundColor: safeTheme.background,
-                                    color: safeTheme.text,
-                                    border: `1px solid ${safeTheme.border}`,
-                                    borderRadius: 4,
-                                    fontSize: 12,
-                                }}
-                            >
-                                Group By
-                            </button>
-                        )}
-                        {localConfig && headerWidth <= 980 && (
-                            <button
-                                onClick={() => {
-                                    setShowSumPanel((v) => !v);
-                                    setShowColumnsPanel(false);
-                                    setShowGroupPanel(false);
-                                }}
-                                title="Sum Options"
-                                style={{
-                                    padding: "4px 10px",
-                                    backgroundColor: safeTheme.background,
-                                    color: safeTheme.text,
-                                    border: `1px solid ${safeTheme.border}`,
-                                    borderRadius: 4,
-                                    fontSize: 12,
-                                }}
-                            >
-                                Sum
-                            </button>
-                        )}
+                        {/* header buttons removed; moved to footer */}
                     </div>
 
                     {/* Column Visibility Controls */}
@@ -540,150 +480,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </div>
             )}
 
-            {isEditing && localConfig && showColumnsPanel && headerWidth <= 980 && (
-                <div
-                    style={{
-                        marginTop: 8,
-                        zIndex: 1,
-                        background: safeTheme.surface,
-                        color: safeTheme.text,
-                        border: `1px solid ${safeTheme.border}`,
-                        borderRadius: 6,
-                        padding: 10,
-                        maxHeight: 260,
-                        overflow: "auto",
-                        boxShadow: "0 8px 18px rgba(0,0,0,0.15)",
-                        width: "100%",
-                    }}
-                >
-                    <div
-                        aria-label="Columns selector"
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns:
-                                "repeat(auto-fit, minmax(160px, 1fr))",
-                            gap: 10,
-                        }}
-                    >
-                        {localConfig.columns.map((col) => (
-                            <label
-                                key={col.key}
-                                className="flex items-center gap-2 text-sm"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={col.visible}
-                                    onChange={() => handleColumnToggle(col.key)}
-                                />
-                                {col.label}
-                            </label>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Group By panel */}
-            {isEditing && localConfig && showGroupPanel && headerWidth <= 980 && (
-                <div
-                    style={{
-                        marginTop: 8,
-                        zIndex: 1,
-                        background: safeTheme.surface,
-                        color: safeTheme.text,
-                        border: `1px solid ${safeTheme.border}`,
-                        borderRadius: 6,
-                        padding: 10,
-                        width: "100%",
-                    }}
-                >
-                    <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                        {localConfig.columns.map((c) => (
-                            <label key={c.key} className="flex items-center gap-2 text-sm">
-                                <input
-                                    type="radio"
-                                    name="groupBy"
-                                    checked={localConfig.grouping?.[0] === c.key}
-                                    onChange={() =>
-                                        setLocalConfig({
-                                            ...localConfig,
-                                            grouping: c.key ? [c.key] : [],
-                                        })
-                                    }
-                                />
-                                {c.label}
-                            </label>
-                        ))}
-                        <button
-                            onClick={() => setLocalConfig({ ...localConfig, grouping: [] })}
-                            style={{
-                                padding: "4px 10px",
-                                background: "transparent",
-                                border: `1px solid ${safeTheme.border}`,
-                                color: safeTheme.text,
-                                borderRadius: 4,
-                                fontSize: 12,
-                                marginLeft: 8,
-                            }}
-                        >
-                            Clear Grouping
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Sum panel */}
-            {isEditing && localConfig && showSumPanel && headerWidth <= 980 && (
-                <div
-                    style={{
-                        marginTop: 8,
-                        zIndex: 1,
-                        background: safeTheme.surface,
-                        color: safeTheme.text,
-                        border: `1px solid ${safeTheme.border}`,
-                        borderRadius: 6,
-                        padding: 10,
-                        width: "100%",
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))",
-                            gap: 10,
-                        }}
-                    >
-                        {localConfig.columns
-                            .filter((c) => numericKeys.includes(c.key))
-                            .map((c) => (
-                                <label key={c.key} className="flex items-center gap-2 text-sm">
-                                    <input
-                                        type="checkbox"
-                                        checked={Boolean(
-                                            (localConfig.filters?.sumColumns || []).includes(
-                                                c.key
-                                            )
-                                        )}
-                                        onChange={(e) => {
-                                            const current = new Set(
-                                                (localConfig.filters?.sumColumns as string[]) || []
-                                            );
-                                            if (e.target.checked) current.add(c.key);
-                                            else current.delete(c.key);
-                                            setLocalConfig({
-                                                ...localConfig,
-                                                filters: {
-                                                    ...(localConfig.filters || {}),
-                                                    sumColumns: Array.from(current),
-                                                },
-                                            });
-                                        }}
-                                    />
-                                    {c.label}
-                                </label>
-                            ))}
-                    </div>
-                </div>
-            )}
+            {/* panels moved to footer area below */}
 
             {/* Table */}
             <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "60vh" }}>
@@ -819,6 +616,209 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     </tfoot>
                 </table>
             </div>
+
+            {/* Footer controls (edit mode only) */}
+            {isEditing && localConfig && (
+                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <button
+                        onClick={() => {
+                            setShowColumnsPanel((v) => !v);
+                            setShowGroupPanel(false);
+                            setShowSumPanel(false);
+                        }}
+                        title="View options"
+                        style={{
+                            padding: "4px 10px",
+                            backgroundColor: safeTheme.background,
+                            color: safeTheme.text,
+                            border: `1px solid ${safeTheme.border}`,
+                            borderRadius: 4,
+                            fontSize: 12,
+                        }}
+                    >
+                        View
+                    </button>
+                    <button
+                        onClick={() => {
+                            setShowGroupPanel((v) => !v);
+                            setShowColumnsPanel(false);
+                            setShowSumPanel(false);
+                        }}
+                        title="Group By"
+                        style={{
+                            padding: "4px 10px",
+                            backgroundColor: safeTheme.background,
+                            color: safeTheme.text,
+                            border: `1px solid ${safeTheme.border}`,
+                            borderRadius: 4,
+                            fontSize: 12,
+                        }}
+                    >
+                        Group By
+                    </button>
+                    <button
+                        onClick={() => {
+                            setShowSumPanel((v) => !v);
+                            setShowColumnsPanel(false);
+                            setShowGroupPanel(false);
+                        }}
+                        title="Sum Options"
+                        style={{
+                            padding: "4px 10px",
+                            backgroundColor: safeTheme.background,
+                            color: safeTheme.text,
+                            border: `1px solid ${safeTheme.border}`,
+                            borderRadius: 4,
+                            fontSize: 12,
+                        }}
+                    >
+                        Sum
+                    </button>
+                </div>
+            )}
+
+            {isEditing && localConfig && showColumnsPanel && (
+                <div
+                    style={{
+                        marginTop: 8,
+                        zIndex: 1,
+                        background: safeTheme.surface,
+                        color: safeTheme.text,
+                        border: `1px solid ${safeTheme.border}`,
+                        borderRadius: 6,
+                        padding: 10,
+                        maxHeight: 260,
+                        overflow: "auto",
+                        boxShadow: "0 8px 18px rgba(0,0,0,0.15)",
+                        width: "100%",
+                    }}
+                >
+                    <div
+                        aria-label="Columns selector"
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns:
+                                "repeat(auto-fit, minmax(160px, 1fr))",
+                            gap: 10,
+                        }}
+                    >
+                        {localConfig.columns.map((col) => (
+                            <label
+                                key={col.key}
+                                className="flex items-center gap-2 text-sm"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={col.visible}
+                                    onChange={() => handleColumnToggle(col.key)}
+                                />
+                                {col.label}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {isEditing && localConfig && showGroupPanel && (
+                <div
+                    style={{
+                        marginTop: 8,
+                        zIndex: 1,
+                        background: safeTheme.surface,
+                        color: safeTheme.text,
+                        border: `1px solid ${safeTheme.border}`,
+                        borderRadius: 6,
+                        padding: 10,
+                        width: "100%",
+                    }}
+                >
+                    <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                        {localConfig.columns.map((c) => (
+                            <label key={c.key} className="flex items-center gap-2 text-sm">
+                                <input
+                                    type="radio"
+                                    name="groupBy"
+                                    checked={localConfig.grouping?.[0] === c.key}
+                                    onChange={() =>
+                                        setLocalConfig({
+                                            ...localConfig,
+                                            grouping: c.key ? [c.key] : [],
+                                        })
+                                    }
+                                />
+                                {c.label}
+                            </label>
+                        ))}
+                        <button
+                            onClick={() => setLocalConfig({ ...localConfig, grouping: [] })}
+                            style={{
+                                padding: "4px 10px",
+                                background: "transparent",
+                                border: `1px solid ${safeTheme.border}`,
+                                color: safeTheme.text,
+                                borderRadius: 4,
+                                fontSize: 12,
+                                marginLeft: 8,
+                            }}
+                        >
+                            Clear Grouping
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {isEditing && localConfig && showSumPanel && (
+                <div
+                    style={{
+                        marginTop: 8,
+                        zIndex: 1,
+                        background: safeTheme.surface,
+                        color: safeTheme.text,
+                        border: `1px solid ${safeTheme.border}`,
+                        borderRadius: 6,
+                        padding: 10,
+                        width: "100%",
+                    }}
+                >
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))",
+                            gap: 10,
+                        }}
+                    >
+                        {localConfig.columns
+                            .filter((c) => numericKeys.includes(c.key))
+                            .map((c) => (
+                                <label key={c.key} className="flex items-center gap-2 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(
+                                            (localConfig.filters?.sumColumns || []).includes(
+                                                c.key
+                                            )
+                                        )}
+                                        onChange={(e) => {
+                                            const current = new Set(
+                                                (localConfig.filters?.sumColumns as string[]) || []
+                                            );
+                                            if (e.target.checked) current.add(c.key);
+                                            else current.delete(c.key);
+                                            setLocalConfig({
+                                                ...localConfig,
+                                                filters: {
+                                                    ...(localConfig.filters || {}),
+                                                    sumColumns: Array.from(current),
+                                                },
+                                            });
+                                        }}
+                                    />
+                                    {c.label}
+                                </label>
+                            ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
