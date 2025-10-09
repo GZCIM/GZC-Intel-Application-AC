@@ -424,9 +424,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </button>
             </div>
         );
-  }
+    }
 
-  return (
+    return (
         <div className="w-full">
             {/* Quick data summary to verify loads */}
             {positions.length > 0 && (
@@ -476,6 +476,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         </h3>
                         {/* Tabs rendered in header (edit mode) */}
                         <div style={{ display: "flex", gap: 6 }}>
+                            {(() => { const highlight = (theme as any)?.success || "#6aa84f"; return null; })()}
                             <button
                                 onClick={() => setActiveTab("view")}
                                 style={{
@@ -485,12 +486,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             ? safeTheme.surfaceAlt
                                             : "transparent",
                                     color: safeTheme.text,
-                                    border: `2px solid ${activeTab === "view" ? (theme?.success || "#6aa84f") : safeTheme.border}`,
+                                    border: activeTab === "view" ? `2px solid ${(theme as any)?.success || "#6aa84f"}` : `1px solid ${safeTheme.border}`,
                                     borderBottom:
                                         activeTab === "view"
                                             ? `1px solid ${safeTheme.surfaceAlt}`
                                             : `1px solid ${safeTheme.border}`,
-                                    borderRadius: 4,
+                                    borderRadius: 6,
+                                    fontWeight: activeTab === "view" ? 700 : 500,
+                                    boxShadow: activeTab === "view" ? `0 0 0 1px rgba(106,168,79,0.25)` : undefined,
                                     fontSize: 12,
                                 }}
                             >
@@ -505,12 +508,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             ? safeTheme.surfaceAlt
                                             : "transparent",
                                     color: safeTheme.text,
-                                    border: `2px solid ${activeTab === "group" ? (theme?.success || "#6aa84f") : safeTheme.border}`,
+                                    border: activeTab === "group" ? `2px solid ${(theme as any)?.success || "#6aa84f"}` : `1px solid ${safeTheme.border}`,
                                     borderBottom:
                                         activeTab === "group"
                                             ? `1px solid ${safeTheme.surfaceAlt}`
                                             : `1px solid ${safeTheme.border}`,
-                                    borderRadius: 4,
+                                    borderRadius: 6,
+                                    fontWeight: activeTab === "group" ? 700 : 500,
+                                    boxShadow: activeTab === "group" ? `0 0 0 1px rgba(106,168,79,0.25)` : undefined,
                                     fontSize: 12,
                                 }}
                             >
@@ -525,12 +530,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             ? safeTheme.surfaceAlt
                                             : "transparent",
                                     color: safeTheme.text,
-                                    border: `2px solid ${activeTab === "sum" ? (theme?.success || "#6aa84f") : safeTheme.border}`,
+                                    border: activeTab === "sum" ? `2px solid ${(theme as any)?.success || "#6aa84f"}` : `1px solid ${safeTheme.border}`,
                                     borderBottom:
                                         activeTab === "sum"
                                             ? `1px solid ${safeTheme.surfaceAlt}`
                                             : `1px solid ${safeTheme.border}`,
-                                    borderRadius: 4,
+                                    borderRadius: 6,
+                                    fontWeight: activeTab === "sum" ? 700 : 500,
+                                    boxShadow: activeTab === "sum" ? `0 0 0 1px rgba(106,168,79,0.25)` : undefined,
                                     fontSize: 12,
                                 }}
                             >
@@ -602,11 +609,16 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 >
                     <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                         {localConfig.columns.map((c) => (
-                            <label key={c.key} className="flex items-center gap-2 text-sm">
+                            <label
+                                key={c.key}
+                                className="flex items-center gap-2 text-sm"
+                            >
                                 <input
                                     type="radio"
                                     name="groupBy"
-                                    checked={localConfig.grouping?.[0] === c.key}
+                                    checked={
+                                        localConfig.grouping?.[0] === c.key
+                                    }
                                     onChange={() =>
                                         setLocalConfig({
                                             ...localConfig,
@@ -618,7 +630,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                             </label>
                         ))}
                         <button
-                            onClick={() => setLocalConfig({ ...localConfig, grouping: [] })}
+                            onClick={() =>
+                                setLocalConfig({ ...localConfig, grouping: [] })
+                            }
                             style={{
                                 padding: "4px 10px",
                                 background: "transparent",
@@ -651,32 +665,42 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     <div
                         style={{
                             display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))",
+                            gridTemplateColumns:
+                                "repeat(auto-fit, minmax(160px,1fr))",
                             gap: 10,
                         }}
                     >
                         {localConfig.columns
                             .filter((c) => numericKeys.includes(c.key))
                             .map((c) => (
-                                <label key={c.key} className="flex items-center gap-2 text-sm">
+                                <label
+                                    key={c.key}
+                                    className="flex items-center gap-2 text-sm"
+                                >
                                     <input
                                         type="checkbox"
                                         checked={Boolean(
-                                            (localConfig.filters?.sumColumns || []).includes(
-                                                c.key
-                                            )
+                                            (
+                                                localConfig.filters
+                                                    ?.sumColumns || []
+                                            ).includes(c.key)
                                         )}
                                         onChange={(e) => {
                                             const current = new Set(
-                                                (localConfig.filters?.sumColumns as string[]) || []
+                                                (localConfig.filters
+                                                    ?.sumColumns as string[]) ||
+                                                    []
                                             );
-                                            if (e.target.checked) current.add(c.key);
+                                            if (e.target.checked)
+                                                current.add(c.key);
                                             else current.delete(c.key);
                                             setLocalConfig({
                                                 ...localConfig,
                                                 filters: {
-                                                    ...(localConfig.filters || {}),
-                                                    sumColumns: Array.from(current),
+                                                    ...(localConfig.filters ||
+                                                        {}),
+                                                    sumColumns:
+                                                        Array.from(current),
                                                 },
                                             });
                                         }}
