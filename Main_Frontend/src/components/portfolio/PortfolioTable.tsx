@@ -509,8 +509,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             <div
                 style={{
                     overflowX: "auto",
-                    overflowY: "auto",
-                    maxHeight: "60vh",
+                    overflowY: positions.length > 20 ? "auto" : "visible",
+                    maxHeight: positions.length > 20 ? "60vh" : "none",
                 }}
             >
                 <table
