@@ -686,7 +686,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             )}
 
             {/* Table */}
-            <div style={{ overflowX: "auto" }}>
+            <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "60vh" }}>
                 <table
                     style={{
                         width: "100%",
