@@ -540,7 +540,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </div>
             )}
 
-            {localConfig && showColumnsPanel && headerWidth <= 980 && (
+            {isEditing && localConfig && showColumnsPanel && headerWidth <= 980 && (
                 <div
                     style={{
                         marginTop: 8,
@@ -583,7 +583,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             )}
 
             {/* Group By panel */}
-            {localConfig && showGroupPanel && headerWidth <= 980 && (
+            {isEditing && localConfig && showGroupPanel && headerWidth <= 980 && (
                 <div
                     style={{
                         marginTop: 8,
@@ -632,7 +632,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             )}
 
             {/* Sum panel */}
-            {localConfig && showSumPanel && headerWidth <= 980 && (
+            {isEditing && localConfig && showSumPanel && headerWidth <= 980 && (
                 <div
                     style={{
                         marginTop: 8,
