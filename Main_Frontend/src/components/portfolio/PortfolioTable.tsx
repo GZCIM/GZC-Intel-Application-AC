@@ -66,6 +66,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     selectedDate,
     fundId,
     isLive,
+    externalEditing,
 }) => {
     const { getToken } = useAuthContext();
     const { currentTheme: theme } = useTheme();
