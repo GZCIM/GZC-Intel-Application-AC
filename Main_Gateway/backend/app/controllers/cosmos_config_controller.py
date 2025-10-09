@@ -1703,7 +1703,22 @@ async def get_portfolio_component_config(
     if not device_doc:
         return {"status": "success", "data": _default_portfolio_table_config()}
 
-    comp_states = (device_doc.get("config") or {}).get("componentStates") or []
+    cfg = device_doc.get("config") or {}
+    # 1) Prefer config embedded directly on the component inside tabs
+    try:
+        for tab in cfg.get("tabs", []) or []:
+            for comp in tab.get("components") or []:
+                if isinstance(comp, dict) and comp.get("id") == componentId:
+                    props = comp.get("props") or {}
+                    embedded_cfg = props.get("tableConfig")
+                    if isinstance(embedded_cfg, dict):
+                        return {"status": "success", "data": embedded_cfg}
+    except Exception:
+        # non-fatal: fall through to componentStates/default
+        pass
+
+    # 2) Fallback to componentStates collection
+    comp_states = cfg.get("componentStates") or []
     for st in comp_states:
         if not isinstance(st, dict):
             continue
@@ -1831,7 +1846,22 @@ async def save_portfolio_component_config(
             }
         )
 
-    device_doc["config"] = {**cfg, "componentStates": comp_states}
+    # Write back componentStates
+    cfg["componentStates"] = comp_states
+
+    # Also embed tableConfig under the component inside tabs for per-instance configs
+    try:
+        for tab in cfg.get("tabs", []) or []:
+            for comp in tab.get("components") or []:
+                if isinstance(comp, dict) and comp.get("id") == component_id:
+                    props = comp.get("props") or {}
+                    props["tableConfig"] = table_config
+                    comp["props"] = props
+    except Exception:
+        # non-fatal; componentStates still holds the config
+        pass
+
+    device_doc["config"] = cfg
     device_doc["updatedAt"] = now
     saved = container.upsert_item(body=device_doc)
 

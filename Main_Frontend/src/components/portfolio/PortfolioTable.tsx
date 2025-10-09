@@ -424,9 +424,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </button>
             </div>
         );
-  }
+    }
 
-  return (
+    return (
         <div className="w-full">
             {/* Quick data summary to verify loads */}
             {positions.length > 0 && (
@@ -476,7 +476,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         </h3>
                         {/* Tabs rendered in header (edit mode) */}
                         <div style={{ display: "flex", gap: 6 }}>
-                            {(() => { const highlight = (theme as any)?.success || "#6aa84f"; return null; })()}
+                            {(() => {
+                                const highlight =
+                                    (theme as any)?.success || "#6aa84f";
+                                return null;
+                            })()}
                             <button
                                 onClick={() => setActiveTab("view")}
                                 style={{
@@ -486,14 +490,24 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             ? safeTheme.surfaceAlt
                                             : "transparent",
                                     color: safeTheme.text,
-                                    border: activeTab === "view" ? `2px solid ${(theme as any)?.success || "#6aa84f"}` : `1px solid ${safeTheme.border}`,
+                                    border:
+                                        activeTab === "view"
+                                            ? `2px solid ${
+                                                  (theme as any)?.success ||
+                                                  "#6aa84f"
+                                              }`
+                                            : `1px solid ${safeTheme.border}`,
                                     borderBottom:
                                         activeTab === "view"
                                             ? `1px solid ${safeTheme.surfaceAlt}`
                                             : `1px solid ${safeTheme.border}`,
                                     borderRadius: 6,
-                                    fontWeight: activeTab === "view" ? 700 : 500,
-                                    boxShadow: activeTab === "view" ? `0 0 0 1px rgba(106,168,79,0.25)` : undefined,
+                                    fontWeight:
+                                        activeTab === "view" ? 700 : 500,
+                                    boxShadow:
+                                        activeTab === "view"
+                                            ? `0 0 0 1px rgba(106,168,79,0.25)`
+                                            : undefined,
                                     fontSize: 12,
                                 }}
                             >
@@ -508,14 +522,24 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             ? safeTheme.surfaceAlt
                                             : "transparent",
                                     color: safeTheme.text,
-                                    border: activeTab === "group" ? `2px solid ${(theme as any)?.success || "#6aa84f"}` : `1px solid ${safeTheme.border}`,
+                                    border:
+                                        activeTab === "group"
+                                            ? `2px solid ${
+                                                  (theme as any)?.success ||
+                                                  "#6aa84f"
+                                              }`
+                                            : `1px solid ${safeTheme.border}`,
                                     borderBottom:
                                         activeTab === "group"
                                             ? `1px solid ${safeTheme.surfaceAlt}`
                                             : `1px solid ${safeTheme.border}`,
                                     borderRadius: 6,
-                                    fontWeight: activeTab === "group" ? 700 : 500,
-                                    boxShadow: activeTab === "group" ? `0 0 0 1px rgba(106,168,79,0.25)` : undefined,
+                                    fontWeight:
+                                        activeTab === "group" ? 700 : 500,
+                                    boxShadow:
+                                        activeTab === "group"
+                                            ? `0 0 0 1px rgba(106,168,79,0.25)`
+                                            : undefined,
                                     fontSize: 12,
                                 }}
                             >
@@ -530,14 +554,23 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             ? safeTheme.surfaceAlt
                                             : "transparent",
                                     color: safeTheme.text,
-                                    border: activeTab === "sum" ? `2px solid ${(theme as any)?.success || "#6aa84f"}` : `1px solid ${safeTheme.border}`,
+                                    border:
+                                        activeTab === "sum"
+                                            ? `2px solid ${
+                                                  (theme as any)?.success ||
+                                                  "#6aa84f"
+                                              }`
+                                            : `1px solid ${safeTheme.border}`,
                                     borderBottom:
                                         activeTab === "sum"
                                             ? `1px solid ${safeTheme.surfaceAlt}`
                                             : `1px solid ${safeTheme.border}`,
                                     borderRadius: 6,
                                     fontWeight: activeTab === "sum" ? 700 : 500,
-                                    boxShadow: activeTab === "sum" ? `0 0 0 1px rgba(106,168,79,0.25)` : undefined,
+                                    boxShadow:
+                                        activeTab === "sum"
+                                            ? `0 0 0 1px rgba(106,168,79,0.25)`
+                                            : undefined,
                                     fontSize: 12,
                                 }}
                             >
