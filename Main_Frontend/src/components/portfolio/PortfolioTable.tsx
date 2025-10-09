@@ -348,6 +348,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         return summary;
     }, [positions]);
 
+    const tradeTypeCounts = useMemo(() => {
+        const counts: Record<string, number> = {};
+        positions.forEach((p) => {
+            counts[p.trade_type] = (counts[p.trade_type] || 0) + 1;
+        });
+        return counts;
+    }, [positions]);
+
     const handleColumnToggle = (columnKey: string) => {
         if (!localConfig) return;
 
@@ -415,10 +423,23 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </button>
             </div>
         );
-  }
+    }
 
-  return (
+    return (
         <div className="w-full">
+            {/* Quick data summary to verify loads */}
+            {positions.length > 0 && (
+                <div
+                    style={{
+                        marginBottom: 8,
+                        color: safeTheme.text,
+                        fontSize: 12,
+                        opacity: 0.8,
+                    }}
+                >
+                    Records: {positions.length} • FX Forwards: {tradeTypeCounts["FX Forward"] || 0} • FX Options: {tradeTypeCounts["FX Option"] || 0}
+                </div>
+            )}
             {error && positions.length > 0 && (
                 <div className="mb-3 rounded border border-yellow-500 bg-yellow-50 text-yellow-700 px-3 py-2">
                     {error}
@@ -483,7 +504,13 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             {/* panels moved to footer area below */}
 
             {/* Table */}
-            <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "60vh" }}>
+            <div
+                style={{
+                    overflowX: "auto",
+                    overflowY: "auto",
+                    maxHeight: "60vh",
+                }}
+            >
                 <table
                     style={{
                         width: "100%",
@@ -734,11 +761,16 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 >
                     <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                         {localConfig.columns.map((c) => (
-                            <label key={c.key} className="flex items-center gap-2 text-sm">
+                            <label
+                                key={c.key}
+                                className="flex items-center gap-2 text-sm"
+                            >
                                 <input
                                     type="radio"
                                     name="groupBy"
-                                    checked={localConfig.grouping?.[0] === c.key}
+                                    checked={
+                                        localConfig.grouping?.[0] === c.key
+                                    }
                                     onChange={() =>
                                         setLocalConfig({
                                             ...localConfig,
@@ -750,7 +782,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                             </label>
                         ))}
                         <button
-                            onClick={() => setLocalConfig({ ...localConfig, grouping: [] })}
+                            onClick={() =>
+                                setLocalConfig({ ...localConfig, grouping: [] })
+                            }
                             style={{
                                 padding: "4px 10px",
                                 background: "transparent",
@@ -783,32 +817,42 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     <div
                         style={{
                             display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))",
+                            gridTemplateColumns:
+                                "repeat(auto-fit, minmax(160px,1fr))",
                             gap: 10,
                         }}
                     >
                         {localConfig.columns
                             .filter((c) => numericKeys.includes(c.key))
                             .map((c) => (
-                                <label key={c.key} className="flex items-center gap-2 text-sm">
+                                <label
+                                    key={c.key}
+                                    className="flex items-center gap-2 text-sm"
+                                >
                                     <input
                                         type="checkbox"
                                         checked={Boolean(
-                                            (localConfig.filters?.sumColumns || []).includes(
-                                                c.key
-                                            )
+                                            (
+                                                localConfig.filters
+                                                    ?.sumColumns || []
+                                            ).includes(c.key)
                                         )}
                                         onChange={(e) => {
                                             const current = new Set(
-                                                (localConfig.filters?.sumColumns as string[]) || []
+                                                (localConfig.filters
+                                                    ?.sumColumns as string[]) ||
+                                                    []
                                             );
-                                            if (e.target.checked) current.add(c.key);
+                                            if (e.target.checked)
+                                                current.add(c.key);
                                             else current.delete(c.key);
                                             setLocalConfig({
                                                 ...localConfig,
                                                 filters: {
-                                                    ...(localConfig.filters || {}),
-                                                    sumColumns: Array.from(current),
+                                                    ...(localConfig.filters ||
+                                                        {}),
+                                                    sumColumns:
+                                                        Array.from(current),
                                                 },
                                             });
                                         }}
