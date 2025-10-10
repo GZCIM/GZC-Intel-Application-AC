@@ -1886,6 +1886,47 @@ async def save_portfolio_component_config(
                 status_code=400, detail="fundId must be integer if provided"
             )
 
+    # Ensure summary aggregation is present to reflect Sum selections in Cosmos
+    try:
+        if isinstance(table_config, dict):
+            has_summary = isinstance(table_config.get("summary"), dict)
+            # Accept either explicit summary or derive from filters.sumColumns or default to all
+            if not has_summary:
+                sum_cols = []
+                try:
+                    sum_cols = list(
+                        (table_config.get("filters", {}) or {}).get(
+                            "sumColumns", []
+                        )
+                    )
+                except Exception:
+                    sum_cols = []
+                allowed = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"]
+                effective = [c for c in sum_cols if c in allowed]
+                if not effective:
+                    effective = allowed
+                def make_agg(k: str) -> Dict[str, Any]:
+                    label_map = {
+                        "itd_pnl": "Σ ITD P&L",
+                        "ytd_pnl": "Σ YTD P&L",
+                        "mtd_pnl": "Σ MTD P&L",
+                        "dtd_pnl": "Σ DTD P&L",
+                    }
+                    return {
+                        "key": k,
+                        "op": "sum",
+                        "label": label_map.get(k, k),
+                        "format": "$0,0.[00]",
+                    }
+                table_config["summary"] = {
+                    "enabled": True,
+                    "aggregations": [make_agg(k) for k in effective],
+                    "position": "footer",
+                }
+    except Exception:
+        # Non-fatal; proceed with whatever client provided
+        pass
+
     # Resolve user id
     user_email = (
         payload.get("preferred_username")
