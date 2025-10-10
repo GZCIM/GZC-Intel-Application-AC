@@ -300,20 +300,51 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     })),
                 });
             } catch (_) {}
+            // Build summary aggregations from current Sum selections
+            const sumKeys = (
+                (localConfig.filters?.sumColumns as string[]) || []
+            ).filter((k) => ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"].includes(k));
+            const effectiveSumKeys = sumKeys.length
+                ? sumKeys
+                : ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"];
+            const makeAgg = (key: string) => ({
+                key,
+                op: "sum",
+                label:
+                    key === "itd_pnl"
+                        ? "Σ ITD P&L"
+                        : key === "ytd_pnl"
+                        ? "Σ YTD P&L"
+                        : key === "mtd_pnl"
+                        ? "Σ MTD P&L"
+                        : key === "dtd_pnl"
+                        ? "Σ DTD P&L"
+                        : key,
+                format: "$0,0.[00]",
+            });
+            const tableConfigWithSummary = {
+                ...localConfig,
+                summary: {
+                    enabled: true,
+                    aggregations: effectiveSumKeys.map(makeAgg),
+                    position: "footer",
+                },
+            };
+
             await axios.post(
                 "/api/cosmos/portfolio-component-config",
                 {
                     deviceType: resolvedDeviceType,
                     componentId: resolvedComponentId,
                     fundId,
-                    tableConfig: localConfig,
+                    tableConfig: tableConfigWithSummary,
                 },
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
 
-            setTableConfig(localConfig);
+            setTableConfig(tableConfigWithSummary as any);
             setIsEditing(false);
             try {
                 console.log(
@@ -504,6 +535,29 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
         return summary;
     }, [positions]);
+
+    // Respect Sum tab selections (fallback to all if none selected)
+    const selectedSumKeys = useMemo(() => {
+        const chosen = (localConfig?.filters?.sumColumns as string[]) || [];
+        const allowed: string[] = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"];
+        const filtered = chosen.filter((k) => allowed.includes(k));
+        return filtered.length > 0 ? filtered : allowed;
+    }, [localConfig?.filters]);
+
+    const sumLabelForKey = (key: string): string => {
+        switch (key) {
+            case "itd_pnl":
+                return "ITD";
+            case "ytd_pnl":
+                return "YTD";
+            case "mtd_pnl":
+                return "MTD";
+            case "dtd_pnl":
+                return "DTD";
+            default:
+                return key;
+        }
+    };
 
     const tradeTypeCounts = useMemo(() => {
         const counts: Record<string, number> = {};
@@ -989,7 +1043,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                             </tr>
                         ))}
                     </tbody>
-                    {/* PnL Summary Footer (compact) */}
+                    {/* PnL Summary Footer (compact) - respects Sum tab selections */}
                     <tfoot>
                         <tr style={{ background: safeTheme.surfaceAlt }}>
                             <td
@@ -1002,14 +1056,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     fontSize: 12,
                                 }}
                             >
-                                ITD:{" "}
-                                {formatValue(pnlSummary.itd_pnl, "itd_pnl")} •
-                                YTD:{" "}
-                                {formatValue(pnlSummary.ytd_pnl, "ytd_pnl")} •
-                                MTD:{" "}
-                                {formatValue(pnlSummary.mtd_pnl, "mtd_pnl")} •
-                                DTD:{" "}
-                                {formatValue(pnlSummary.dtd_pnl, "dtd_pnl")}
+                                {selectedSumKeys
+                                    .map((key) =>
+                                        `${sumLabelForKey(key)}: ${formatValue(
+                                            (pnlSummary as any)[key] ?? 0,
+                                            key
+                                        )}`
+                                    )
+                                    .join(" • ")}
                             </td>
                         </tr>
                     </tfoot>
