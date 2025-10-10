@@ -113,6 +113,17 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         "bigscreen") as "laptop" | "mobile" | "bigscreen";
     const resolvedComponentId =
         componentId || (window as any)?.componentId || "portfolio-default";
+    try {
+        console.log(
+            "[PortfolioTable] Identifiers:", {
+                resolvedDeviceType,
+                resolvedComponentId,
+                propComponentId: componentId,
+                windowComponentId: (window as any)?.componentId,
+                fundId,
+            }
+        );
+    } catch (_) {}
 
     // Sync with global Tools menu Unlock/Lock editing (and external prop)
     useEffect(() => {
@@ -172,6 +183,19 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const loadTableConfig = async () => {
         try {
             const token = await getToken();
+            try {
+                console.log(
+                    "[PortfolioTable] Loading table config",
+                    {
+                        url: "/api/cosmos/portfolio-component-config",
+                        params: {
+                            deviceType: resolvedDeviceType,
+                            componentId: resolvedComponentId,
+                            fundId,
+                        },
+                    }
+                );
+            } catch (_) {}
             const response = await axios.get(
                 "/api/cosmos/portfolio-component-config",
                 {
@@ -187,6 +211,19 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             if (response.data.status === "success") {
                 setTableConfig(response.data.data);
                 setLocalConfig(response.data.data);
+                try {
+                    console.log(
+                        "[PortfolioTable] Table config loaded",
+                        response.data.data
+                    );
+                } catch (_) {}
+            } else {
+                try {
+                    console.warn(
+                        "[PortfolioTable] Unexpected table config payload",
+                        response.data
+                    );
+                } catch (_) {}
             }
         } catch (err) {
             console.error("Failed to load table config:", err);
@@ -198,6 +235,20 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
         try {
             const token = await getToken();
+            try {
+                console.log(
+                    "[PortfolioTable] Saving table config",
+                    {
+                        deviceType: resolvedDeviceType,
+                        componentId: resolvedComponentId,
+                        fundId,
+                        columns: localConfig.columns?.map((c) => ({
+                            key: c.key,
+                            visible: c.visible,
+                        })),
+                    }
+                );
+            } catch (_) {}
             await axios.post(
                 "/api/cosmos/portfolio-component-config",
                 {
@@ -213,6 +264,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
             setTableConfig(localConfig);
             setIsEditing(false);
+            try {
+                console.log(
+                    "[PortfolioTable] Table config saved and edit mode locked"
+                );
+            } catch (_) {}
         } catch (err) {
             console.error("Failed to save table config:", err);
         }
