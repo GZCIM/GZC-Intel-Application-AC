@@ -435,9 +435,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </button>
             </div>
         );
-    }
+  }
 
-    return (
+  return (
         <div className="w-full">
             {/* Quick data summary to verify loads */}
             {positions.length > 0 && (
