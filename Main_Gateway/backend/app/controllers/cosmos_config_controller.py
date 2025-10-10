@@ -1644,6 +1644,19 @@ def _default_portfolio_table_config() -> Dict[str, Any]:
         "sorting": {"column": "maturity_date", "direction": "asc"},
         "grouping": [],
         "filters": {},
+        # Summary footer aggregations for key numeric columns
+        "summary": {
+            "enabled": True,
+            "aggregations": [
+                {"key": "quantity", "op": "sum", "label": "Σ Quantity", "format": "0,0.[00]"},
+                {"key": "position", "op": "sum", "label": "Σ Position", "format": "0,0.[00]"},
+                {"key": "itd_pnl", "op": "sum", "label": "Σ ITD P&L", "format": "$0,0.[00]"},
+                {"key": "ytd_pnl", "op": "sum", "label": "Σ YTD P&L", "format": "$0,0.[00]"},
+                {"key": "mtd_pnl", "op": "sum", "label": "Σ MTD P&L", "format": "$0,0.[00]"},
+                {"key": "dtd_pnl", "op": "sum", "label": "Σ DTD P&L", "format": "$0,0.[00]"},
+            ],
+            "position": "footer",
+        },
     }
 
 
