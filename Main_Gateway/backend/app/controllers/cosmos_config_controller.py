@@ -1937,6 +1937,19 @@ async def save_portfolio_component_config(
     cfg = device_doc.get("config") or {}
     comp_states = cfg.get("componentStates") or []
 
+    # Resolve actual portfolio component id when caller uses a logical id
+    resolved_component_id = component_id
+    try:
+        portfolio_components = []
+        for tab in cfg.get("tabs", []) or []:
+            for comp in tab.get("components") or []:
+                if isinstance(comp, dict) and comp.get("type") == "portfolio":
+                    portfolio_components.append(comp)
+        if component_id in ("portfolio-default", "portfolio_default") and len(portfolio_components) == 1:
+            resolved_component_id = portfolio_components[0].get("id") or component_id
+    except Exception:
+        resolved_component_id = component_id
+
     updated = False
     seen_before_ids = []
     try:
@@ -1949,13 +1962,13 @@ async def save_portfolio_component_config(
     for i, st in enumerate(comp_states):
         if not isinstance(st, dict):
             continue
-        if st.get("type") == "portfolio" and st.get("componentId") == component_id:
+        if st.get("type") == "portfolio" and st.get("componentId") == resolved_component_id:
             st_fund = st.get("fundId")
             if fund_id is None or st_fund == fund_id:
                 comp_states[i] = {
                     **st,
                     "type": "portfolio",
-                    "componentId": component_id,
+                    "componentId": resolved_component_id,
                     "fundId": fund_id,
                     "tableConfig": table_config,
                     "updatedAt": now,
@@ -1967,7 +1980,7 @@ async def save_portfolio_component_config(
         comp_states.append(
             {
                 "type": "portfolio",
-                "componentId": component_id,
+                "componentId": resolved_component_id,
                 "fundId": fund_id,
                 "tableConfig": table_config,
                 "createdAt": now,
@@ -1983,7 +1996,7 @@ async def save_portfolio_component_config(
         matched_indices = []
         for tab in cfg.get("tabs", []) or []:
             for comp in tab.get("components") or []:
-                if isinstance(comp, dict) and comp.get("id") == component_id:
+                if isinstance(comp, dict) and comp.get("id") in (resolved_component_id, component_id):
                     props = comp.get("props") or {}
                     props["tableConfig"] = table_config
                     comp["props"] = props
@@ -2003,7 +2016,7 @@ async def save_portfolio_component_config(
                 try:
                     logger.info(
                         "[CosmosConfig] SAVE single-portfolio fallback used for componentId=%s (only portfolio component id=%s). columns=%s",
-                        component_id,
+                        resolved_component_id,
                         portfolio_components[0].get("id"),
                         len(table_config.get("columns", [])),
                     )
@@ -2013,7 +2026,7 @@ async def save_portfolio_component_config(
             logger.info(
                 "[CosmosConfig] SAVE embedding summary: device=%s componentId=%s seenBefore=%s matched=%s matchedIds=%s",
                 device_config_id,
-                component_id,
+                resolved_component_id,
                 seen_before_ids,
                 matched,
                 matched_indices,
@@ -2030,7 +2043,7 @@ async def save_portfolio_component_config(
         for st in comp_states:
             if not isinstance(st, dict):
                 continue
-            if st.get("type") == "portfolio" and st.get("componentId") == component_id:
+            if st.get("type") == "portfolio" and st.get("componentId") == resolved_component_id:
                 st_fund = st.get("fundId")
                 if fund_id is None or st_fund == fund_id:
                     # skip (we embedded into props)
@@ -2054,9 +2067,9 @@ async def save_portfolio_component_config(
             for comp in tab.get("components") or []:
                 if isinstance(comp, dict):
                     cid = comp.get("id")
-                    if cid:
+            if cid:
                         comp_id_list.append(cid)
-                    if cid == component_id and isinstance(
+            if cid == resolved_component_id and isinstance(
                         (comp.get("props") or {}).get("tableConfig"), dict
                     ):
                         post_props_present = True
@@ -2073,7 +2086,7 @@ async def save_portfolio_component_config(
     return {
         "status": "success",
         "deviceConfigId": device_config_id,
-        "componentId": component_id,
+        "componentId": resolved_component_id,
         "updatedAt": saved.get("updatedAt", now),
         "columns": table_config.get("columns"),
     }
