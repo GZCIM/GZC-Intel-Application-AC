@@ -536,6 +536,24 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         return summary;
     }, [positions]);
 
+    // Debounced auto-save when Sum selection changes while editing
+    const saveDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const requestAutoSave = () => {
+        if (saveDebounceRef.current) clearTimeout(saveDebounceRef.current);
+        saveDebounceRef.current = setTimeout(() => {
+            void saveTableConfig();
+        }, 500);
+    };
+
+    useEffect(() => {
+        const keys = (localConfig?.filters as any)?.sumColumns as string[] | undefined;
+        if (!isEditing) return;
+        if (!localConfig) return;
+        // Persist changes to Sum selections automatically
+        requestAutoSave();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isEditing, localConfig?.filters?.sumColumns]);
+
     // Respect Sum tab selections; prefer summary.aggregations if present, then filters.sumColumns, else all
     const selectedSumKeys = useMemo(() => {
         const allowed: string[] = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"];
