@@ -248,6 +248,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                             legacy = st?.tableConfig || null;
                         }
                     }
+                    // If we found an embedded config for this component, prefer it to ensure manual edits reflect in UI
+                    if (embedded && typeof embedded === "object") {
+                        setTableConfig(embedded);
+                        setLocalConfig(embedded);
+                    }
                     console.log(
                         "[PortfolioTable] Read-back device config components",
                         portfolioIds
@@ -335,9 +340,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             try {
                 console.log("[PortfolioTable] Saving with:", {
                     sumColumns: tableConfigWithSummary.filters?.sumColumns,
-                    summaryKeys: (tableConfigWithSummary.summary?.aggregations || []).map(
-                        (a: any) => a.key
-                    ),
+                    summaryKeys: (
+                        tableConfigWithSummary.summary?.aggregations || []
+                    ).map((a: any) => a.key),
                 });
             } catch (_) {}
 
