@@ -1815,6 +1815,37 @@ async def get_portfolio_component_config(
             props = portfolio_components[0].get("props") or {}
             embedded_cfg = props.get("tableConfig")
             if isinstance(embedded_cfg, dict):
+                # Auto-embed summary if missing in single-portfolio fallback
+                try:
+                    if not isinstance(embedded_cfg.get("summary"), dict):
+                        filters = embedded_cfg.get("filters", {}) or {}
+                        sum_cols = list(filters.get("sumColumns", []) or [])
+                        allowed = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"]
+                        eff = [c for c in sum_cols if c in allowed] or allowed
+                        def make_agg(k: str) -> Dict[str, Any]:
+                            label_map = {
+                                "itd_pnl": "Σ ITD P&L",
+                                "ytd_pnl": "Σ YTD P&L",
+                                "mtd_pnl": "Σ MTD P&L",
+                                "dtd_pnl": "Σ DTD P&L",
+                            }
+                            return {
+                                "key": k,
+                                "op": "sum",
+                                "label": label_map.get(k, k),
+                                "format": "$0,0.[00]",
+                            }
+                        embedded_cfg["summary"] = {
+                            "enabled": True,
+                            "aggregations": [make_agg(k) for k in eff],
+                            "position": "footer",
+                        }
+                        props["tableConfig"] = embedded_cfg
+                        portfolio_components[0]["props"] = props
+                        device_doc["updatedAt"] = datetime.utcnow().isoformat()
+                        container.upsert_item(body=device_doc)
+                except Exception:
+                    pass
                 try:
                     logger.info(
                         "[CosmosConfig] GET single-portfolio fallback used (componentId=%s). columns=%s",
