@@ -301,13 +301,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 });
             } catch (_) {}
             // Build summary aggregations from current Sum selections
-            const sumKeys = (
-                (localConfig.filters?.sumColumns as string[]) || []
-            ).filter((k) =>
-                ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"].includes(k)
-            );
-            const effectiveSumKeys = sumKeys.length
-                ? sumKeys
+            const effectiveSumKeys = selectedSumKeys.length
+                ? selectedSumKeys
                 : ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"];
             const makeAgg = (key: string) => ({
                 key,
@@ -326,6 +321,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             });
             const tableConfigWithSummary = {
                 ...localConfig,
+                filters: {
+                    ...(localConfig.filters || {}),
+                    sumColumns: effectiveSumKeys,
+                },
                 summary: {
                     enabled: true,
                     aggregations: effectiveSumKeys.map(makeAgg),
@@ -561,9 +560,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     // Respect Sum tab selections; prefer filters.sumColumns if present, then summary.aggregations, else all
     const selectedSumKeys = useMemo(() => {
         const allowed: string[] = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"];
-        const fromFilters: string[] = Array.isArray((localConfig as any)?.filters?.sumColumns)
-            ? (((localConfig as any).filters.sumColumns as any[])
-                  .filter((k: any) => typeof k === "string" && allowed.includes(k)))
+        const fromFilters: string[] = Array.isArray(
+            (localConfig as any)?.filters?.sumColumns
+        )
+            ? ((localConfig as any).filters.sumColumns as any[]).filter(
+                  (k: any) => typeof k === "string" && allowed.includes(k)
+              )
             : [];
         if (fromFilters.length > 0) return fromFilters;
         const fromSummary: string[] = Array.isArray(
