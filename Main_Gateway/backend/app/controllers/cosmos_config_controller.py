@@ -1735,9 +1735,22 @@ async def get_portfolio_component_config(
         if st.get("type") == "portfolio" and st.get("componentId") == componentId:
             st_fund = st.get("fundId")
             if fundId is None or st_fund == fundId:
-                cfg = st.get("tableConfig")
-                if isinstance(cfg, dict):
-                    return {"status": "success", "data": cfg}
+                legacy_cfg = st.get("tableConfig")
+                if isinstance(legacy_cfg, dict):
+                    # MIGRATION: If legacy exists but not embedded, embed it now for this component
+                    try:
+                        for tab in device_doc.get("config", {}).get("tabs", []) or []:
+                            for comp in tab.get("components") or []:
+                                if isinstance(comp, dict) and comp.get("id") == componentId:
+                                    props = comp.get("props") or {}
+                                    props["tableConfig"] = legacy_cfg
+                                    comp["props"] = props
+                        # Persist migration
+                        device_doc["updatedAt"] = datetime.utcnow().isoformat()
+                        container.upsert_item(body=device_doc)
+                    except Exception as mig_err:
+                        logger.warning("[CosmosConfig] Failed to embed legacy portfolio config: %s", mig_err)
+                    return {"status": "success", "data": legacy_cfg}
 
     return {"status": "success", "data": _default_portfolio_table_config()}
 
@@ -1856,8 +1869,7 @@ async def save_portfolio_component_config(
             }
         )
 
-    # Write back componentStates
-    cfg["componentStates"] = comp_states
+    # Write back componentStates (after cleanup of duplicates below)
 
     # Also embed tableConfig under the component inside tabs for per-instance configs
     try:
@@ -1870,6 +1882,22 @@ async def save_portfolio_component_config(
     except Exception:
         # non-fatal; componentStates still holds the config
         pass
+
+    # Remove legacy duplicates from componentStates for this component/fund to avoid two sources of truth
+    try:
+        new_states = []
+        for st in comp_states:
+            if not isinstance(st, dict):
+                continue
+            if st.get("type") == "portfolio" and st.get("componentId") == component_id:
+                st_fund = st.get("fundId")
+                if fund_id is None or st_fund == fund_id:
+                    # skip (we embedded into props)
+                    continue
+            new_states.append(st)
+        cfg["componentStates"] = new_states
+    except Exception as cleanup_err:
+        logger.warning("[CosmosConfig] Failed to cleanup legacy componentStates: %s", cleanup_err)
 
     device_doc["config"] = cfg
     device_doc["updatedAt"] = now
