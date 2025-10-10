@@ -536,13 +536,19 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         return summary;
     }, [positions]);
 
-    // Respect Sum tab selections (fallback to all if none selected)
+    // Respect Sum tab selections; prefer summary.aggregations if present, then filters.sumColumns, else all
     const selectedSumKeys = useMemo(() => {
-        const chosen = (localConfig?.filters?.sumColumns as string[]) || [];
         const allowed: string[] = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"];
+        const fromSummary: string[] = Array.isArray((tableConfig as any)?.summary?.aggregations)
+            ? ((tableConfig as any).summary.aggregations as any[])
+                  .map((a) => a?.key)
+                  .filter((k: any) => typeof k === "string" && allowed.includes(k))
+            : [];
+        if (fromSummary.length > 0) return fromSummary;
+        const chosen = (localConfig?.filters?.sumColumns as string[]) || [];
         const filtered = chosen.filter((k) => allowed.includes(k));
         return filtered.length > 0 ? filtered : allowed;
-    }, [localConfig?.filters]);
+    }, [tableConfig, localConfig?.filters]);
 
     const sumLabelForKey = (key: string): string => {
         switch (key) {
