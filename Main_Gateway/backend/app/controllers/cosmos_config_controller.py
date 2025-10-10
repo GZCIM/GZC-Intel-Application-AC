@@ -1727,6 +1727,22 @@ async def get_portfolio_component_config(
         # non-fatal: fall through to componentStates/default
         pass
 
+    # 1b) Fallback: if exactly one portfolio component exists in tabs, use its embedded config
+    try:
+        portfolio_components = []
+        for tab in cfg.get("tabs", []) or []:
+            for comp in tab.get("components") or []:
+                if isinstance(comp, dict) and (comp.get("type") == "portfolio"):
+                    portfolio_components.append(comp)
+        if len(portfolio_components) == 1:
+            props = portfolio_components[0].get("props") or {}
+            embedded_cfg = props.get("tableConfig")
+            if isinstance(embedded_cfg, dict):
+                logger.info("[CosmosConfig] Using single-portfolio fallback for GET (componentId missing/mismatch)")
+                return {"status": "success", "data": embedded_cfg}
+    except Exception:
+        pass
+
     # 2) Fallback to componentStates collection
     comp_states = cfg.get("componentStates") or []
     for st in comp_states:
@@ -1873,12 +1889,26 @@ async def save_portfolio_component_config(
 
     # Also embed tableConfig under the component inside tabs for per-instance configs
     try:
+        matched = False
         for tab in cfg.get("tabs", []) or []:
             for comp in tab.get("components") or []:
                 if isinstance(comp, dict) and comp.get("id") == component_id:
                     props = comp.get("props") or {}
                     props["tableConfig"] = table_config
                     comp["props"] = props
+                    matched = True
+        # Fallback: if no exact id match, embed into the only portfolio component when unique
+        if not matched:
+            portfolio_components = []
+            for tab in cfg.get("tabs", []) or []:
+                for comp in tab.get("components") or []:
+                    if isinstance(comp, dict) and (comp.get("type") == "portfolio"):
+                        portfolio_components.append(comp)
+            if len(portfolio_components) == 1:
+                props = portfolio_components[0].get("props") or {}
+                props["tableConfig"] = table_config
+                portfolio_components[0]["props"] = props
+                logger.info("[CosmosConfig] Embedded config via single-portfolio fallback (save)")
     except Exception:
         # non-fatal; componentStates still holds the config
         pass
