@@ -332,6 +332,15 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 },
             };
 
+            try {
+                console.log("[PortfolioTable] Saving with:", {
+                    sumColumns: tableConfigWithSummary.filters?.sumColumns,
+                    summaryKeys: (tableConfigWithSummary.summary?.aggregations || []).map(
+                        (a: any) => a.key
+                    ),
+                });
+            } catch (_) {}
+
             await axios.post(
                 "/api/cosmos/portfolio-component-config",
                 {
@@ -554,6 +563,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         if (!localConfig) return;
         // Persist changes to Sum selections automatically
         requestAutoSave();
+        try {
+            console.log("[PortfolioTable] Auto-save Sum change", {
+                sumColumns: keys,
+            });
+        } catch (_) {}
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEditing, localConfig?.filters?.sumColumns]);
 
@@ -580,7 +594,16 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         if (fromSummary.length > 0) return fromSummary;
         const chosen = (localConfig?.filters?.sumColumns as string[]) || [];
         const filtered = chosen.filter((k) => allowed.includes(k));
-        return filtered.length > 0 ? filtered : allowed;
+        const out = filtered.length > 0 ? filtered : allowed;
+        try {
+            console.log("[PortfolioTable] selectedSumKeys: ", {
+                fromFilters,
+                fromSummary,
+                chosen,
+                resolved: out,
+            });
+        } catch (_) {}
+        return out;
     }, [tableConfig, localConfig?.filters]);
 
     const sumLabelForKey = (key: string): string => {
