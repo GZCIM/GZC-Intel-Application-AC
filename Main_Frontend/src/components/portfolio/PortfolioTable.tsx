@@ -114,15 +114,13 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const resolvedComponentId =
         componentId || (window as any)?.componentId || "portfolio-default";
     try {
-        console.log(
-            "[PortfolioTable] Identifiers:", {
-                resolvedDeviceType,
-                resolvedComponentId,
-                propComponentId: componentId,
-                windowComponentId: (window as any)?.componentId,
-                fundId,
-            }
-        );
+        console.log("[PortfolioTable] Identifiers:", {
+            resolvedDeviceType,
+            resolvedComponentId,
+            propComponentId: componentId,
+            windowComponentId: (window as any)?.componentId,
+            fundId,
+        });
     } catch (_) {}
 
     // Sync with global Tools menu Unlock/Lock editing (and external prop)
@@ -184,17 +182,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         try {
             const token = await getToken();
             try {
-                console.log(
-                    "[PortfolioTable] Loading table config",
-                    {
-                        url: "/api/cosmos/portfolio-component-config",
-                        params: {
-                            deviceType: resolvedDeviceType,
-                            componentId: resolvedComponentId,
-                            fundId,
-                        },
-                    }
-                );
+                console.log("[PortfolioTable] Loading table config", {
+                    url: "/api/cosmos/portfolio-component-config",
+                    params: {
+                        deviceType: resolvedDeviceType,
+                        componentId: resolvedComponentId,
+                        fundId,
+                    },
+                });
             } catch (_) {}
             const response = await axios.get(
                 "/api/cosmos/portfolio-component-config",
@@ -216,7 +211,66 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         "[PortfolioTable] Table config loaded",
                         response.data.data
                     );
+                    const cols = (response.data.data?.columns || []).map(
+                        (c: any) => ({ key: c.key, visible: !!c.visible })
+                    );
+                    console.log(
+                        "[PortfolioTable] Loaded columns snapshot",
+                        cols
+                    );
                 } catch (_) {}
+                // Optional: read-back entire device config to compare what is stored under tabs[].components[].props
+                try {
+                    const readback = await axios.get(
+                        `/api/cosmos/device-config/${resolvedDeviceType}`,
+                        {
+                            headers: { Authorization: `Bearer ${token}` },
+                        }
+                    );
+                    const tabs = readback.data?.config?.tabs || [];
+                    let embedded: any = null;
+                    let legacy: any = null;
+                    let portfolioIds: string[] = [];
+                    for (const t of tabs) {
+                        for (const c of t?.components || []) {
+                            if (c?.id) portfolioIds.push(String(c.id));
+                            if (c?.id === resolvedComponentId)
+                                embedded = c?.props?.tableConfig || null;
+                        }
+                    }
+                    const compStates =
+                        readback.data?.config?.componentStates || [];
+                    for (const st of compStates) {
+                        if (
+                            st?.type === "portfolio" &&
+                            st?.componentId === resolvedComponentId
+                        ) {
+                            legacy = st?.tableConfig || null;
+                        }
+                    }
+                    console.log(
+                        "[PortfolioTable] Read-back device config components",
+                        portfolioIds
+                    );
+                    console.log(
+                        "[PortfolioTable] Read-back embedded vs legacy",
+                        {
+                            embeddedCols: Array.isArray(embedded?.columns)
+                                ? embedded.columns.map((x: any) => x.key)
+                                : null,
+                            legacyCols: Array.isArray(legacy?.columns)
+                                ? legacy.columns.map((x: any) => x.key)
+                                : null,
+                            hasEmbedded: !!embedded,
+                            hasLegacy: !!legacy,
+                        }
+                    );
+                } catch (rbErr) {
+                    console.warn(
+                        "[PortfolioTable] Read-back device config failed",
+                        rbErr
+                    );
+                }
             } else {
                 try {
                     console.warn(
@@ -236,18 +290,15 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         try {
             const token = await getToken();
             try {
-                console.log(
-                    "[PortfolioTable] Saving table config",
-                    {
-                        deviceType: resolvedDeviceType,
-                        componentId: resolvedComponentId,
-                        fundId,
-                        columns: localConfig.columns?.map((c) => ({
-                            key: c.key,
-                            visible: c.visible,
-                        })),
-                    }
-                );
+                console.log("[PortfolioTable] Saving table config", {
+                    deviceType: resolvedDeviceType,
+                    componentId: resolvedComponentId,
+                    fundId,
+                    columns: localConfig.columns?.map((c) => ({
+                        key: c.key,
+                        visible: c.visible,
+                    })),
+                });
             } catch (_) {}
             await axios.post(
                 "/api/cosmos/portfolio-component-config",
@@ -268,6 +319,44 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 console.log(
                     "[PortfolioTable] Table config saved and edit mode locked"
                 );
+                // Read-back and compare embedding under tabs[].components[].props
+                const readback = await axios.get(
+                    `/api/cosmos/device-config/${resolvedDeviceType}`,
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
+                );
+                const tabs = readback.data?.config?.tabs || [];
+                let embedded: any = null;
+                let portfolioIds: string[] = [];
+                for (const t of tabs) {
+                    for (const c of t?.components || []) {
+                        if (c?.id) portfolioIds.push(String(c.id));
+                        if (c?.id === resolvedComponentId)
+                            embedded = c?.props?.tableConfig || null;
+                    }
+                }
+                const compStates = readback.data?.config?.componentStates || [];
+                const legacy =
+                    compStates.find(
+                        (st: any) =>
+                            st?.type === "portfolio" &&
+                            st?.componentId === resolvedComponentId
+                    )?.tableConfig || null;
+                console.log(
+                    "[PortfolioTable] Post-save read-back components",
+                    portfolioIds
+                );
+                console.log("[PortfolioTable] Post-save embedded vs legacy", {
+                    hasEmbedded: !!embedded,
+                    embeddedCols: Array.isArray(embedded?.columns)
+                        ? embedded.columns.map((x: any) => x.key)
+                        : null,
+                    hasLegacy: !!legacy,
+                    legacyCols: Array.isArray(legacy?.columns)
+                        ? legacy.columns.map((x: any) => x.key)
+                        : null,
+                });
             } catch (_) {}
         } catch (err) {
             console.error("Failed to save table config:", err);
@@ -491,9 +580,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </button>
             </div>
         );
-  }
+    }
 
-  return (
+    return (
         <div className="w-full">
             {/* Quick data summary to verify loads */}
             {positions.length > 0 && (

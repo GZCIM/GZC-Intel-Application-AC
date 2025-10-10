@@ -1716,13 +1716,46 @@ async def get_portfolio_component_config(
     cfg = device_doc.get("config") or {}
     # 1) Prefer config embedded directly on the component inside tabs
     try:
+        seen_comp_ids = []
         for tab in cfg.get("tabs", []) or []:
             for comp in tab.get("components") or []:
+                if isinstance(comp, dict):
+                    cid = comp.get("id")
+                    if cid:
+                        seen_comp_ids.append(cid)
                 if isinstance(comp, dict) and comp.get("id") == componentId:
                     props = comp.get("props") or {}
                     embedded_cfg = props.get("tableConfig")
                     if isinstance(embedded_cfg, dict):
+                        try:
+                            logger.info(
+                                "[CosmosConfig] GET matched componentId=%s; props.tableConfig present (columns=%s). Seen components=%s",
+                                componentId,
+                                len(embedded_cfg.get("columns", [])),
+                                seen_comp_ids,
+                            )
+                        except Exception:
+                            pass
                         return {"status": "success", "data": embedded_cfg}
+                    else:
+                        # Embed default immediately if exact component is found but no config present
+                        try:
+                            default_cfg = _default_portfolio_table_config()
+                            props["tableConfig"] = default_cfg
+                            comp["props"] = props
+                            device_doc["updatedAt"] = datetime.utcnow().isoformat()
+                            container.upsert_item(body=device_doc)
+                            logger.info(
+                                "[CosmosConfig] GET embedded default tableConfig for componentId=%s (no existing config).",
+                                componentId,
+                            )
+                            return {"status": "success", "data": default_cfg}
+                        except Exception as emb_err:
+                            logger.warning(
+                                "[CosmosConfig] Failed to embed default config on GET for %s: %s",
+                                componentId,
+                                emb_err,
+                            )
     except Exception:
         # non-fatal: fall through to componentStates/default
         pass
@@ -1738,8 +1771,34 @@ async def get_portfolio_component_config(
             props = portfolio_components[0].get("props") or {}
             embedded_cfg = props.get("tableConfig")
             if isinstance(embedded_cfg, dict):
-                logger.info("[CosmosConfig] Using single-portfolio fallback for GET (componentId missing/mismatch)")
+                try:
+                    logger.info(
+                        "[CosmosConfig] GET single-portfolio fallback used (componentId=%s). columns=%s",
+                        componentId,
+                        len(embedded_cfg.get("columns", [])),
+                    )
+                except Exception:
+                    pass
                 return {"status": "success", "data": embedded_cfg}
+            else:
+                # No embedded config present -> write default into props for this unique portfolio component
+                try:
+                    default_cfg = _default_portfolio_table_config()
+                    props["tableConfig"] = default_cfg
+                    portfolio_components[0]["props"] = props
+                    device_doc["updatedAt"] = datetime.utcnow().isoformat()
+                    container.upsert_item(body=device_doc)
+                    logger.info(
+                        "[CosmosConfig] GET fallback embedded default tableConfig into unique portfolio component (componentId param=%s, actual=%s)",
+                        componentId,
+                        portfolio_components[0].get("id"),
+                    )
+                    return {"status": "success", "data": default_cfg}
+                except Exception as emb_err:
+                    logger.warning(
+                        "[CosmosConfig] Failed to embed default config on GET fallback: %s",
+                        emb_err,
+                    )
     except Exception:
         pass
 
@@ -1755,9 +1814,16 @@ async def get_portfolio_component_config(
                 if isinstance(legacy_cfg, dict):
                     # MIGRATION: If legacy exists but not embedded, embed it now for this component
                     try:
+                        logger.info(
+                            "[CosmosConfig] GET migrating legacy componentStates to props for componentId=%s",
+                            componentId,
+                        )
                         for tab in device_doc.get("config", {}).get("tabs", []) or []:
                             for comp in tab.get("components") or []:
-                                if isinstance(comp, dict) and comp.get("id") == componentId:
+                                if (
+                                    isinstance(comp, dict)
+                                    and comp.get("id") == componentId
+                                ):
                                     props = comp.get("props") or {}
                                     props["tableConfig"] = legacy_cfg
                                     comp["props"] = props
@@ -1765,7 +1831,10 @@ async def get_portfolio_component_config(
                         device_doc["updatedAt"] = datetime.utcnow().isoformat()
                         container.upsert_item(body=device_doc)
                     except Exception as mig_err:
-                        logger.warning("[CosmosConfig] Failed to embed legacy portfolio config: %s", mig_err)
+                        logger.warning(
+                            "[CosmosConfig] Failed to embed legacy portfolio config: %s",
+                            mig_err,
+                        )
                     return {"status": "success", "data": legacy_cfg}
 
     return {"status": "success", "data": _default_portfolio_table_config()}
@@ -1856,6 +1925,14 @@ async def save_portfolio_component_config(
     comp_states = cfg.get("componentStates") or []
 
     updated = False
+    seen_before_ids = []
+    try:
+        for tab in cfg.get("tabs", []) or []:
+            for comp in tab.get("components") or []:
+                if isinstance(comp, dict) and comp.get("id"):
+                    seen_before_ids.append(comp.get("id"))
+    except Exception:
+        pass
     for i, st in enumerate(comp_states):
         if not isinstance(st, dict):
             continue
@@ -1890,6 +1967,7 @@ async def save_portfolio_component_config(
     # Also embed tableConfig under the component inside tabs for per-instance configs
     try:
         matched = False
+        matched_indices = []
         for tab in cfg.get("tabs", []) or []:
             for comp in tab.get("components") or []:
                 if isinstance(comp, dict) and comp.get("id") == component_id:
@@ -1897,6 +1975,7 @@ async def save_portfolio_component_config(
                     props["tableConfig"] = table_config
                     comp["props"] = props
                     matched = True
+                    matched_indices.append(comp.get("id"))
         # Fallback: if no exact id match, embed into the only portfolio component when unique
         if not matched:
             portfolio_components = []
@@ -1908,7 +1987,26 @@ async def save_portfolio_component_config(
                 props = portfolio_components[0].get("props") or {}
                 props["tableConfig"] = table_config
                 portfolio_components[0]["props"] = props
-                logger.info("[CosmosConfig] Embedded config via single-portfolio fallback (save)")
+                try:
+                    logger.info(
+                        "[CosmosConfig] SAVE single-portfolio fallback used for componentId=%s (only portfolio component id=%s). columns=%s",
+                        component_id,
+                        portfolio_components[0].get("id"),
+                        len(table_config.get("columns", [])),
+                    )
+                except Exception:
+                    pass
+        try:
+            logger.info(
+                "[CosmosConfig] SAVE embedding summary: device=%s componentId=%s seenBefore=%s matched=%s matchedIds=%s",
+                device_config_id,
+                component_id,
+                seen_before_ids,
+                matched,
+                matched_indices,
+            )
+        except Exception:
+            pass
     except Exception:
         # non-fatal; componentStates still holds the config
         pass
@@ -1927,11 +2025,37 @@ async def save_portfolio_component_config(
             new_states.append(st)
         cfg["componentStates"] = new_states
     except Exception as cleanup_err:
-        logger.warning("[CosmosConfig] Failed to cleanup legacy componentStates: %s", cleanup_err)
+        logger.warning(
+            "[CosmosConfig] Failed to cleanup legacy componentStates: %s", cleanup_err
+        )
 
     device_doc["config"] = cfg
     device_doc["updatedAt"] = now
     saved = container.upsert_item(body=device_doc)
+
+    # Verify that props.tableConfig is present post-save (best-effort log)
+    try:
+        post_props_present = False
+        comp_id_list = []
+        for tab in device_doc.get("config", {}).get("tabs", []) or []:
+            for comp in tab.get("components") or []:
+                if isinstance(comp, dict):
+                    cid = comp.get("id")
+                    if cid:
+                        comp_id_list.append(cid)
+                    if cid == component_id and isinstance(
+                        (comp.get("props") or {}).get("tableConfig"), dict
+                    ):
+                        post_props_present = True
+        logger.info(
+            "[CosmosConfig] SAVE writeback complete: device=%s componentId=%s props.tableConfig=%s components=%s",
+            device_config_id,
+            component_id,
+            post_props_present,
+            comp_id_list,
+        )
+    except Exception:
+        pass
 
     return {
         "status": "success",
