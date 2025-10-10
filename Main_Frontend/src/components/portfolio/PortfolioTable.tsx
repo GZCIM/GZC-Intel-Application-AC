@@ -303,7 +303,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             // Build summary aggregations from current Sum selections
             const sumKeys = (
                 (localConfig.filters?.sumColumns as string[]) || []
-            ).filter((k) => ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"].includes(k));
+            ).filter((k) =>
+                ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"].includes(k)
+            );
             const effectiveSumKeys = sumKeys.length
                 ? sumKeys
                 : ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"];
@@ -546,7 +548,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     };
 
     useEffect(() => {
-        const keys = (localConfig?.filters as any)?.sumColumns as string[] | undefined;
+        const keys = (localConfig?.filters as any)?.sumColumns as
+            | string[]
+            | undefined;
         if (!isEditing) return;
         if (!localConfig) return;
         // Persist changes to Sum selections automatically
@@ -554,13 +558,22 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEditing, localConfig?.filters?.sumColumns]);
 
-    // Respect Sum tab selections; prefer summary.aggregations if present, then filters.sumColumns, else all
+    // Respect Sum tab selections; prefer filters.sumColumns if present, then summary.aggregations, else all
     const selectedSumKeys = useMemo(() => {
         const allowed: string[] = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"];
-        const fromSummary: string[] = Array.isArray((tableConfig as any)?.summary?.aggregations)
+        const fromFilters: string[] = Array.isArray((localConfig as any)?.filters?.sumColumns)
+            ? (((localConfig as any).filters.sumColumns as any[])
+                  .filter((k: any) => typeof k === "string" && allowed.includes(k)))
+            : [];
+        if (fromFilters.length > 0) return fromFilters;
+        const fromSummary: string[] = Array.isArray(
+            (tableConfig as any)?.summary?.aggregations
+        )
             ? ((tableConfig as any).summary.aggregations as any[])
                   .map((a) => a?.key)
-                  .filter((k: any) => typeof k === "string" && allowed.includes(k))
+                  .filter(
+                      (k: any) => typeof k === "string" && allowed.includes(k)
+                  )
             : [];
         if (fromSummary.length > 0) return fromSummary;
         const chosen = (localConfig?.filters?.sumColumns as string[]) || [];
@@ -1081,11 +1094,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                 }}
                             >
                                 {selectedSumKeys
-                                    .map((key) =>
-                                        `${sumLabelForKey(key)}: ${formatValue(
-                                            (pnlSummary as any)[key] ?? 0,
-                                            key
-                                        )}`
+                                    .map(
+                                        (key) =>
+                                            `${sumLabelForKey(
+                                                key
+                                            )}: ${formatValue(
+                                                (pnlSummary as any)[key] ?? 0,
+                                                key
+                                            )}`
                                     )
                                     .join(" • ")}
                             </td>
