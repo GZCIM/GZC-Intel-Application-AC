@@ -788,7 +788,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     fontSize: 12,
                                 }}
                             >
-                                View
+                                Columns
                             </button>
                             <button
                                 onClick={() => setActiveTab("group")}
@@ -851,7 +851,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     fontSize: 12,
                                 }}
                             >
-                                Sum
+                                Aggregation
                             </button>
                         </div>
                     </div>
@@ -982,42 +982,91 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     >
                         {localConfig.columns
                             .filter((c) => numericKeys.includes(c.key))
-                            .map((c) => (
-                                <label
-                                    key={c.key}
-                                    className="flex items-center gap-2 text-sm"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={Boolean(
-                                            (
-                                                localConfig.filters
-                                                    ?.sumColumns || []
-                                            ).includes(c.key)
-                                        )}
-                                        onChange={(e) => {
-                                            const current = new Set(
-                                                (localConfig.filters
-                                                    ?.sumColumns as string[]) ||
-                                                    []
-                                            );
-                                            if (e.target.checked)
-                                                current.add(c.key);
-                                            else current.delete(c.key);
-                                            setLocalConfig({
-                                                ...localConfig,
-                                                filters: {
-                                                    ...(localConfig.filters ||
-                                                        {}),
-                                                    sumColumns:
-                                                        Array.from(current),
-                                                },
-                                            });
-                                        }}
-                                    />
-                                    {c.label}
-                                </label>
-                            ))}
+                            .map((c) => {
+                                const selected = Boolean(
+                                    (localConfig.filters?.sumColumns || []).includes(c.key)
+                                );
+                                // Find existing aggregation entry if present
+                                const aggList = (localConfig as any)?.summary?.aggregations || [];
+                                const existing = aggList.find((a: any) => a.key === c.key) || {};
+                                const currentOp = existing.op || "sum";
+
+                                return (
+                                    <div key={c.key} className="flex items-center gap-2 text-sm">
+                                        <input
+                                            type="checkbox"
+                                            checked={selected}
+                                            onChange={(e) => {
+                                                const current = new Set(
+                                                    (localConfig.filters?.sumColumns as string[]) || []
+                                                );
+                                                if (e.target.checked) current.add(c.key);
+                                                else current.delete(c.key);
+
+                                                // Ensure summary.aggregations contains entry with enabled flag
+                                                const base = { key: c.key, op: currentOp, label: undefined, format: undefined, enabled: e.target.checked };
+                                                const nextAggs = Array.isArray(aggList)
+                                                    ? (() => {
+                                                          const idx = aggList.findIndex((a: any) => a.key === c.key);
+                                                          if (idx >= 0) {
+                                                              const copy = [...aggList];
+                                                              copy[idx] = { ...copy[idx], enabled: e.target.checked };
+                                                              return copy;
+                                                          }
+                                                          return [...aggList, base];
+                                                      })()
+                                                    : [base];
+
+                                                setLocalConfig({
+                                                    ...localConfig,
+                                                    filters: {
+                                                        ...(localConfig.filters || {}),
+                                                        sumColumns: Array.from(current),
+                                                    },
+                                                    summary: {
+                                                        enabled: true,
+                                                        position: ((localConfig as any)?.summary?.position) || "footer",
+                                                        aggregations: nextAggs,
+                                                    },
+                                                } as any);
+                                            }}
+                                        />
+                                        <span style={{ minWidth: 90 }}>{c.label}</span>
+                                        <select
+                                            value={currentOp}
+                                            onChange={(e) => {
+                                                const op = e.target.value;
+                                                const list = (localConfig as any)?.summary?.aggregations || [];
+                                                const idx = list.findIndex((a: any) => a.key === c.key);
+                                                const updated = idx >= 0
+                                                    ? (() => { const copy = [...list]; copy[idx] = { ...copy[idx], op, enabled: true }; return copy; })()
+                                                    : [...list, { key: c.key, op, enabled: true }];
+                                                setLocalConfig({
+                                                    ...localConfig,
+                                                    summary: {
+                                                        enabled: true,
+                                                        position: ((localConfig as any)?.summary?.position) || "footer",
+                                                        aggregations: updated,
+                                                    },
+                                                } as any);
+                                            }}
+                                            style={{
+                                                background: safeTheme.surfaceAlt,
+                                                color: safeTheme.text,
+                                                border: `1px solid ${safeTheme.border}`,
+                                                borderRadius: 4,
+                                                padding: "2px 6px",
+                                                fontSize: 12,
+                                            }}
+                                        >
+                                            <option value="sum">Sum</option>
+                                            <option value="avg">Average</option>
+                                            <option value="min">Min</option>
+                                            <option value="max">Max</option>
+                                        </select>
+                                    </div>
+                                );
+                            })}
                     </div>
                 </div>
             )}
