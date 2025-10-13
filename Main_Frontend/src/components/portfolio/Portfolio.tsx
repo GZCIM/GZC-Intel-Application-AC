@@ -1100,6 +1100,8 @@ export const Portfolio: React.FC<
                                                         fontSize: 11,
                                                         width: 120,
                                                     }}
+                                                    inputMode="none"
+                                                    title="Select EOD date"
                                                     readOnly
                                                 />
                                             ));
@@ -1129,7 +1131,7 @@ export const Portfolio: React.FC<
                                             maxDate={new Date()}
                                             calendarClassName="react-datepicker gzc-dark"
                                             popperClassName="gzc-datepicker-popper"
-                                                customInput={React.createElement(CustomInput)}
+                                                customInput={<CustomInput />}
                                             dateFormat="yyyy-MM-dd"
                                             />
                                             );
