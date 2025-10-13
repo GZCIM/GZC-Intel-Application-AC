@@ -128,7 +128,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         if (typeof externalEditing === "boolean") {
             setIsEditing(externalEditing);
         }
-        const handler = (e: Event) => {
+        const handler = async (e: Event) => {
             const detail = (e as CustomEvent).detail || {};
             const unlocked = !!detail.unlocked;
             if (unlocked) {
@@ -136,7 +136,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             } else {
                 // On lock, persist current config if present
                 if (isEditing) {
-                    void saveTableConfig();
+                    try {
+                        console.log(
+                            "[PortfolioTable][SAVE] Lock -> saving current config"
+                        );
+                    } catch (_) {}
+                    await saveTableConfig();
                 }
                 setIsEditing(false);
             }
@@ -203,6 +208,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 }
             );
 
+            try {
+                console.log(
+                    "[PortfolioTable][GET] Response status",
+                    response.status,
+                    response.data?.status
+                );
+            } catch (_) {}
+
             if (response.data.status === "success") {
                 setTableConfig(response.data.data);
                 setLocalConfig(response.data.data);
@@ -217,6 +230,13 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     console.log(
                         "[PortfolioTable][GET] Loaded columns snapshot",
                         cols
+                    );
+                    console.log(
+                        "[PortfolioTable][GET] summary/filters snapshot",
+                        {
+                            filters: response.data?.data?.filters,
+                            summary: response.data?.data?.summary,
+                        }
                     );
                 } catch (_) {}
                 // Optional: read-back entire device config to compare what is stored under tabs[].components[].props
@@ -352,7 +372,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 });
             } catch (_) {}
 
-            await axios.post(
+            const saveResp = await axios.post(
                 "/api/cosmos/portfolio-component-config",
                 {
                     deviceType: resolvedDeviceType,
@@ -364,6 +384,13 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
+            try {
+                console.log(
+                    "[PortfolioTable][SAVE] Server reply",
+                    saveResp.status,
+                    saveResp.data
+                );
+            } catch (_) {}
 
             setTableConfig(tableConfigWithSummary as any);
             setIsEditing(false);
@@ -403,6 +430,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     "[PortfolioTable][READBACK] Post-save embedded vs legacy",
                     {
                         hasEmbedded: !!embedded,
+                        embeddedFilters: embedded?.filters,
+                        embeddedSummary: embedded?.summary,
                         embeddedCols: Array.isArray(embedded?.columns)
                             ? embedded.columns.map((x: any) => x.key)
                             : null,
@@ -583,7 +612,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             });
         } catch (_) {}
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isEditing, localConfig?.filters?.sumColumns]);
+    }, [
+        isEditing,
+        localConfig?.filters?.sumColumns,
+        (localConfig as any)?.summary?.aggregations,
+    ]);
 
     // Respect Aggregation selections; prefer filters.sumColumns, then enabled summary aggregations, else all
     const selectedSumKeys = useMemo(() => {

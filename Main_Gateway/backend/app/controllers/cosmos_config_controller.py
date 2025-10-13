@@ -1648,12 +1648,42 @@ def _default_portfolio_table_config() -> Dict[str, Any]:
         "summary": {
             "enabled": True,
             "aggregations": [
-                {"key": "quantity", "op": "sum", "label": "Σ Quantity", "format": "0,0.[00]"},
-                {"key": "position", "op": "sum", "label": "Σ Position", "format": "0,0.[00]"},
-                {"key": "itd_pnl", "op": "sum", "label": "Σ ITD P&L", "format": "$0,0.[00]"},
-                {"key": "ytd_pnl", "op": "sum", "label": "Σ YTD P&L", "format": "$0,0.[00]"},
-                {"key": "mtd_pnl", "op": "sum", "label": "Σ MTD P&L", "format": "$0,0.[00]"},
-                {"key": "dtd_pnl", "op": "sum", "label": "Σ DTD P&L", "format": "$0,0.[00]"},
+                {
+                    "key": "quantity",
+                    "op": "sum",
+                    "label": "Σ Quantity",
+                    "format": "0,0.[00]",
+                },
+                {
+                    "key": "position",
+                    "op": "sum",
+                    "label": "Σ Position",
+                    "format": "0,0.[00]",
+                },
+                {
+                    "key": "itd_pnl",
+                    "op": "sum",
+                    "label": "Σ ITD P&L",
+                    "format": "$0,0.[00]",
+                },
+                {
+                    "key": "ytd_pnl",
+                    "op": "sum",
+                    "label": "Σ YTD P&L",
+                    "format": "$0,0.[00]",
+                },
+                {
+                    "key": "mtd_pnl",
+                    "op": "sum",
+                    "label": "Σ MTD P&L",
+                    "format": "$0,0.[00]",
+                },
+                {
+                    "key": "dtd_pnl",
+                    "op": "sum",
+                    "label": "Σ DTD P&L",
+                    "format": "$0,0.[00]",
+                },
             ],
             "position": "footer",
         },
@@ -1747,6 +1777,7 @@ async def get_portfolio_component_config(
                                 sum_cols = list(filters.get("sumColumns", []) or [])
                                 allowed = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"]
                                 eff = [c for c in sum_cols if c in allowed] or allowed
+
                                 def make_agg(k: str) -> Dict[str, Any]:
                                     label_map = {
                                         "itd_pnl": "Σ ITD P&L",
@@ -1760,6 +1791,7 @@ async def get_portfolio_component_config(
                                         "label": label_map.get(k, k),
                                         "format": "$0,0.[00]",
                                     }
+
                                 embedded_cfg["summary"] = {
                                     "enabled": True,
                                     "aggregations": [make_agg(k) for k in eff],
@@ -1822,6 +1854,7 @@ async def get_portfolio_component_config(
                         sum_cols = list(filters.get("sumColumns", []) or [])
                         allowed = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"]
                         eff = [c for c in sum_cols if c in allowed] or allowed
+
                         def make_agg(k: str) -> Dict[str, Any]:
                             label_map = {
                                 "itd_pnl": "Σ ITD P&L",
@@ -1835,6 +1868,7 @@ async def get_portfolio_component_config(
                                 "label": label_map.get(k, k),
                                 "format": "$0,0.[00]",
                             }
+
                         embedded_cfg["summary"] = {
                             "enabled": True,
                             "aggregations": [make_agg(k) for k in eff],
@@ -1984,7 +2018,9 @@ async def save_portfolio_component_config(
             # Also consider filters.sumColumns (legacy PnL selector) as enabling flags for PnL keys
             sum_columns = []
             try:
-                sum_columns = list((table_config.get("filters", {}) or {}).get("sumColumns", []) or [])
+                sum_columns = list(
+                    (table_config.get("filters", {}) or {}).get("sumColumns", []) or []
+                )
             except Exception:
                 sum_columns = []
             sum_set = set([k for k in sum_columns if isinstance(k, str)])
@@ -2008,8 +2044,15 @@ async def save_portfolio_component_config(
                 normalized_aggs.append(entry)
 
             # Keep filters.sumColumns limited to PnL keys where enabled=true (for footer display compatibility)
-            new_sum_cols = [k for k in pnl_keys if any(a.get("key") == k and a.get("enabled") for a in normalized_aggs)]
-            table_config["filters"] = {**(table_config.get("filters") or {}), "sumColumns": new_sum_cols}
+            new_sum_cols = [
+                k
+                for k in pnl_keys
+                if any(a.get("key") == k and a.get("enabled") for a in normalized_aggs)
+            ]
+            table_config["filters"] = {
+                **(table_config.get("filters") or {}),
+                "sumColumns": new_sum_cols,
+            }
             table_config["summary"] = {
                 "enabled": True,
                 "aggregations": normalized_aggs,
@@ -2086,7 +2129,10 @@ async def save_portfolio_component_config(
             for comp in tab.get("components") or []:
                 if isinstance(comp, dict) and comp.get("type") == "portfolio":
                     portfolio_components.append(comp)
-        if component_id in ("portfolio-default", "portfolio_default") and len(portfolio_components) == 1:
+        if (
+            component_id in ("portfolio-default", "portfolio_default")
+            and len(portfolio_components) == 1
+        ):
             resolved_component_id = portfolio_components[0].get("id") or component_id
     except Exception:
         resolved_component_id = component_id
@@ -2103,7 +2149,10 @@ async def save_portfolio_component_config(
     for i, st in enumerate(comp_states):
         if not isinstance(st, dict):
             continue
-        if st.get("type") == "portfolio" and st.get("componentId") == resolved_component_id:
+        if (
+            st.get("type") == "portfolio"
+            and st.get("componentId") == resolved_component_id
+        ):
             st_fund = st.get("fundId")
             if fund_id is None or st_fund == fund_id:
                 comp_states[i] = {
@@ -2137,7 +2186,10 @@ async def save_portfolio_component_config(
         matched_indices = []
         for tab in cfg.get("tabs", []) or []:
             for comp in tab.get("components") or []:
-                if isinstance(comp, dict) and comp.get("id") in (resolved_component_id, component_id):
+                if isinstance(comp, dict) and comp.get("id") in (
+                    resolved_component_id,
+                    component_id,
+                ):
                     props = comp.get("props") or {}
                     props["tableConfig"] = table_config
                     comp["props"] = props
@@ -2184,7 +2236,10 @@ async def save_portfolio_component_config(
         for st in comp_states:
             if not isinstance(st, dict):
                 continue
-            if st.get("type") == "portfolio" and st.get("componentId") == resolved_component_id:
+            if (
+                st.get("type") == "portfolio"
+                and st.get("componentId") == resolved_component_id
+            ):
                 st_fund = st.get("fundId")
                 if fund_id is None or st_fund == fund_id:
                     # skip (we embedded into props)
@@ -2206,14 +2261,15 @@ async def save_portfolio_component_config(
         comp_id_list = []
         for tab in device_doc.get("config", {}).get("tabs", []) or []:
             for comp in tab.get("components") or []:
-                if isinstance(comp, dict):
-                    cid = comp.get("id")
-            if cid:
-                        comp_id_list.append(cid)
-            if cid == resolved_component_id and isinstance(
-                        (comp.get("props") or {}).get("tableConfig"), dict
-                    ):
-                        post_props_present = True
+                if not isinstance(comp, dict):
+                    continue
+                cid = comp.get("id")
+                if cid:
+                    comp_id_list.append(cid)
+                if cid == resolved_component_id and isinstance(
+                    (comp.get("props") or {}).get("tableConfig"), dict
+                ):
+                    post_props_present = True
         logger.info(
             "[CosmosConfig] SAVE writeback complete: device=%s componentId=%s props.tableConfig=%s components=%s",
             device_config_id,
