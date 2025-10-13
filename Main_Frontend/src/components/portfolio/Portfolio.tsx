@@ -1147,6 +1147,31 @@ export const Portfolio: React.FC<
                                                     maxDate={new Date()}
                                                     calendarClassName="react-datepicker gzc-dark"
                                                     popperClassName="gzc-datepicker-popper"
+                                                     popperPlacement="bottom-end"
+                                                     popperModifiers={[
+                                                         {
+                                                             name: "preventOverflow",
+                                                             options: {
+                                                                 rootBoundary: "viewport",
+                                                                 tether: true,
+                                                                 padding: 8,
+                                                             },
+                                                         },
+                                                         {
+                                                             name: "flip",
+                                                             options: {
+                                                                 fallbackPlacements: [
+                                                                     "top-end",
+                                                                     "bottom-start",
+                                                                     "top-start",
+                                                                 ],
+                                                             },
+                                                         },
+                                                         {
+                                                             name: "offset",
+                                                             options: { offset: [0, 8] },
+                                                         },
+                                                     ]}
                                                     customInput={
                                                         <CustomInput />
                                                     }
