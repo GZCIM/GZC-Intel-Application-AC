@@ -1060,6 +1060,28 @@ export const Portfolio: React.FC<
                                             gap: 6,
                                         }}
                                     >
+                                        {(() => {
+                                            const CustomInput = React.forwardRef<HTMLInputElement, any>(({ value, onClick, onChange }, ref) => (
+                                                <input
+                                                    ref={ref}
+                                                    onClick={onClick}
+                                                    onChange={onChange}
+                                                    value={value}
+                                                    className="gzc-date-input"
+                                                    style={{
+                                                        padding: "4px 8px",
+                                                        backgroundColor: currentTheme.background,
+                                                        color: currentTheme.text,
+                                                        border: `1px solid ${currentTheme.border}`,
+                                                        borderRadius: 4,
+                                                        fontSize: 11,
+                                                        width: 120,
+                                                    }}
+                                                    readOnly
+                                                />
+                                            ));
+                                            CustomInput.displayName = "CustomDateInput";
+                                            return (
                                         <DatePicker
                                             selected={(() => {
                                                 try {
@@ -1084,9 +1106,11 @@ export const Portfolio: React.FC<
                                             maxDate={new Date()}
                                             calendarClassName="react-datepicker gzc-dark"
                                             popperClassName="gzc-datepicker-popper"
-                                            className="gzc-date-input"
+                                                customInput={React.createElement(CustomInput)}
                                             dateFormat="yyyy-MM-dd"
-                                        />
+                                            />
+                                            );
+                                        })()}
                                         <style>
                                             {`
                                             /* Input styling to match dark theme */
