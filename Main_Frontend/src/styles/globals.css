@@ -430,3 +430,24 @@ body {
 	background: var(--gzc-primary, #2a7f5f) !important;
 	color: #ffffff !important;
 }
+
+/* Ensure the dropdown container itself is dark (Bootstrap wrappers) */
+.datepicker-dropdown.dropdown-menu,
+.bootstrap-datetimepicker-widget.dropdown-menu,
+.tempus-dominus-widget.dropdown-menu,
+.td-dropdown.dropdown-menu,
+.dropdown-menu:has(.datepicker),
+.dropdown-menu:has(.tempus-dominus-widget) {
+	background-color: #111111 !important;
+	color: #eaeaea !important;
+	border: 1px solid #333333 !important;
+}
+
+/* Also darken header rows that may inherit dropdown background */
+.datepicker-dropdown .datepicker-days,
+.datepicker-dropdown .datepicker-months,
+.datepicker-dropdown .datepicker-years,
+.bootstrap-datetimepicker-widget .datepicker,
+.tempus-dominus-widget .calendar {
+	background-color: #111111 !important;
+}
