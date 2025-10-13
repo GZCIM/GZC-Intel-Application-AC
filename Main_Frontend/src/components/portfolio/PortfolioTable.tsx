@@ -182,7 +182,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         try {
             const token = await getToken();
             try {
-                console.log("[PortfolioTable] Loading table config", {
+                console.log("[PortfolioTable][GET] Loading table config", {
                     url: "/api/cosmos/portfolio-component-config",
                     params: {
                         deviceType: resolvedDeviceType,
@@ -208,14 +208,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 setLocalConfig(response.data.data);
                 try {
                     console.log(
-                        "[PortfolioTable] Table config loaded",
+                        "[PortfolioTable][GET] Table config loaded (raw)",
                         response.data.data
                     );
                     const cols = (response.data.data?.columns || []).map(
                         (c: any) => ({ key: c.key, visible: !!c.visible })
                     );
                     console.log(
-                        "[PortfolioTable] Loaded columns snapshot",
+                        "[PortfolioTable][GET] Loaded columns snapshot",
                         cols
                     );
                 } catch (_) {}
@@ -254,11 +254,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         setLocalConfig(embedded);
                     }
                     console.log(
-                        "[PortfolioTable] Read-back device config components",
+                        "[PortfolioTable][READBACK] Device config components",
                         portfolioIds
                     );
                     console.log(
-                        "[PortfolioTable] Read-back embedded vs legacy",
+                        "[PortfolioTable][READBACK] Embedded vs legacy",
                         {
                             embeddedCols: Array.isArray(embedded?.columns)
                                 ? embedded.columns.map((x: any) => x.key)
@@ -295,7 +295,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         try {
             const token = await getToken();
             try {
-                console.log("[PortfolioTable] Saving table config", {
+                console.log("[PortfolioTable][SAVE] Saving table config", {
                     deviceType: resolvedDeviceType,
                     componentId: resolvedComponentId,
                     fundId,
@@ -324,6 +324,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     enabled: selectedSet.has(key),
                 };
             });
+            try {
+                console.log("[PortfolioTable][SAVE] Computed aggregations", {
+                    preview: nextAggregations,
+                });
+            } catch (_) {}
             const effectiveSumKeys = Array.from(selectedSet);
             const tableConfigWithSummary = {
                 ...localConfig,
@@ -339,7 +344,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             };
 
             try {
-                console.log("[PortfolioTable] Saving with:", {
+                console.log("[PortfolioTable][SAVE] Payload:", {
                     sumColumns: tableConfigWithSummary.filters?.sumColumns,
                     summaryKeys: (
                         tableConfigWithSummary.summary?.aggregations || []
@@ -364,7 +369,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             setIsEditing(false);
             try {
                 console.log(
-                    "[PortfolioTable] Table config saved and edit mode locked"
+                    "[PortfolioTable][SAVE] Saved ✔ and locked edit mode"
                 );
                 // Read-back and compare embedding under tabs[].components[].props
                 const readback = await axios.get(
@@ -391,19 +396,22 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                             st?.componentId === resolvedComponentId
                     )?.tableConfig || null;
                 console.log(
-                    "[PortfolioTable] Post-save read-back components",
+                    "[PortfolioTable][READBACK] Post-save components",
                     portfolioIds
                 );
-                console.log("[PortfolioTable] Post-save embedded vs legacy", {
-                    hasEmbedded: !!embedded,
-                    embeddedCols: Array.isArray(embedded?.columns)
-                        ? embedded.columns.map((x: any) => x.key)
-                        : null,
-                    hasLegacy: !!legacy,
-                    legacyCols: Array.isArray(legacy?.columns)
-                        ? legacy.columns.map((x: any) => x.key)
-                        : null,
-                });
+                console.log(
+                    "[PortfolioTable][READBACK] Post-save embedded vs legacy",
+                    {
+                        hasEmbedded: !!embedded,
+                        embeddedCols: Array.isArray(embedded?.columns)
+                            ? embedded.columns.map((x: any) => x.key)
+                            : null,
+                        hasLegacy: !!legacy,
+                        legacyCols: Array.isArray(legacy?.columns)
+                            ? legacy.columns.map((x: any) => x.key)
+                            : null,
+                    }
+                );
             } catch (_) {}
         } catch (err) {
             console.error("Failed to save table config:", err);
@@ -570,7 +578,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         // Persist changes to Sum selections automatically
         requestAutoSave();
         try {
-            console.log("[PortfolioTable] Auto-save Sum change", {
+            console.log("[PortfolioTable][AUTO] Auto-save Sum change", {
                 sumColumns: keys,
             });
         } catch (_) {}
@@ -604,7 +612,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         const filtered = chosen.filter((k) => allowed.includes(k));
         const out = filtered.length > 0 ? filtered : allowed;
         try {
-            console.log("[PortfolioTable] selectedSumKeys: ", {
+            console.log("[PortfolioTable][FOOTER] selectedSumKeys", {
                 fromFilters,
                 fromSummary,
                 chosen,
@@ -1115,6 +1123,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                                           true,
                                                                   },
                                                               ];
+                                                    try {
+                                                        console.log(
+                                                            "[PortfolioTable][UI] Aggregation op change",
+                                                            { key: c.key, op }
+                                                        );
+                                                    } catch (_) {}
                                                     setLocalConfig({
                                                         ...localConfig,
                                                         summary: {
