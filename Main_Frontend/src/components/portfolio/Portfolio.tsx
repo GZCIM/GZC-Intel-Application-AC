@@ -1084,13 +1084,13 @@ export const Portfolio: React.FC<
                                         }}
                                     >
                                         {(() => {
-                                            const CustomInput = React.forwardRef<HTMLInputElement, any>(({ value, onClick, onChange }, ref) => (
-                                                <input
+                                            const CustomInput = React.forwardRef<HTMLButtonElement, any>(({ value, onClick }, ref) => (
+                                                <button
                                                     ref={ref}
                                                     onClick={onClick}
-                                                    onChange={onChange}
-                                                    value={value}
+                                                    type="button"
                                                     className="gzc-date-input"
+                                                    title="Select EOD date"
                                                     style={{
                                                         padding: "4px 8px",
                                                         backgroundColor: currentTheme.background,
@@ -1099,11 +1099,11 @@ export const Portfolio: React.FC<
                                                         borderRadius: 4,
                                                         fontSize: 11,
                                                         width: 120,
+                                                        textAlign: "left",
                                                     }}
-                                                    inputMode="none"
-                                                    title="Select EOD date"
-                                                    readOnly
-                                                />
+                                                >
+                                                    {value || "yyyy-mm-dd"}
+                                                </button>
                                             ));
                                             CustomInput.displayName = "CustomDateInput";
                                             return (
