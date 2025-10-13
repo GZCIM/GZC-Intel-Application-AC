@@ -303,3 +303,64 @@ body {
         color: black !important;
     }
 }
+
+/* Date Picker Dark Theme Overrides */
+/* Supports popular pickers: react-datepicker and flatpickr */
+.react-datepicker,
+.flatpickr-calendar {
+	background: #111111 !important;
+	color: #eaeaea !important;
+	border: 1px solid #333333 !important;
+	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35) !important;
+}
+
+.react-datepicker__header,
+.flatpickr-months,
+.flatpickr-weekdays {
+	background: #1e1e1e !important;
+	border-bottom: 1px solid #333333 !important;
+	color: #eaeaea !important;
+}
+
+.react-datepicker__day,
+.flatpickr-day {
+	color: #eaeaea !important;
+}
+
+.react-datepicker__day--keyboard-selected,
+.react-datepicker__day--selected,
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+	background: var(--gzc-primary, #2a7f5f) !important;
+	color: #ffffff !important;
+	border-color: var(--gzc-primary, #2a7f5f) !important;
+}
+
+.react-datepicker__day:hover,
+.flatpickr-day:hover {
+	background: #2a2a2a !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name,
+.flatpickr-current-month,
+.flatpickr-weekday {
+	color: #eaeaea !important;
+}
+
+.react-datepicker__navigation-icon::before,
+.flatpickr-prev-month svg,
+.flatpickr-next-month svg {
+	filter: invert(100%) !important;
+}
+
+.react-datepicker__triangle { display: none !important; }
+
+/* Footer actions */
+.flatpickr-calendar .flatpickr-footer,
+.react-datepicker__today-button {
+	background: #1e1e1e !important;
+	color: #eaeaea !important;
+	border-top: 1px solid #333333 !important;
+}
