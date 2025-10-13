@@ -1948,43 +1948,81 @@ async def save_portfolio_component_config(
                 status_code=400, detail="fundId must be integer if provided"
             )
 
-    # Ensure summary aggregation is present to reflect Sum selections in Cosmos
+    # Normalize and enforce summary aggregations with per-field enabled/op
     try:
         if isinstance(table_config, dict):
-            has_summary = isinstance(table_config.get("summary"), dict)
-            # Accept either explicit summary or derive from filters.sumColumns or default to all
-            if not has_summary:
-                sum_cols = []
-                try:
-                    sum_cols = list(
-                        (table_config.get("filters", {}) or {}).get(
-                            "sumColumns", []
-                        )
-                    )
-                except Exception:
-                    sum_cols = []
-                allowed = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"]
-                effective = [c for c in sum_cols if c in allowed]
-                if not effective:
-                    effective = allowed
-                def make_agg(k: str) -> Dict[str, Any]:
-                    label_map = {
-                        "itd_pnl": "Σ ITD P&L",
-                        "ytd_pnl": "Σ YTD P&L",
-                        "mtd_pnl": "Σ MTD P&L",
-                        "dtd_pnl": "Σ DTD P&L",
-                    }
-                    return {
+            numeric_keys = [
+                "quantity",
+                "trade_price",
+                "price",
+                "eoy_price",
+                "eom_price",
+                "eod_price",
+                "position",
+                "itd_pnl",
+                "ytd_pnl",
+                "mtd_pnl",
+                "dtd_pnl",
+            ]
+            pnl_keys = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"]
+
+            incoming_summary = table_config.get("summary") or {}
+            incoming_aggs = incoming_summary.get("aggregations") or []
+            by_key: Dict[str, Dict[str, Any]] = {}
+            for a in incoming_aggs:
+                if isinstance(a, dict) and a.get("key"):
+                    k = str(a.get("key"))
+                    by_key[k] = {
                         "key": k,
-                        "op": "sum",
-                        "label": label_map.get(k, k),
-                        "format": "$0,0.[00]",
+                        "op": (a.get("op") or "sum").lower(),
+                        "enabled": bool(a.get("enabled", False)),
+                        # Preserve optional label/format if provided
+                        **({"label": a.get("label")} if a.get("label") else {}),
+                        **({"format": a.get("format")} if a.get("format") else {}),
                     }
-                table_config["summary"] = {
-                    "enabled": True,
-                    "aggregations": [make_agg(k) for k in effective],
-                    "position": "footer",
-                }
+
+            # Also consider filters.sumColumns (legacy PnL selector) as enabling flags for PnL keys
+            sum_columns = []
+            try:
+                sum_columns = list((table_config.get("filters", {}) or {}).get("sumColumns", []) or [])
+            except Exception:
+                sum_columns = []
+            sum_set = set([k for k in sum_columns if isinstance(k, str)])
+
+            allowed_ops = {"sum", "avg", "min", "max"}
+            normalized_aggs: list[Dict[str, Any]] = []
+            for k in numeric_keys:
+                existing = by_key.get(k, {})
+                op = str(existing.get("op") or "sum").lower()
+                if op not in allowed_ops:
+                    op = "sum"
+                # Enabled comes from explicit aggregation.enabled; for PnL also reflect filters.sumColumns
+                enabled = bool(existing.get("enabled", False))
+                if k in pnl_keys and k in sum_set:
+                    enabled = True
+                entry: Dict[str, Any] = {"key": k, "op": op, "enabled": enabled}
+                if "label" in existing:
+                    entry["label"] = existing["label"]
+                if "format" in existing:
+                    entry["format"] = existing["format"]
+                normalized_aggs.append(entry)
+
+            # Keep filters.sumColumns limited to PnL keys where enabled=true (for footer display compatibility)
+            new_sum_cols = [k for k in pnl_keys if any(a.get("key") == k and a.get("enabled") for a in normalized_aggs)]
+            table_config["filters"] = {**(table_config.get("filters") or {}), "sumColumns": new_sum_cols}
+            table_config["summary"] = {
+                "enabled": True,
+                "aggregations": normalized_aggs,
+                "position": (incoming_summary.get("position") or "footer"),
+            }
+            try:
+                logger.info(
+                    "[CosmosConfig] SAVE normalize summary aggregations keys=%s enabled_pnl=%s",
+                    [a.get("key") for a in normalized_aggs],
+                    new_sum_cols,
+                )
+            except Exception:
+                pass
     except Exception:
         # Non-fatal; proceed with whatever client provided
         pass
