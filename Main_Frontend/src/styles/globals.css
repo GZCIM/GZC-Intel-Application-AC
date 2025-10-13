@@ -308,23 +308,23 @@ body {
 /* Supports popular pickers: react-datepicker and flatpickr */
 .react-datepicker,
 .flatpickr-calendar {
-	background: #111111 !important;
-	color: #eaeaea !important;
-	border: 1px solid #333333 !important;
-	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35) !important;
+    background: #111111 !important;
+    color: #eaeaea !important;
+    border: 1px solid #333333 !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35) !important;
 }
 
 .react-datepicker__header,
 .flatpickr-months,
 .flatpickr-weekdays {
-	background: #1e1e1e !important;
-	border-bottom: 1px solid #333333 !important;
-	color: #eaeaea !important;
+    background: #1e1e1e !important;
+    border-bottom: 1px solid #333333 !important;
+    color: #eaeaea !important;
 }
 
 .react-datepicker__day,
 .flatpickr-day {
-	color: #eaeaea !important;
+    color: #eaeaea !important;
 }
 
 .react-datepicker__day--keyboard-selected,
@@ -332,35 +332,101 @@ body {
 .flatpickr-day.selected,
 .flatpickr-day.startRange,
 .flatpickr-day.endRange {
-	background: var(--gzc-primary, #2a7f5f) !important;
-	color: #ffffff !important;
-	border-color: var(--gzc-primary, #2a7f5f) !important;
+    background: var(--gzc-primary, #2a7f5f) !important;
+    color: #ffffff !important;
+    border-color: var(--gzc-primary, #2a7f5f) !important;
 }
 
 .react-datepicker__day:hover,
 .flatpickr-day:hover {
-	background: #2a2a2a !important;
+    background: #2a2a2a !important;
 }
 
 .react-datepicker__current-month,
 .react-datepicker__day-name,
 .flatpickr-current-month,
 .flatpickr-weekday {
-	color: #eaeaea !important;
+    color: #eaeaea !important;
 }
 
 .react-datepicker__navigation-icon::before,
 .flatpickr-prev-month svg,
 .flatpickr-next-month svg {
-	filter: invert(100%) !important;
+    filter: invert(100%) !important;
 }
 
-.react-datepicker__triangle { display: none !important; }
+.react-datepicker__triangle {
+    display: none !important;
+}
 
 /* Footer actions */
 .flatpickr-calendar .flatpickr-footer,
 .react-datepicker__today-button {
+    background: #1e1e1e !important;
+    color: #eaeaea !important;
+    border-top: 1px solid #333333 !important;
+}
+
+/* Bootstrap Datepicker / Tempus Dominus */
+.datepicker-dropdown,
+.datepicker,
+.tempus-dominus-widget,
+.td-dropdown,
+.td-calendar {
+	background: #111111 !important;
+	color: #eaeaea !important;
+	border: 1px solid #333333 !important;
+	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35) !important;
+}
+.datepicker table,
+.datepicker table tr td,
+.datepicker table tr th {
+	background: transparent !important;
+	color: #eaeaea !important;
+	border-color: #333333 !important;
+}
+.datepicker table tr td.day:hover,
+.datepicker table tr td.focused,
+.datepicker .active,
+.tempus-dominus-widget .date-container .day.active {
+	background: var(--gzc-primary, #2a7f5f) !important;
+	color: #ffffff !important;
+}
+.datepicker .prev span,
+.datepicker .next span {
+	filter: invert(100%) !important;
+}
+
+/* React Day Picker */
+.rdp,
+.rdp-caption,
+.rdp-head,
+.rdp-table,
+.rdp-day {
+	background: #111111 !important;
+	color: #eaeaea !important;
+}
+.rdp-day:hover,
+.rdp-day[aria-selected="true"] {
+	background: var(--gzc-primary, #2a7f5f) !important;
+	color: #ffffff !important;
+}
+
+/* jQuery UI Datepicker */
+.ui-datepicker,
+.ui-widget-content.ui-datepicker {
+	background: #111111 !important;
+	color: #eaeaea !important;
+	border: 1px solid #333333 !important;
+}
+.ui-datepicker .ui-datepicker-header,
+.ui-datepicker-calendar th,
+.ui-datepicker-calendar td a {
 	background: #1e1e1e !important;
 	color: #eaeaea !important;
-	border-top: 1px solid #333333 !important;
+}
+.ui-datepicker-calendar td a.ui-state-active,
+.ui-datepicker-calendar td a:hover {
+	background: var(--gzc-primary, #2a7f5f) !important;
+	color: #ffffff !important;
 }
