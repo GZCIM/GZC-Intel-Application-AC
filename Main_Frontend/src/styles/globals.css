@@ -373,28 +373,28 @@ body {
 .tempus-dominus-widget,
 .td-dropdown,
 .td-calendar {
-	background: #111111 !important;
-	color: #eaeaea !important;
-	border: 1px solid #333333 !important;
-	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35) !important;
+    background: #111111 !important;
+    color: #eaeaea !important;
+    border: 1px solid #333333 !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35) !important;
 }
 .datepicker table,
 .datepicker table tr td,
 .datepicker table tr th {
-	background: transparent !important;
-	color: #eaeaea !important;
-	border-color: #333333 !important;
+    background: transparent !important;
+    color: #eaeaea !important;
+    border-color: #333333 !important;
 }
 .datepicker table tr td.day:hover,
 .datepicker table tr td.focused,
 .datepicker .active,
 .tempus-dominus-widget .date-container .day.active {
-	background: var(--gzc-primary, #2a7f5f) !important;
-	color: #ffffff !important;
+    background: var(--gzc-primary, #2a7f5f) !important;
+    color: #ffffff !important;
 }
 .datepicker .prev span,
 .datepicker .next span {
-	filter: invert(100%) !important;
+    filter: invert(100%) !important;
 }
 
 /* React Day Picker */
@@ -403,32 +403,32 @@ body {
 .rdp-head,
 .rdp-table,
 .rdp-day {
-	background: #111111 !important;
-	color: #eaeaea !important;
+    background: #111111 !important;
+    color: #eaeaea !important;
 }
 .rdp-day:hover,
 .rdp-day[aria-selected="true"] {
-	background: var(--gzc-primary, #2a7f5f) !important;
-	color: #ffffff !important;
+    background: var(--gzc-primary, #2a7f5f) !important;
+    color: #ffffff !important;
 }
 
 /* jQuery UI Datepicker */
 .ui-datepicker,
 .ui-widget-content.ui-datepicker {
-	background: #111111 !important;
-	color: #eaeaea !important;
-	border: 1px solid #333333 !important;
+    background: #111111 !important;
+    color: #eaeaea !important;
+    border: 1px solid #333333 !important;
 }
 .ui-datepicker .ui-datepicker-header,
 .ui-datepicker-calendar th,
 .ui-datepicker-calendar td a {
-	background: #1e1e1e !important;
-	color: #eaeaea !important;
+    background: #1e1e1e !important;
+    color: #eaeaea !important;
 }
 .ui-datepicker-calendar td a.ui-state-active,
 .ui-datepicker-calendar td a:hover {
-	background: var(--gzc-primary, #2a7f5f) !important;
-	color: #ffffff !important;
+    background: var(--gzc-primary, #2a7f5f) !important;
+    color: #ffffff !important;
 }
 
 /* Ensure the dropdown container itself is dark (Bootstrap wrappers) */
@@ -438,9 +438,9 @@ body {
 .td-dropdown.dropdown-menu,
 .dropdown-menu:has(.datepicker),
 .dropdown-menu:has(.tempus-dominus-widget) {
-	background-color: #111111 !important;
-	color: #eaeaea !important;
-	border: 1px solid #333333 !important;
+    background-color: #111111 !important;
+    color: #eaeaea !important;
+    border: 1px solid #333333 !important;
 }
 
 /* Also darken header rows that may inherit dropdown background */
@@ -449,64 +449,77 @@ body {
 .datepicker-dropdown .datepicker-years,
 .bootstrap-datetimepicker-widget .datepicker,
 .tempus-dominus-widget .calendar {
-	background-color: #111111 !important;
+    background-color: #111111 !important;
 }
 
 /* PrimeReact Calendar / DatePicker */
 .p-datepicker {
-	background: #111111 !important;
-	color: #eaeaea !important;
-	border: 1px solid #333333 !important;
-	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35) !important;
+    background: #111111 !important;
+    color: #eaeaea !important;
+    border: 1px solid #333333 !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35) !important;
 }
 .p-datepicker .p-datepicker-header {
-	background: #1e1e1e !important;
-	border-bottom: 1px solid #333333 !important;
-	color: #eaeaea !important;
+    background: #1e1e1e !important;
+    border-bottom: 1px solid #333333 !important;
+    color: #eaeaea !important;
 }
 .p-datepicker .p-datepicker-title,
 .p-datepicker .p-datepicker-month,
 .p-datepicker .p-datepicker-year {
-	color: #eaeaea !important;
+    color: #eaeaea !important;
 }
 .p-datepicker .p-datepicker-prev,
 .p-datepicker .p-datepicker-next {
-	color: #eaeaea !important;
+    color: #eaeaea !important;
 }
 .p-datepicker .p-datepicker-calendar th {
-	color: #cfcfcf !important;
-	background: #1e1e1e !important;
+    color: #cfcfcf !important;
+    background: #1e1e1e !important;
 }
 .p-datepicker .p-datepicker-calendar td {
-	background: #111111 !important;
-	color: #eaeaea !important;
+    background: #111111 !important;
+    color: #eaeaea !important;
 }
 .p-datepicker .p-datepicker-calendar td > span {
-	border-radius: 4px !important;
+    border-radius: 4px !important;
 }
 .p-datepicker .p-datepicker-calendar td > span:hover {
-	background: #2a2a2a !important;
+    background: #2a2a2a !important;
 }
 .p-datepicker .p-datepicker-calendar td.p-datepicker-today > span {
-	background: #222833 !important;
-	color: #eaeaea !important;
+    background: #222833 !important;
+    color: #eaeaea !important;
 }
 .p-datepicker .p-highlight > span {
-	background: var(--gzc-primary, #2a7f5f) !important;
-	color: #ffffff !important;
+    background: var(--gzc-primary, #2a7f5f) !important;
+    color: #ffffff !important;
 }
 .p-datepicker .p-timepicker,
 .p-datepicker .p-datepicker-buttonbar {
-	background: #1e1e1e !important;
-	border-top: 1px solid #333333 !important;
+    background: #1e1e1e !important;
+    border-top: 1px solid #333333 !important;
 }
 .p-datepicker .p-datepicker-buttonbar .p-button {
-	background: #2a2a2a !important;
-	border: 1px solid #3a3a3a !important;
-	color: #eaeaea !important;
+    background: #2a2a2a !important;
+    border: 1px solid #3a3a3a !important;
+    color: #eaeaea !important;
 }
 .p-datepicker .p-datepicker-buttonbar .p-button.p-highlight {
-	background: var(--gzc-primary, #2a7f5f) !important;
-	border-color: var(--gzc-primary, #2a7f5f) !important;
-	color: #ffffff !important;
+    background: var(--gzc-primary, #2a7f5f) !important;
+    border-color: var(--gzc-primary, #2a7f5f) !important;
+    color: #ffffff !important;
+}
+/* GZC portfolio EOD datepicker input */
+.gzc-date-input {
+    padding: 4px 8px !important;
+    background-color: var(--gzc-background) !important;
+    color: var(--gzc-text) !important;
+    border: 1px solid var(--gzc-border) !important;
+    border-radius: 4px !important;
+    font-size: 11px !important;
+    width: 120px !important;
+}
+.gzc-datepicker-popper {
+    z-index: 1200 !important;
 }
