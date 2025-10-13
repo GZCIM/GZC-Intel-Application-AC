@@ -520,6 +520,22 @@ body {
     font-size: 11px !important;
     width: 120px !important;
 }
+/* Increase specificity to beat Bootstrap/Tailwind defaults */
+.react-datepicker-wrapper .react-datepicker__input-container > input.gzc-date-input {
+    background-color: var(--gzc-background) !important;
+    color: var(--gzc-text) !important;
+    border: 1px solid var(--gzc-border) !important;
+}
+/* Ensure placeholder/read-only states follow theme */
+.gzc-date-input::placeholder { color: var(--gzc-text-muted) !important; opacity: 0.8; }
+.gzc-date-input[readonly] { background-color: var(--gzc-background) !important; }
+/* Fight Chrome autofill yellow */
+.gzc-date-input:-webkit-autofill,
+.gzc-date-input:-webkit-autofill:hover,
+.gzc-date-input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px var(--gzc-background) inset !important;
+    -webkit-text-fill-color: var(--gzc-text) !important;
+}
 .gzc-datepicker-popper {
     z-index: 1200 !important;
 }
