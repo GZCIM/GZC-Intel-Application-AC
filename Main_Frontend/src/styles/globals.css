@@ -451,3 +451,62 @@ body {
 .tempus-dominus-widget .calendar {
 	background-color: #111111 !important;
 }
+
+/* PrimeReact Calendar / DatePicker */
+.p-datepicker {
+	background: #111111 !important;
+	color: #eaeaea !important;
+	border: 1px solid #333333 !important;
+	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35) !important;
+}
+.p-datepicker .p-datepicker-header {
+	background: #1e1e1e !important;
+	border-bottom: 1px solid #333333 !important;
+	color: #eaeaea !important;
+}
+.p-datepicker .p-datepicker-title,
+.p-datepicker .p-datepicker-month,
+.p-datepicker .p-datepicker-year {
+	color: #eaeaea !important;
+}
+.p-datepicker .p-datepicker-prev,
+.p-datepicker .p-datepicker-next {
+	color: #eaeaea !important;
+}
+.p-datepicker .p-datepicker-calendar th {
+	color: #cfcfcf !important;
+	background: #1e1e1e !important;
+}
+.p-datepicker .p-datepicker-calendar td {
+	background: #111111 !important;
+	color: #eaeaea !important;
+}
+.p-datepicker .p-datepicker-calendar td > span {
+	border-radius: 4px !important;
+}
+.p-datepicker .p-datepicker-calendar td > span:hover {
+	background: #2a2a2a !important;
+}
+.p-datepicker .p-datepicker-calendar td.p-datepicker-today > span {
+	background: #222833 !important;
+	color: #eaeaea !important;
+}
+.p-datepicker .p-highlight > span {
+	background: var(--gzc-primary, #2a7f5f) !important;
+	color: #ffffff !important;
+}
+.p-datepicker .p-timepicker,
+.p-datepicker .p-datepicker-buttonbar {
+	background: #1e1e1e !important;
+	border-top: 1px solid #333333 !important;
+}
+.p-datepicker .p-datepicker-buttonbar .p-button {
+	background: #2a2a2a !important;
+	border: 1px solid #3a3a3a !important;
+	color: #eaeaea !important;
+}
+.p-datepicker .p-datepicker-buttonbar .p-button.p-highlight {
+	background: var(--gzc-primary, #2a7f5f) !important;
+	border-color: var(--gzc-primary, #2a7f5f) !important;
+	color: #ffffff !important;
+}
