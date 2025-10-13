@@ -541,6 +541,12 @@ input.gzc-date-input[type="date"] {
     border-color: #2a3441 !important; /* border */
     appearance: none;
 }
+/* When using button as custom input, ensure text is visible per theme */
+button.gzc-date-input {
+    background-color: var(--gzc-surface, #151933) !important;
+    color: var(--gzc-text, #ffffff) !important;
+    border: 1px solid var(--gzc-border, #2a3441) !important;
+}
 /* Ensure placeholder/read-only states follow theme */
 .gzc-date-input::placeholder { color: var(--gzc-text-muted) !important; opacity: 0.8; }
 .gzc-date-input[readonly] { background-color: var(--gzc-background) !important; }
