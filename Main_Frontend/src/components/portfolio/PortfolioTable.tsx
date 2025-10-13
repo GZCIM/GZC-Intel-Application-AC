@@ -1031,10 +1031,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                 } as any);
                                             }}
                                         />
-                                        <span style={{ minWidth: 90 }}>{c.label}</span>
-                                        <select
-                                            value={currentOp}
-                                            onChange={(e) => {
+                                        {/* Aggregation selector appears before label and only when selected */}
+                                        {selected && (
+                                            <select
+                                                value={currentOp}
+                                                onChange={(e) => {
                                                 const op = e.target.value;
                                                 const list = (localConfig as any)?.summary?.aggregations || [];
                                                 const idx = list.findIndex((a: any) => a.key === c.key);
@@ -1049,21 +1050,23 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                         aggregations: updated,
                                                     },
                                                 } as any);
-                                            }}
-                                            style={{
-                                                background: safeTheme.surfaceAlt,
-                                                color: safeTheme.text,
-                                                border: `1px solid ${safeTheme.border}`,
-                                                borderRadius: 4,
-                                                padding: "2px 6px",
-                                                fontSize: 12,
-                                            }}
-                                        >
-                                            <option value="sum">Sum</option>
-                                            <option value="avg">Average</option>
-                                            <option value="min">Min</option>
-                                            <option value="max">Max</option>
-                                        </select>
+                                                }}
+                                                style={{
+                                                    background: safeTheme.surfaceAlt,
+                                                    color: safeTheme.text,
+                                                    border: `1px solid ${safeTheme.border}`,
+                                                    borderRadius: 4,
+                                                    padding: "2px 6px",
+                                                    fontSize: 12,
+                                                }}
+                                            >
+                                                <option value="sum">Sum</option>
+                                                <option value="avg">Average</option>
+                                                <option value="min">Min</option>
+                                                <option value="max">Max</option>
+                                            </select>
+                                        )}
+                                        <span style={{ minWidth: 90 }}>{c.label}</span>
                                     </div>
                                 );
                             })}
