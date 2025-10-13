@@ -1389,69 +1389,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 </div>
             )}
 
-            {isEditing && localConfig && activeTab === "sum" && (
-                <div
-                    style={{
-                        marginTop: 8,
-                        zIndex: 1,
-                        background: safeTheme.surface,
-                        color: safeTheme.text,
-                        border: `1px solid ${safeTheme.border}`,
-                        borderRadius: 6,
-                        padding: 10,
-                        width: "100%",
-                        marginBottom: 0,
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns:
-                                "repeat(auto-fit, minmax(160px,1fr))",
-                            gap: 10,
-                        }}
-                    >
-                        {localConfig.columns
-                            .filter((c) => numericKeys.includes(c.key))
-                            .map((c) => (
-                                <label
-                                    key={c.key}
-                                    className="flex items-center gap-2 text-sm"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={Boolean(
-                                            (
-                                                localConfig.filters
-                                                    ?.sumColumns || []
-                                            ).includes(c.key)
-                                        )}
-                                        onChange={(e) => {
-                                            const current = new Set(
-                                                (localConfig.filters
-                                                    ?.sumColumns as string[]) ||
-                                                    []
-                                            );
-                                            if (e.target.checked)
-                                                current.add(c.key);
-                                            else current.delete(c.key);
-                                            setLocalConfig({
-                                                ...localConfig,
-                                                filters: {
-                                                    ...(localConfig.filters ||
-                                                        {}),
-                                                    sumColumns:
-                                                        Array.from(current),
-                                                },
-                                            });
-                                        }}
-                                    />
-                                    {c.label}
-                                </label>
-                            ))}
-                    </div>
-                </div>
-            )}
+            {/* Duplicate simple Aggregation panel removed to avoid state conflicts. */}
         </div>
     );
 };
