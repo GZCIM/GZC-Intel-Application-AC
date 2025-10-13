@@ -2280,12 +2280,25 @@ async def save_portfolio_component_config(
     except Exception:
         pass
 
+    try:
+        logger.info(
+            "[CosmosConfig] SAVE result: device=%s componentId=%s sumColumns=%s aggKeys=%s",
+            device_config_id,
+            resolved_component_id,
+            (table_config.get("filters", {}) or {}).get("sumColumns", []),
+            [a.get("key") for a in (table_config.get("summary", {}) or {}).get("aggregations", [])],
+        )
+    except Exception:
+        pass
+
     return {
         "status": "success",
         "deviceConfigId": device_config_id,
         "componentId": resolved_component_id,
         "updatedAt": saved.get("updatedAt", now),
         "columns": table_config.get("columns"),
+        "filters": table_config.get("filters"),
+        "summary": table_config.get("summary"),
     }
 
 

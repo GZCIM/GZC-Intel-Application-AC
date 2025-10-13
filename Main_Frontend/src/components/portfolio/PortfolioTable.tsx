@@ -392,6 +392,39 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 );
             } catch (_) {}
 
+            // Force read-back of the saved portfolio tableConfig from Cosmos (authoritative)
+            try {
+                const rb = await axios.get(
+                    "/api/cosmos/portfolio-component-config",
+                    {
+                        params: {
+                            deviceType: resolvedDeviceType,
+                            componentId: resolvedComponentId,
+                            fundId,
+                        },
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
+                );
+                if (rb?.data?.status === "success" && rb?.data?.data) {
+                    console.log(
+                        "[PortfolioTable][READBACK][AFTER_SAVE] server tableConfig",
+                        {
+                            filters: rb.data.data.filters,
+                            summary: rb.data.data.summary,
+                        }
+                    );
+                    setTableConfig(rb.data.data);
+                    setLocalConfig(rb.data.data);
+                } else {
+                    console.warn(
+                        "[PortfolioTable][READBACK][AFTER_SAVE] unexpected payload",
+                        rb?.data
+                    );
+                }
+            } catch (e) {
+                console.warn("[PortfolioTable][READBACK][AFTER_SAVE] failed", e);
+            }
+
             setTableConfig(tableConfigWithSummary as any);
             setIsEditing(false);
             try {
