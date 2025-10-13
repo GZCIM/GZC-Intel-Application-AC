@@ -1083,6 +1083,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             type="checkbox"
                                             checked={selected}
                                             onChange={(e) => {
+                                                try {
+                                                    console.log(
+                                                        "[PortfolioTable][UI] Checkbox toggle",
+                                                        { key: c.key, checked: e.target.checked }
+                                                    );
+                                                } catch (_) {}
                                                 const current = new Set(
                                                     (localConfig.filters
                                                         ?.sumColumns as string[]) ||
@@ -1144,6 +1150,49 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                                 ?.summary
                                                                 ?.position ||
                                                             "footer",
+                                                        aggregations: nextAggs,
+                                                    },
+                                                } as any);
+                                            }}
+                                            onClick={(e) => {
+                                                // Mirror onChange to handle cases where click doesn't trigger change due to focus behavior
+                                                const target = e.currentTarget as HTMLInputElement;
+                                                try {
+                                                    console.log(
+                                                        "[PortfolioTable][UI] Checkbox click",
+                                                        { key: c.key, checked: target.checked }
+                                                    );
+                                                } catch (_) {}
+                                                const current = new Set(
+                                                    (localConfig.filters
+                                                        ?.sumColumns as string[]) || []
+                                                );
+                                                if (target.checked) current.add(c.key);
+                                                else current.delete(c.key);
+                                                const aggList = (localConfig as any)?.summary?.aggregations || [];
+                                                const idx = Array.isArray(aggList)
+                                                    ? aggList.findIndex((a: any) => a.key === c.key)
+                                                    : -1;
+                                                const nextAggs = idx >= 0
+                                                    ? (() => {
+                                                          const copy = [...aggList];
+                                                          copy[idx] = { ...copy[idx], enabled: target.checked };
+                                                          return copy;
+                                                      })()
+                                                    : [
+                                                          ...aggList,
+                                                          { key: c.key, op: "sum", enabled: target.checked },
+                                                      ];
+                                                setLocalConfig({
+                                                    ...localConfig,
+                                                    filters: {
+                                                        ...(localConfig.filters || {}),
+                                                        sumColumns: Array.from(current),
+                                                    },
+                                                    summary: {
+                                                        enabled: true,
+                                                        position:
+                                                            (localConfig as any)?.summary?.position || "footer",
                                                         aggregations: nextAggs,
                                                     },
                                                 } as any);
