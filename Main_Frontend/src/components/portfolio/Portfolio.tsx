@@ -308,7 +308,7 @@ export const Portfolio: React.FC<
         const applyInputTheme = () => {
             try {
                 const input = document.querySelector(
-                    'input.gzc-date-input'
+                    "input.gzc-date-input"
                 ) as HTMLInputElement | null;
                 if (!input) return;
                 input.style.backgroundColor = currentTheme.background;
@@ -323,7 +323,13 @@ export const Portfolio: React.FC<
         const t = window.setTimeout(applyInputTheme, 50);
         return () => window.clearTimeout(t);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dataMode, selectedDate, currentTheme.background, currentTheme.text, currentTheme.border]);
+    }, [
+        dataMode,
+        selectedDate,
+        currentTheme.background,
+        currentTheme.text,
+        currentTheme.border,
+    ]);
 
     useEffect(() => {
         try {
@@ -1084,56 +1090,68 @@ export const Portfolio: React.FC<
                                         }}
                                     >
                                         {(() => {
-                                            const CustomInput = React.forwardRef<HTMLButtonElement, any>(({ value, onClick }, ref) => (
-                                                <button
-                                                    ref={ref}
-                                                    onClick={onClick}
-                                                    type="button"
-                                                    className="gzc-date-input"
-                                                    title="Select EOD date"
-                                                    style={{
-                                                        padding: "4px 8px",
-                                                        backgroundColor: currentTheme.background,
-                                                        color: currentTheme.text,
-                                                        border: `1px solid ${currentTheme.border}`,
-                                                        borderRadius: 4,
-                                                        fontSize: 11,
-                                                        width: 120,
-                                                        textAlign: "left",
-                                                    }}
-                                                >
-                                                    {value || "yyyy-mm-dd"}
-                                                </button>
-                                            ));
-                                            CustomInput.displayName = "CustomDateInput";
+                                            const CustomInput =
+                                                React.forwardRef<
+                                                    HTMLButtonElement,
+                                                    any
+                                                >(({ value, onClick }, ref) => (
+                                                    <button
+                                                        ref={ref}
+                                                        onClick={onClick}
+                                                        type="button"
+                                                        className="gzc-date-input"
+                                                        title="Select EOD date"
+                                                        style={{
+                                                            padding: "4px 8px",
+                                                            backgroundColor:
+                                                                "var(--gzc-surface)",
+                                                            color: "var(--gzc-text)",
+                                                            border: "1px solid var(--gzc-border)",
+                                                            borderRadius: 4,
+                                                            fontSize: 11,
+                                                            width: 120,
+                                                            textAlign: "left",
+                                                        }}
+                                                    >
+                                                        {value || "yyyy-mm-dd"}
+                                                    </button>
+                                                ));
+                                            CustomInput.displayName =
+                                                "CustomDateInput";
                                             return (
-                                        <DatePicker
-                                            selected={(() => {
-                                                try {
-                                                    return new Date(
-                                                        (selectedDate ||
-                                                            effectiveDate) +
-                                                            "T00:00:00"
-                                                    );
-                                                } catch (_) {
-                                                    return new Date();
-                                                }
-                                            })()}
-                                            onChange={(d: Date | null) => {
-                                                if (!d) return;
-                                                try {
-                                                    const iso = d
-                                                        .toISOString()
-                                                        .slice(0, 10);
-                                                    setSelectedDate(iso);
-                                                } catch (_) {}
-                                            }}
-                                            maxDate={new Date()}
-                                            calendarClassName="react-datepicker gzc-dark"
-                                            popperClassName="gzc-datepicker-popper"
-                                                customInput={<CustomInput />}
-                                            dateFormat="yyyy-MM-dd"
-                                            />
+                                                <DatePicker
+                                                    selected={(() => {
+                                                        try {
+                                                            return new Date(
+                                                                (selectedDate ||
+                                                                    effectiveDate) +
+                                                                    "T00:00:00"
+                                                            );
+                                                        } catch (_) {
+                                                            return new Date();
+                                                        }
+                                                    })()}
+                                                    onChange={(
+                                                        d: Date | null
+                                                    ) => {
+                                                        if (!d) return;
+                                                        try {
+                                                            const iso = d
+                                                                .toISOString()
+                                                                .slice(0, 10);
+                                                            setSelectedDate(
+                                                                iso
+                                                            );
+                                                        } catch (_) {}
+                                                    }}
+                                                    maxDate={new Date()}
+                                                    calendarClassName="react-datepicker gzc-dark"
+                                                    popperClassName="gzc-datepicker-popper"
+                                                    customInput={
+                                                        <CustomInput />
+                                                    }
+                                                    dateFormat="yyyy-MM-dd"
+                                                />
                                             );
                                         })()}
                                         <style>
