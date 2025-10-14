@@ -1104,7 +1104,7 @@ export const Portfolio: React.FC<
                                                         style={{
                                                             padding: "4px 8px",
                                                             backgroundColor: "#1e1e1e",
-                                                            color: currentTheme.text,
+                                                            color: (currentTheme as any).success || "#6aa84f",
                                                             border: `1px solid ${currentTheme.border}66`,
                                                             borderRadius: 4,
                                                             fontSize: 11,
