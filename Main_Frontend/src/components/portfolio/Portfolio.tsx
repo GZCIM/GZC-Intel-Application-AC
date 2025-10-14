@@ -1149,7 +1149,7 @@ export const Portfolio: React.FC<
                                                         } catch (_) {}
                                                     }}
                                                     maxDate={new Date()}
-                                                    calendarClassName="react-datepicker gzc-dark"
+                                                    calendarClassName="react-datepicker"
                                                     popperClassName="gzc-datepicker-popper"
                                                      popperPlacement="bottom-end"
                                                      popperModifiers={[
