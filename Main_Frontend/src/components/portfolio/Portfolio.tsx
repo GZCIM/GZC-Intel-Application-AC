@@ -488,7 +488,10 @@ export const Portfolio: React.FC<
                 .gzc-datepicker-popper .react-datepicker__day-names {
                     color: var(--gzc-text);
                 }
-                .gzc-datepicker-popper .react-datepicker__current-month {
+                .gzc-datepicker-popper .react-datepicker__current-month,
+                .gzc-datepicker-popper .react-datepicker__year-select,
+                .gzc-datepicker-popper .react-datepicker__month-select {
+                    color: var(--gzc-text) !important;
                     visibility: visible !important;
                 }
                 .gzc-datepicker-popper .react-datepicker__day-names {
@@ -1268,7 +1271,7 @@ export const Portfolio: React.FC<
                                                     maxDate={new Date()}
                                                     calendarClassName="react-datepicker"
                                                     popperClassName="gzc-datepicker-popper"
-                                                    popperPlacement="top-end"
+                                                    popperPlacement="bottom-end"
                                                     popperModifiers={[
                                                         {
                                                             name: "preventOverflow",
@@ -1284,7 +1287,6 @@ export const Portfolio: React.FC<
                                                             options: {
                                                                 fallbackPlacements:
                                                                     [
-                                                                        "bottom-end",
                                                                         "top-end",
                                                                         "bottom-start",
                                                                         "top-start",
