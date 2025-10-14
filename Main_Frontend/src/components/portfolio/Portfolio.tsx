@@ -359,6 +359,17 @@ export const Portfolio: React.FC<
         [portfolios, selectedPortfolioId]
     );
 
+    // Expose theme as CSS variables for consistent styling without hardcoded colors
+    const cssVars: React.CSSProperties = {
+        ["--gzc-bg" as any]: currentTheme.background,
+        ["--gzc-surface" as any]: currentTheme.surface,
+        ["--gzc-surface-alt" as any]: (currentTheme as any).surfaceAlt || currentTheme.surface,
+        ["--gzc-border" as any]: currentTheme.border,
+        ["--gzc-text" as any]: currentTheme.text,
+        ["--gzc-text-secondary" as any]: currentTheme.textSecondary,
+        ["--gzc-success" as any]: (currentTheme as any).success || "#6aa84f",
+    };
+
     return (
         <div
             style={{
@@ -369,6 +380,7 @@ export const Portfolio: React.FC<
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
+                ...cssVars,
             }}
         >
             {/* Themed utility styles for chips and datepicker (match GZC Dark) */}
@@ -377,34 +389,42 @@ export const Portfolio: React.FC<
                 /* Chip buttons used by Live/EOD selectors */
                 .gzc-chip {
                     padding: 4px 8px;
-                    background-color: ${currentTheme.background};
-                    color: ${currentTheme.textSecondary};
-                    border: 1px solid ${currentTheme.border}66;
+                    background-color: var(--gzc-bg);
+                    color: var(--gzc-text-secondary);
+                    border: 1px solid var(--gzc-border);
+                    border-color: color-mix(in hsl, var(--gzc-border) 60%, transparent);
                     border-radius: 4px;
                     font-size: 11px;
                     cursor: pointer;
                     transition: background-color .15s ease, color .15s ease, border-color .15s ease;
                 }
                 .gzc-chip:hover {
-                    background-color: ${currentTheme.surface};
-                    color: ${currentTheme.text};
-                    border-color: ${currentTheme.border};
+                    background-color: var(--gzc-surface);
+                    color: var(--gzc-text);
+                    border-color: var(--gzc-border);
                 }
                 .gzc-chip--active {
                     color: #ffffff;
-                    background-color: #1e1e1e;
-                    border: 1px solid ${currentTheme.success || "#6aa84f"};
+                    background-color: var(--gzc-surface);
+                    border: 1px solid var(--gzc-success);
                     box-shadow: inset 0 -1px 0 rgba(0,0,0,.2);
                 }
 
                 /* Date input button (customInput) */
                 .gzc-date-input {
                     padding: 4px 8px;
-                    background-color: ${currentTheme.background};
-                    color: ${currentTheme.text};
-                    border: 1px solid ${currentTheme.border};
+                    background-color: var(--gzc-bg);
+                    color: var(--gzc-text);
+                    border: 1px solid var(--gzc-border);
                     border-radius: 4px;
                     font-size: 11px;
+                }
+                /* stronger specificity to override library styles */
+                .gzc-date-input.gzc-date-input--themed,
+                .gzc-chip.gzc-date-input--themed {
+                    background-color: var(--gzc-bg);
+                    color: var(--gzc-text);
+                    border-color: var(--gzc-border);
                 }
 
                 /* React Datepicker dark theming */
@@ -412,40 +432,40 @@ export const Portfolio: React.FC<
                     z-index: 10000;
                 }
                 .gzc-datepicker-popper .react-datepicker {
-                    background-color: ${currentTheme.surface};
-                    border: 1px solid ${currentTheme.border};
-                    color: ${currentTheme.text};
+                    background-color: var(--gzc-surface);
+                    border: 1px solid var(--gzc-border);
+                    color: var(--gzc-text);
                     box-shadow: 0 8px 18px rgba(0,0,0,0.25);
                 }
                 .gzc-datepicker-popper .react-datepicker__header {
-                    background-color: ${currentTheme.background};
-                    border-bottom: 1px solid ${currentTheme.border};
+                    background-color: var(--gzc-bg);
+                    border-bottom: 1px solid var(--gzc-border);
                 }
                 .gzc-datepicker-popper .react-datepicker__current-month,
                 .gzc-datepicker-popper .react-datepicker-time__header,
                 .gzc-datepicker-popper .react-datepicker-year-header {
-                    color: ${currentTheme.text};
+                    color: var(--gzc-text);
                 }
                 .gzc-datepicker-popper .react-datepicker__day-name,
                 .gzc-datepicker-popper .react-datepicker__day,
                 .gzc-datepicker-popper .react-datepicker__time-name {
-                    color: ${currentTheme.text};
+                    color: var(--gzc-text);
                 }
                 .gzc-datepicker-popper .react-datepicker__day:hover,
                 .gzc-datepicker-popper .react-datepicker__day--keyboard-selected {
-                    background-color: ${currentTheme.surface};
+                    background-color: var(--gzc-surface);
                     border-radius: 4px;
                 }
                 .gzc-datepicker-popper .react-datepicker__day--selected,
                 .gzc-datepicker-popper .react-datepicker__day--in-selecting-range,
                 .gzc-datepicker-popper .react-datepicker__day--in-range {
-                    background-color: ${currentTheme.success || "#6aa84f"};
+                    background-color: var(--gzc-success);
                     color: #ffffff;
                     border-radius: 4px;
                 }
                 .gzc-datepicker-popper .react-datepicker__triangle::after,
                 .gzc-datepicker-popper .react-datepicker__triangle::before {
-                    border-bottom-color: ${currentTheme.surface};
+                    border-bottom-color: var(--gzc-surface);
                 }
                 `}
             </style>
