@@ -467,6 +467,11 @@ export const Portfolio: React.FC<
                 .gzc-datepicker-popper {
                     z-index: 10000;
                 }
+                /* Force right alignment when above (top-end) */
+                .gzc-datepicker-popper[data-popper-placement^="top-end"] {
+                    right: 0 !important;
+                    left: auto !important;
+                }
                 .gzc-datepicker-popper .react-datepicker {
                     background-color: var(--gzc-surface);
                     border: 1px solid var(--gzc-border);
@@ -1272,7 +1277,7 @@ export const Portfolio: React.FC<
                                                     maxDate={new Date()}
                                                     calendarClassName="react-datepicker"
                                                     popperClassName="gzc-datepicker-popper"
-                                                    popperPlacement="bottom-end"
+                                                    popperPlacement="top-end"
                                                     popperModifiers={[
                                                         {
                                                             name: "preventOverflow",
@@ -1296,14 +1301,17 @@ export const Portfolio: React.FC<
                                                         },
                                                         {
                                                             name: "offset",
-                                                            options: { offset: [0, 8] },
+                                                            options: {
+                                                                offset: [0, 8],
+                                                            },
                                                         },
                                                         // Use Popper 'arrow' positioning so right edges align
                                                         {
                                                             name: "computeStyles",
                                                             options: {
                                                                 adaptive: false,
-                                                                gpuAcceleration: false,
+                                                                gpuAcceleration:
+                                                                    false,
                                                             },
                                                         },
                                                     ]}
