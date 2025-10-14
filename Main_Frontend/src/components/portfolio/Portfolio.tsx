@@ -1103,10 +1103,9 @@ export const Portfolio: React.FC<
                                                         title="Select EOD date"
                                                         style={{
                                                             padding: "4px 8px",
-                                                            // Bind theme via CSS vars for schema-based theming
-                                                            ['--ci-bg' as any]: currentTheme.background,
-                                                            ['--ci-text' as any]: currentTheme.text,
-                                                            ['--ci-border' as any]: currentTheme.border,
+                                                            backgroundColor: currentTheme.surface || currentTheme.background,
+                                                            color: currentTheme.text,
+                                                            border: `1px solid ${currentTheme.border}`,
                                                             borderRadius: 4,
                                                             fontSize: 11,
                                                             width: 120,
