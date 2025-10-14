@@ -370,6 +370,20 @@ export const Portfolio: React.FC<
         ["--gzc-success" as any]: (currentTheme as any).success || "#6aa84f",
     };
 
+    // Ensure variables are also available to portal-rooted elements (e.g., datepicker popper)
+    useEffect(() => {
+        const root = document.documentElement;
+        try {
+            root.style.setProperty("--gzc-bg", String(cssVars["--gzc-bg" as any]));
+            root.style.setProperty("--gzc-surface", String(cssVars["--gzc-surface" as any]));
+            root.style.setProperty("--gzc-surface-alt", String(cssVars["--gzc-surface-alt" as any]));
+            root.style.setProperty("--gzc-border", String(cssVars["--gzc-border" as any]));
+            root.style.setProperty("--gzc-text", String(cssVars["--gzc-text" as any]));
+            root.style.setProperty("--gzc-text-secondary", String(cssVars["--gzc-text-secondary" as any]));
+            root.style.setProperty("--gzc-success", String(cssVars["--gzc-success" as any]));
+        } catch (_) {}
+    }, [currentTheme]);
+
     return (
         <div
             style={{
@@ -437,6 +451,12 @@ export const Portfolio: React.FC<
                     color: var(--gzc-text);
                     box-shadow: 0 8px 18px rgba(0,0,0,0.25);
                 }
+                .gzc-datepicker-popper .react-datepicker__month-container,
+                .gzc-datepicker-popper .react-datepicker__month,
+                .gzc-datepicker-popper .react-datepicker__week {
+                    background-color: var(--gzc-surface);
+                    color: var(--gzc-text);
+                }
                 .gzc-datepicker-popper .react-datepicker__header {
                     background-color: var(--gzc-bg);
                     border-bottom: 1px solid var(--gzc-border);
@@ -450,6 +470,9 @@ export const Portfolio: React.FC<
                 .gzc-datepicker-popper .react-datepicker__day,
                 .gzc-datepicker-popper .react-datepicker__time-name {
                     color: var(--gzc-text);
+                }
+                .gzc-datepicker-popper .react-datepicker__day--outside-month {
+                    color: color-mix(in hsl, var(--gzc-text) 55%, transparent);
                 }
                 .gzc-datepicker-popper .react-datepicker__day:hover,
                 .gzc-datepicker-popper .react-datepicker__day--keyboard-selected {
