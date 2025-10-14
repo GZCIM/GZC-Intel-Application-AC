@@ -371,6 +371,84 @@ export const Portfolio: React.FC<
                 flexDirection: "column",
             }}
         >
+            {/* Themed utility styles for chips and datepicker (match GZC Dark) */}
+            <style>
+                {`
+                /* Chip buttons used by Live/EOD selectors */
+                .gzc-chip {
+                    padding: 4px 8px;
+                    background-color: ${currentTheme.background};
+                    color: ${currentTheme.textSecondary};
+                    border: 1px solid ${currentTheme.border}66;
+                    border-radius: 4px;
+                    font-size: 11px;
+                    cursor: pointer;
+                    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+                }
+                .gzc-chip:hover {
+                    background-color: ${currentTheme.surface};
+                    color: ${currentTheme.text};
+                    border-color: ${currentTheme.border};
+                }
+                .gzc-chip--active {
+                    color: #ffffff;
+                    background-color: #1e1e1e;
+                    border: 1px solid ${currentTheme.success || "#6aa84f"};
+                    box-shadow: inset 0 -1px 0 rgba(0,0,0,.2);
+                }
+
+                /* Date input button (customInput) */
+                .gzc-date-input {
+                    padding: 4px 8px;
+                    background-color: ${currentTheme.background};
+                    color: ${currentTheme.text};
+                    border: 1px solid ${currentTheme.border};
+                    border-radius: 4px;
+                    font-size: 11px;
+                }
+
+                /* React Datepicker dark theming */
+                .gzc-datepicker-popper {
+                    z-index: 10000;
+                }
+                .gzc-datepicker-popper .react-datepicker {
+                    background-color: ${currentTheme.surface};
+                    border: 1px solid ${currentTheme.border};
+                    color: ${currentTheme.text};
+                    box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+                }
+                .gzc-datepicker-popper .react-datepicker__header {
+                    background-color: ${currentTheme.background};
+                    border-bottom: 1px solid ${currentTheme.border};
+                }
+                .gzc-datepicker-popper .react-datepicker__current-month,
+                .gzc-datepicker-popper .react-datepicker-time__header,
+                .gzc-datepicker-popper .react-datepicker-year-header {
+                    color: ${currentTheme.text};
+                }
+                .gzc-datepicker-popper .react-datepicker__day-name,
+                .gzc-datepicker-popper .react-datepicker__day,
+                .gzc-datepicker-popper .react-datepicker__time-name {
+                    color: ${currentTheme.text};
+                }
+                .gzc-datepicker-popper .react-datepicker__day:hover,
+                .gzc-datepicker-popper .react-datepicker__day--keyboard-selected {
+                    background-color: ${currentTheme.surface};
+                    border-radius: 4px;
+                }
+                .gzc-datepicker-popper .react-datepicker__day--selected,
+                .gzc-datepicker-popper .react-datepicker__day--in-selecting-range,
+                .gzc-datepicker-popper .react-datepicker__day--in-range {
+                    background-color: ${currentTheme.success || "#6aa84f"};
+                    color: #ffffff;
+                    border-radius: 4px;
+                }
+                .gzc-datepicker-popper .react-datepicker__triangle::after,
+                .gzc-datepicker-popper .react-datepicker__triangle::before {
+                    border-bottom-color: ${currentTheme.surface};
+                }
+                `}
+            </style>
             <div
                 style={{
                     padding: "8px",
@@ -1010,7 +1088,9 @@ export const Portfolio: React.FC<
                                     <button
                                         onClick={() => setDataMode("live")}
                                         className={`gzc-chip ${
-                                            dataMode === "live" ? "gzc-chip--active" : ""
+                                            dataMode === "live"
+                                                ? "gzc-chip--active"
+                                                : ""
                                         }`}
                                     >
                                         Live
@@ -1026,7 +1106,9 @@ export const Portfolio: React.FC<
                                             }
                                         }}
                                         className={`gzc-chip ${
-                                            dataMode === "eod" ? "gzc-chip--active" : ""
+                                            dataMode === "eod"
+                                                ? "gzc-chip--active"
+                                                : ""
                                         }`}
                                     >
                                         EOD
@@ -1051,10 +1133,15 @@ export const Portfolio: React.FC<
                                                         onClick={onClick}
                                                         type="button"
                                                         className={`gzc-chip gzc-date-input gzc-date-input--themed ${
-                                                            dataMode === "eod" ? "gzc-chip--active" : ""
+                                                            dataMode === "eod"
+                                                                ? "gzc-chip--active"
+                                                                : ""
                                                         }`}
                                                         title="Select EOD date"
-                                                        style={{ width: 120, textAlign: "left" }}
+                                                        style={{
+                                                            width: 120,
+                                                            textAlign: "left",
+                                                        }}
                                                     >
                                                         {value || "yyyy-mm-dd"}
                                                     </button>
@@ -1090,36 +1177,42 @@ export const Portfolio: React.FC<
                                                     maxDate={new Date()}
                                                     calendarClassName="react-datepicker"
                                                     popperClassName="gzc-datepicker-popper"
-                                                     popperPlacement="bottom-end"
-                                                     popperModifiers={[
-                                                         {
-                                                             name: "preventOverflow",
-                                                             options: {
-                                                                 rootBoundary: "viewport",
-                                                                 tether: true,
-                                                                 padding: 8,
-                                                             },
-                                                         },
-                                                         {
-                                                             name: "flip",
-                                                             options: {
-                                                                 fallbackPlacements: [
-                                                                     "top-end",
-                                                                     "bottom-start",
-                                                                     "top-start",
-                                                                 ],
-                                                             },
-                                                         },
-                                                         {
-                                                             name: "offset",
-                                                             options: { offset: [0, 8] },
-                                                         },
-                                                         // Use Popper 'arrow' positioning so right edges align
-                                                         {
-                                                             name: "computeStyles",
-                                                             options: { adaptive: false },
-                                                         },
-                                                     ]}
+                                                    popperPlacement="bottom-end"
+                                                    popperModifiers={[
+                                                        {
+                                                            name: "preventOverflow",
+                                                            options: {
+                                                                rootBoundary:
+                                                                    "viewport",
+                                                                tether: true,
+                                                                padding: 8,
+                                                            },
+                                                        },
+                                                        {
+                                                            name: "flip",
+                                                            options: {
+                                                                fallbackPlacements:
+                                                                    [
+                                                                        "top-end",
+                                                                        "bottom-start",
+                                                                        "top-start",
+                                                                    ],
+                                                            },
+                                                        },
+                                                        {
+                                                            name: "offset",
+                                                            options: {
+                                                                offset: [0, 8],
+                                                            },
+                                                        },
+                                                        // Use Popper 'arrow' positioning so right edges align
+                                                        {
+                                                            name: "computeStyles",
+                                                            options: {
+                                                                adaptive: false,
+                                                            },
+                                                        },
+                                                    ]}
                                                     portalId="gzc-datepicker-portal"
                                                     strategy="fixed"
                                                     customInput={
