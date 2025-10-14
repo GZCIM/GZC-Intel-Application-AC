@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
@@ -1248,10 +1249,21 @@ export const Portfolio: React.FC<
                                                 ));
                                             CustomInput.displayName =
                                                 "CustomDateInput";
+                                            // Variant B fallback: fixed-position portal anchored to button rect
+                                            const FixedPopperContainer = ({ className, children }: any) => {
+                                                const btn = (ref as any)?.current as HTMLElement | null;
+                                                const rect = btn?.getBoundingClientRect?.();
+                                                const top = rect ? rect.bottom + 12 : 0;
+                                                const right = rect ? window.innerWidth - rect.right + 6 : 0;
+                                                return createPortal(
+                                                    <div className={className} style={{ position: "fixed", top, right, zIndex: 2147483647 }}>
+                                                        {children}
+                                                    </div>,
+                                                    document.body
+                                                );
+                                            };
                                             return (
-                                                <span
-                                                    style={{ position: "relative", display: "inline-block" }}
-                                                >
+                                                <span style={{ position: "relative", display: "inline-block" }}>
                                                 <DatePicker
                                                     selected={(() => {
                                                         try {
@@ -1318,19 +1330,7 @@ export const Portfolio: React.FC<
                                                             },
                                                         },
                                                     ]}
-                                                    popperContainer={({ className, children }: any) => (
-                                                        <div
-                                                            className={className}
-                                                            style={{
-                                                                position: "absolute",
-                                                                right: 6,
-                                                                top: "calc(100% + 12px)",
-                                                                zIndex: 2147483647,
-                                                            }}
-                                                        >
-                                                            {children}
-                                                        </div>
-                                                    )}
+                                                    popperContainer={FixedPopperContainer}
                                                     customInput={
                                                         <CustomInput />
                                                     }
