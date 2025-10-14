@@ -1,5 +1,5 @@
 # Deployment Status - Bloomberg Volatility Fix
-
+Redeploy requested: 2025-10-14T09:47Z
 ## Current Production Version
 - **Version**: `v20250814-044841` (from 4:48 AM this morning)
 - **Status**: WORKING ✅
