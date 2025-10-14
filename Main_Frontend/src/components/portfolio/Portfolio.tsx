@@ -1249,6 +1249,9 @@ export const Portfolio: React.FC<
                                             CustomInput.displayName =
                                                 "CustomDateInput";
                                             return (
+                                                <span
+                                                    style={{ position: "relative", display: "inline-block" }}
+                                                >
                                                 <DatePicker
                                                     selected={(() => {
                                                         try {
@@ -1315,13 +1318,15 @@ export const Portfolio: React.FC<
                                                             },
                                                         },
                                                     ]}
-                                                    portalId="gzc-datepicker-portal"
-                                                    strategy="fixed"
+                                                    popperContainer={({ className, children }: any) => (
+                                                        <div className={className}>{children}</div>
+                                                    )}
                                                     customInput={
                                                         <CustomInput />
                                                     }
                                                     dateFormat="yyyy-MM-dd"
                                                 />
+                                                </span>
                                             );
                                         })()}
                                         <style>
