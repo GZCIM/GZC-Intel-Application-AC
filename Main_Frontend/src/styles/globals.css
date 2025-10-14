@@ -591,13 +591,13 @@ button.gzc-date-input {
     line-height: 22px;
     padding: 4px 8px;
     border-radius: 4px;
-    background-color: var(--gzc-surface);
-    color: var(--gzc-text);
-    border: 1px solid var(--gzc-border);
+    background-color: var(--gzc-surface) !important;
+    color: var(--gzc-text) !important;
+    border: 1px solid var(--gzc-border) !important;
     font-size: 11px;
 }
 .gzc-chip--active {
-    border-color: var(--gzc-success);
+    border-color: var(--gzc-success) !important;
     font-weight: 600;
 }
 /* Ensure datepicker popper anchors to the button width, not a stretched container */

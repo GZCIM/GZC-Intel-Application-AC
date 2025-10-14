@@ -302,34 +302,15 @@ export const Portfolio: React.FC<
         } catch (_) {}
     }, [portfolioMode]);
 
-    // Ensure the EOD date input uses dark theme even if external CSS tries to override
+    // Ensure a dedicated portal exists for react-datepicker (stable alignment)
     useEffect(() => {
-        if (dataMode !== "eod") return;
-        const applyInputTheme = () => {
-            try {
-                const input = document.querySelector(
-                    "input.gzc-date-input"
-                ) as HTMLInputElement | null;
-                if (!input) return;
-                input.style.backgroundColor = currentTheme.background;
-                input.style.color = currentTheme.text;
-                input.style.border = `1px solid ${currentTheme.border}`;
-                input.style.borderRadius = "4px";
-                input.style.padding = "4px 8px";
-            } catch (_) {}
-        };
-        // Apply immediately and after a short delay to catch re-renders
-        applyInputTheme();
-        const t = window.setTimeout(applyInputTheme, 50);
-        return () => window.clearTimeout(t);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        dataMode,
-        selectedDate,
-        currentTheme.background,
-        currentTheme.text,
-        currentTheme.border,
-    ]);
+        const id = "gzc-datepicker-portal";
+        if (!document.getElementById(id)) {
+            const el = document.createElement("div");
+            el.id = id;
+            document.body.appendChild(el);
+        }
+    }, []);
 
     useEffect(() => {
         try {
@@ -1139,6 +1120,8 @@ export const Portfolio: React.FC<
                                                              options: { adaptive: false },
                                                          },
                                                      ]}
+                                                    portalId="gzc-datepicker-portal"
+                                                    strategy="fixed"
                                                     customInput={
                                                         <CustomInput />
                                                     }
