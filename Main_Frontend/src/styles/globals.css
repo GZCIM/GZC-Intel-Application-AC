@@ -585,6 +585,12 @@ button.gzc-date-input {
 .gzc-datepicker-popper {
     z-index: 1200 !important;
 }
+/* Ensure datepicker popper anchors to the button width, not a stretched container */
+.react-datepicker-wrapper,
+.react-datepicker__input-container {
+    display: inline-block !important;
+    width: auto !important;
+}
 /* Force any react-datepicker input to use dark/scheme surface like Active button */
 .react-datepicker-wrapper .react-datepicker__input-container > input,
 .react-datepicker__input-container input[type="text"] {

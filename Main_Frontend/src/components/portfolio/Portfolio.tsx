@@ -1170,21 +1170,10 @@ export const Portfolio: React.FC<
                                                              name: "offset",
                                                              options: { offset: [0, 8] },
                                                          },
+                                                         // Use Popper 'arrow' positioning so right edges align
                                                          {
-                                                             // Ensure right border of popper aligns with right border of button
-                                                             name: "alignRightEdge",
-                                                             enabled: true,
-                                                             phase: "beforeWrite",
-                                                             requires: ["computeStyles"],
-                                                             fn: ({ state }: any) => {
-                                                                 const refRight =
-                                                                     state.rects.reference.x +
-                                                                     state.rects.reference.width;
-                                                                 const left =
-                                                                     refRight -
-                                                                     state.rects.popper.width;
-                                                                 state.styles.popper.left = `${left}px`;
-                                                             },
+                                                             name: "computeStyles",
+                                                             options: { adaptive: false },
                                                          },
                                                      ]}
                                                     customInput={
