@@ -363,7 +363,8 @@ export const Portfolio: React.FC<
     const cssVars: React.CSSProperties = {
         ["--gzc-bg" as any]: currentTheme.background,
         ["--gzc-surface" as any]: currentTheme.surface,
-        ["--gzc-surface-alt" as any]: (currentTheme as any).surfaceAlt || currentTheme.surface,
+        ["--gzc-surface-alt" as any]:
+            (currentTheme as any).surfaceAlt || currentTheme.surface,
         ["--gzc-border" as any]: currentTheme.border,
         ["--gzc-text" as any]: currentTheme.text,
         ["--gzc-text-secondary" as any]: currentTheme.textSecondary,
@@ -374,13 +375,34 @@ export const Portfolio: React.FC<
     useEffect(() => {
         const root = document.documentElement;
         try {
-            root.style.setProperty("--gzc-bg", String(cssVars["--gzc-bg" as any]));
-            root.style.setProperty("--gzc-surface", String(cssVars["--gzc-surface" as any]));
-            root.style.setProperty("--gzc-surface-alt", String(cssVars["--gzc-surface-alt" as any]));
-            root.style.setProperty("--gzc-border", String(cssVars["--gzc-border" as any]));
-            root.style.setProperty("--gzc-text", String(cssVars["--gzc-text" as any]));
-            root.style.setProperty("--gzc-text-secondary", String(cssVars["--gzc-text-secondary" as any]));
-            root.style.setProperty("--gzc-success", String(cssVars["--gzc-success" as any]));
+            root.style.setProperty(
+                "--gzc-bg",
+                String(cssVars["--gzc-bg" as any])
+            );
+            root.style.setProperty(
+                "--gzc-surface",
+                String(cssVars["--gzc-surface" as any])
+            );
+            root.style.setProperty(
+                "--gzc-surface-alt",
+                String(cssVars["--gzc-surface-alt" as any])
+            );
+            root.style.setProperty(
+                "--gzc-border",
+                String(cssVars["--gzc-border" as any])
+            );
+            root.style.setProperty(
+                "--gzc-text",
+                String(cssVars["--gzc-text" as any])
+            );
+            root.style.setProperty(
+                "--gzc-text-secondary",
+                String(cssVars["--gzc-text-secondary" as any])
+            );
+            root.style.setProperty(
+                "--gzc-success",
+                String(cssVars["--gzc-success" as any])
+            );
         } catch (_) {}
     }, [currentTheme]);
 
@@ -461,6 +483,17 @@ export const Portfolio: React.FC<
                     background-color: var(--gzc-bg);
                     border-bottom: 1px solid var(--gzc-border);
                 }
+                /* Header refinements: title bar and weekday strip */
+                .gzc-datepicker-popper .react-datepicker__header,
+                .gzc-datepicker-popper .react-datepicker__day-names {
+                    color: var(--gzc-text);
+                }
+                .gzc-datepicker-popper .react-datepicker__day-names {
+                    background-color: var(--gzc-surface-alt);
+                }
+                .gzc-datepicker-popper .react-datepicker__day-name {
+                    color: var(--gzc-text-secondary);
+                }
                 .gzc-datepicker-popper .react-datepicker__current-month,
                 .gzc-datepicker-popper .react-datepicker-time__header,
                 .gzc-datepicker-popper .react-datepicker-year-header {
@@ -489,6 +522,18 @@ export const Portfolio: React.FC<
                 .gzc-datepicker-popper .react-datepicker__triangle::after,
                 .gzc-datepicker-popper .react-datepicker__triangle::before {
                     border-bottom-color: var(--gzc-surface);
+                }
+                /* Navigation arrows */
+                .gzc-datepicker-popper .react-datepicker__navigation-icon::before {
+                    border-color: var(--gzc-text);
+                    top: 6px;
+                }
+                .gzc-datepicker-popper .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+                    border-color: var(--gzc-success);
+                }
+                .gzc-datepicker-popper .react-datepicker__navigation--previous,
+                .gzc-datepicker-popper .react-datepicker__navigation--next {
+                    outline: none;
                 }
                 `}
             </style>
