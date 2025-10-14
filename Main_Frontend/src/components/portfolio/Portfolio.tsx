@@ -466,6 +466,13 @@ export const Portfolio: React.FC<
                 /* React Datepicker dark theming */
                 .gzc-datepicker-popper {
                     z-index: 10000;
+                    inset: auto auto 0 0 !important;
+                    transform: translate3d(0, 0, 0) !important;
+                }
+                /* Align popper to the right edge of the button */
+                .gzc-datepicker-popper[data-popper-placement^="bottom"] {
+                    left: auto !important;
+                    right: 0 !important;
                 }
                 .gzc-datepicker-popper .react-datepicker {
                     background-color: var(--gzc-surface);
@@ -1289,9 +1296,7 @@ export const Portfolio: React.FC<
                                                         },
                                                         {
                                                             name: "offset",
-                                                            options: {
-                                                                offset: [0, 8],
-                                                            },
+                                                            options: { offset: [0, 10] },
                                                         },
                                                         // Use Popper 'arrow' positioning so right edges align
                                                         {
