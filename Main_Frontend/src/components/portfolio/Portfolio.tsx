@@ -1280,7 +1280,7 @@ export const Portfolio: React.FC<
                                                     maxDate={new Date()}
                                                     calendarClassName="react-datepicker"
                                                     popperClassName="gzc-datepicker-popper"
-                                                    popperPlacement="top-end"
+                                                    popperPlacement="bottom-end"
                                                     popperModifiers={[
                                                         {
                                                             name: "preventOverflow",
@@ -1319,7 +1319,17 @@ export const Portfolio: React.FC<
                                                         },
                                                     ]}
                                                     popperContainer={({ className, children }: any) => (
-                                                        <div className={className}>{children}</div>
+                                                        <div
+                                                            className={className}
+                                                            style={{
+                                                                position: "absolute",
+                                                                right: 8,
+                                                                top: "calc(100% + 10px)",
+                                                                zIndex: 200000,
+                                                            }}
+                                                        >
+                                                            {children}
+                                                        </div>
                                                     )}
                                                     customInput={
                                                         <CustomInput />
