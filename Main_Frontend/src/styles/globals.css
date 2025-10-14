@@ -547,6 +547,11 @@ button.gzc-date-input {
     color: var(--gzc-text, #ffffff) !important;
     border: 1px solid var(--gzc-border, #2a3441) !important;
 }
+[data-theme] .gzc-date-input--themed {
+    background-color: var(--ci-bg, var(--gzc-surface)) !important;
+    color: var(--ci-text, var(--gzc-text)) !important;
+    border: 1px solid var(--ci-border, var(--gzc-border)) !important;
+}
 /* Highest specificity for themed pages */
 [data-theme] button.gzc-date-input {
     background-color: var(--gzc-surface, var(--gzc-background, #151933)) !important;

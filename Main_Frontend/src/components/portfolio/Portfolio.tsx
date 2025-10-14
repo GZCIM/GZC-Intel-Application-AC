@@ -1099,14 +1099,14 @@ export const Portfolio: React.FC<
                                                         ref={ref}
                                                         onClick={onClick}
                                                         type="button"
-                                                        className="gzc-date-input"
+                                                        className="gzc-date-input gzc-date-input--themed"
                                                         title="Select EOD date"
                                                         style={{
                                                             padding: "4px 8px",
-                                                            backgroundColor:
-                                                                "var(--gzc-surface)",
-                                                            color: "var(--gzc-text)",
-                                                            border: "1px solid var(--gzc-border)",
+                                                            // Bind theme via CSS vars for schema-based theming
+                                                            ['--ci-bg' as any]: currentTheme.background,
+                                                            ['--ci-text' as any]: currentTheme.text,
+                                                            ['--ci-border' as any]: currentTheme.border,
                                                             borderRadius: 4,
                                                             fontSize: 11,
                                                             width: 120,
