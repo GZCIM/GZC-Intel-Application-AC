@@ -1103,9 +1103,9 @@ export const Portfolio: React.FC<
                                                         title="Select EOD date"
                                                         style={{
                                                             padding: "4px 8px",
-                                                            backgroundColor: currentTheme.surface || currentTheme.background,
+                                                            backgroundColor: "#1e1e1e",
                                                             color: currentTheme.text,
-                                                            border: `1px solid ${currentTheme.border}`,
+                                                            border: `1px solid ${currentTheme.border}66`,
                                                             borderRadius: 4,
                                                             fontSize: 11,
                                                             width: 120,
