@@ -1245,6 +1245,8 @@ export const Portfolio: React.FC<
                                 border: `1px dashed ${currentTheme.border}`,
                                 borderRadius: 4,
                                 padding: 8,
+                                overflow: "auto",
+                                maxHeight: "100%",
                             }}
                         >
                             <PortfolioTable
