@@ -304,27 +304,27 @@ body {
     }
 }
 
-/* Date Picker Dark Theme Overrides */
-/* Supports popular pickers: react-datepicker and flatpickr */
+/* Date Picker Theme Overrides (schema-driven) */
+/* Supports react-datepicker and flatpickr */
 .react-datepicker,
 .flatpickr-calendar {
-    background: #111111 !important;
-    color: #eaeaea !important;
-    border: 1px solid #333333 !important;
+    background: var(--gzc-surface, var(--gzc-background, #111)) !important;
+    color: var(--gzc-text, #eaeaea) !important;
+    border: 1px solid var(--gzc-border, #333) !important;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35) !important;
 }
 
 .react-datepicker__header,
 .flatpickr-months,
 .flatpickr-weekdays {
-    background: #1e1e1e !important;
-    border-bottom: 1px solid #333333 !important;
-    color: #eaeaea !important;
+    background: var(--gzc-background, #1e1e1e) !important;
+    border-bottom: 1px solid var(--gzc-border, #333) !important;
+    color: var(--gzc-text, #eaeaea) !important;
 }
 
 .react-datepicker__day,
 .flatpickr-day {
-    color: #eaeaea !important;
+    color: var(--gzc-text, #eaeaea) !important;
 }
 
 .react-datepicker__day--keyboard-selected,
@@ -339,14 +339,14 @@ body {
 
 .react-datepicker__day:hover,
 .flatpickr-day:hover {
-    background: #2a2a2a !important;
+    background: color-mix(in oklab, var(--gzc-surface) 90%, #fff 10%) !important;
 }
 
 .react-datepicker__current-month,
 .react-datepicker__day-name,
 .flatpickr-current-month,
 .flatpickr-weekday {
-    color: #eaeaea !important;
+    color: var(--gzc-text, #eaeaea) !important;
 }
 
 .react-datepicker__navigation-icon::before,
@@ -355,9 +355,7 @@ body {
     filter: invert(100%) !important;
 }
 
-.react-datepicker__triangle {
-    display: none !important;
-}
+.react-datepicker__triangle { display: none !important; }
 
 /* Footer actions */
 .flatpickr-calendar .flatpickr-footer,
