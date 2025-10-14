@@ -42,6 +42,8 @@ export const Portfolio: React.FC<
     const [toolsEditing, setToolsEditing] = useState(false);
     const headerRef = useRef<HTMLDivElement | null>(null);
     const [headerWidth, setHeaderWidth] = useState<number>(0);
+    // Anchor element for EOD datepicker portal positioning
+    const dateButtonRef = useRef<HTMLButtonElement | null>(null);
     const lastNonMaximizedStateRef = useRef<"minimized" | "normal">("normal");
     const handleTitleDoubleClick = () => {
         if (componentState === "maximized") {
@@ -1230,7 +1232,11 @@ export const Portfolio: React.FC<
                                                     any
                                                 >(({ value, onClick }, ref) => (
                                                     <button
-                                                        ref={ref}
+                                                        ref={(el) => {
+                                                            if (typeof ref === "function") ref(el);
+                                                            else if (ref && typeof ref === "object") (ref as any).current = el;
+                                                            dateButtonRef.current = el;
+                                                        }}
                                                         onClick={onClick}
                                                         type="button"
                                                         className={`gzc-chip gzc-date-input gzc-date-input--themed ${
@@ -1250,92 +1256,123 @@ export const Portfolio: React.FC<
                                             CustomInput.displayName =
                                                 "CustomDateInput";
                                             // Variant B fallback: fixed-position portal anchored to button rect
-                                            const FixedPopperContainer = ({ className, children }: any) => {
-                                                const btn = (ref as any)?.current as HTMLElement | null;
-                                                const rect = btn?.getBoundingClientRect?.();
-                                                const top = rect ? rect.bottom + 12 : 0;
-                                                const right = rect ? window.innerWidth - rect.right + 6 : 0;
+                                            const FixedPopperContainer = ({
+                                                className,
+                                                children,
+                                            }: any) => {
+                                                const btn = dateButtonRef.current as HTMLElement | null;
+                                                const rect =
+                                                    btn?.getBoundingClientRect?.();
+                                                const top = rect
+                                                    ? rect.bottom + 12
+                                                    : 0;
+                                                const right = rect
+                                                    ? window.innerWidth -
+                                                      rect.right +
+                                                      6
+                                                    : 0;
                                                 return createPortal(
-                                                    <div className={className} style={{ position: "fixed", top, right, zIndex: 2147483647 }}>
+                                                    <div
+                                                        className={className}
+                                                        style={{
+                                                            position: "fixed",
+                                                            top,
+                                                            right,
+                                                            zIndex: 2147483647,
+                                                        }}
+                                                    >
                                                         {children}
                                                     </div>,
                                                     document.body
                                                 );
                                             };
                                             return (
-                                                <span style={{ position: "relative", display: "inline-block" }}>
-                                                <DatePicker
-                                                    selected={(() => {
-                                                        try {
-                                                            return new Date(
-                                                                (selectedDate ||
-                                                                    effectiveDate) +
-                                                                    "T00:00:00"
-                                                            );
-                                                        } catch (_) {
-                                                            return new Date();
-                                                        }
-                                                    })()}
-                                                    onChange={(
-                                                        d: Date | null
-                                                    ) => {
-                                                        if (!d) return;
-                                                        try {
-                                                            const iso = d
-                                                                .toISOString()
-                                                                .slice(0, 10);
-                                                            setSelectedDate(
-                                                                iso
-                                                            );
-                                                        } catch (_) {}
+                                                <span
+                                                    style={{
+                                                        position: "relative",
+                                                        display: "inline-block",
                                                     }}
-                                                    maxDate={new Date()}
-                                                    calendarClassName="react-datepicker"
-                                                    popperClassName="gzc-datepicker-popper"
-                                                    popperPlacement="bottom-end"
-                                                    popperModifiers={[
-                                                        {
-                                                            name: "preventOverflow",
-                                                            options: {
-                                                                rootBoundary:
-                                                                    "viewport",
-                                                                tether: true,
-                                                                padding: 8,
+                                                >
+                                                    <DatePicker
+                                                        selected={(() => {
+                                                            try {
+                                                                return new Date(
+                                                                    (selectedDate ||
+                                                                        effectiveDate) +
+                                                                        "T00:00:00"
+                                                                );
+                                                            } catch (_) {
+                                                                return new Date();
+                                                            }
+                                                        })()}
+                                                        onChange={(
+                                                            d: Date | null
+                                                        ) => {
+                                                            if (!d) return;
+                                                            try {
+                                                                const iso = d
+                                                                    .toISOString()
+                                                                    .slice(
+                                                                        0,
+                                                                        10
+                                                                    );
+                                                                setSelectedDate(
+                                                                    iso
+                                                                );
+                                                            } catch (_) {}
+                                                        }}
+                                                        maxDate={new Date()}
+                                                        calendarClassName="react-datepicker"
+                                                        popperClassName="gzc-datepicker-popper"
+                                                        popperPlacement="bottom-end"
+                                                        popperModifiers={[
+                                                            {
+                                                                name: "preventOverflow",
+                                                                options: {
+                                                                    rootBoundary:
+                                                                        "viewport",
+                                                                    tether: true,
+                                                                    padding: 8,
+                                                                },
                                                             },
-                                                        },
-                                                        {
-                                                            name: "flip",
-                                                            options: {
-                                                                fallbackPlacements:
-                                                                    [
-                                                                        "top-end",
-                                                                        "bottom-start",
-                                                                        "top-start",
+                                                            {
+                                                                name: "flip",
+                                                                options: {
+                                                                    fallbackPlacements:
+                                                                        [
+                                                                            "top-end",
+                                                                            "bottom-start",
+                                                                            "top-start",
+                                                                        ],
+                                                                },
+                                                            },
+                                                            {
+                                                                name: "offset",
+                                                                options: {
+                                                                    offset: [
+                                                                        0, 8,
                                                                     ],
+                                                                },
                                                             },
-                                                        },
-                                                        {
-                                                            name: "offset",
-                                                            options: {
-                                                                offset: [0, 8],
+                                                            // Use Popper 'arrow' positioning so right edges align
+                                                            {
+                                                                name: "computeStyles",
+                                                                options: {
+                                                                    adaptive:
+                                                                        false,
+                                                                    gpuAcceleration:
+                                                                        false,
+                                                                },
                                                             },
-                                                        },
-                                                        // Use Popper 'arrow' positioning so right edges align
-                                                        {
-                                                            name: "computeStyles",
-                                                            options: {
-                                                                adaptive: false,
-                                                                gpuAcceleration:
-                                                                    false,
-                                                            },
-                                                        },
-                                                    ]}
-                                                    popperContainer={FixedPopperContainer}
-                                                    customInput={
-                                                        <CustomInput />
-                                                    }
-                                                    dateFormat="yyyy-MM-dd"
-                                                />
+                                                        ]}
+                                                        popperContainer={
+                                                            FixedPopperContainer
+                                                        }
+                                                        customInput={
+                                                            <CustomInput />
+                                                        }
+                                                        dateFormat="yyyy-MM-dd"
+                                                    />
                                                 </span>
                                             );
                                         })()}
