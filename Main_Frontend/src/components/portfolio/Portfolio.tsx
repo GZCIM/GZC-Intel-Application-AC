@@ -480,8 +480,9 @@ export const Portfolio: React.FC<
                     color: var(--gzc-text);
                 }
                 .gzc-datepicker-popper .react-datepicker__header {
-                    background-color: var(--gzc-surface-alt);
-                    border-bottom: 1px solid var(--gzc-border);
+                    background-color: var(--gzc-surface-alt) !important;
+                    border-bottom: 1px solid var(--gzc-border) !important;
+                    color: var(--gzc-text) !important;
                 }
                 /* Header refinements: title bar and weekday strip */
                 .gzc-datepicker-popper .react-datepicker__header,
@@ -495,10 +496,10 @@ export const Portfolio: React.FC<
                     visibility: visible !important;
                 }
                 .gzc-datepicker-popper .react-datepicker__day-names {
-                    background-color: var(--gzc-surface-alt);
+                    background-color: var(--gzc-surface-alt) !important;
                 }
                 .gzc-datepicker-popper .react-datepicker__day-name {
-                    color: var(--gzc-text-secondary);
+                    color: var(--gzc-text-secondary) !important;
                 }
                 .gzc-datepicker-popper .react-datepicker__current-month,
                 .gzc-datepicker-popper .react-datepicker-time__header,
@@ -1302,6 +1303,7 @@ export const Portfolio: React.FC<
                                                             name: "computeStyles",
                                                             options: {
                                                                 adaptive: false,
+                                                                gpuAcceleration: false,
                                                             },
                                                         },
                                                     ]}
