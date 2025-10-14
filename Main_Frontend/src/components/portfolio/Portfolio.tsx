@@ -465,7 +465,7 @@ export const Portfolio: React.FC<
 
                 /* React Datepicker dark theming */
                 .gzc-datepicker-popper {
-                    z-index: 10000;
+                    z-index: 2147483647; /* ensure above all stacking contexts */
                 }
                 /* Force right alignment when above (top-end) */
                 .gzc-datepicker-popper[data-popper-placement^="top-end"] {
@@ -1323,9 +1323,9 @@ export const Portfolio: React.FC<
                                                             className={className}
                                                             style={{
                                                                 position: "absolute",
-                                                                right: 8,
-                                                                top: "calc(100% + 10px)",
-                                                                zIndex: 200000,
+                                                                right: 6,
+                                                                top: "calc(100% + 12px)",
+                                                                zIndex: 2147483647,
                                                             }}
                                                         >
                                                             {children}
