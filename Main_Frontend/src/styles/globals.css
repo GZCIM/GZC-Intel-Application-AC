@@ -583,6 +583,23 @@ button.gzc-date-input {
 .gzc-datepicker-popper {
     z-index: 1200 !important;
 }
+/* Unified chip style for Live / EOD / Date chips */
+.gzc-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    line-height: 22px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: var(--gzc-surface);
+    color: var(--gzc-text);
+    border: 1px solid var(--gzc-border);
+    font-size: 11px;
+}
+.gzc-chip--active {
+    border-color: var(--gzc-success);
+    font-weight: 600;
+}
 /* Ensure datepicker popper anchors to the button width, not a stretched container */
 .react-datepicker-wrapper,
 .react-datepicker__input-container {

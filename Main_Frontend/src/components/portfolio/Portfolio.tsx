@@ -1028,24 +1028,9 @@ export const Portfolio: React.FC<
                                 <div style={{ display: "flex", gap: 6 }}>
                                     <button
                                         onClick={() => setDataMode("live")}
-                                        style={{
-                                            padding: "4px 8px",
-                                            backgroundColor: "#1e1e1e",
-                                            color:
-                                                dataMode === "live"
-                                                    ? "#ffffff"
-                                                    : currentTheme.textSecondary,
-                                            border:
-                                                dataMode === "live"
-                                                    ? `1px solid ${
-                                                          currentTheme.success ||
-                                                          "#6aa84f"
-                                                      }`
-                                                    : `1px solid ${currentTheme.border}66`,
-                                            borderRadius: 4,
-                                            fontSize: 11,
-                                            cursor: "pointer",
-                                        }}
+                                        className={`gzc-chip ${
+                                            dataMode === "live" ? "gzc-chip--active" : ""
+                                        }`}
                                     >
                                         Live
                                     </button>
@@ -1059,24 +1044,9 @@ export const Portfolio: React.FC<
                                                 setSelectedDate(d);
                                             }
                                         }}
-                                        style={{
-                                            padding: "4px 8px",
-                                            backgroundColor: "#1e1e1e",
-                                            color:
-                                                dataMode === "eod"
-                                                    ? "#ffffff"
-                                                    : currentTheme.textSecondary,
-                                            border:
-                                                dataMode === "eod"
-                                                    ? `1px solid ${
-                                                          currentTheme.success ||
-                                                          "#6aa84f"
-                                                      }`
-                                                    : `1px solid ${currentTheme.border}66`,
-                                            borderRadius: 4,
-                                            fontSize: 11,
-                                            cursor: "pointer",
-                                        }}
+                                        className={`gzc-chip ${
+                                            dataMode === "eod" ? "gzc-chip--active" : ""
+                                        }`}
                                     >
                                         EOD
                                     </button>
@@ -1099,21 +1069,11 @@ export const Portfolio: React.FC<
                                                         ref={ref}
                                                         onClick={onClick}
                                                         type="button"
-                                                        className="gzc-date-input gzc-date-input--themed"
+                                                        className={`gzc-chip gzc-date-input gzc-date-input--themed ${
+                                                            dataMode === "eod" ? "gzc-chip--active" : ""
+                                                        }`}
                                                         title="Select EOD date"
-                                                        style={{
-                                                            padding: "4px 8px",
-                                                            // Mirror chip styling of Live/EOD buttons
-                                                            backgroundColor: "#1e1e1e",
-                                                            color: "#ffffff",
-                                                            border: `1px solid ${
-                                                                currentTheme.success || "#6aa84f"
-                                                            }`,
-                                                            borderRadius: 4,
-                                                            fontSize: 11,
-                                                            width: 120,
-                                                            textAlign: "left",
-                                                        }}
+                                                        style={{ width: 120, textAlign: "left" }}
                                                     >
                                                         {value || "yyyy-mm-dd"}
                                                     </button>
