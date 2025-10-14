@@ -466,13 +466,6 @@ export const Portfolio: React.FC<
                 /* React Datepicker dark theming */
                 .gzc-datepicker-popper {
                     z-index: 10000;
-                    inset: auto auto 0 0 !important;
-                    transform: translate3d(0, 0, 0) !important;
-                }
-                /* Align popper to the right edge of the button */
-                .gzc-datepicker-popper[data-popper-placement^="bottom"] {
-                    left: auto !important;
-                    right: 0 !important;
                 }
                 .gzc-datepicker-popper .react-datepicker {
                     background-color: var(--gzc-surface);
@@ -494,6 +487,9 @@ export const Portfolio: React.FC<
                 .gzc-datepicker-popper .react-datepicker__header,
                 .gzc-datepicker-popper .react-datepicker__day-names {
                     color: var(--gzc-text);
+                }
+                .gzc-datepicker-popper .react-datepicker__current-month {
+                    visibility: visible !important;
                 }
                 .gzc-datepicker-popper .react-datepicker__day-names {
                     background-color: var(--gzc-surface-alt);
@@ -1272,7 +1268,7 @@ export const Portfolio: React.FC<
                                                     maxDate={new Date()}
                                                     calendarClassName="react-datepicker"
                                                     popperClassName="gzc-datepicker-popper"
-                                                    popperPlacement="bottom-end"
+                                                    popperPlacement="top-end"
                                                     popperModifiers={[
                                                         {
                                                             name: "preventOverflow",
@@ -1288,6 +1284,7 @@ export const Portfolio: React.FC<
                                                             options: {
                                                                 fallbackPlacements:
                                                                     [
+                                                                        "bottom-end",
                                                                         "top-end",
                                                                         "bottom-start",
                                                                         "top-start",
@@ -1296,7 +1293,7 @@ export const Portfolio: React.FC<
                                                         },
                                                         {
                                                             name: "offset",
-                                                            options: { offset: [0, 10] },
+                                                            options: { offset: [0, 8] },
                                                         },
                                                         // Use Popper 'arrow' positioning so right edges align
                                                         {
