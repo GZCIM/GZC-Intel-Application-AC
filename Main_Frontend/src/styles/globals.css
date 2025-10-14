@@ -554,10 +554,10 @@ button.gzc-date-input {
 }
 /* Max specificity for the rendered control shown in outerHTML */
 .react-datepicker__input-container > button.gzc-date-input.gzc-date-input--themed {
-    /* Match neutral button look used by EOD */
-    background-color: #1e1e1e !important;
-    color: var(--gzc-text, #eaeaea) !important;
-    border: 1px solid var(--gzc-border, #2a3441) !important;
+    /* Schema-driven: use runtime vars when available, otherwise theme vars */
+    background-color: var(--ci-bg, var(--gzc-surface)) !important;
+    color: var(--ci-text, var(--gzc-text)) !important;
+    border: 1px solid var(--ci-border, var(--gzc-border)) !important;
     border-radius: 4px !important;
     line-height: 22px !important;
     height: 28px !important;
@@ -588,14 +588,14 @@ button.gzc-date-input {
 /* Force any react-datepicker input to use dark/scheme surface like Active button */
 .react-datepicker-wrapper .react-datepicker__input-container > input,
 .react-datepicker__input-container input[type="text"] {
-    background-color: #1e1e1e !important;
-    color: var(--gzc-text, #eaeaea) !important;
-    border: 1px solid var(--gzc-border, #2a3441) !important;
+    background-color: var(--ci-bg, var(--gzc-surface, var(--gzc-background))) !important;
+    color: var(--ci-text, var(--gzc-text)) !important;
+    border: 1px solid var(--ci-border, var(--gzc-border)) !important;
 }
 /* Fallback: style any EOD date input by accessible label or title */
 input[title="Select EOD date"],
 input[aria-label="Select EOD date"] {
-    background-color: var(--gzc-surface, #1e1e1e) !important;
-    color: var(--gzc-text, #eaeaea) !important;
-    border: 1px solid var(--gzc-border, #2a3441) !important;
+    background-color: var(--ci-bg, var(--gzc-surface)) !important;
+    color: var(--ci-text, var(--gzc-text)) !important;
+    border: 1px solid var(--ci-border, var(--gzc-border)) !important;
 }
