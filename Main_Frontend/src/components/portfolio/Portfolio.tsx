@@ -480,7 +480,7 @@ export const Portfolio: React.FC<
                     color: var(--gzc-text);
                 }
                 .gzc-datepicker-popper .react-datepicker__header {
-                    background-color: var(--gzc-bg);
+                    background-color: var(--gzc-surface-alt);
                     border-bottom: 1px solid var(--gzc-border);
                 }
                 /* Header refinements: title bar and weekday strip */
