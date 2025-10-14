@@ -1103,14 +1103,12 @@ export const Portfolio: React.FC<
                                                         title="Select EOD date"
                                                         style={{
                                                             padding: "4px 8px",
-                                                            // Use selected theme tokens (no hardcoded colors)
-                                                            backgroundColor:
-                                                                (currentTheme as any).surface ||
-                                                                currentTheme.background,
-                                                            color:
-                                                                (currentTheme as any).success ||
-                                                                "#6aa84f",
-                                                            border: `1px solid ${currentTheme.border}66`,
+                                                            // Mirror chip styling of Live/EOD buttons
+                                                            backgroundColor: "#1e1e1e",
+                                                            color: "#ffffff",
+                                                            border: `1px solid ${
+                                                                currentTheme.success || "#6aa84f"
+                                                            }`,
                                                             borderRadius: 4,
                                                             fontSize: 11,
                                                             width: 120,
