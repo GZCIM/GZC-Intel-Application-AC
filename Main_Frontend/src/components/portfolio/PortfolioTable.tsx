@@ -963,7 +963,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 <div
                     style={{
                         marginTop: 8,
-                        zIndex: 2,
+                        marginBottom: 12,
+                        position: "relative",
+                        zIndex: 100,
                         background: safeTheme.surface,
                         color: safeTheme.text,
                         border: `1px solid ${safeTheme.border}`,
@@ -1035,7 +1037,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 <div
                     style={{
                         marginTop: 8,
-                        zIndex: 2,
+                        marginBottom: 12,
+                        position: "relative",
+                        zIndex: 100,
                         background: safeTheme.surface,
                         color: safeTheme.text,
                         border: `1px solid ${safeTheme.border}`,
@@ -1090,7 +1094,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 <div
                     style={{
                         marginTop: 8,
-                        zIndex: 2,
+                        marginBottom: 12,
+                        position: "relative",
+                        zIndex: 100,
                         background: safeTheme.surface,
                         color: safeTheme.text,
                         border: `1px solid ${safeTheme.border}`,
