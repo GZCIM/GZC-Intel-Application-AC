@@ -1133,8 +1133,17 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             userSelect: "none",
                                             padding: "6px 8px",
                                             borderRadius: 6,
-                                            border: `1px solid ${safeTheme.border}`,
-                                            background: safeTheme.surfaceAlt,
+                                            border: selected
+                                                ? `2px solid ${
+                                                      (theme as any)?.success ||
+                                                      "#6aa84f"
+                                                  }`
+                                                : `1px solid ${safeTheme.border}`,
+                                            background: selected
+                                                ? "rgba(106,168,79,0.12)"
+                                                : "transparent",
+                                            transition:
+                                                "background 120ms ease, border-color 120ms ease",
                                         }}
                                         onClick={(e) => {
                                             e.stopPropagation();
