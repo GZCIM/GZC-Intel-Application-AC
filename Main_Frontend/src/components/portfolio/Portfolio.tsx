@@ -1282,12 +1282,12 @@ export const Portfolio: React.FC<
                                                 // Nudge further left and clamp to keep inside viewport
                                                 const right = rect
                                                     ? Math.max(
-                                                          12,
+                                                          16,
                                                           window.innerWidth -
                                                               rect.right +
-                                                              20
+                                                              40
                                                       )
-                                                    : 12;
+                                                    : 16;
                                                 return createPortal(
                                                     <div
                                                         className={className}
