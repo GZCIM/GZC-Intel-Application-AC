@@ -1285,26 +1285,43 @@ export const Portfolio: React.FC<
                                                     dateButtonRef.current as HTMLElement | null;
                                                 const rect =
                                                     btn?.getBoundingClientRect?.();
-                                                const approxWidth = 360;
+                                                const approxWidth = 400;
                                                 const approxHeight = 340;
                                                 const spaceBelow = rect
-                                                    ? window.innerHeight - rect.bottom
+                                                    ? window.innerHeight -
+                                                      rect.bottom
                                                     : 0;
                                                 const showAbove = rect
-                                                    ? spaceBelow < approxHeight + 16
+                                                    ? spaceBelow <
+                                                      approxHeight + 16
                                                     : false;
                                                 const top = rect
                                                     ? showAbove
-                                                        ? Math.max(16, rect.top - (approxHeight + 12))
+                                                        ? Math.max(
+                                                              16,
+                                                              rect.top -
+                                                                  (approxHeight +
+                                                                      12)
+                                                          )
                                                         : rect.bottom + 12
                                                     : 16;
                                                 // Clamp horizontally within viewport
                                                 const right = rect
                                                     ? (() => {
-                                                          const spaceRight = window.innerWidth - rect.right;
-                                                          const overlap = Math.max(0, approxWidth - spaceRight);
-                                                          // Extra nudge left by 12px beyond overlap + keep at least 16px from edge
-                                                          return Math.max(16, 24 + overlap);
+                                                          const spaceRight =
+                                                              window.innerWidth -
+                                                              rect.right;
+                                                          const overlap =
+                                                              Math.max(
+                                                                  0,
+                                                                  approxWidth -
+                                                                      spaceRight
+                                                              );
+                                                          // Extra nudge left by 24px beyond overlap + keep at least 16px from edge
+                                                          return Math.max(
+                                                              16,
+                                                              40 + overlap
+                                                          );
                                                       })()
                                                     : 16;
                                                 return createPortal(
