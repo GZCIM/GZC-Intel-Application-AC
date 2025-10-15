@@ -422,7 +422,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     );
                 }
             } catch (e) {
-                console.warn("[PortfolioTable][READBACK][AFTER_SAVE] failed", e);
+                console.warn(
+                    "[PortfolioTable][READBACK][AFTER_SAVE] failed",
+                    e
+                );
             }
 
             setTableConfig(tableConfigWithSummary as any);
@@ -1087,7 +1090,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                 try {
                                                     console.log(
                                                         "[PortfolioTable][UI] Checkbox toggle",
-                                                        { key: c.key, checked: e.target.checked }
+                                                        {
+                                                            key: c.key,
+                                                            checked:
+                                                                e.target
+                                                                    .checked,
+                                                        }
                                                     );
                                                 } catch (_) {}
                                                 const current = new Set(
@@ -1157,43 +1165,75 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             }}
                                             onClick={(e) => {
                                                 // Mirror onChange to handle cases where click doesn't trigger change due to focus behavior
-                                                const target = e.currentTarget as HTMLInputElement;
+                                                const target =
+                                                    e.currentTarget as HTMLInputElement;
                                                 try {
                                                     console.log(
                                                         "[PortfolioTable][UI] Checkbox click",
-                                                        { key: c.key, checked: target.checked }
+                                                        {
+                                                            key: c.key,
+                                                            checked:
+                                                                target.checked,
+                                                        }
                                                     );
                                                 } catch (_) {}
                                                 const current = new Set(
                                                     (localConfig.filters
-                                                        ?.sumColumns as string[]) || []
+                                                        ?.sumColumns as string[]) ||
+                                                        []
                                                 );
-                                                if (target.checked) current.add(c.key);
+                                                if (target.checked)
+                                                    current.add(c.key);
                                                 else current.delete(c.key);
-                                                const aggList = (localConfig as any)?.summary?.aggregations || [];
-                                                const idx = Array.isArray(aggList)
-                                                    ? aggList.findIndex((a: any) => a.key === c.key)
+                                                const aggList =
+                                                    (localConfig as any)
+                                                        ?.summary
+                                                        ?.aggregations || [];
+                                                const idx = Array.isArray(
+                                                    aggList
+                                                )
+                                                    ? aggList.findIndex(
+                                                          (a: any) =>
+                                                              a.key === c.key
+                                                      )
                                                     : -1;
-                                                const nextAggs = idx >= 0
-                                                    ? (() => {
-                                                          const copy = [...aggList];
-                                                          copy[idx] = { ...copy[idx], enabled: target.checked };
-                                                          return copy;
-                                                      })()
-                                                    : [
-                                                          ...aggList,
-                                                          { key: c.key, op: "sum", enabled: target.checked },
-                                                      ];
+                                                const nextAggs =
+                                                    idx >= 0
+                                                        ? (() => {
+                                                              const copy = [
+                                                                  ...aggList,
+                                                              ];
+                                                              copy[idx] = {
+                                                                  ...copy[idx],
+                                                                  enabled:
+                                                                      target.checked,
+                                                              };
+                                                              return copy;
+                                                          })()
+                                                        : [
+                                                              ...aggList,
+                                                              {
+                                                                  key: c.key,
+                                                                  op: "sum",
+                                                                  enabled:
+                                                                      target.checked,
+                                                              },
+                                                          ];
                                                 setLocalConfig({
                                                     ...localConfig,
                                                     filters: {
-                                                        ...(localConfig.filters || {}),
-                                                        sumColumns: Array.from(current),
+                                                        ...(localConfig.filters ||
+                                                            {}),
+                                                        sumColumns:
+                                                            Array.from(current),
                                                     },
                                                     summary: {
                                                         enabled: true,
                                                         position:
-                                                            (localConfig as any)?.summary?.position || "footer",
+                                                            (localConfig as any)
+                                                                ?.summary
+                                                                ?.position ||
+                                                            "footer",
                                                         aggregations: nextAggs,
                                                     },
                                                 } as any);
@@ -1324,6 +1364,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             padding: "8px 12px",
                                             textAlign: "left",
                                             cursor: "pointer",
+                                            whiteSpace: "nowrap",
                                         }}
                                         onClick={header.column.getToggleSortingHandler()}
                                     >
@@ -1365,7 +1406,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                         style={{
                                             border: `1px solid ${safeTheme.border}`,
                                             padding: "8px 12px",
-                                            whiteSpace: cell.column.id === "trade_type" ? "nowrap" : undefined,
+                                            whiteSpace: "nowrap",
                                         }}
                                     >
                                         {flexRender(
