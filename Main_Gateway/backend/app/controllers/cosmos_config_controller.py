@@ -1346,11 +1346,11 @@ async def save_device_configuration(
                         # Merge props shallowly, but preserve existing props.tableConfig if not provided by incoming
                         incoming_props = ic.get("props") or {}
                         existing_props = ec.get("props") or {}
-                        if (
-                            "tableConfig" not in incoming_props
-                            and "tableConfig" in existing_props
-                        ):
+                        # HARD PRESERVE: Never overwrite an existing tableConfig from tabs- or editor-saves
+                        # If existing has tableConfig, keep it authoritative regardless of incoming
+                        if "tableConfig" in existing_props:
                             merged_props = {**existing_props, **incoming_props}
+                            merged_props["tableConfig"] = existing_props["tableConfig"]
                         else:
                             merged_props = {**existing_props, **incoming_props}
                         mc = {**ec, **ic, "props": merged_props}
