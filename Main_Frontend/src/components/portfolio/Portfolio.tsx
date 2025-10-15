@@ -1233,9 +1233,21 @@ export const Portfolio: React.FC<
                                                 >(({ value, onClick }, ref) => (
                                                     <button
                                                         ref={(el) => {
-                                                            if (typeof ref === "function") ref(el);
-                                                            else if (ref && typeof ref === "object") (ref as any).current = el;
-                                                            dateButtonRef.current = el;
+                                                            if (
+                                                                typeof ref ===
+                                                                "function"
+                                                            )
+                                                                ref(el);
+                                                            else if (
+                                                                ref &&
+                                                                typeof ref ===
+                                                                    "object"
+                                                            )
+                                                                (
+                                                                    ref as any
+                                                                ).current = el;
+                                                            dateButtonRef.current =
+                                                                el;
                                                         }}
                                                         onClick={onClick}
                                                         type="button"
@@ -1260,17 +1272,22 @@ export const Portfolio: React.FC<
                                                 className,
                                                 children,
                                             }: any) => {
-                                                const btn = dateButtonRef.current as HTMLElement | null;
+                                                const btn =
+                                                    dateButtonRef.current as HTMLElement | null;
                                                 const rect =
                                                     btn?.getBoundingClientRect?.();
                                                 const top = rect
                                                     ? rect.bottom + 12
                                                     : 0;
+                                                // Nudge further left and clamp to keep inside viewport
                                                 const right = rect
-                                                    ? window.innerWidth -
-                                                      rect.right +
-                                                      6
-                                                    : 0;
+                                                    ? Math.max(
+                                                          12,
+                                                          window.innerWidth -
+                                                              rect.right +
+                                                              20
+                                                      )
+                                                    : 12;
                                                 return createPortal(
                                                     <div
                                                         className={className}
