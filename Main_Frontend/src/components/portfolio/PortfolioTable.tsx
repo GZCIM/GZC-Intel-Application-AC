@@ -554,7 +554,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             accessorKey: c.key as keyof PortfolioPosition,
             header: c.label,
             cell: (info) => formatValue(info.getValue() as any, c.key),
-            size: c.width,
+            // Ensure Trade Type column is wide enough to avoid wrapping (e.g., "FX Option")
+            size: c.key === "trade_type" ? Math.max(c.width, 140) : c.width,
             enableHiding: true,
             enableSorting: true,
         }));
@@ -1364,6 +1365,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                         style={{
                                             border: `1px solid ${safeTheme.border}`,
                                             padding: "8px 12px",
+                                            whiteSpace: cell.column.id === "trade_type" ? "nowrap" : undefined,
                                         }}
                                     >
                                         {flexRender(
