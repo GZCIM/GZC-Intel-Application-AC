@@ -468,12 +468,11 @@ export const Portfolio: React.FC<
                 }
                 .gzc-date--green {
                     color: var(--gzc-success) !important;
-                    border-color: var(--gzc-success) !important;
                 }
                 .gzc-chip.gzc-date--green,
                 .gzc-date-input.gzc-date--green {
                     color: var(--gzc-success) !important;
-                    border-color: var(--gzc-success) !important;
+                    border-color: var(--gzc-border) !important; /* keep neutral border */
                 }
 
                 /* React Datepicker dark theming */
