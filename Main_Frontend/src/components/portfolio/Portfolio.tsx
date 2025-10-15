@@ -323,10 +323,11 @@ export const Portfolio: React.FC<
 
     const formatDateBadge = (value?: string) => {
         try {
+            if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value; // already yyyy-mm-dd
             const d = value ? new Date(value) : new Date();
-            return d.toLocaleDateString("en-GB"); // dd/MM/yyyy
+            return d.toISOString().slice(0, 10); // yyyy-mm-dd
         } catch (_) {
-            return new Date().toLocaleDateString("en-GB");
+            return new Date().toISOString().slice(0, 10);
         }
     };
 
@@ -464,6 +465,10 @@ export const Portfolio: React.FC<
                     background-color: var(--gzc-bg);
                     color: var(--gzc-text);
                     border-color: var(--gzc-border);
+                }
+                .gzc-date--green {
+                    color: var(--gzc-success) !important;
+                    border-color: var(--gzc-success) !important;
                 }
 
                 /* React Datepicker dark theming */
@@ -1255,7 +1260,7 @@ export const Portfolio: React.FC<
                                                             dataMode === "eod"
                                                                 ? "gzc-chip--active"
                                                                 : ""
-                                                        }`}
+                                                        } gzc-date--green`}
                                                         title="Select EOD date"
                                                         style={{
                                                             width: 120,
@@ -1417,7 +1422,7 @@ export const Portfolio: React.FC<
                                 ) : (
                                     <span
                                         title="Date"
-                                        className="gzc-chip gzc-date-input gzc-date-input--themed gzc-chip--active"
+                                        className="gzc-chip gzc-date-input gzc-date-input--themed gzc-date--green"
                                         style={{
                                             display: "inline-block",
                                             width: 120,
