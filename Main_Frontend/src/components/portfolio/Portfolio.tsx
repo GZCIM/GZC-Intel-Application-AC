@@ -1475,7 +1475,7 @@ export const Portfolio: React.FC<
                             }}
                         >
                             <PortfolioTable
-                                selectedDate={selectedDate || effectiveDate}
+                                selectedDate={effectiveDate}
                                 fundId={Number(selectedFundId) || 0}
                                 isLive={dataMode === "live"}
                                 externalEditing={isEditMode || toolsEditing}
