@@ -1308,10 +1308,86 @@ async def save_device_configuration(
         incoming_cs = config_data.get("componentStates")
         incoming_layouts = config_data.get("layouts")
 
+        # Merge tabs deeply to avoid losing per-component props (e.g., props.tableConfig)
+        # If incoming tabs/components omit props.tableConfig, preserve existing one
+        def _merge_tabs_preserving_component_props(incoming_tabs, existing_tabs):
+            if not isinstance(incoming_tabs, list) or len(incoming_tabs) == 0:
+                return existing_tabs if isinstance(existing_tabs, list) else []
+
+            # Build index of existing components by id for quick lookup
+            existing_components_by_id = {}
+            existing_tabs_by_id = {}
+            if isinstance(existing_tabs, list):
+                for et in existing_tabs:
+                    if not isinstance(et, dict):
+                        continue
+                    tid = et.get("id")
+                    if tid is not None:
+                        existing_tabs_by_id[tid] = et
+                    for ec in et.get("components") or []:
+                        if isinstance(ec, dict) and ec.get("id"):
+                            existing_components_by_id[ec.get("id")] = ec
+
+            merged_tabs = []
+            for it in incoming_tabs:
+                if not isinstance(it, dict):
+                    continue
+                # Start from incoming tab
+                mt = {**it}
+                # Merge components array preserving existing props.tableConfig when missing from incoming
+                incoming_components = it.get("components") or []
+                merged_components = []
+                for ic in incoming_components:
+                    if not isinstance(ic, dict):
+                        continue
+                    cid = ic.get("id")
+                    if cid and cid in existing_components_by_id:
+                        ec = existing_components_by_id[cid]
+                        # Merge props shallowly, but preserve existing props.tableConfig if not provided by incoming
+                        incoming_props = ic.get("props") or {}
+                        existing_props = ec.get("props") or {}
+                        if (
+                            "tableConfig" not in incoming_props
+                            and "tableConfig" in existing_props
+                        ):
+                            merged_props = {**existing_props, **incoming_props}
+                        else:
+                            merged_props = {**existing_props, **incoming_props}
+                        mc = {**ec, **ic, "props": merged_props}
+                        merged_components.append(mc)
+                    else:
+                        # No existing component; keep as-is
+                        merged_components.append(ic)
+                mt["components"] = merged_components
+
+                # Preserve other tab-level fields from existing when incoming omits them
+                tid = it.get("id")
+                if tid is not None and tid in existing_tabs_by_id:
+                    et = existing_tabs_by_id[tid]
+                    # Prefer incoming values but backfill missing
+                    for k in [
+                        "name",
+                        "component",
+                        "type",
+                        "icon",
+                        "closable",
+                        "gridLayoutEnabled",
+                        "editMode",
+                        "memoryStrategy",
+                    ]:
+                        if mt.get(k) is None and et.get(k) is not None:
+                            mt[k] = et.get(k)
+
+                merged_tabs.append(mt)
+
+            return merged_tabs
+
+        merged_tabs = _merge_tabs_preserving_component_props(
+            clean_tabs, existing_config.get("tabs", [])
+        )
+
         merged_config = {
-            "tabs": clean_tabs
-            if len(clean_tabs) > 0
-            else existing_config.get("tabs", []),
+            "tabs": merged_tabs,
             "preferences": {**existing_config.get("preferences", {}), **incoming_prefs},
             "windowState": {**existing_config.get("windowState", {}), **incoming_ws},
             "componentStates": incoming_cs
