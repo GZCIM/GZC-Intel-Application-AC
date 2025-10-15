@@ -1285,7 +1285,7 @@ export const Portfolio: React.FC<
                                                     dateButtonRef.current as HTMLElement | null;
                                                 const rect =
                                                     btn?.getBoundingClientRect?.();
-                                                const approxWidth = 320;
+                                                const approxWidth = 360;
                                                 const approxHeight = 340;
                                                 const spaceBelow = rect
                                                     ? window.innerHeight - rect.bottom
@@ -1303,9 +1303,10 @@ export const Portfolio: React.FC<
                                                     ? (() => {
                                                           const spaceRight = window.innerWidth - rect.right;
                                                           const overlap = Math.max(0, approxWidth - spaceRight);
-                                                          return Math.max(12, 12 + overlap);
+                                                          // Extra nudge left by 12px beyond overlap + keep at least 16px from edge
+                                                          return Math.max(16, 24 + overlap);
                                                       })()
-                                                    : 12;
+                                                    : 16;
                                                 return createPortal(
                                                     <div
                                                         className={className}
