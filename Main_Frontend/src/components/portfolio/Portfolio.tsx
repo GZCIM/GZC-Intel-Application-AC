@@ -1285,8 +1285,54 @@ export const Portfolio: React.FC<
                                                     dateButtonRef.current as HTMLElement | null;
                                                 const rect =
                                                     btn?.getBoundingClientRect?.();
-                                                const approxWidth = 400;
-                                                const approxHeight = 340;
+                                                // Measure calendar once it renders; fallback to responsive estimates
+                                                const containerRef =
+                                                    React.useRef<HTMLDivElement | null>(
+                                                        null
+                                                    );
+                                                const [measured, setMeasured] =
+                                                    React.useState({
+                                                        w: 0,
+                                                        h: 0,
+                                                    });
+                                                React.useLayoutEffect(() => {
+                                                    const el = containerRef
+                                                        .current
+                                                        ?.firstElementChild as HTMLElement | null;
+                                                    if (el) {
+                                                        const r =
+                                                            el.getBoundingClientRect();
+                                                        if (r.width && r.height)
+                                                            setMeasured({
+                                                                w: r.width,
+                                                                h: r.height,
+                                                            });
+                                                    }
+                                                }, [children]);
+                                                const approxWidth =
+                                                    measured.w ||
+                                                    Math.min(
+                                                        480,
+                                                        Math.max(
+                                                            280,
+                                                            Math.round(
+                                                                window.innerWidth *
+                                                                    0.24
+                                                            )
+                                                        )
+                                                    );
+                                                const approxHeight =
+                                                    measured.h ||
+                                                    Math.min(
+                                                        420,
+                                                        Math.max(
+                                                            260,
+                                                            Math.round(
+                                                                window.innerHeight *
+                                                                    0.38
+                                                            )
+                                                        )
+                                                    );
                                                 const spaceBelow = rect
                                                     ? window.innerHeight -
                                                       rect.bottom
@@ -1326,6 +1372,7 @@ export const Portfolio: React.FC<
                                                     : 16;
                                                 return createPortal(
                                                     <div
+                                                        ref={containerRef}
                                                         className={className}
                                                         style={{
                                                             position: "fixed",
