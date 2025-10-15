@@ -1281,12 +1281,18 @@ export const Portfolio: React.FC<
                                                     : 0;
                                                 // Nudge further left and clamp to keep inside viewport
                                                 const right = rect
-                                                    ? Math.max(
-                                                          16,
-                                                          window.innerWidth -
-                                                              rect.right +
-                                                              40
-                                                      )
+                                                    ? (() => {
+                                                          const approxWidth = 300; // estimated datepicker width
+                                                          const spaceRight =
+                                                              window.innerWidth -
+                                                              rect.right;
+                                                          const overlap = Math.max(
+                                                              0,
+                                                              approxWidth -
+                                                                  spaceRight
+                                                          );
+                                                          return 16 + overlap; // 16px margin + any overlap compensation
+                                                      })()
                                                     : 16;
                                                 return createPortal(
                                                     <div
