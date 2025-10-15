@@ -1285,25 +1285,27 @@ export const Portfolio: React.FC<
                                                     dateButtonRef.current as HTMLElement | null;
                                                 const rect =
                                                     btn?.getBoundingClientRect?.();
-                                                const top = rect
-                                                    ? rect.bottom + 12
+                                                const approxWidth = 320;
+                                                const approxHeight = 340;
+                                                const spaceBelow = rect
+                                                    ? window.innerHeight - rect.bottom
                                                     : 0;
-                                                // Nudge further left and clamp to keep inside viewport
+                                                const showAbove = rect
+                                                    ? spaceBelow < approxHeight + 16
+                                                    : false;
+                                                const top = rect
+                                                    ? showAbove
+                                                        ? Math.max(16, rect.top - (approxHeight + 12))
+                                                        : rect.bottom + 12
+                                                    : 16;
+                                                // Clamp horizontally within viewport
                                                 const right = rect
                                                     ? (() => {
-                                                          const approxWidth = 300; // estimated datepicker width
-                                                          const spaceRight =
-                                                              window.innerWidth -
-                                                              rect.right;
-                                                          const overlap =
-                                                              Math.max(
-                                                                  0,
-                                                                  approxWidth -
-                                                                      spaceRight
-                                                              );
-                                                          return 16 + overlap; // 16px margin + any overlap compensation
+                                                          const spaceRight = window.innerWidth - rect.right;
+                                                          const overlap = Math.max(0, approxWidth - spaceRight);
+                                                          return Math.max(12, 12 + overlap);
                                                       })()
-                                                    : 16;
+                                                    : 12;
                                                 return createPortal(
                                                     <div
                                                         className={className}
