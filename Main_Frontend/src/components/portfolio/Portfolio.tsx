@@ -1415,19 +1415,17 @@ export const Portfolio: React.FC<
                                         </style>
                                     </div>
                                 ) : (
-                                    <div
+                                    <span
                                         title="Date"
+                                        className="gzc-chip gzc-date-input gzc-date-input--themed gzc-chip--active"
                                         style={{
-                                            padding: "4px 8px",
-                                            backgroundColor: "#1e1e1e",
-                                            color: currentTheme.textSecondary,
-                                            border: `1px solid ${currentTheme.border}66`,
-                                            borderRadius: 4,
-                                            fontSize: 11,
+                                            display: "inline-block",
+                                            width: 120,
+                                            textAlign: "left",
                                         }}
                                     >
                                         {formatDateBadge(effectiveDate)}
-                                    </div>
+                                    </span>
                                 )}
                             </div>
                         )}
