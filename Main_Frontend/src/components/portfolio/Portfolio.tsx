@@ -1295,11 +1295,12 @@ export const Portfolio: React.FC<
                                                           const spaceRight =
                                                               window.innerWidth -
                                                               rect.right;
-                                                          const overlap = Math.max(
-                                                              0,
-                                                              approxWidth -
-                                                                  spaceRight
-                                                          );
+                                                          const overlap =
+                                                              Math.max(
+                                                                  0,
+                                                                  approxWidth -
+                                                                      spaceRight
+                                                              );
                                                           return 16 + overlap; // 16px margin + any overlap compensation
                                                       })()
                                                     : 16;
@@ -1452,7 +1453,7 @@ export const Portfolio: React.FC<
                         flex: 1,
                         minHeight: 0,
                         backgroundColor: currentTheme.background,
-                        padding: 12,
+                        padding: "12px 12px 0 12px",
                         display: "flex",
                         alignItems: "stretch",
                         justifyContent: "stretch",
@@ -1468,8 +1469,9 @@ export const Portfolio: React.FC<
                                 border: `1px dashed ${currentTheme.border}`,
                                 borderRadius: 4,
                                 padding: 8,
-                                overflow: "auto",
-                                maxHeight: "100%",
+                                overflowX: "auto",
+                                overflowY: "auto",
+                                height: "100%",
                             }}
                         >
                             <PortfolioTable
