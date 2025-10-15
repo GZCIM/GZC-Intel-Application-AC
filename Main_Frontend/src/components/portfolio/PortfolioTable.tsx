@@ -315,14 +315,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         try {
             const token = await getToken();
             try {
+                const visibleColumns = (localConfig.columns || [])
+                    .filter((c) => c.visible)
+                    .map((c) => c.key);
                 console.log("[PortfolioTable][SAVE] Saving table config", {
                     deviceType: resolvedDeviceType,
                     componentId: resolvedComponentId,
                     fundId,
-                    columns: localConfig.columns?.map((c) => ({
-                        key: c.key,
-                        visible: c.visible,
-                    })),
+                    visibleColumns,
                 });
             } catch (_) {}
             // Build summary aggregations preserving per-field op and enabled flags
@@ -390,6 +390,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     saveResp.status,
                     saveResp.data
                 );
+                const savedVisible = Array.isArray(saveResp?.data?.columns)
+                    ? saveResp.data.columns
+                          .filter((c: any) => c && c.visible)
+                          .map((c: any) => c.key)
+                    : undefined;
+                console.log("[PortfolioTable][SAVE] Saved (server-visible)", {
+                    savedVisible,
+                });
             } catch (_) {}
 
             // Force read-back of the saved portfolio tableConfig from Cosmos (authoritative)
@@ -411,10 +419,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         {
                             filters: rb.data.data.filters,
                             summary: rb.data.data.summary,
+                            visibleColumns: (rb.data.data.columns || [])
+                                .filter((c: any) => c && c.visible)
+                                .map((c: any) => c.key),
                         }
                     );
                     setTableConfig(rb.data.data);
                     setLocalConfig(rb.data.data);
+                    console.log("[PortfolioTable][READBACK] Applied to UI ✔");
                 } else {
                     console.warn(
                         "[PortfolioTable][READBACK][AFTER_SAVE] unexpected payload",

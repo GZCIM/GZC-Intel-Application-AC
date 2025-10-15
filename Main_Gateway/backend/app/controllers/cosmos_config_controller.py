@@ -2230,22 +2230,27 @@ async def save_portfolio_component_config(
         # non-fatal; componentStates still holds the config
         pass
 
-    # Remove legacy duplicates from componentStates for this component/fund to avoid two sources of truth
+    # Remove legacy duplicates from componentStates ONLY if we successfully embedded into tabs.
+    # Otherwise, keep componentStates as the authoritative storage so edits persist even without tabs.
     try:
-        new_states = []
-        for st in comp_states:
-            if not isinstance(st, dict):
-                continue
-            if (
-                st.get("type") == "portfolio"
-                and st.get("componentId") == resolved_component_id
-            ):
-                st_fund = st.get("fundId")
-                if fund_id is None or st_fund == fund_id:
-                    # skip (we embedded into props)
+        if "matched" in locals() and matched:
+            new_states = []
+            for st in comp_states:
+                if not isinstance(st, dict):
                     continue
-            new_states.append(st)
-        cfg["componentStates"] = new_states
+                if (
+                    st.get("type") == "portfolio"
+                    and st.get("componentId") == resolved_component_id
+                ):
+                    st_fund = st.get("fundId")
+                    if fund_id is None or st_fund == fund_id:
+                        # skip (we embedded into props)
+                        continue
+                new_states.append(st)
+            cfg["componentStates"] = new_states
+        else:
+            # Keep existing componentStates to ensure the UI can load the saved config on GET
+            cfg["componentStates"] = comp_states
     except Exception as cleanup_err:
         logger.warning(
             "[CosmosConfig] Failed to cleanup legacy componentStates: %s", cleanup_err
@@ -2286,7 +2291,10 @@ async def save_portfolio_component_config(
             device_config_id,
             resolved_component_id,
             (table_config.get("filters", {}) or {}).get("sumColumns", []),
-            [a.get("key") for a in (table_config.get("summary", {}) or {}).get("aggregations", [])],
+            [
+                a.get("key")
+                for a in (table_config.get("summary", {}) or {}).get("aggregations", [])
+            ],
         )
     except Exception:
         pass
