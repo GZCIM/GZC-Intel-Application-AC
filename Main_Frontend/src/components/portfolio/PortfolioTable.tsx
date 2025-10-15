@@ -488,6 +488,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const loadPositions = async () => {
         setLoading(true);
         setError(null);
+        // Clear existing rows so stale data isn't shown when switching modes/dates
+        setPositions([]);
 
         try {
             const token = await getToken();
@@ -531,6 +533,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         "Failed to load positions"
                 );
             }
+            // Ensure stale rows are not displayed after an error
+            setPositions([]);
         } finally {
             setLoading(false);
         }
