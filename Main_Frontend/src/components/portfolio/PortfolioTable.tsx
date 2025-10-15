@@ -980,23 +980,48 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         style={{
                             display: "grid",
                             gridTemplateColumns:
-                                "repeat(auto-fit, minmax(160px, 1fr))",
-                            gap: 10,
+                                "repeat(auto-fit, minmax(180px, 1fr))",
+                            gap: 12,
                         }}
                     >
-                        {localConfig.columns.map((col) => (
-                            <label
-                                key={col.key}
-                                className="flex items-center gap-2 text-sm"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={col.visible}
-                                    onChange={() => handleColumnToggle(col.key)}
-                                />
-                                {col.label}
-                            </label>
-                        ))}
+                        {localConfig.columns.map((col) => {
+                            const inputId = `col-toggle-${col.key}`;
+                            return (
+                                <label
+                                    key={col.key}
+                                    htmlFor={inputId}
+                                    className="flex items-center gap-3 text-sm"
+                                    style={{
+                                        cursor: "pointer",
+                                        userSelect: "none",
+                                        padding: "6px 8px",
+                                        borderRadius: 6,
+                                        border: `1px solid ${safeTheme.border}`,
+                                        background: safeTheme.surfaceAlt,
+                                    }}
+                                    onClick={(e) => {
+                                        // Allow clicking anywhere on the row
+                                        e.stopPropagation();
+                                    }}
+                                >
+                                    <input
+                                        id={inputId}
+                                        type="checkbox"
+                                        checked={col.visible}
+                                        onChange={() =>
+                                            handleColumnToggle(col.key)
+                                        }
+                                        onClick={(e) => e.stopPropagation()}
+                                        style={{
+                                            width: 18,
+                                            height: 18,
+                                            cursor: "pointer",
+                                        }}
+                                    />
+                                    <span>{col.label}</span>
+                                </label>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -1095,9 +1120,18 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                 const currentOp = existing.op || "sum";
 
                                 return (
-                                    <div
+                                    <label
                                         key={c.key}
-                                        className="flex items-center gap-2 text-sm"
+                                        className="flex items-center gap-3 text-sm"
+                                        style={{
+                                            cursor: "pointer",
+                                            userSelect: "none",
+                                            padding: "6px 8px",
+                                            borderRadius: 6,
+                                            border: `1px solid ${safeTheme.border}`,
+                                            background: safeTheme.surfaceAlt,
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
                                     >
                                         <input
                                             type="checkbox"
@@ -1179,6 +1213,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                     },
                                                 } as any);
                                             }}
+                                            onClick={(e) => e.stopPropagation()}
+                                            style={{
+                                                width: 18,
+                                                height: 18,
+                                                cursor: "pointer",
+                                            }}
                                         />
                                         {/* Aggregation selector appears before label and only when selected */}
                                         {selected && (
@@ -1250,6 +1290,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                     padding: "2px 6px",
                                                     fontSize: 12,
                                                 }}
+                                                onClick={(e) =>
+                                                    e.stopPropagation()
+                                                }
                                             >
                                                 <option value="sum">Sum</option>
                                                 <option value="avg">
@@ -1262,7 +1305,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                         <span style={{ minWidth: 90 }}>
                                             {c.label}
                                         </span>
-                                    </div>
+                                    </label>
                                 );
                             })}
                     </div>
