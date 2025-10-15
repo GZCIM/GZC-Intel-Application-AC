@@ -1000,8 +1000,13 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                         background: safeTheme.surfaceAlt,
                                     }}
                                     onClick={(e) => {
-                                        // Allow clicking anywhere on the row
                                         e.stopPropagation();
+                                        const tag = (e.target as HTMLElement)
+                                            .tagName;
+                                        if (tag !== "INPUT") {
+                                            // Toggle when clicking anywhere on the row
+                                            handleColumnToggle(col.key);
+                                        }
                                     }}
                                 >
                                     <input
@@ -1131,7 +1136,76 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             border: `1px solid ${safeTheme.border}`,
                                             background: safeTheme.surfaceAlt,
                                         }}
-                                        onClick={(e) => e.stopPropagation()}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const tag = (
+                                                e.target as HTMLElement
+                                            ).tagName;
+                                            if (
+                                                tag !== "INPUT" &&
+                                                tag !== "SELECT"
+                                            ) {
+                                                // Toggle selection when clicking the row
+                                                const current = new Set(
+                                                    (localConfig.filters
+                                                        ?.sumColumns as string[]) ||
+                                                        []
+                                                );
+                                                if (selected)
+                                                    current.delete(c.key);
+                                                else current.add(c.key);
+
+                                                // Sync summary.aggregations enabled flag
+                                                const list =
+                                                    (localConfig as any)
+                                                        ?.summary
+                                                        ?.aggregations || [];
+                                                const idx = list.findIndex(
+                                                    (a: any) => a.key === c.key
+                                                );
+                                                const updated =
+                                                    idx >= 0
+                                                        ? (() => {
+                                                              const cp = [
+                                                                  ...list,
+                                                              ];
+                                                              cp[idx] = {
+                                                                  ...cp[idx],
+                                                                  enabled:
+                                                                      !selected,
+                                                              };
+                                                              return cp;
+                                                          })()
+                                                        : [
+                                                              ...list,
+                                                              {
+                                                                  key: c.key,
+                                                                  op: currentOp,
+                                                                  enabled:
+                                                                      !selected,
+                                                              },
+                                                          ];
+
+                                                setLocalConfig({
+                                                    ...localConfig,
+                                                    filters: {
+                                                        ...(localConfig.filters ||
+                                                            {}),
+                                                        sumColumns:
+                                                            Array.from(current),
+                                                    },
+                                                    summary: {
+                                                        enabled: true,
+                                                        position:
+                                                            (localConfig as any)
+                                                                ?.summary
+                                                                ?.position ||
+                                                            "footer",
+                                                        aggregations: updated,
+                                                    },
+                                                } as any);
+                                            }
+                                        }}
                                     >
                                         <input
                                             type="checkbox"
