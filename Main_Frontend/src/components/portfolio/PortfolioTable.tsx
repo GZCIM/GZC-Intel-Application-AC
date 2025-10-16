@@ -966,6 +966,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         marginBottom: 12,
                         position: "relative",
                         zIndex: 100,
+                        pointerEvents: "auto",
                         background: safeTheme.surface,
                         color: safeTheme.text,
                         border: `1px solid ${safeTheme.border}`,
@@ -1001,6 +1002,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                         border: `1px solid ${safeTheme.border}`,
                                         background: safeTheme.surfaceAlt,
                                     }}
+                                    onMouseDown={(e) => e.preventDefault()}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         const tag = (e.target as HTMLElement)
@@ -1040,6 +1042,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         marginBottom: 12,
                         position: "relative",
                         zIndex: 100,
+                        pointerEvents: "auto",
                         background: safeTheme.surface,
                         color: safeTheme.text,
                         border: `1px solid ${safeTheme.border}`,
@@ -1097,6 +1100,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         marginBottom: 12,
                         position: "relative",
                         zIndex: 100,
+                        pointerEvents: "auto",
                         background: safeTheme.surface,
                         color: safeTheme.text,
                         border: `1px solid ${safeTheme.border}`,
@@ -1153,6 +1157,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             transition:
                                                 "background 120ms ease, border-color 120ms ease",
                                         }}
+                                        onMouseDown={(e) => e.preventDefault()}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             const tag = (
