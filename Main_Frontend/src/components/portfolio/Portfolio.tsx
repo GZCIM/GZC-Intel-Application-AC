@@ -10,6 +10,7 @@ import {
 import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
 import PortfolioTable from "./PortfolioTable";
+import "../../styles/portfolio.css";
 
 interface PortfolioProps {
     apiEndpoint?: string;
@@ -1516,6 +1517,7 @@ export const Portfolio: React.FC<
 
             {componentState === "minimized" ? null : (
                 <div
+                    className="portfolio-card-body"
                     style={{
                         flex: 1,
                         minHeight: 0,
@@ -1531,14 +1533,12 @@ export const Portfolio: React.FC<
                 >
                     <div style={{ flex: 1, display: "flex", gap: 12 }}>
                         <div
+                            className="portfolio-dashed-wrap"
                             style={{
                                 flex: 1,
-                                minWidth: 0, // allow child scroll container to constrain width
                                 border: `1px dashed ${currentTheme.border}`,
                                 borderRadius: 4,
                                 padding: 8,
-                                overflowX: "hidden", // prevent double horizontal scrollbar at parent level
-                                overflowY: "hidden",
                                 height: "100%",
                             }}
                         >

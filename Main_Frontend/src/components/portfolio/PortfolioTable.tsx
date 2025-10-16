@@ -1665,13 +1665,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             {/* Table */}
             <div
                 ref={scrollContainerRef}
+                className="portfolio-table-scroll"
                 style={{
                     marginTop: isEditing ? 140 : 0,
                     width: "100%",
-                    maxWidth: "100%",
-                    minWidth: 0, // allow scroll instead of growing in flex/grid parents
-                    overflowX: "auto",
-                    overflowY: "auto",
                     maxHeight: "60vh",
                     position: "relative",
                     zIndex: 0,
