@@ -89,6 +89,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const [isEditing, setIsEditing] = useState(false);
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
     const headerRef = useRef<HTMLDivElement | null>(null);
+    const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+    const tableRef = useRef<HTMLTableElement | null>(null);
     const [headerWidth, setHeaderWidth] = useState<number>(0);
     // Edit-mode tabs: view/group/sum
     const [activeTab, setActiveTab] = useState<"view" | "group" | "sum">(
@@ -175,6 +177,38 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         setHeaderWidth(el.getBoundingClientRect().width);
         return () => ro.disconnect();
     }, [isEditing]);
+
+    // Observe container/table widths to validate horizontal scroll behavior
+    useEffect(() => {
+        const container = scrollContainerRef.current;
+        const tableEl = tableRef.current;
+        if (!container || !tableEl) return;
+
+        const log = () => {
+            try {
+                const data = {
+                    containerClientWidth: container.clientWidth,
+                    containerScrollWidth: container.scrollWidth,
+                    tableOffsetWidth: tableEl.offsetWidth,
+                    tableScrollWidth: tableEl.scrollWidth,
+                    overflowX: getComputedStyle(container).overflowX,
+                };
+                console.log("[PortfolioTable][SCROLL] widths", data);
+                console.log(
+                    "[PortfolioTable][SCROLL] needsHorizontalScroll?",
+                    data.tableScrollWidth > data.containerClientWidth
+                );
+            } catch (_) {}
+        };
+
+        const ro = new ResizeObserver(() => log());
+        try {
+            ro.observe(container);
+            ro.observe(tableEl);
+        } catch (_) {}
+        log();
+        return () => ro.disconnect();
+    }, [localConfig?.columns, positions?.length]);
 
     // Load positions when date/fund changes
     useEffect(() => {
@@ -1630,9 +1664,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
             {/* Table */}
             <div
+                ref={scrollContainerRef}
                 style={{
                     marginTop: isEditing ? 140 : 0,
+                    width: "100%",
                     maxWidth: "100%",
+                    minWidth: 0, // allow scroll instead of growing in flex/grid parents
                     overflowX: "auto",
                     overflowY: "auto",
                     maxHeight: "60vh",
@@ -1642,8 +1679,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 }}
             >
                 <table
+                    ref={tableRef}
                     style={{
                         width: "max-content",
+                        minWidth: "100%",
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
                         color: safeTheme.text,
