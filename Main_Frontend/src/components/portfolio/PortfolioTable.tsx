@@ -657,6 +657,79 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     // Aggregation changes are applied locally and saved on lock to avoid race conditions
     // (Auto-save disabled to prevent flicker/reset while selecting)
 
+    // Compute summary values for any enabled aggregations (e.g., EOD Price)
+    const enabledAggregations = useMemo(() => {
+        const list = ((localConfig as any)?.summary?.aggregations || []) as Array<{
+            key: string;
+            op?: "sum" | "avg" | "min" | "max";
+            enabled?: boolean;
+        }>;
+        const enabled = list.filter((a) => a && (a.enabled === undefined || a.enabled));
+        const labelByKey: Record<string, string> = (localConfig?.columns || []).reduce(
+            (acc, c) => {
+                acc[c.key] = c.label;
+                return acc;
+            },
+            {} as Record<string, string>
+        );
+        const compute = (key: string, op: string) => {
+            const values: number[] = positions
+                .map((p: any) => p?.[key])
+                .filter((v: any) => typeof v === "number") as number[];
+            if (values.length === 0) return null;
+            switch (op) {
+                case "avg":
+                    return values.reduce((a, b) => a + b, 0) / values.length;
+                case "min":
+                    return Math.min(...values);
+                case "max":
+                    return Math.max(...values);
+                default:
+                    return values.reduce((a, b) => a + b, 0);
+            }
+        };
+        const formatAgg = (value: number | null, key: string): string => {
+            if (value === null) return "-";
+            // Reuse table formatting where sensible
+            switch (key) {
+                case "trade_price":
+                case "price":
+                case "eoy_price":
+                case "eom_price":
+                case "eod_price":
+                    return value.toFixed(6);
+                case "quantity":
+                case "position":
+                    return new Intl.NumberFormat().format(value);
+                case "itd_pnl":
+                case "ytd_pnl":
+                case "mtd_pnl":
+                case "dtd_pnl":
+                    return `$${value.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                    })}`;
+                default:
+                    return String(value);
+            }
+        };
+        return enabled
+            .filter((a) => numericKeys.includes(a.key))
+            .map((a) => {
+                const op = a.op || "sum";
+                const raw = compute(a.key, op);
+                const label = labelByKey[a.key] || a.key;
+                const prettyOp = op === "avg" ? "Avg" : op.charAt(0).toUpperCase() + op.slice(1);
+                return {
+                    key: a.key,
+                    op,
+                    label,
+                    value: raw,
+                    display: `${label} (${prettyOp}): ${formatAgg(raw, a.key)}`,
+                };
+            });
+    }, [localConfig?.summary?.aggregations, localConfig?.columns, positions]);
+
     // Respect Aggregation selections; prefer filters.sumColumns, then enabled summary aggregations, else all
     const selectedSumKeys = useMemo(() => {
         const allowed: string[] = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"];
@@ -1510,6 +1583,24 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     .join(" • ")}
                             </td>
                         </tr>
+                        {enabledAggregations && enabledAggregations.length > 0 && (
+                            <tr style={{ background: safeTheme.surfaceAlt }}>
+                                <td
+                                    colSpan={table.getVisibleLeafColumns().length}
+                                    style={{
+                                        border: `1px solid ${safeTheme.border}`,
+                                        padding: "4px 8px",
+                                        textAlign: "right",
+                                        fontWeight: 600,
+                                        fontSize: 12,
+                                    }}
+                                >
+                                    {enabledAggregations
+                                        .map((a) => a.display)
+                                        .join(" • ")}
+                                </td>
+                            </tr>
+                        )}
                     </tfoot>
                 </table>
             </div>
