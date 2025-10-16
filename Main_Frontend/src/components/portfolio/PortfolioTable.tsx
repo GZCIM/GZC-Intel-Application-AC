@@ -1631,20 +1631,19 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             {/* Table */}
             <div
                 style={{
-                    marginTop: isEditing ? 180 : 0,
+                    marginTop: isEditing ? 140 : 0,
+                    maxWidth: "100%",
                     overflowX: "auto",
-                    overflowY: positions.length > 20 ? "auto" : "visible",
-                    maxHeight: positions.length > 20 ? "60vh" : "none",
+                    overflowY: "auto",
+                    maxHeight: "60vh",
                     position: "relative",
                     zIndex: 0,
                     WebkitOverflowScrolling: "touch",
-                    scrollbarGutter: "stable both-edges",
                 }}
             >
                 <table
                     style={{
-                        width: "100%",
-                        minWidth: tableMinWidth,
+                        width: "max-content",
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
                         color: safeTheme.text,
