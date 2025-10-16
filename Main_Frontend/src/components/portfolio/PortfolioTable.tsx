@@ -1679,7 +1679,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     ref={tableRef}
                     style={{
                         width: "max-content",
-                        minWidth: "100%",
+                        minWidth: tableMinWidth ? `${tableMinWidth}px` : "100%",
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
                         color: safeTheme.text,
