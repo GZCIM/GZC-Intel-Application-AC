@@ -659,19 +659,21 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
     // Compute summary values for any enabled aggregations (e.g., EOD Price)
     const enabledAggregations = useMemo(() => {
-        const list = ((localConfig as any)?.summary?.aggregations || []) as Array<{
+        const list = ((localConfig as any)?.summary?.aggregations ||
+            []) as Array<{
             key: string;
             op?: "sum" | "avg" | "min" | "max";
             enabled?: boolean;
         }>;
-        const enabled = list.filter((a) => a && (a.enabled === undefined || a.enabled));
-        const labelByKey: Record<string, string> = (localConfig?.columns || []).reduce(
-            (acc, c) => {
-                acc[c.key] = c.label;
-                return acc;
-            },
-            {} as Record<string, string>
+        const enabled = list.filter(
+            (a) => a && (a.enabled === undefined || a.enabled)
         );
+        const labelByKey: Record<string, string> = (
+            localConfig?.columns || []
+        ).reduce((acc, c) => {
+            acc[c.key] = c.label;
+            return acc;
+        }, {} as Record<string, string>);
         const compute = (key: string, op: string) => {
             const values: number[] = positions
                 .map((p: any) => p?.[key])
@@ -719,7 +721,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 const op = a.op || "sum";
                 const raw = compute(a.key, op);
                 const label = labelByKey[a.key] || a.key;
-                const prettyOp = op === "avg" ? "Avg" : op.charAt(0).toUpperCase() + op.slice(1);
+                const prettyOp =
+                    op === "avg"
+                        ? "Avg"
+                        : op.charAt(0).toUpperCase() + op.slice(1);
                 return {
                     key: a.key,
                     op,
@@ -1188,7 +1193,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     "mtd_pnl",
                                     "dtd_pnl",
                                 ];
-                                const sumCols = (localConfig.filters?.sumColumns || []) as string[];
+                                const sumCols = (localConfig.filters
+                                    ?.sumColumns || []) as string[];
                                 // Find existing aggregation entry if present
                                 const aggList =
                                     (localConfig as any)?.summary
@@ -1197,7 +1203,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     aggList.find((a: any) => a.key === c.key) ||
                                     {};
                                 const currentOp = existing.op || "sum";
-                                const enabledFromAgg = existing.enabled !== false;
+                                const enabledFromAgg =
+                                    existing.enabled !== false;
                                 const selected = pnlKeys.includes(c.key)
                                     ? sumCols.includes(c.key)
                                     : enabledFromAgg;
@@ -1240,13 +1247,18 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                     "mtd_pnl",
                                                     "dtd_pnl",
                                                 ];
-                                                const isPnl = pnlKeys.includes(c.key);
+                                                const isPnl = pnlKeys.includes(
+                                                    c.key
+                                                );
                                                 const current = new Set(
-                                                    (localConfig.filters?.sumColumns as string[]) || []
+                                                    (localConfig.filters
+                                                        ?.sumColumns as string[]) ||
+                                                        []
                                                 );
                                                 // For PnL keys, reflect selection in sumColumns
                                                 if (isPnl) {
-                                                    if (selected) current.delete(c.key);
+                                                    if (selected)
+                                                        current.delete(c.key);
                                                     else current.add(c.key);
                                                 }
 
@@ -1287,7 +1299,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                         ...(localConfig.filters ||
                                                             {}),
                                                         // Only PnL keys are reflected in sumColumns
-                                                        sumColumns: Array.from(current),
+                                                        sumColumns:
+                                                            Array.from(current),
                                                     },
                                                     summary: {
                                                         enabled: true,
@@ -1323,12 +1336,17 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                     "mtd_pnl",
                                                     "dtd_pnl",
                                                 ];
-                                                const isPnl = pnlKeys.includes(c.key);
+                                                const isPnl = pnlKeys.includes(
+                                                    c.key
+                                                );
                                                 const current = new Set(
-                                                    (localConfig.filters?.sumColumns as string[]) || []
+                                                    (localConfig.filters
+                                                        ?.sumColumns as string[]) ||
+                                                        []
                                                 );
                                                 if (isPnl) {
-                                                    if (e.target.checked) current.add(c.key);
+                                                    if (e.target.checked)
+                                                        current.add(c.key);
                                                     else current.delete(c.key);
                                                 }
 
@@ -1375,7 +1393,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                         ...(localConfig.filters ||
                                                             {}),
                                                         // Only PnL keys are reflected in sumColumns
-                                                        sumColumns: Array.from(current),
+                                                        sumColumns:
+                                                            Array.from(current),
                                                     },
                                                     summary: {
                                                         enabled: true,
@@ -1603,24 +1622,29 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     .join(" • ")}
                             </td>
                         </tr>
-                        {enabledAggregations && enabledAggregations.length > 0 && (
-                            <tr style={{ background: safeTheme.surfaceAlt }}>
-                                <td
-                                    colSpan={table.getVisibleLeafColumns().length}
-                                    style={{
-                                        border: `1px solid ${safeTheme.border}`,
-                                        padding: "4px 8px",
-                                        textAlign: "right",
-                                        fontWeight: 600,
-                                        fontSize: 12,
-                                    }}
+                        {enabledAggregations &&
+                            enabledAggregations.length > 0 && (
+                                <tr
+                                    style={{ background: safeTheme.surfaceAlt }}
                                 >
-                                    {enabledAggregations
-                                        .map((a) => a.display)
-                                        .join(" • ")}
-                                </td>
-                            </tr>
-                        )}
+                                    <td
+                                        colSpan={
+                                            table.getVisibleLeafColumns().length
+                                        }
+                                        style={{
+                                            border: `1px solid ${safeTheme.border}`,
+                                            padding: "4px 8px",
+                                            textAlign: "right",
+                                            fontWeight: 600,
+                                            fontSize: 12,
+                                        }}
+                                    >
+                                        {enabledAggregations
+                                            .map((a) => a.display)
+                                            .join(" • ")}
+                                    </td>
+                                </tr>
+                            )}
                     </tfoot>
                 </table>
             </div>
