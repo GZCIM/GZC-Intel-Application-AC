@@ -1181,11 +1181,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         {localConfig.columns
                             .filter((c) => numericKeys.includes(c.key))
                             .map((c) => {
-                                const selected = Boolean(
-                                    (
-                                        localConfig.filters?.sumColumns || []
-                                    ).includes(c.key)
-                                );
+                                // Selection rule: PnL keys use filters.sumColumns; others use summary.aggregations.enabled
+                                const pnlKeys = [
+                                    "itd_pnl",
+                                    "ytd_pnl",
+                                    "mtd_pnl",
+                                    "dtd_pnl",
+                                ];
+                                const sumCols = (localConfig.filters?.sumColumns || []) as string[];
                                 // Find existing aggregation entry if present
                                 const aggList =
                                     (localConfig as any)?.summary
@@ -1194,6 +1197,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     aggList.find((a: any) => a.key === c.key) ||
                                     {};
                                 const currentOp = existing.op || "sum";
+                                const enabledFromAgg = existing.enabled !== false;
+                                const selected = pnlKeys.includes(c.key)
+                                    ? sumCols.includes(c.key)
+                                    : enabledFromAgg;
 
                                 return (
                                     <label
@@ -1227,14 +1234,21 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                 tag !== "SELECT"
                                             ) {
                                                 // Toggle selection when clicking the row
+                                                const pnlKeys = [
+                                                    "itd_pnl",
+                                                    "ytd_pnl",
+                                                    "mtd_pnl",
+                                                    "dtd_pnl",
+                                                ];
+                                                const isPnl = pnlKeys.includes(c.key);
                                                 const current = new Set(
-                                                    (localConfig.filters
-                                                        ?.sumColumns as string[]) ||
-                                                        []
+                                                    (localConfig.filters?.sumColumns as string[]) || []
                                                 );
-                                                if (selected)
-                                                    current.delete(c.key);
-                                                else current.add(c.key);
+                                                // For PnL keys, reflect selection in sumColumns
+                                                if (isPnl) {
+                                                    if (selected) current.delete(c.key);
+                                                    else current.add(c.key);
+                                                }
 
                                                 // Sync summary.aggregations enabled flag
                                                 const list =
@@ -1272,8 +1286,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                     filters: {
                                                         ...(localConfig.filters ||
                                                             {}),
-                                                        sumColumns:
-                                                            Array.from(current),
+                                                        // Only PnL keys are reflected in sumColumns
+                                                        sumColumns: Array.from(current),
                                                     },
                                                     summary: {
                                                         enabled: true,
@@ -1303,14 +1317,20 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                         }
                                                     );
                                                 } catch (_) {}
+                                                const pnlKeys = [
+                                                    "itd_pnl",
+                                                    "ytd_pnl",
+                                                    "mtd_pnl",
+                                                    "dtd_pnl",
+                                                ];
+                                                const isPnl = pnlKeys.includes(c.key);
                                                 const current = new Set(
-                                                    (localConfig.filters
-                                                        ?.sumColumns as string[]) ||
-                                                        []
+                                                    (localConfig.filters?.sumColumns as string[]) || []
                                                 );
-                                                if (e.target.checked)
-                                                    current.add(c.key);
-                                                else current.delete(c.key);
+                                                if (isPnl) {
+                                                    if (e.target.checked) current.add(c.key);
+                                                    else current.delete(c.key);
+                                                }
 
                                                 // Ensure summary.aggregations contains entry with enabled flag
                                                 const base = {
@@ -1354,8 +1374,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                     filters: {
                                                         ...(localConfig.filters ||
                                                             {}),
-                                                        sumColumns:
-                                                            Array.from(current),
+                                                        // Only PnL keys are reflected in sumColumns
+                                                        sumColumns: Array.from(current),
                                                     },
                                                     summary: {
                                                         enabled: true,
