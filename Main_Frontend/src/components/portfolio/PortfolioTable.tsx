@@ -738,6 +738,95 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             });
     }, [localConfig?.summary?.aggregations, localConfig?.columns, positions]);
 
+    // Helper: compute enabled aggregations for an arbitrary subset of positions
+    const computeAggregationsFor = (
+        subset: PortfolioPosition[]
+    ): { pnlParts: string[]; otherParts: string[] } => {
+        const labelByKey: Record<string, string> = (
+            localConfig?.columns || []
+        ).reduce((acc, c) => {
+            acc[c.key] = c.label;
+            return acc;
+        }, {} as Record<string, string>);
+
+        const compute = (key: string, op: string) => {
+            const values: number[] = subset
+                .map((p: any) => p?.[key])
+                .filter((v: any) => typeof v === "number") as number[];
+            if (values.length === 0) return null;
+            switch (op) {
+                case "avg":
+                    return values.reduce((a, b) => a + b, 0) / values.length;
+                case "min":
+                    return Math.min(...values);
+                case "max":
+                    return Math.max(...values);
+                default:
+                    return values.reduce((a, b) => a + b, 0);
+            }
+        };
+
+        const formatAgg = (value: number | null, key: string): string => {
+            if (value === null) return "-";
+            switch (key) {
+                case "trade_price":
+                case "price":
+                case "eoy_price":
+                case "eom_price":
+                case "eod_price":
+                    return value.toFixed(6);
+                case "quantity":
+                case "position":
+                    return new Intl.NumberFormat().format(value);
+                case "itd_pnl":
+                case "ytd_pnl":
+                case "mtd_pnl":
+                case "dtd_pnl":
+                    return `$${value.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                    })}`;
+                default:
+                    return String(value);
+            }
+        };
+
+        // PnL parts use selectedSumKeys
+        const pnlParts = selectedSumKeys.map((key) => {
+            const op = "sum";
+            const val = compute(key, op as any) ?? 0;
+            return `${sumLabelForKey(key)}: ${formatAgg(val as number, key)}`;
+        });
+
+        // Other enabled aggregations from config
+        const list = ((localConfig as any)?.summary?.aggregations ||
+            []) as Array<{
+            key: string;
+            op?: "sum" | "avg" | "min" | "max";
+            enabled?: boolean;
+        }>;
+        const otherParts = list
+            .filter((a) => a && (a.enabled === undefined || a.enabled))
+            .filter(
+                (a) =>
+                    !["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"].includes(
+                        a.key
+                    )
+            )
+            .map((a) => {
+                const op = a.op || "sum";
+                const raw = compute(a.key, op);
+                const label = labelByKey[a.key] || a.key;
+                const prettyOp =
+                    op === "avg"
+                        ? "Avg"
+                        : op.charAt(0).toUpperCase() + op.slice(1);
+                return `${label} (${prettyOp}): ${formatAgg(raw, a.key)}`;
+            });
+
+        return { pnlParts, otherParts };
+    };
+
     // Respect Aggregation selections; prefer filters.sumColumns, then enabled summary aggregations, else all
     const selectedSumKeys = useMemo(() => {
         const allowed: string[] = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"];
@@ -1581,33 +1670,147 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         ))}
                     </thead>
                     <tbody>
-                        {table.getRowModel().rows.map((row, idx) => (
-                            <tr
-                                key={row.id}
-                                style={{
-                                    background:
-                                        idx % 2 === 0
-                                            ? safeTheme.surface
-                                            : safeTheme.background,
-                                }}
-                            >
-                                {row.getVisibleCells().map((cell) => (
-                                    <td
-                                        key={cell.id}
+                        {(() => {
+                            const rows = table.getRowModel().rows;
+                            const groupKey =
+                                (localConfig
+                                    ?.grouping?.[0] as keyof PortfolioPosition) ||
+                                null;
+                            const rendered: React.ReactNode[] = [];
+                            let currentGroupValue: any = undefined;
+                            let groupBuffer: typeof rows = [] as any;
+
+                            const flushGroup = () => {
+                                if (!groupKey || groupBuffer.length === 0)
+                                    return;
+                                const subset = groupBuffer.map(
+                                    (r: any) => r.original as PortfolioPosition
+                                );
+                                const { pnlParts, otherParts } =
+                                    computeAggregationsFor(subset);
+                                rendered.push(
+                                    <tr
+                                        key={`group-sum-${String(
+                                            currentGroupValue
+                                        )}-${rendered.length}`}
                                         style={{
-                                            border: `1px solid ${safeTheme.border}`,
-                                            padding: "8px 12px",
-                                            whiteSpace: "nowrap",
+                                            background: safeTheme.surfaceAlt,
                                         }}
                                     >
-                                        {flexRender(
-                                            cell.column.columnDef.cell,
-                                            cell.getContext()
-                                        )}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
+                                        <td
+                                            colSpan={
+                                                table.getVisibleLeafColumns()
+                                                    .length
+                                            }
+                                            style={{
+                                                border: `1px solid ${safeTheme.border}`,
+                                                padding: "4px 8px",
+                                                textAlign: "right",
+                                                fontWeight: 600,
+                                                fontSize: 12,
+                                            }}
+                                        >
+                                            {[...pnlParts, ...otherParts].join(
+                                                " • "
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            };
+
+                            rows.forEach((row, idx) => {
+                                const original =
+                                    row.original as PortfolioPosition;
+                                const value = groupKey
+                                    ? (original as any)[groupKey]
+                                    : undefined;
+                                const isNewGroup =
+                                    groupKey && value !== currentGroupValue;
+
+                                if (isNewGroup) {
+                                    // flush previous group
+                                    flushGroup();
+                                    currentGroupValue = value;
+                                    groupBuffer = [] as any;
+                                }
+
+                                groupBuffer.push(row);
+                                rendered.push(
+                                    <tr
+                                        key={row.id}
+                                        style={{
+                                            background:
+                                                idx % 2 === 0
+                                                    ? safeTheme.surface
+                                                    : safeTheme.background,
+                                        }}
+                                    >
+                                        {row.getVisibleCells().map((cell) => (
+                                            <td
+                                                key={cell.id}
+                                                style={{
+                                                    border: `1px solid ${safeTheme.border}`,
+                                                    padding: "8px 12px",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                );
+
+                                const next = rows[idx + 1];
+                                const nextValue =
+                                    next && groupKey
+                                        ? (next.original as any)[groupKey]
+                                        : undefined;
+                                const isBoundary =
+                                    groupKey &&
+                                    (next === undefined ||
+                                        nextValue !== currentGroupValue);
+                                if (isBoundary) {
+                                    flushGroup();
+                                    groupBuffer = [] as any;
+                                }
+                            });
+
+                            // If no grouping set, just render rows as before
+                            if (!groupKey) {
+                                return rows.map((row, idx) => (
+                                    <tr
+                                        key={row.id}
+                                        style={{
+                                            background:
+                                                idx % 2 === 0
+                                                    ? safeTheme.surface
+                                                    : safeTheme.background,
+                                        }}
+                                    >
+                                        {row.getVisibleCells().map((cell) => (
+                                            <td
+                                                key={cell.id}
+                                                style={{
+                                                    border: `1px solid ${safeTheme.border}`,
+                                                    padding: "8px 12px",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ));
+                            }
+
+                            return rendered;
+                        })()}
                     </tbody>
                     {/* Combined footer: compact PnL + non-PnL aggregations in one line */}
                     <tfoot>
