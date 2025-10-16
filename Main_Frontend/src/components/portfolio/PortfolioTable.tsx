@@ -1230,7 +1230,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             transition:
                                                 "background 120ms ease, border-color 120ms ease",
                                         }}
-                                        onMouseDown={(e) => e.preventDefault()}
+                                        onMouseDown={(e) => {
+                                            const tag = (e.target as HTMLElement).tagName;
+                                            if (tag !== "SELECT" && tag !== "INPUT") {
+                                                e.preventDefault();
+                                            }
+                                        }}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             const tag = (
