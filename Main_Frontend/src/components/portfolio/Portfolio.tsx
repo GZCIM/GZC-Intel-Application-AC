@@ -1533,11 +1533,12 @@ export const Portfolio: React.FC<
                         <div
                             style={{
                                 flex: 1,
+                                minWidth: 0, // allow child scroll container to constrain width
                                 border: `1px dashed ${currentTheme.border}`,
                                 borderRadius: 4,
                                 padding: 8,
-                                overflowX: "auto",
-                                overflowY: "auto",
+                                overflowX: "hidden", // prevent double horizontal scrollbar at parent level
+                                overflowY: "hidden",
                                 height: "100%",
                             }}
                         >
