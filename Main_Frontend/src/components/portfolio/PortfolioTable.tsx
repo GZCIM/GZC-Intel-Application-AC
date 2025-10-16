@@ -1673,13 +1673,18 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     position: "relative",
                     zIndex: 0,
                     WebkitOverflowScrolling: "touch",
+                    paddingBottom: 6,
+                    paddingRight: 1, // create slight overflow to surface horizontal scrollbar
+                    overflowX: "auto",
                 }}
             >
                 <table
                     ref={tableRef}
                     style={{
                         width: "max-content",
-                        minWidth: tableMinWidth ? `${tableMinWidth}px` : "100%",
+                        minWidth: tableMinWidth
+                            ? `${tableMinWidth + 48}px` // ensure table exceeds container for horizontal scroll
+                            : "100%",
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
                         color: safeTheme.text,
@@ -1900,6 +1905,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         </tr>
                     </tfoot>
                 </table>
+                {/* Removed spacer; scrollbar is now always visible via CSS */}
             </div>
 
             {/* Footer controls removed as tabs are in header */}

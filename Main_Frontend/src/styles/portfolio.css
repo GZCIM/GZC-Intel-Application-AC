@@ -14,7 +14,7 @@
 .portfolio-table-scroll {
     max-width: 100%;
     min-width: 0;
-    overflow-x: auto;
+    overflow-x: scroll; /* always show horizontal scrollbar inside the table area */
     overflow-y: auto;
     box-sizing: border-box;
     contain: content;
