@@ -715,8 +715,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     return String(value);
             }
         };
+        const pnlKeys = ["itd_pnl", "ytd_pnl", "mtd_pnl", "dtd_pnl"];
         return enabled
-            .filter((a) => numericKeys.includes(a.key))
+            .filter(
+                (a) => numericKeys.includes(a.key) && !pnlKeys.includes(a.key)
+            )
             .map((a) => {
                 const op = a.op || "sum";
                 const raw = compute(a.key, op);
@@ -1231,8 +1234,13 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                 "background 120ms ease, border-color 120ms ease",
                                         }}
                                         onMouseDown={(e) => {
-                                            const tag = (e.target as HTMLElement).tagName;
-                                            if (tag !== "SELECT" && tag !== "INPUT") {
+                                            const tag = (
+                                                e.target as HTMLElement
+                                            ).tagName;
+                                            if (
+                                                tag !== "SELECT" &&
+                                                tag !== "INPUT"
+                                            ) {
                                                 e.preventDefault();
                                             }
                                         }}
