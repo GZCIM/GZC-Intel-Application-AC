@@ -336,12 +336,24 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     selectedSumKeys ||
                     []
             );
+            // Respect explicit aggregation.enabled for any numeric field, not only PnL keys
+            const enabledSet = new Set<string>();
+            for (const a of existingAggs) {
+                if (
+                    a &&
+                    a.key &&
+                    (a.enabled === true || a.enabled === undefined)
+                ) {
+                    enabledSet.add(a.key);
+                }
+            }
             const nextAggregations = (numericKeys as string[]).map((key) => {
                 const prev = existingAggs.find((a) => a?.key === key) || {};
                 return {
                     key,
                     op: prev.op || "sum",
-                    enabled: selectedSet.has(key),
+                    // Enabled if explicitly enabled in aggregations OR selected via Sum (for PnL keys)
+                    enabled: enabledSet.has(key) || selectedSet.has(key),
                 };
             });
             try {
