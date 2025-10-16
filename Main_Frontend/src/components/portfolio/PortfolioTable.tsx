@@ -1203,7 +1203,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     aggList.find((a: any) => a.key === c.key) ||
                                     {};
                                 const currentOp = existing.op || "sum";
-                                const enabledFromAgg = existing.enabled === true;
+                                const enabledFromAgg =
+                                    existing.enabled === true;
                                 const selected = pnlKeys.includes(c.key)
                                     ? sumCols.includes(c.key)
                                     : enabledFromAgg;
