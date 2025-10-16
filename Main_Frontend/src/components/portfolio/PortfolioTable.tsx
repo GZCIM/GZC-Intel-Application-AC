@@ -1102,6 +1102,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         border: `1px solid ${safeTheme.border}`,
                         borderRadius: 6,
                         padding: 10,
+                        maxHeight: 280,
+                        overflowY: "auto",
                         width: "100%",
                     }}
                 >
@@ -1109,7 +1111,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         style={{
                             display: "grid",
                             gridTemplateColumns:
-                                "repeat(auto-fit, minmax(160px,1fr))",
+                                "repeat(auto-fit, minmax(200px,1fr))",
                             gap: 10,
                         }}
                     >
