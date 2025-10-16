@@ -592,6 +592,21 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         }));
     }, [localConfig]);
 
+    // Compute total min width to force horizontal scrollbar when needed
+    const tableMinWidth = useMemo(() => {
+        const visCols = (localConfig?.columns || []).filter((c) => c.visible);
+        if (visCols.length === 0) return undefined as number | undefined;
+        // include cell padding approximation (24px per col)
+        const total = visCols.reduce(
+            (sum, c) =>
+                sum +
+                (c.key === "trade_type" ? Math.max(c.width, 140) : c.width) +
+                24,
+            0
+        );
+        return Math.max(total, 800); // enforce a reasonable floor
+    }, [localConfig?.columns]);
+
     // Sorting state mapped from config
     const [sorting, setSorting] = useState<SortingState>(() => {
         const s = localConfig?.sorting;
@@ -991,7 +1006,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     className="flex justify-between items-center mb-4 p-4 rounded"
                     style={{
                         overflowX: "auto",
-                        position: "relative",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 300,
                         paddingRight: 8,
                         background: safeTheme.surface,
                         border: `1px solid ${safeTheme.border}`,
@@ -1119,9 +1136,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 <div
                     style={{
                         marginTop: 8,
-                        marginBottom: 12,
-                        position: "relative",
-                        zIndex: 100,
+                        marginBottom: 16,
+                        position: "sticky",
+                        top: 56,
+                        zIndex: 250,
                         pointerEvents: "auto",
                         background: safeTheme.surface,
                         color: safeTheme.text,
@@ -1195,9 +1213,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 <div
                     style={{
                         marginTop: 8,
-                        marginBottom: 12,
-                        position: "relative",
-                        zIndex: 100,
+                        marginBottom: 16,
+                        position: "sticky",
+                        top: 56,
+                        zIndex: 250,
                         pointerEvents: "auto",
                         background: safeTheme.surface,
                         color: safeTheme.text,
@@ -1253,9 +1272,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 <div
                     style={{
                         marginTop: 8,
-                        marginBottom: 12,
-                        position: "relative",
-                        zIndex: 100,
+                        marginBottom: 16,
+                        position: "sticky",
+                        top: 56,
+                        zIndex: 250,
                         pointerEvents: "auto",
                         background: safeTheme.surface,
                         color: safeTheme.text,
@@ -1611,6 +1631,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             {/* Table */}
             <div
                 style={{
+                    marginTop: isEditing ? 180 : 0,
                     overflowX: "auto",
                     overflowY: positions.length > 20 ? "auto" : "visible",
                     maxHeight: positions.length > 20 ? "60vh" : "none",
@@ -1623,6 +1644,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 <table
                     style={{
                         width: "100%",
+                        minWidth: tableMinWidth,
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
                         color: safeTheme.text,
