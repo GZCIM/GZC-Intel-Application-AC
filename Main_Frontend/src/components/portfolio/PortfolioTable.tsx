@@ -1609,7 +1609,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                             </tr>
                         ))}
                     </tbody>
-                    {/* PnL Summary Footer (compact) - respects Sum tab selections */}
+                    {/* Combined footer: compact PnL + non-PnL aggregations in one line */}
                     <tfoot>
                         <tr style={{ background: safeTheme.surfaceAlt }}>
                             <td
@@ -1622,8 +1622,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                     fontSize: 12,
                                 }}
                             >
-                                {selectedSumKeys
-                                    .map(
+                                {[
+                                    ...selectedSumKeys.map(
                                         (key) =>
                                             `${sumLabelForKey(
                                                 key
@@ -1631,33 +1631,13 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                 (pnlSummary as any)[key] ?? 0,
                                                 key
                                             )}`
-                                    )
-                                    .join(" • ")}
+                                    ),
+                                    ...(enabledAggregations || []).map(
+                                        (a) => a.display
+                                    ),
+                                ].join(" • ")}
                             </td>
                         </tr>
-                        {enabledAggregations &&
-                            enabledAggregations.length > 0 && (
-                                <tr
-                                    style={{ background: safeTheme.surfaceAlt }}
-                                >
-                                    <td
-                                        colSpan={
-                                            table.getVisibleLeafColumns().length
-                                        }
-                                        style={{
-                                            border: `1px solid ${safeTheme.border}`,
-                                            padding: "4px 8px",
-                                            textAlign: "right",
-                                            fontWeight: 600,
-                                            fontSize: 12,
-                                        }}
-                                    >
-                                        {enabledAggregations
-                                            .map((a) => a.display)
-                                            .join(" • ")}
-                                    </td>
-                                </tr>
-                            )}
                     </tfoot>
                 </table>
             </div>
