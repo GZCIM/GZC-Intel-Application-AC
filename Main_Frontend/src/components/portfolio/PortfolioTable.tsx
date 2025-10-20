@@ -1760,10 +1760,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     style={{
                         width: "max-content",
                         minWidth: tableMinWidth
-                            ? `${Math.max(tableMinWidth + 200, 3000)}px` // smaller table to show horizontal scrollbar
+                            ? `${Math.max(tableMinWidth + 500, 4000)}px` // force horizontal scrollbar
                             : "100%",
-                        borderCollapse: "separate",
-                        borderSpacing: 0,
+                        borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
                         color: safeTheme.text,
                         background: safeTheme.background,
@@ -1792,8 +1791,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             background: safeTheme.surfaceAlt,
                                             // Make room for the resize handle so label isn't covered
                                             paddingRight: 14,
-                                            // Required for absolute positioning of resize handle
-                                            position: "relative",
                                         }}
                                         onClick={header.column.getToggleSortingHandler()}
                                     >
@@ -1850,16 +1847,18 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                     right: 0,
                                                     top: 0,
                                                     height: "100%",
-                                                    width: 6,
+                                                    width: 8,
                                                     cursor: "col-resize",
                                                     userSelect: "none",
                                                     touchAction: "none",
                                                     backgroundColor:
                                                         header.column.getIsResizing()
-                                                            ? "rgba(106,168,79,0.35)"
-                                                            : "rgba(106,168,79,0.1)",
-                                                    border: "1px solid rgba(106,168,79,0.3)",
+                                                            ? "rgba(106,168,79,0.5)"
+                                                            : "rgba(106,168,79,0.2)",
+                                                    border: "1px solid rgba(106,168,79,0.4)",
                                                     zIndex: 10,
+                                                    // Ensure it's visible and clickable
+                                                    pointerEvents: "auto",
                                                 }}
                                                 aria-label="Resize column"
                                             />
