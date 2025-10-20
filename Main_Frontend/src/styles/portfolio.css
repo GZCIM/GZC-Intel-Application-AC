@@ -2,20 +2,20 @@
 
 .portfolio-card-body {
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .portfolio-dashed-wrap {
     display: flex;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .portfolio-table-scroll {
     max-width: 100%;
     min-width: 0;
-    overflow-x: auto; /* horizontal scrollbar when needed */
-    overflow-y: auto; /* vertical scrollbar when needed */
+    overflow-x: scroll; /* always show horizontal scrollbar */
+    overflow-y: scroll; /* always show vertical scrollbar */
     box-sizing: border-box;
     contain: content;
     overflow-clip-margin: content-box;
