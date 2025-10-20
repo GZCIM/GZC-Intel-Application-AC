@@ -73,6 +73,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     componentId,
     deviceType,
 }) => {
+    // Portfolio table with sticky headers, column resizing, and horizontal scrollbar support
     const { getToken } = useAuthContext();
     const { currentTheme: theme } = useTheme();
     const safeTheme = (theme as any) || {
@@ -201,14 +202,25 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     "[PortfolioTable][SCROLL] needsHorizontalScroll?",
                     data.tableScrollWidth > data.containerClientWidth
                 );
-                console.log("[PortfolioTable][SCROLL] tableMinWidth calculated:", tableMinWidth);
-                console.log("[PortfolioTable][SCROLL] DIFFERENCE:", data.tableScrollWidth - data.containerClientWidth, "px");
-                
+                console.log(
+                    "[PortfolioTable][SCROLL] tableMinWidth calculated:",
+                    tableMinWidth
+                );
+                console.log(
+                    "[PortfolioTable][SCROLL] DIFFERENCE:",
+                    data.tableScrollWidth - data.containerClientWidth,
+                    "px"
+                );
+
                 // Force scrollbar visibility by adding a temporary element
                 if (data.tableScrollWidth <= data.containerClientWidth) {
-                    console.log("[PortfolioTable][SCROLL] ⚠️ NO HORIZONTAL SCROLLBAR - table fits in container");
+                    console.log(
+                        "[PortfolioTable][SCROLL] ⚠️ NO HORIZONTAL SCROLLBAR - table fits in container"
+                    );
                 } else {
-                    console.log("[PortfolioTable][SCROLL] ✅ HORIZONTAL SCROLLBAR SHOULD BE VISIBLE");
+                    console.log(
+                        "[PortfolioTable][SCROLL] ✅ HORIZONTAL SCROLLBAR SHOULD BE VISIBLE"
+                    );
                 }
             } catch (_) {}
         };
@@ -688,7 +700,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         state: { sorting, columnSizing },
         onSortingChange: setSorting,
         onColumnSizingChange: (updater) => {
-            console.log('[PortfolioTable] Column sizing change', { updater, currentSizing: columnSizing });
+            console.log("[PortfolioTable] Column sizing change", {
+                updater,
+                currentSizing: columnSizing,
+            });
             setColumnSizing(updater);
         },
         getCoreRowModel: getCoreRowModel(),
@@ -1801,18 +1816,34 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                         {isEditing && (
                                             <div
                                                 onMouseDown={(e) => {
-                                                    console.log('[PortfolioTable] Resize handle mousedown', {
-                                                        columnId: header.column.id,
-                                                        isResizing: header.column.getIsResizing(),
-                                                        currentSize: header.getSize()
-                                                    });
-                                                    header.getResizeHandler()(e);
+                                                    console.log(
+                                                        "[PortfolioTable] Resize handle mousedown",
+                                                        {
+                                                            columnId:
+                                                                header.column
+                                                                    .id,
+                                                            isResizing:
+                                                                header.column.getIsResizing(),
+                                                            currentSize:
+                                                                header.getSize(),
+                                                        }
+                                                    );
+                                                    header.getResizeHandler()(
+                                                        e
+                                                    );
                                                 }}
                                                 onTouchStart={(e) => {
-                                                    console.log('[PortfolioTable] Resize handle touchstart', {
-                                                        columnId: header.column.id
-                                                    });
-                                                    header.getResizeHandler()(e);
+                                                    console.log(
+                                                        "[PortfolioTable] Resize handle touchstart",
+                                                        {
+                                                            columnId:
+                                                                header.column
+                                                                    .id,
+                                                        }
+                                                    );
+                                                    header.getResizeHandler()(
+                                                        e
+                                                    );
                                                 }}
                                                 style={{
                                                     position: "absolute",
