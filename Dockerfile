@@ -7,22 +7,27 @@ FROM mcr.microsoft.com/devcontainers/javascript-node:20 AS frontend-builder
 
 WORKDIR /app/frontend
 
+# Configure npm for maximum speed
+RUN npm config set fetch-retries 3 \
+    && npm config set fetch-retry-mintimeout 10000 \
+    && npm config set fetch-retry-maxtimeout 60000 \
+    && npm config set registry https://registry.npmjs.org \
+    && npm config set prefer-offline true \
+    && npm config set audit false \
+    && npm config set fund false
+
 # Copy frontend package files
 COPY Main_Frontend/package*.json ./
 
-# Harden npm and enable cache for faster CI rebuilds
-RUN npm config set fetch-retries 6 \
-    && npm config set fetch-retry-mintimeout 20000 \
-    && npm config set fetch-retry-maxtimeout 180000 \
-    && npm config set registry https://registry.npmjs.org
-
-# Use BuildKit cache for npm
-RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
+# Install dependencies with aggressive caching
+RUN --mount=type=cache,target=/root/.npm \
+    --mount=type=cache,target=/app/frontend/node_modules \
+    npm ci --prefer-offline --no-audit --no-fund --silent
 
 # Copy frontend source
 COPY Main_Frontend/ ./
 
-# Build frontend with Application Insights, Azure AD and Version (skip TypeScript check for faster builds)
+# Build frontend with Application Insights, Azure AD and Version
 ARG VITE_APPLICATIONINSIGHTS_CONNECTION_STRING
 ARG VITE_CLIENT_ID
 ARG VITE_TENANT_ID
@@ -31,42 +36,45 @@ ENV VITE_APPLICATIONINSIGHTS_CONNECTION_STRING=${VITE_APPLICATIONINSIGHTS_CONNEC
 ENV VITE_CLIENT_ID=${VITE_CLIENT_ID}
 ENV VITE_TENANT_ID=${VITE_TENANT_ID}
 ENV VITE_APP_VERSION=${VITE_APP_VERSION}
-# Cache npm during build too
-RUN --mount=type=cache,target=/root/.npm npm run build:skip-ts
+
+# Build with caching and parallel processing
+RUN --mount=type=cache,target=/root/.npm \
+    --mount=type=cache,target=/app/frontend/node_modules \
+    npm run build:skip-ts
 
 # Stage 2: Production Container
 FROM mcr.microsoft.com/devcontainers/python:3.11
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies in parallel
+RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx \
     supervisor \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Install Python dependencies for both backends
+# Install Python dependencies for both backends in parallel
 COPY FSS_Socket/backend/requirements.txt /tmp/fss_requirements.txt
 COPY Main_Gateway/backend/requirements.txt /tmp/gateway_requirements.txt
-# Use pip cache mounts to speed up repeated installs
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/fss_requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/gateway_requirements.txt
 
-# Copy built frontend to nginx directory
+# Install Python packages with aggressive caching and parallel processing
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r /tmp/fss_requirements.txt && \
+    pip install --no-cache-dir -r /tmp/gateway_requirements.txt
+
+# Copy all files in parallel to minimize layers
 COPY --from=frontend-builder /app/frontend/dist /var/www/html
-
-# Copy backend applications
 COPY FSS_Socket/backend/ /app/fss_backend/
 COPY Main_Gateway/backend/ /app/gateway_backend/
-
-# Copy nginx config (use our provided config)
 COPY nginx-config/nginx.conf /etc/nginx/nginx.conf
 COPY nginx-config/mime.types /etc/nginx/mime.types
 COPY nginx-config/sites-available/default /etc/nginx/conf.d/default.conf
-
-# Copy environment variable injection script
 COPY inject-env.sh /usr/local/bin/inject-env.sh
+
+# Set permissions
 RUN chmod +x /usr/local/bin/inject-env.sh
 
 # Create supervisor config
