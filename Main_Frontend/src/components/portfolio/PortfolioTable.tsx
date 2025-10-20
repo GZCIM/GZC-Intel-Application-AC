@@ -46,6 +46,7 @@ interface ColumnConfig {
     label: string;
     visible: boolean;
     width: number;
+    size?: number; // TanStack column sizing value
 }
 
 interface TableConfig {
@@ -654,6 +655,19 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
     // Enable column resizing state so drag interactions update widths live
     const [columnSizing, setColumnSizing] = useState<Record<string, number>>({});
+    
+    // Initialize column sizing from config when it loads
+    useEffect(() => {
+        if (localConfig?.columns) {
+            const savedSizes: Record<string, number> = {};
+            localConfig.columns.forEach(col => {
+                if (col.size !== undefined) {
+                    savedSizes[col.key] = col.size;
+                }
+            });
+            setColumnSizing(savedSizes);
+        }
+    }, [localConfig?.columns]);
 
     const table = useReactTable({
         data: positions,
@@ -666,28 +680,55 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         columnResizeMode: "onChange",
     });
 
-    // Sync column visibility with config
+    // Sync column visibility and sizing with config
     useEffect(() => {
         const vis: Record<string, boolean> = {};
-        (localConfig?.columns || []).forEach((c) => (vis[c.key] = !!c.visible));
+        const sizes: Record<string, number> = {};
+        (localConfig?.columns || []).forEach((c) => {
+            vis[c.key] = !!c.visible;
+            if (c.size !== undefined) {
+                sizes[c.key] = c.size;
+            }
+        });
         table.setColumnVisibility(vis);
+        table.setColumnSizing(sizes);
     }, [localConfig?.columns, table]);
 
-    // Reflect sorting changes back into config while editing
+    // Reflect sorting and column sizing changes back into config while editing
     useEffect(() => {
         if (!localConfig) return;
-        if (sorting.length === 0) return;
-        const s = sorting[0];
-        const updated: TableConfig = {
-            ...localConfig,
-            sorting: {
-                column: s.id as string,
-                direction: s.desc ? "desc" : "asc",
-            },
-        };
-        setLocalConfig(updated);
+        
+        let updated: TableConfig = { ...localConfig };
+        
+        // Update sorting if changed
+        if (sorting.length > 0) {
+            const s = sorting[0];
+            updated = {
+                ...updated,
+                sorting: {
+                    column: s.id as string,
+                    direction: s.desc ? "desc" : "asc",
+                },
+            };
+        }
+        
+        // Update column sizes if changed
+        const hasSizeChanges = Object.keys(columnSizing).length > 0;
+        if (hasSizeChanges) {
+            updated = {
+                ...updated,
+                columns: updated.columns.map(col => ({
+                    ...col,
+                    size: columnSizing[col.key] || col.size || col.width
+                }))
+            };
+        }
+        
+        if (hasSizeChanges || sorting.length > 0) {
+            setLocalConfig(updated);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [sorting]);
+    }, [sorting, columnSizing]);
 
     const pnlSummary = useMemo(() => {
         const summary = {
