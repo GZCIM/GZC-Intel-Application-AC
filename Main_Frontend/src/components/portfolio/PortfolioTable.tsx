@@ -652,11 +652,15 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         setSorting(s ? [{ id: s.column, desc: s.direction === "desc" }] : []);
     }, [localConfig?.sorting]);
 
+    // Enable column resizing state so drag interactions update widths live
+    const [columnSizing, setColumnSizing] = useState<Record<string, number>>({});
+
     const table = useReactTable({
         data: positions,
         columns,
-        state: { sorting },
+        state: { sorting, columnSizing },
         onSortingChange: setSorting,
+        onColumnSizingChange: setColumnSizing,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         columnResizeMode: "onChange",
@@ -1692,7 +1696,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         minWidth: tableMinWidth
                             ? `${Math.max(tableMinWidth + 600, 4000)}px` // ensure table always exceeds container for horizontal scroll
                             : "100%",
-                        borderCollapse: "collapse",
+                        borderCollapse: "separate",
+                        borderSpacing: 0,
                         border: `1px solid ${safeTheme.border}`,
                         color: safeTheme.text,
                         background: safeTheme.background,
@@ -1709,11 +1714,18 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                         key={header.id}
                                         style={{
                                             width: header.getSize(),
+                                            minWidth: header.getSize(),
                                             border: `1px solid ${safeTheme.border}`,
                                             padding: "8px 12px",
                                             textAlign: "left",
                                             cursor: "pointer",
                                             whiteSpace: "nowrap",
+                                            position: "sticky",
+                                            top: 0,
+                                            zIndex: 2,
+                                            background: safeTheme.surfaceAlt,
+                                            // Make room for the resize handle so label isn't covered
+                                            paddingRight: 14,
                                         }}
                                         onClick={header.column.getToggleSortingHandler()}
                                     >
@@ -1733,6 +1745,27 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             {header.column.getIsSorted() ===
                                                 "desc" && "↓"}
                                         </div>
+                                        {isEditing && (
+                                            <div
+                                                onMouseDown={header.getResizeHandler()}
+                                                onTouchStart={header.getResizeHandler()}
+                                                style={{
+                                                    position: "absolute",
+                                                    right: 0,
+                                                    top: 0,
+                                                    height: "100%",
+                                                    width: 6,
+                                                    cursor: "col-resize",
+                                                    userSelect: "none",
+                                                    touchAction: "none",
+                                                    backgroundColor:
+                                                        header.column.getIsResizing()
+                                                            ? "rgba(106,168,79,0.35)"
+                                                            : "transparent",
+                                                }}
+                                                aria-label="Resize column"
+                                            />
+                                        )}
                                     </th>
                                 ))}
                             </tr>
