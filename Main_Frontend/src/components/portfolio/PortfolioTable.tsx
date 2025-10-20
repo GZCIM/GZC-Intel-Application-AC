@@ -1669,9 +1669,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 style={{
                     marginTop: isEditing ? 140 : 0,
                     width: "100%",
-                    maxHeight: "60vh",
-                    overflowX: "auto",
-                    overflowY: "auto",
+                    // Ensure the component never pushes header out of viewport
+                    maxHeight: "calc(100vh - 220px)",
+                    // Always show scrollbars so users can drag, not only wheel-pan
+                    overflowX: "scroll",
+                    overflowY: "scroll",
+                    // Critical for flex layouts: allow child to shrink and create scrollbars
+                    minWidth: 0,
+                    minHeight: 0,
                     scrollbarGutter: "stable both-edges",
                     position: "relative",
                     zIndex: 0,
@@ -1685,7 +1690,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     style={{
                         width: "max-content",
                         minWidth: tableMinWidth
-                            ? `${tableMinWidth + 200}px` // ensure table exceeds container for horizontal scroll (more headroom)
+                            ? `${tableMinWidth + 160}px` // still provide headroom without over-expanding
                             : "100%",
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
