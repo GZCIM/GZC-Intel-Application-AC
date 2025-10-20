@@ -1675,7 +1675,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     WebkitOverflowScrolling: "touch",
                     paddingBottom: 6,
                     paddingRight: 1, // create slight overflow to surface horizontal scrollbar
-                    overflowX: "auto",
                 }}
             >
                 <table
