@@ -1690,7 +1690,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     style={{
                         width: "max-content",
                         minWidth: tableMinWidth
-                            ? `${tableMinWidth + 160}px` // still provide headroom without over-expanding
+                            ? `${Math.max(tableMinWidth + 200, 2800)}px` // ensure table always exceeds container for horizontal scroll
                             : "100%",
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
