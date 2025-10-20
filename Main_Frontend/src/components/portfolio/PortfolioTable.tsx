@@ -192,13 +192,16 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     containerScrollWidth: container.scrollWidth,
                     tableOffsetWidth: tableEl.offsetWidth,
                     tableScrollWidth: tableEl.scrollWidth,
+                    tableMinWidth: tableEl.style.minWidth,
                     overflowX: getComputedStyle(container).overflowX,
+                    overflowY: getComputedStyle(container).overflowY,
                 };
                 console.log("[PortfolioTable][SCROLL] widths", data);
                 console.log(
                     "[PortfolioTable][SCROLL] needsHorizontalScroll?",
                     data.tableScrollWidth > data.containerClientWidth
                 );
+                console.log("[PortfolioTable][SCROLL] tableMinWidth calculated:", tableMinWidth);
             } catch (_) {}
         };
 
@@ -1721,18 +1724,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     width: "100%",
                     // Ensure the component never pushes header out of viewport
                     maxHeight: "calc(100vh - 220px)",
-                    // Always show scrollbars so users can drag, not only wheel-pan
-                    overflowX: "scroll",
-                    overflowY: "scroll",
-                    // Critical for flex layouts: allow child to shrink and create scrollbars
+                    // Let CSS handle overflow settings
                     minWidth: 0,
                     minHeight: 0,
-                    scrollbarGutter: "stable both-edges",
                     position: "relative",
                     zIndex: 0,
                     WebkitOverflowScrolling: "touch",
-                    paddingBottom: 6,
-                    paddingRight: 1, // create slight overflow to surface horizontal scrollbar
                 }}
             >
                 <table
@@ -1740,7 +1737,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     style={{
                         width: "max-content",
                         minWidth: tableMinWidth
-                            ? `${Math.max(tableMinWidth + 600, 4000)}px` // ensure table always exceeds container for horizontal scroll
+                            ? `${Math.max(tableMinWidth + 800, 5000)}px` // ensure table always exceeds container for horizontal scroll
                             : "100%",
                         borderCollapse: "separate",
                         borderSpacing: 0,
