@@ -9,7 +9,13 @@ WORKDIR /app/frontend
 
 # Copy frontend package files
 COPY Main_Frontend/package*.json ./
-RUN npm ci
+
+# Harden npm against transient registry outages (retry and higher timeouts)
+RUN npm config set fetch-retries 6 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 180000 \
+    && npm config set registry https://registry.npmjs.org \
+    && npm ci --no-audit --no-fund
 
 # Copy frontend source
 COPY Main_Frontend/ ./
