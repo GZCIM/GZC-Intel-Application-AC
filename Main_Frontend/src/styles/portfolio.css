@@ -32,6 +32,14 @@
     scrollbar-color: #333333 #1e1e1e;
 }
 
+/* Invisible spacer to guarantee minimal overflow so the horizontal bar appears */
+.portfolio-table-scroll::after {
+    content: "";
+    display: inline-block;
+    width: 12px;   /* ensures scrollWidth > clientWidth */
+    height: 1px;
+}
+
 @supports not (width: fit-content) {
     .portfolio-table-scroll {
         display: inline-block;
