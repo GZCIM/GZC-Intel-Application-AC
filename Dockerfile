@@ -3,7 +3,7 @@
 # Deploys to Azure Container Apps (linux/amd64)
 
 # Stage 1: Build Frontend
-FROM node:lts-alpine AS frontend-builder
+FROM mcr.microsoft.com/devcontainers/javascript-node:20 AS frontend-builder
 
 WORKDIR /app/frontend
 
