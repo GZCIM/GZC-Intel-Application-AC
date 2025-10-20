@@ -11,9 +11,11 @@
     overflow: visible;
 }
 
-/* Scroll container: 100% width, natural horizontal/vertical scrollbars */
+/* Shrink-wrap the table so the scrollbars sit on the table’s right border */
 .portfolio-table-scroll {
-    width: 100%;
+    display: inline-block;
+    width: -moz-fit-content;
+    width: fit-content;
     max-width: 100%;
     min-width: 0;
     overflow-x: auto;
@@ -22,11 +24,19 @@
     contain: content;
     overflow-clip-margin: content-box;
     scrollbar-gutter: stable both-edges;
-    padding-bottom: 14px; /* keep horiz bar visible above footer */
+    padding-right: 4px;   /* nudge to surface horiz bar when widths tie */
+    padding-bottom: 14px; /* keep bar above footer/status */
 
     /* Firefox scrollbar styling */
     scrollbar-width: auto;
     scrollbar-color: #333333 #1e1e1e;
+}
+
+@supports not (width: fit-content) {
+    .portfolio-table-scroll {
+        display: inline-block;
+        width: auto;
+    }
 }
 
 /* WebKit scrollbar styling */
@@ -53,6 +63,7 @@
 /* Let table define intrinsic width; container scrolls */
 .portfolio-table-scroll > table {
     width: max-content;
+    border-right: 2px solid transparent; /* force tiny overflow so horiz bar appears */
 }
 
 /* Prevent wrapping (keeps columns stable) */
