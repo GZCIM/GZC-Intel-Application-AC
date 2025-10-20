@@ -202,6 +202,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     data.tableScrollWidth > data.containerClientWidth
                 );
                 console.log("[PortfolioTable][SCROLL] tableMinWidth calculated:", tableMinWidth);
+                console.log("[PortfolioTable][SCROLL] DIFFERENCE:", data.tableScrollWidth - data.containerClientWidth, "px");
+                
+                // Force scrollbar visibility by adding a temporary element
+                if (data.tableScrollWidth <= data.containerClientWidth) {
+                    console.log("[PortfolioTable][SCROLL] ⚠️ NO HORIZONTAL SCROLLBAR - table fits in container");
+                } else {
+                    console.log("[PortfolioTable][SCROLL] ✅ HORIZONTAL SCROLLBAR SHOULD BE VISIBLE");
+                }
             } catch (_) {}
         };
 
@@ -1737,7 +1745,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     style={{
                         width: "max-content",
                         minWidth: tableMinWidth
-                            ? `${Math.max(tableMinWidth + 800, 5000)}px` // ensure table always exceeds container for horizontal scroll
+                            ? `${Math.max(tableMinWidth + 200, 3000)}px` // smaller table to show horizontal scrollbar
                             : "100%",
                         borderCollapse: "separate",
                         borderSpacing: 0,
