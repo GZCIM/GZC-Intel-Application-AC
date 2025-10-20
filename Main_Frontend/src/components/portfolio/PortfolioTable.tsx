@@ -1006,7 +1006,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     }
 
     return (
-        <div className="w-full">
+        <div className="w-full" style={{ overflow: 'visible' }}>
             {/* Quick data summary to verify loads */}
             {positions.length > 0 && (
                 <div
@@ -1690,7 +1690,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     style={{
                         width: "max-content",
                         minWidth: tableMinWidth
-                            ? `${Math.max(tableMinWidth + 200, 2800)}px` // ensure table always exceeds container for horizontal scroll
+                            ? `${Math.max(tableMinWidth + 400, 3200)}px` // ensure table always exceeds container for horizontal scroll
                             : "100%",
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
