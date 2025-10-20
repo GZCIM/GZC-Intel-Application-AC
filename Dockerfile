@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # GZC Intel Application AC - Production Dockerfile
 # Cross-platform compatible (Windows/Mac/Linux development)
 # Deploys to Azure Container Apps (linux/amd64)
@@ -10,12 +11,14 @@ WORKDIR /app/frontend
 # Copy frontend package files
 COPY Main_Frontend/package*.json ./
 
-# Harden npm against transient registry outages (retry and higher timeouts)
+# Harden npm and enable cache for faster CI rebuilds
 RUN npm config set fetch-retries 6 \
     && npm config set fetch-retry-mintimeout 20000 \
     && npm config set fetch-retry-maxtimeout 180000 \
-    && npm config set registry https://registry.npmjs.org \
-    && npm ci --no-audit --no-fund
+    && npm config set registry https://registry.npmjs.org
+
+# Use BuildKit cache for npm
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 # Copy frontend source
 COPY Main_Frontend/ ./
@@ -29,7 +32,8 @@ ENV VITE_APPLICATIONINSIGHTS_CONNECTION_STRING=${VITE_APPLICATIONINSIGHTS_CONNEC
 ENV VITE_CLIENT_ID=${VITE_CLIENT_ID}
 ENV VITE_TENANT_ID=${VITE_TENANT_ID}
 ENV VITE_APP_VERSION=${VITE_APP_VERSION}
-RUN npm run build:skip-ts
+# Cache npm during build too
+RUN --mount=type=cache,target=/root/.npm npm run build:skip-ts
 
 # Stage 2: Production Container
 FROM mcr.microsoft.com/devcontainers/python:3.11
@@ -46,8 +50,9 @@ RUN apt-get update && apt-get install -y \
 # Install Python dependencies for both backends
 COPY FSS_Socket/backend/requirements.txt /tmp/fss_requirements.txt
 COPY Main_Gateway/backend/requirements.txt /tmp/gateway_requirements.txt
-RUN pip install --no-cache-dir -r /tmp/fss_requirements.txt
-RUN pip install --no-cache-dir -r /tmp/gateway_requirements.txt
+# Use pip cache mounts to speed up repeated installs
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/fss_requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/gateway_requirements.txt
 
 # Copy built frontend to nginx directory
 COPY --from=frontend-builder /app/frontend/dist /var/www/html

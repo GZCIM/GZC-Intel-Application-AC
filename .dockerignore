@@ -1,0 +1,25 @@
+# Ignore everything by default
+**
+
+# Include only what the Docker build needs
+!Dockerfile
+!nginx-config/**
+!inject-env.sh
+!FSS_Socket/backend/**
+!Main_Gateway/backend/**
+!Main_Frontend/**
+!Main_Frontend/package.json
+!Main_Frontend/package-lock.json
+
+# Exclude dev/build artifacts
+**/node_modules/**
+**/.next/**
+**/dist/**
+**/build/**
+**/.cache/**
+**/.git/**
+**/.gitignore
+**/.vscode/**
+**/.idea/**
+**/*.log
+**/.DS_Store
