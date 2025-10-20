@@ -647,6 +647,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             size: c.key === "trade_type" ? Math.max(c.width, 140) : c.width,
             enableHiding: true,
             enableSorting: true,
+            enableResizing: true, // Enable resizing for all columns
         }));
     }, [localConfig]);
 
@@ -1813,34 +1814,39 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                         {isEditing && (
                                             <div
                                                 onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
                                                     console.log(
                                                         "[PortfolioTable] Resize handle mousedown",
                                                         {
-                                                            columnId:
-                                                                header.column
-                                                                    .id,
-                                                            isResizing:
-                                                                header.column.getIsResizing(),
-                                                            currentSize:
-                                                                header.getSize(),
+                                                            columnId: header.column.id,
+                                                            isResizing: header.column.getIsResizing(),
+                                                            currentSize: header.getSize(),
                                                         }
                                                     );
-                                                    header.getResizeHandler()(
-                                                        e
-                                                    );
+                                                    
+                                                    // Try TanStack handler first
+                                                    try {
+                                                        header.getResizeHandler()(e);
+                                                    } catch (err) {
+                                                        console.error("[PortfolioTable] TanStack resize handler failed:", err);
+                                                    }
                                                 }}
                                                 onTouchStart={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
                                                     console.log(
                                                         "[PortfolioTable] Resize handle touchstart",
                                                         {
-                                                            columnId:
-                                                                header.column
-                                                                    .id,
+                                                            columnId: header.column.id,
                                                         }
                                                     );
-                                                    header.getResizeHandler()(
-                                                        e
-                                                    );
+                                                    
+                                                    try {
+                                                        header.getResizeHandler()(e);
+                                                    } catch (err) {
+                                                        console.error("[PortfolioTable] TanStack resize handler failed:", err);
+                                                    }
                                                 }}
                                                 style={{
                                                     position: "absolute",
