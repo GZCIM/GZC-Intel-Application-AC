@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=mcr.microsoft.com/oss/docker/dockerfile:1.7
 # GZC Intel Application AC - Production Dockerfile
 # Cross-platform compatible (Windows/Mac/Linux development)
 # Deploys to Azure Container Apps (linux/amd64)
