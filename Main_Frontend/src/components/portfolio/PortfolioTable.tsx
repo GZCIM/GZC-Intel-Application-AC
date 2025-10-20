@@ -1670,6 +1670,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     marginTop: isEditing ? 140 : 0,
                     width: "100%",
                     maxHeight: "60vh",
+                    overflowX: "auto",
+                    overflowY: "auto",
+                    scrollbarGutter: "stable both-edges",
                     position: "relative",
                     zIndex: 0,
                     WebkitOverflowScrolling: "touch",
@@ -1682,7 +1685,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     style={{
                         width: "max-content",
                         minWidth: tableMinWidth
-                            ? `${tableMinWidth + 48}px` // ensure table exceeds container for horizontal scroll
+                            ? `${tableMinWidth + 200}px` // ensure table exceeds container for horizontal scroll (more headroom)
                             : "100%",
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
