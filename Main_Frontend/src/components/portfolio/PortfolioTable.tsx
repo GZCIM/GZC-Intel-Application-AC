@@ -654,13 +654,15 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     }, [localConfig?.sorting]);
 
     // Enable column resizing state so drag interactions update widths live
-    const [columnSizing, setColumnSizing] = useState<Record<string, number>>({});
-    
+    const [columnSizing, setColumnSizing] = useState<Record<string, number>>(
+        {}
+    );
+
     // Initialize column sizing from config when it loads
     useEffect(() => {
         if (localConfig?.columns) {
             const savedSizes: Record<string, number> = {};
-            localConfig.columns.forEach(col => {
+            localConfig.columns.forEach((col) => {
                 if (col.size !== undefined) {
                     savedSizes[col.key] = col.size;
                 }
@@ -674,7 +676,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         columns,
         state: { sorting, columnSizing },
         onSortingChange: setSorting,
-        onColumnSizingChange: setColumnSizing,
+        onColumnSizingChange: (updater) => {
+            console.log('[PortfolioTable] Column sizing change', { updater, currentSizing: columnSizing });
+            setColumnSizing(updater);
+        },
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         columnResizeMode: "onChange",
@@ -697,9 +702,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     // Reflect sorting and column sizing changes back into config while editing
     useEffect(() => {
         if (!localConfig) return;
-        
+
         let updated: TableConfig = { ...localConfig };
-        
+
         // Update sorting if changed
         if (sorting.length > 0) {
             const s = sorting[0];
@@ -711,19 +716,19 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 },
             };
         }
-        
+
         // Update column sizes if changed
         const hasSizeChanges = Object.keys(columnSizing).length > 0;
         if (hasSizeChanges) {
             updated = {
                 ...updated,
-                columns: updated.columns.map(col => ({
+                columns: updated.columns.map((col) => ({
                     ...col,
-                    size: columnSizing[col.key] || col.size || col.width
-                }))
+                    size: columnSizing[col.key] || col.size || col.width,
+                })),
             };
         }
-        
+
         if (hasSizeChanges || sorting.length > 0) {
             setLocalConfig(updated);
         }
@@ -1051,7 +1056,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     }
 
     return (
-        <div className="w-full" style={{ overflow: 'visible' }}>
+        <div className="w-full" style={{ overflow: "visible" }}>
             {/* Quick data summary to verify loads */}
             {positions.length > 0 && (
                 <div
@@ -1767,6 +1772,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             background: safeTheme.surfaceAlt,
                                             // Make room for the resize handle so label isn't covered
                                             paddingRight: 14,
+                                            // Required for absolute positioning of resize handle
+                                            position: "relative",
                                         }}
                                         onClick={header.column.getToggleSortingHandler()}
                                     >
@@ -1788,8 +1795,20 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                         </div>
                                         {isEditing && (
                                             <div
-                                                onMouseDown={header.getResizeHandler()}
-                                                onTouchStart={header.getResizeHandler()}
+                                                onMouseDown={(e) => {
+                                                    console.log('[PortfolioTable] Resize handle mousedown', {
+                                                        columnId: header.column.id,
+                                                        isResizing: header.column.getIsResizing(),
+                                                        currentSize: header.getSize()
+                                                    });
+                                                    header.getResizeHandler()(e);
+                                                }}
+                                                onTouchStart={(e) => {
+                                                    console.log('[PortfolioTable] Resize handle touchstart', {
+                                                        columnId: header.column.id
+                                                    });
+                                                    header.getResizeHandler()(e);
+                                                }}
                                                 style={{
                                                     position: "absolute",
                                                     right: 0,
@@ -1802,7 +1821,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                     backgroundColor:
                                                         header.column.getIsResizing()
                                                             ? "rgba(106,168,79,0.35)"
-                                                            : "transparent",
+                                                            : "rgba(106,168,79,0.1)",
+                                                    border: "1px solid rgba(106,168,79,0.3)",
+                                                    zIndex: 10,
                                                 }}
                                                 aria-label="Resize column"
                                             />
