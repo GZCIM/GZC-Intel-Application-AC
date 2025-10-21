@@ -28,7 +28,6 @@
     scrollbar-color: #333333 #1e1e1e;
 }
 
-
 /* WebKit scrollbar styling */
 .portfolio-table-scroll::-webkit-scrollbar {
     width: 12px;
