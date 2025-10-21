@@ -508,6 +508,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     onGridReady={onGridReady}
                     suppressHorizontalScroll={false}
                     suppressVerticalScroll={false}
+                    alwaysShowVerticalScroll={true}
                     enableRangeSelection={true}
                     enableCharts={true}
                     animateRows={true}
