@@ -438,8 +438,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             accessorKey: c.key as keyof PortfolioPosition,
             header: c.label,
             cell: (info) => formatValue(info.getValue() as any, c.key),
-            // Use size if available, otherwise use width, with narrower defaults
-            size: c.size !== undefined ? c.size : Math.max(c.width || 80, 80),
+            // Use size if available, otherwise use width, with responsive defaults
+            size: c.size !== undefined ? c.size : Math.max(c.width || window.innerWidth * 0.08, window.innerWidth * 0.08), // 8% of viewport width
             enableHiding: true,
             enableSorting: true,
             enableResizing: true, // Enable resizing for all columns
@@ -450,13 +450,14 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const tableMinWidth = useMemo(() => {
         const visCols = (localConfig?.columns || []).filter((c) => c.visible);
         if (visCols.length === 0) return undefined as number | undefined;
-        // include cell padding approximation (24px per col)
+        // include cell padding approximation (2% of viewport width per col)
+        const paddingPerCol = window.innerWidth * 0.02;
         const total = visCols.reduce((sum, c) => {
             const width =
-                c.size !== undefined ? c.size : Math.max(c.width || 80, 80);
-            return sum + width + 24;
+                c.size !== undefined ? c.size : Math.max(c.width || window.innerWidth * 0.08, window.innerWidth * 0.08);
+            return sum + width + paddingPerCol;
         }, 0);
-        return Math.max(total, 1200); // enforce minimum width for horizontal scroll
+        return Math.max(total, window.innerWidth * 1.2); // enforce minimum 120% of viewport width
     }, [localConfig?.columns]);
 
     // Sorting state mapped from config
@@ -480,8 +481,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         if (localConfig?.columns) {
             const savedSizes: Record<string, number> = {};
             localConfig.columns.forEach((col) => {
-                // Use size if available, otherwise use width as fallback, with narrower defaults
-                const width = col.size !== undefined ? col.size : Math.max(col.width || 80, 80);
+                // Use size if available, otherwise use width as fallback, with responsive defaults
+                const width = col.size !== undefined ? col.size : Math.max(col.width || window.innerWidth * 0.08, window.innerWidth * 0.08);
                 if (width > 0) {
                     savedSizes[col.key] = width;
                 }
@@ -1040,7 +1041,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         border: `1px solid ${safeTheme.border}`,
                         borderRadius: 6,
                         padding: 10,
-                        maxHeight: 260,
+                        maxHeight: "25vh", // 25% of viewport height
                         overflow: "auto",
                         boxShadow: "0 8px 18px rgba(0,0,0,0.15)",
                         width: "100%",
@@ -1051,7 +1052,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         style={{
                             display: "grid",
                             gridTemplateColumns:
-                                "repeat(auto-fit, minmax(180px, 1fr))",
+                                "repeat(auto-fit, minmax(15vw, 1fr))", // 15% of viewport width minimum
                             gap: 12,
                         }}
                     >
@@ -1176,7 +1177,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         border: `1px solid ${safeTheme.border}`,
                         borderRadius: 6,
                         padding: 10,
-                        maxHeight: 280,
+                        maxHeight: "30vh", // 30% of viewport height
                         overflowY: "auto",
                         width: "100%",
                     }}
@@ -1185,7 +1186,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         style={{
                             display: "grid",
                             gridTemplateColumns:
-                                "repeat(auto-fit, minmax(200px,1fr))",
+                                "repeat(auto-fit, minmax(20vw,1fr))", // 20% of viewport width minimum
                             gap: 10,
                         }}
                     >
@@ -1510,15 +1511,15 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 ref={scrollContainerRef}
                 className="portfolio-table-scroll"
                 style={{
-                    marginTop: isEditing ? 140 : 0,
+                    marginTop: isEditing ? "8vh" : 0,
                     width: "100%",
-                    // Reduce height to fit better between components and show scrollbar
-                    maxHeight: "calc(100vh - 300px)",
-                    height: "400px", // Fixed height to ensure scrollbar visibility
+                    // Use relative height to fit better between components and show scrollbar
+                    maxHeight: "60vh", // 60% of viewport height
+                    height: "50vh", // 50% of viewport height for consistent scrollbar visibility
                     overflow: "auto", // Force scrollbars to be visible
                     // Let CSS handle overflow settings
                     minWidth: 0,
-                    minHeight: 0,
+                    minHeight: "30vh", // Minimum 30% of viewport height
                     position: "relative",
                     zIndex: 0,
                     WebkitOverflowScrolling: "touch",
@@ -1529,8 +1530,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     style={{
                         width: "max-content",
                         minWidth: tableMinWidth
-                            ? `${Math.max(tableMinWidth, 1200)}px` // ensure minimum width for horizontal scroll
-                            : "1200px", // fallback minimum width
+                            ? `${Math.max(tableMinWidth, window.innerWidth * 1.2)}px` // 120% of viewport width minimum
+                            : "120vw", // fallback: 120% of viewport width
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
                         color: safeTheme.text,
