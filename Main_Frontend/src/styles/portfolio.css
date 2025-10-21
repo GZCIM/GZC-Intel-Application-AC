@@ -71,7 +71,7 @@
 /* Let table define intrinsic width; container scrolls */
 .portfolio-table-scroll > table {
     width: max-content;
-    min-width: calc(100% + 20px); /* Force table to be wider than container */
+    min-width: 4020px; /* Force table to be wider than typical container (4000px + 20px) */
     border-right: 2px solid transparent; /* force tiny overflow so horiz bar appears */
 }
 
