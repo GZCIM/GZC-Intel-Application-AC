@@ -22,9 +22,9 @@
         "Helvetica Neue", sans-serif;
 }
 
-/* Ensure scrollbars are always visible and fill height */
+/* Ensure horizontal scrollbar is always visible */
 .ag-theme-alpine .ag-body-viewport {
-    overflow-x: auto !important;
+    overflow-x: scroll !important;
     overflow-y: auto !important;
     height: 100% !important;
     min-height: 100% !important;
@@ -80,13 +80,13 @@
     flex: 1 !important;
 }
 
-/* Ensure no white space below rows and vertical scrollbar is visible */
+/* Ensure no white space below rows and horizontal scrollbar is visible */
 .ag-theme-alpine .ag-body-viewport {
     height: 100% !important;
-    overflow-x: auto !important;
-    overflow-y: scroll !important;
+    overflow-x: scroll !important;
+    overflow-y: auto !important;
     flex: 1 !important;
-    /* Force vertical scrollbar to always be visible */
+    /* Force horizontal scrollbar to always be visible */
     scrollbar-width: thin;
     scrollbar-color: var(--gzc-success, #6aa84f) var(--gzc-surface, #1e1e1e);
 }
