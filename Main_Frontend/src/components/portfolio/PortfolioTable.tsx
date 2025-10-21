@@ -438,8 +438,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             accessorKey: c.key as keyof PortfolioPosition,
             header: c.label,
             cell: (info) => formatValue(info.getValue() as any, c.key),
-            // Use size if available, otherwise use width, with responsive defaults
-            size: c.size !== undefined ? c.size : Math.max(c.width || window.innerWidth * 0.08, window.innerWidth * 0.08), // 8% of viewport width
+            // Use size if available, otherwise use width, with much narrower defaults
+            size: c.size !== undefined ? c.size : Math.max(c.width || window.innerWidth * 0.05, window.innerWidth * 0.05), // 5% of viewport width
             enableHiding: true,
             enableSorting: true,
             enableResizing: true, // Enable resizing for all columns
@@ -454,10 +454,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         const paddingPerCol = window.innerWidth * 0.02;
         const total = visCols.reduce((sum, c) => {
             const width =
-                c.size !== undefined ? c.size : Math.max(c.width || window.innerWidth * 0.08, window.innerWidth * 0.08);
+                c.size !== undefined ? c.size : Math.max(c.width || window.innerWidth * 0.05, window.innerWidth * 0.05);
             return sum + width + paddingPerCol;
         }, 0);
-        return Math.max(total, window.innerWidth * 1.2); // enforce minimum 120% of viewport width
+        return Math.max(total, window.innerWidth * 1.5); // enforce minimum 150% of viewport width
     }, [localConfig?.columns]);
 
     // Sorting state mapped from config
@@ -481,8 +481,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         if (localConfig?.columns) {
             const savedSizes: Record<string, number> = {};
             localConfig.columns.forEach((col) => {
-                // Use size if available, otherwise use width as fallback, with responsive defaults
-                const width = col.size !== undefined ? col.size : Math.max(col.width || window.innerWidth * 0.08, window.innerWidth * 0.08);
+                // Use size if available, otherwise use width as fallback, with much narrower defaults
+                const width = col.size !== undefined ? col.size : Math.max(col.width || window.innerWidth * 0.05, window.innerWidth * 0.05);
                 if (width > 0) {
                     savedSizes[col.key] = width;
                 }
@@ -1523,6 +1523,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     position: "relative",
                     zIndex: 0,
                     WebkitOverflowScrolling: "touch",
+                    // Ensure proper scroll behavior
+                    overscrollBehavior: "contain",
                 }}
             >
                 <table
@@ -1530,8 +1532,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     style={{
                         width: "max-content",
                         minWidth: tableMinWidth
-                            ? `${Math.max(tableMinWidth, window.innerWidth * 1.2)}px` // 120% of viewport width minimum
-                            : "120vw", // fallback: 120% of viewport width
+                            ? `${Math.max(tableMinWidth, window.innerWidth * 1.5)}px` // 150% of viewport width minimum
+                            : "150vw", // fallback: 150% of viewport width
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
                         color: safeTheme.text,
