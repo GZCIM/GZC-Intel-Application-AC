@@ -117,15 +117,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         "bigscreen") as "laptop" | "mobile" | "bigscreen";
     const resolvedComponentId =
         componentId || (window as any)?.componentId || "portfolio-default";
-    try {
-        console.log("[PortfolioTable] Identifiers:", {
-            resolvedDeviceType,
-            resolvedComponentId,
-            propComponentId: componentId,
-            windowComponentId: (window as any)?.componentId,
-            fundId,
-        });
-    } catch (_) {}
+    // Component identifiers resolved
 
     // Sync with global Tools menu Unlock/Lock editing (and external prop)
     useEffect(() => {
@@ -140,11 +132,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             } else {
                 // On lock, persist current config if present
                 if (isEditing) {
-                    try {
-                        console.log(
-                            "[PortfolioTable][SAVE] Lock -> saving current config"
-                        );
-                    } catch (_) {}
                     await saveTableConfig();
                 }
                 setIsEditing(false);
@@ -191,37 +178,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 const data = {
                     containerClientWidth: container.clientWidth,
                     containerScrollWidth: container.scrollWidth,
-                    tableOffsetWidth: tableEl.offsetWidth,
                     tableScrollWidth: tableEl.scrollWidth,
-                    tableMinWidth: tableEl.style.minWidth,
-                    overflowX: getComputedStyle(container).overflowX,
-                    overflowY: getComputedStyle(container).overflowY,
+                    needsHorizontalScroll: tableEl.scrollWidth > container.clientWidth,
                 };
-                console.log("[PortfolioTable][SCROLL] widths", data);
-                console.log(
-                    "[PortfolioTable][SCROLL] needsHorizontalScroll?",
-                    data.tableScrollWidth > data.containerClientWidth
-                );
-                console.log(
-                    "[PortfolioTable][SCROLL] tableMinWidth calculated:",
-                    tableMinWidth
-                );
-                console.log(
-                    "[PortfolioTable][SCROLL] DIFFERENCE:",
-                    data.tableScrollWidth - data.containerClientWidth,
-                    "px"
-                );
-
-                // Force scrollbar visibility by adding a temporary element
-                if (data.tableScrollWidth <= data.containerClientWidth) {
-                    console.log(
-                        "[PortfolioTable][SCROLL] ⚠️ NO HORIZONTAL SCROLLBAR - table fits in container"
-                    );
-                } else {
-                    console.log(
-                        "[PortfolioTable][SCROLL] ✅ HORIZONTAL SCROLLBAR SHOULD BE VISIBLE"
-                    );
-                }
+                console.log("[PortfolioTable][SCROLL]", data);
             } catch (_) {}
         };
 
@@ -244,16 +204,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
     const loadTableConfig = async () => {
         try {
             const token = await getToken();
-            try {
-                console.log("[PortfolioTable][GET] Loading table config", {
-                    url: "/api/cosmos/portfolio-component-config",
-                    params: {
-                        deviceType: resolvedDeviceType,
-                        componentId: resolvedComponentId,
-                        fundId,
-                    },
-                });
-            } catch (_) {}
             const response = await axios.get(
                 "/api/cosmos/portfolio-component-config",
                 {
@@ -266,37 +216,9 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 }
             );
 
-            try {
-                console.log(
-                    "[PortfolioTable][GET] Response status",
-                    response.status,
-                    response.data?.status
-                );
-            } catch (_) {}
-
             if (response.data.status === "success") {
                 setTableConfig(response.data.data);
                 setLocalConfig(response.data.data);
-                try {
-                    console.log(
-                        "[PortfolioTable][GET] Table config loaded (raw)",
-                        response.data.data
-                    );
-                    const cols = (response.data.data?.columns || []).map(
-                        (c: any) => ({ key: c.key, visible: !!c.visible })
-                    );
-                    console.log(
-                        "[PortfolioTable][GET] Loaded columns snapshot",
-                        cols
-                    );
-                    console.log(
-                        "[PortfolioTable][GET] summary/filters snapshot",
-                        {
-                            filters: response.data?.data?.filters,
-                            summary: response.data?.data?.summary,
-                        }
-                    );
-                } catch (_) {}
                 // Optional: read-back entire device config to compare what is stored under tabs[].components[].props
                 try {
                     const readback = await axios.get(
@@ -331,36 +253,12 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         setTableConfig(embedded);
                         setLocalConfig(embedded);
                     }
-                    console.log(
-                        "[PortfolioTable][READBACK] Device config components",
-                        portfolioIds
-                    );
-                    console.log(
-                        "[PortfolioTable][READBACK] Embedded vs legacy",
-                        {
-                            embeddedCols: Array.isArray(embedded?.columns)
-                                ? embedded.columns.map((x: any) => x.key)
-                                : null,
-                            legacyCols: Array.isArray(legacy?.columns)
-                                ? legacy.columns.map((x: any) => x.key)
-                                : null,
-                            hasEmbedded: !!embedded,
-                            hasLegacy: !!legacy,
-                        }
-                    );
                 } catch (rbErr) {
                     console.warn(
                         "[PortfolioTable] Read-back device config failed",
                         rbErr
                     );
                 }
-            } else {
-                try {
-                    console.warn(
-                        "[PortfolioTable] Unexpected table config payload",
-                        response.data
-                    );
-                } catch (_) {}
             }
         } catch (err) {
             console.error("Failed to load table config:", err);
@@ -372,17 +270,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
         try {
             const token = await getToken();
-            try {
-                const visibleColumns = (localConfig.columns || [])
-                    .filter((c) => c.visible)
-                    .map((c) => c.key);
-                console.log("[PortfolioTable][SAVE] Saving table config", {
-                    deviceType: resolvedDeviceType,
-                    componentId: resolvedComponentId,
-                    fundId,
-                    visibleColumns,
-                });
-            } catch (_) {}
             // Build summary aggregations preserving per-field op and enabled flags
             const existingAggs: any[] = Array.isArray(
                 (localConfig as any)?.summary?.aggregations
@@ -414,11 +301,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     enabled: enabledSet.has(key) || selectedSet.has(key),
                 };
             });
-            try {
-                console.log("[PortfolioTable][SAVE] Computed aggregations", {
-                    preview: nextAggregations,
-                });
-            } catch (_) {}
             const effectiveSumKeys = Array.from(selectedSet);
             const tableConfigWithSummary = {
                 ...localConfig,
@@ -433,14 +315,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 },
             };
 
-            try {
-                console.log("[PortfolioTable][SAVE] Payload:", {
-                    sumColumns: tableConfigWithSummary.filters?.sumColumns,
-                    summaryKeys: (
-                        tableConfigWithSummary.summary?.aggregations || []
-                    ).map((a: any) => a.key),
-                });
-            } catch (_) {}
 
             const saveResp = await axios.post(
                 "/api/cosmos/portfolio-component-config",
@@ -454,21 +328,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
-            try {
-                console.log(
-                    "[PortfolioTable][SAVE] Server reply",
-                    saveResp.status,
-                    saveResp.data
-                );
-                const savedVisible = Array.isArray(saveResp?.data?.columns)
-                    ? saveResp.data.columns
-                          .filter((c: any) => c && c.visible)
-                          .map((c: any) => c.key)
-                    : undefined;
-                console.log("[PortfolioTable][SAVE] Saved (server-visible)", {
-                    savedVisible,
-                });
-            } catch (_) {}
 
             // Force read-back of the saved portfolio tableConfig from Cosmos (authoritative)
             try {
@@ -484,24 +343,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     }
                 );
                 if (rb?.data?.status === "success" && rb?.data?.data) {
-                    console.log(
-                        "[PortfolioTable][READBACK][AFTER_SAVE] server tableConfig",
-                        {
-                            filters: rb.data.data.filters,
-                            summary: rb.data.data.summary,
-                            visibleColumns: (rb.data.data.columns || [])
-                                .filter((c: any) => c && c.visible)
-                                .map((c: any) => c.key),
-                        }
-                    );
                     setTableConfig(rb.data.data);
                     setLocalConfig(rb.data.data);
-                    console.log("[PortfolioTable][READBACK] Applied to UI ✔");
-                } else {
-                    console.warn(
-                        "[PortfolioTable][READBACK][AFTER_SAVE] unexpected payload",
-                        rb?.data
-                    );
                 }
             } catch (e) {
                 console.warn(
@@ -512,54 +355,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
             setTableConfig(tableConfigWithSummary as any);
             setIsEditing(false);
-            try {
-                console.log(
-                    "[PortfolioTable][SAVE] Saved ✔ and locked edit mode"
-                );
-                // Read-back and compare embedding under tabs[].components[].props
-                const readback = await axios.get(
-                    `/api/cosmos/device-config/${resolvedDeviceType}`,
-                    {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }
-                );
-                const tabs = readback.data?.config?.tabs || [];
-                let embedded: any = null;
-                let portfolioIds: string[] = [];
-                for (const t of tabs) {
-                    for (const c of t?.components || []) {
-                        if (c?.id) portfolioIds.push(String(c.id));
-                        if (c?.id === resolvedComponentId)
-                            embedded = c?.props?.tableConfig || null;
-                    }
-                }
-                const compStates = readback.data?.config?.componentStates || [];
-                const legacy =
-                    compStates.find(
-                        (st: any) =>
-                            st?.type === "portfolio" &&
-                            st?.componentId === resolvedComponentId
-                    )?.tableConfig || null;
-                console.log(
-                    "[PortfolioTable][READBACK] Post-save components",
-                    portfolioIds
-                );
-                console.log(
-                    "[PortfolioTable][READBACK] Post-save embedded vs legacy",
-                    {
-                        hasEmbedded: !!embedded,
-                        embeddedFilters: embedded?.filters,
-                        embeddedSummary: embedded?.summary,
-                        embeddedCols: Array.isArray(embedded?.columns)
-                            ? embedded.columns.map((x: any) => x.key)
-                            : null,
-                        hasLegacy: !!legacy,
-                        legacyCols: Array.isArray(legacy?.columns)
-                            ? legacy.columns.map((x: any) => x.key)
-                            : null,
-                    }
-                );
-            } catch (_) {}
         } catch (err) {
             console.error("Failed to save table config:", err);
         }
@@ -701,10 +496,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         state: { sorting, columnSizing },
         onSortingChange: setSorting,
         onColumnSizingChange: (updater) => {
-            console.log("[PortfolioTable] Column sizing change", {
-                updater,
-                currentSizing: columnSizing,
-            });
             setColumnSizing(updater);
         },
         getCoreRowModel: getCoreRowModel(),
@@ -979,14 +770,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         const chosen = (localConfig?.filters?.sumColumns as string[]) || [];
         const filtered = chosen.filter((k) => allowed.includes(k));
         const out = filtered.length > 0 ? filtered : allowed;
-        try {
-            console.log("[PortfolioTable][FOOTER] selectedSumKeys", {
-                fromFilters,
-                fromSummary,
-                chosen,
-                resolved: out,
-            });
-        } catch (_) {}
         return out;
     }, [tableConfig, localConfig?.filters]);
 
@@ -1552,17 +1335,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                             type="checkbox"
                                             checked={selected}
                                             onChange={(e) => {
-                                                try {
-                                                    console.log(
-                                                        "[PortfolioTable][UI] Checkbox toggle",
-                                                        {
-                                                            key: c.key,
-                                                            checked:
-                                                                e.target
-                                                                    .checked,
-                                                        }
-                                                    );
-                                                } catch (_) {}
                                                 const pnlKeys = [
                                                     "itd_pnl",
                                                     "ytd_pnl",
@@ -1687,12 +1459,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                                           true,
                                                                   },
                                                               ];
-                                                    try {
-                                                        console.log(
-                                                            "[PortfolioTable][UI] Aggregation op change",
-                                                            { key: c.key, op }
-                                                        );
-                                                    } catch (_) {}
                                                     setLocalConfig({
                                                         ...localConfig,
                                                         summary: {
@@ -1816,36 +1582,23 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                 onMouseDown={(e) => {
                                                     e.preventDefault();
                                                     e.stopPropagation();
-                                                    console.log(
-                                                        "[PortfolioTable] Resize handle mousedown",
-                                                        {
-                                                            columnId: header.column.id,
-                                                            isResizing: header.column.getIsResizing(),
-                                                            currentSize: header.getSize(),
-                                                        }
-                                                    );
-                                                    
-                                                    // Try TanStack handler first
+                                                    console.log("[PortfolioTable] Resize handle mousedown", {
+                                                        columnId: header.column.id,
+                                                        currentSize: header.getSize(),
+                                                    });
                                                     try {
                                                         header.getResizeHandler()(e);
                                                     } catch (err) {
-                                                        console.error("[PortfolioTable] TanStack resize handler failed:", err);
+                                                        console.error("[PortfolioTable] Resize handler failed:", err);
                                                     }
                                                 }}
                                                 onTouchStart={(e) => {
                                                     e.preventDefault();
                                                     e.stopPropagation();
-                                                    console.log(
-                                                        "[PortfolioTable] Resize handle touchstart",
-                                                        {
-                                                            columnId: header.column.id,
-                                                        }
-                                                    );
-                                                    
                                                     try {
                                                         header.getResizeHandler()(e);
                                                     } catch (err) {
-                                                        console.error("[PortfolioTable] TanStack resize handler failed:", err);
+                                                        console.error("[PortfolioTable] Resize handler failed:", err);
                                                     }
                                                 }}
                                                 style={{
