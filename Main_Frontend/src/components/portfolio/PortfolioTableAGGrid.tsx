@@ -522,6 +522,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         suppressScrollOnNewData: false,
                         alwaysShowHorizontalScroll: true,
                         alwaysShowVerticalScroll: true,
+                        suppressRowTransform: true,
+                        domLayout: 'normal', // Use normal layout to fill available space
                     }}
                 />
             </div>

@@ -31,10 +31,21 @@
 /* Force minimum table width to ensure horizontal scroll */
 .ag-theme-alpine .ag-root-wrapper {
     min-width: 1200px !important;
+    height: 100% !important;
 }
 
 .ag-theme-alpine .ag-body-viewport {
     min-width: 1200px !important;
+    height: 100% !important;
+}
+
+/* Ensure table fills full height */
+.ag-theme-alpine .ag-root {
+    height: 100% !important;
+}
+
+.ag-theme-alpine .ag-body {
+    height: 100% !important;
 }
 
 /* Custom scrollbar styling - Using GZC Color Schema */
