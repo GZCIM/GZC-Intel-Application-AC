@@ -1,20 +1,21 @@
-/* Custom AG Grid Theme for Portfolio Table */
+/* Custom AG Grid Theme for Portfolio Table - Using GZC Color Schema */
 .ag-theme-alpine {
-    --ag-background-color: #111111;
-    --ag-foreground-color: #eaeaea;
-    --ag-border-color: #333333;
-    --ag-header-background-color: #1e1e1e;
-    --ag-header-foreground-color: #eaeaea;
-    --ag-odd-row-background-color: #1e1e1e;
-    --ag-even-row-background-color: #111111;
-    --ag-hover-color: #2a2a2a;
-    --ag-selected-color: #2a2a2a;
+    /* Use GZC CSS custom properties for consistent theming */
+    --ag-background-color: var(--gzc-bg, #111111);
+    --ag-foreground-color: var(--gzc-text, #eaeaea);
+    --ag-border-color: var(--gzc-border, #333333);
+    --ag-header-background-color: var(--gzc-surface-alt, #1e1e1e);
+    --ag-header-foreground-color: var(--gzc-text, #eaeaea);
+    --ag-odd-row-background-color: var(--gzc-surface, #1e1e1e);
+    --ag-even-row-background-color: var(--gzc-bg, #111111);
+    --ag-hover-color: var(--gzc-surface-alt, #2a2a2a);
+    --ag-selected-color: var(--gzc-surface-alt, #2a2a2a);
     --ag-range-selection-background-color: rgba(106, 168, 79, 0.2);
-    --ag-range-selection-border-color: #6aa84f;
-    --ag-cell-horizontal-border: 1px solid #333333;
-    --ag-cell-vertical-border: 1px solid #333333;
-    --ag-header-cell-horizontal-border: 1px solid #333333;
-    --ag-header-cell-vertical-border: 1px solid #333333;
+    --ag-range-selection-border-color: var(--gzc-success, #6aa84f);
+    --ag-cell-horizontal-border: 1px solid var(--gzc-border, #333333);
+    --ag-cell-vertical-border: 1px solid var(--gzc-border, #333333);
+    --ag-header-cell-horizontal-border: 1px solid var(--gzc-border, #333333);
+    --ag-header-cell-vertical-border: 1px solid var(--gzc-border, #333333);
     --ag-font-size: 12px;
     --ag-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 }
@@ -34,52 +35,67 @@
     min-width: 1200px !important;
 }
 
-/* Custom scrollbar styling */
+/* Custom scrollbar styling - Using GZC Color Schema */
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar {
     width: 12px;
     height: 12px;
 }
 
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-track {
-    background: #1e1e1e;
+    background: var(--gzc-surface, #1e1e1e);
 }
 
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb {
-    background: #6aa84f;
+    background: var(--gzc-success, #6aa84f);
     border-radius: 6px;
 }
 
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb:hover {
-    background: #5a9a3f;
+    background: color-mix(in hsl, var(--gzc-success, #6aa84f) 80%, black);
 }
 
-/* Column resize handle */
+/* Column resize handle - Using GZC Color Schema */
 .ag-theme-alpine .ag-header-cell-resize {
-    background-color: #6aa84f;
+    background-color: var(--gzc-success, #6aa84f);
     opacity: 0.7;
 }
 
 .ag-theme-alpine .ag-header-cell-resize:hover {
     opacity: 1;
+    background-color: var(--gzc-success, #6aa84f);
 }
 
-/* Selection styling */
+/* Selection styling - Using GZC Color Schema */
 .ag-theme-alpine .ag-row-selected {
-    background-color: rgba(106, 168, 79, 0.1) !important;
+    background-color: color-mix(in hsl, var(--gzc-success, #6aa84f) 10%, transparent) !important;
 }
 
-/* Header styling */
+.ag-theme-alpine .ag-row:hover {
+    background-color: var(--gzc-surface-alt, #2a2a2a) !important;
+}
+
+/* Header styling - Using GZC Color Schema */
 .ag-theme-alpine .ag-header-cell {
+    background-color: var(--gzc-surface-alt, #1e1e1e);
+    color: var(--gzc-text, #eaeaea);
+    border-color: var(--gzc-border, #333333);
     font-weight: 600;
     text-transform: uppercase;
     font-size: 11px;
     letter-spacing: 0.5px;
 }
 
-/* Cell content styling */
+.ag-theme-alpine .ag-header-cell:hover {
+    background-color: var(--gzc-surface, #2a2a2a);
+}
+
+/* Cell content styling - Using GZC Color Schema */
 .ag-theme-alpine .ag-cell {
     padding: 8px 12px;
     line-height: 1.4;
+    color: var(--gzc-text, #eaeaea);
+    background-color: var(--gzc-bg, #111111);
+    border-color: var(--gzc-border, #333333);
 }
 
 /* Responsive adjustments */
