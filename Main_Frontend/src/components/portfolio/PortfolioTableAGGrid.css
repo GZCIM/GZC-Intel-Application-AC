@@ -1,0 +1,89 @@
+/* Custom AG Grid Theme for Portfolio Table */
+.ag-theme-alpine {
+    --ag-background-color: #111111;
+    --ag-foreground-color: #eaeaea;
+    --ag-border-color: #333333;
+    --ag-header-background-color: #1e1e1e;
+    --ag-header-foreground-color: #eaeaea;
+    --ag-odd-row-background-color: #1e1e1e;
+    --ag-even-row-background-color: #111111;
+    --ag-hover-color: #2a2a2a;
+    --ag-selected-color: #2a2a2a;
+    --ag-range-selection-background-color: rgba(106, 168, 79, 0.2);
+    --ag-range-selection-border-color: #6aa84f;
+    --ag-cell-horizontal-border: 1px solid #333333;
+    --ag-cell-vertical-border: 1px solid #333333;
+    --ag-header-cell-horizontal-border: 1px solid #333333;
+    --ag-header-cell-vertical-border: 1px solid #333333;
+    --ag-font-size: 12px;
+    --ag-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* Ensure horizontal scrollbar is always visible */
+.ag-theme-alpine .ag-body-viewport {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+}
+
+/* Custom scrollbar styling */
+.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb {
+    background: #6aa84f;
+    border-radius: 6px;
+}
+
+.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb:hover {
+    background: #5a9a3f;
+}
+
+/* Column resize handle */
+.ag-theme-alpine .ag-header-cell-resize {
+    background-color: #6aa84f;
+    opacity: 0.7;
+}
+
+.ag-theme-alpine .ag-header-cell-resize:hover {
+    opacity: 1;
+}
+
+/* Selection styling */
+.ag-theme-alpine .ag-row-selected {
+    background-color: rgba(106, 168, 79, 0.1) !important;
+}
+
+/* Header styling */
+.ag-theme-alpine .ag-header-cell {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+/* Cell content styling */
+.ag-theme-alpine .ag-cell {
+    padding: 8px 12px;
+    line-height: 1.4;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .ag-theme-alpine {
+        --ag-font-size: 11px;
+    }
+    
+    .ag-theme-alpine .ag-cell {
+        padding: 6px 8px;
+    }
+    
+    .ag-theme-alpine .ag-header-cell {
+        font-size: 10px;
+    }
+}
