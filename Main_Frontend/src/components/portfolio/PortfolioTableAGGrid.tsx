@@ -414,7 +414,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     }
 
     return (
-        <div className="w-full" style={{ overflow: "visible" }}>
+        <div className="w-full" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
             {/* Quick data summary */}
             {positions.length > 0 && (
                 <div
@@ -491,9 +491,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             <div
                 className="ag-theme-alpine"
                 style={{
-                    height: "100%",
+                    flex: 1,
                     width: "100%",
                     marginTop: isEditing ? "8vh" : 0,
+                    minHeight: 0, // Important for flex children
                 }}
             >
                 <AgGridReact
