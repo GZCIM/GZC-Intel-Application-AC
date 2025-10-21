@@ -9,7 +9,7 @@ import {
 } from "../../utils/axios";
 import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
-import PortfolioTable from "./PortfolioTable";
+import PortfolioTableAGGrid from "./PortfolioTableAGGrid";
 import "../../styles/portfolio.css";
 
 interface PortfolioProps {
@@ -1525,7 +1525,7 @@ export const Portfolio: React.FC<
                                 height: "100%",
                             }}
                         >
-                            <PortfolioTable
+                            <PortfolioTableAGGrid
                                 selectedDate={effectiveDate}
                                 fundId={Number(selectedFundId) || 0}
                                 isLive={dataMode === "live"}

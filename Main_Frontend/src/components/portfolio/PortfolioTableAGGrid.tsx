@@ -267,7 +267,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         return cfgCols.map((c) => ({
             field: c.key,
             headerName: c.label,
-            width: c.size || c.width || 120,
+            width: Math.min(c.size || c.width || 80, 80), // Force narrow columns (max 80px)
+            minWidth: 60, // Minimum width
+            maxWidth: 120, // Maximum width
             hide: !c.visible,
             resizable: true,
             sortable: true,
@@ -446,11 +448,18 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         resizable: true,
                         sortable: true,
                         filter: true,
+                        width: 80, // Default narrow width
+                        minWidth: 60,
+                        maxWidth: 120,
                     }}
                     gridOptions={{
                         suppressRowClickSelection: true,
                         rowHeight: 30,
                         headerHeight: 40,
+                        // Force scrollbars to be visible
+                        suppressScrollOnNewData: false,
+                        alwaysShowHorizontalScroll: true,
+                        alwaysShowVerticalScroll: true,
                     }}
                 />
             </div>
