@@ -30,19 +30,18 @@
     min-height: 100% !important;
 }
 
-/* Force minimum table width to ensure horizontal scroll */
+/* Force table to fill full width and height */
 .ag-theme-alpine .ag-root-wrapper {
-    min-width: 800px !important; /* Reduced from 1200px */
-    height: 100% !important;
     width: 100% !important;
+    height: 100% !important;
     overflow: hidden !important;
     max-height: 100% !important;
 }
 
 .ag-theme-alpine .ag-body-viewport {
-    min-width: 800px !important; /* Reduced from 1200px */
+    width: 100% !important;
     height: calc(100% - 17px) !important; /* Account for horizontal scrollbar height */
-    overflow-x: scroll !important;
+    overflow-x: auto !important;
     overflow-y: auto !important;
 }
 
@@ -208,10 +207,19 @@
     overflow: hidden !important;
 }
 
-/* Ensure table body doesn't overflow */
+/* Ensure table body fills full height without vertical overflow */
 .ag-theme-alpine .ag-body {
     height: calc(100% - 17px) !important;
     max-height: calc(100% - 17px) !important;
+    overflow: hidden !important;
+    width: 100% !important;
+}
+
+/* Ensure table fills full height and matches down */
+.ag-theme-alpine .ag-root {
+    height: 100% !important;
+    width: 100% !important;
+    max-height: 100% !important;
     overflow: hidden !important;
 }
 

@@ -289,25 +289,25 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         if (cfgCols.length === 0) {
             console.log("[AG Grid] No config loaded, using fallback columns");
             return [
-                { field: "trade_id", headerName: "Trade ID", width: 80 },
-                { field: "trade_type", headerName: "Type", width: 80 },
-                { field: "quantity", headerName: "Quantity", width: 80 },
-                { field: "trade_price", headerName: "Trade Price", width: 80 },
-                { field: "price", headerName: "Price", width: 80 },
+                { field: "trade_id", headerName: "Trade ID", width: 150 },
+                { field: "trade_type", headerName: "Type", width: 150 },
+                { field: "quantity", headerName: "Quantity", width: 150 },
+                { field: "trade_price", headerName: "Trade Price", width: 150 },
+                { field: "price", headerName: "Price", width: 150 },
                 {
                     field: "trade_currency",
                     headerName: "Trade Currency",
-                    width: 80,
+                    width: 150,
                 },
                 {
                     field: "settlement_currency",
                     headerName: "Settlement Currency",
-                    width: 80,
+                    width: 150,
                 },
-                { field: "itd_pnl", headerName: "ITD PnL", width: 80 },
-                { field: "ytd_pnl", headerName: "YTD PnL", width: 80 },
-                { field: "mtd_pnl", headerName: "MTD PnL", width: 80 },
-                { field: "dtd_pnl", headerName: "DTD PnL", width: 80 },
+                { field: "itd_pnl", headerName: "ITD PnL", width: 150 },
+                { field: "ytd_pnl", headerName: "YTD PnL", width: 150 },
+                { field: "mtd_pnl", headerName: "MTD PnL", width: 150 },
+                { field: "dtd_pnl", headerName: "DTD PnL", width: 150 },
             ];
         }
 
@@ -315,9 +315,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             return cfgCols.map((c) => ({
                 field: c.key,
                 headerName: c.label,
-                width: Math.min(c.size || c.width || 80, 80), // Reduced width to prevent overflow
-                minWidth: 70, // Reduced minimum width
-                maxWidth: 120, // Reduced maximum width
+                width: Math.max(c.size || c.width || 150, 150), // Increased width to fill space
+                minWidth: 100, // Increased minimum width
+                maxWidth: 200, // Increased maximum width
                 hide: !c.visible,
                 resizable: true,
                 sortable: true,
@@ -518,9 +518,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         resizable: true,
                         sortable: true,
                         filter: true,
-                        width: 80, // Reduced width to prevent overflow
-                        minWidth: 70,
-                        maxWidth: 120,
+                        width: 150, // Increased width to fill horizontal space
+                        minWidth: 100,
+                        maxWidth: 200,
                     }}
                     gridOptions={{
                         suppressRowClickSelection: true,
