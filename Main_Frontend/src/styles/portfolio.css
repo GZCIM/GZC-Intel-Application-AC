@@ -53,7 +53,7 @@
 /* Ensure table has proper width for all columns and triggers scrollbars */
 .portfolio-table-scroll > table {
     width: max-content; /* Let table define its natural width based on content */
-    min-width: 2000px; /* Ensure minimum width for all columns to be readable */
+    min-width: 4500px; /* Force table to be wider than container (4004px + 496px) */
     table-layout: auto; /* Allow columns to size based on content */
 }
 
