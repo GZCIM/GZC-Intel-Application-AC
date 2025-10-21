@@ -41,8 +41,19 @@
 .ag-theme-alpine .ag-body-viewport {
     min-width: 1200px !important;
     height: 100% !important;
-    overflow-x: auto !important;
+    overflow-x: scroll !important;
     overflow-y: auto !important;
+}
+
+/* Ensure horizontal scrollbar appears at bottom */
+.ag-theme-alpine .ag-body-horizontal-scroll {
+    display: block !important;
+    height: 17px !important;
+}
+
+.ag-theme-alpine .ag-body-horizontal-scroll-viewport {
+    display: block !important;
+    height: 17px !important;
 }
 
 /* Ensure table fills full height */
@@ -159,14 +170,7 @@
     font-size: 9px;
 }
 
-/* Eliminate any white space below the table */
-.ag-theme-alpine .ag-body-horizontal-scroll {
-    display: none !important;
-}
-
-.ag-theme-alpine .ag-body-horizontal-scroll-viewport {
-    display: none !important;
-}
+/* Horizontal scrollbar is now visible at bottom */
 
 /* Ensure rows fill available space */
 .ag-theme-alpine .ag-row {
