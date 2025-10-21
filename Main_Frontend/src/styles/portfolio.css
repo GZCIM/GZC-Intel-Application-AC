@@ -24,7 +24,7 @@
     contain: content;
     overflow-clip-margin: content-box;
     scrollbar-gutter: stable both-edges;
-    padding-right: 4px;   /* nudge to surface horiz bar when widths tie */
+    padding-right: 4px; /* nudge to surface horiz bar when widths tie */
     padding-bottom: 14px; /* keep bar above footer/status */
 
     /* Firefox scrollbar styling */
@@ -36,7 +36,7 @@
 .portfolio-table-scroll::after {
     content: "";
     display: inline-block;
-    width: 12px;   /* ensures scrollWidth > clientWidth */
+    width: 12px; /* ensures scrollWidth > clientWidth */
     height: 1px;
 }
 
