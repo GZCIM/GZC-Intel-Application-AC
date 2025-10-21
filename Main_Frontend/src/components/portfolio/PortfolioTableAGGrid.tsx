@@ -459,18 +459,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             )}
 
             {/* AG Grid Table */}
-            {/* Debug info */}
-            <div style={{ padding: "10px", background: "#333", color: "white", fontSize: "12px", marginBottom: "10px" }}>
-                Debug: Positions: {positions?.length || 0}, Columns: {columnDefs?.length || 0}, Loading: {loading ? "Yes" : "No"}, Error: {error || "None"}
-            </div>
-            
             <div
                 className="ag-theme-alpine"
                 style={{
-                    height: "50vh",
+                    height: "100%",
                     width: "100%",
                     marginTop: isEditing ? "8vh" : 0,
-                    border: "2px solid red", // Debug border
                 }}
             >
                 <AgGridReact
