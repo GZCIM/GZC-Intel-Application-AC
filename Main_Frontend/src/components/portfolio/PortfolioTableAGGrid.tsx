@@ -264,6 +264,26 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     // Convert config to AG Grid column definitions
     const columnDefs = useMemo<ColDef[]>(() => {
         const cfgCols = localConfig?.columns || [];
+        
+        // If no config loaded yet, use fallback columns
+        if (cfgCols.length === 0) {
+            console.log("[AG Grid] No config loaded, using fallback columns");
+            return [
+                { field: "trade_id", headerName: "Trade ID", width: 80 },
+                { field: "trade_type", headerName: "Type", width: 80 },
+                { field: "quantity", headerName: "Quantity", width: 80 },
+                { field: "trade_price", headerName: "Trade Price", width: 80 },
+                { field: "price", headerName: "Price", width: 80 },
+                { field: "trade_currency", headerName: "Trade Currency", width: 80 },
+                { field: "settlement_currency", headerName: "Settlement Currency", width: 80 },
+                { field: "itd_pnl", headerName: "ITD PnL", width: 80 },
+                { field: "ytd_pnl", headerName: "YTD PnL", width: 80 },
+                { field: "mtd_pnl", headerName: "MTD PnL", width: 80 },
+                { field: "dtd_pnl", headerName: "DTD PnL", width: 80 },
+            ];
+        }
+        
+        console.log("[AG Grid] Using config columns:", cfgCols.length);
         return cfgCols.map((c) => ({
             field: c.key,
             headerName: c.label,
@@ -328,6 +348,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         });
         return counts;
     }, [positions]);
+
+    // Debug logging
+    console.log("[AG Grid Debug] Component render:", {
+        positionsCount: positions?.length || 0,
+        columnDefsCount: columnDefs?.length || 0,
+        localConfig: !!localConfig,
+        loading,
+        error,
+        positions: positions?.slice(0, 2) // First 2 positions for debugging
+    });
 
     if (loading) {
         return (
@@ -426,12 +456,18 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             )}
 
             {/* AG Grid Table */}
+            {/* Debug info */}
+            <div style={{ padding: "10px", background: "#333", color: "white", fontSize: "12px", marginBottom: "10px" }}>
+                Debug: Positions: {positions?.length || 0}, Columns: {columnDefs?.length || 0}, Loading: {loading ? "Yes" : "No"}, Error: {error || "None"}
+            </div>
+            
             <div
                 className="ag-theme-alpine"
                 style={{
                     height: "50vh",
                     width: "100%",
                     marginTop: isEditing ? "8vh" : 0,
+                    border: "2px solid red", // Debug border
                 }}
             >
                 <AgGridReact
