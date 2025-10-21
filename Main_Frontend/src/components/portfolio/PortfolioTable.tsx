@@ -438,8 +438,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             accessorKey: c.key as keyof PortfolioPosition,
             header: c.label,
             cell: (info) => formatValue(info.getValue() as any, c.key),
-            // Use size if available, otherwise use width, with minimum defaults
-            size: c.size !== undefined ? c.size : Math.max(c.width || 120, 120),
+            // Use size if available, otherwise use width, with narrower defaults
+            size: c.size !== undefined ? c.size : Math.max(c.width || 80, 80),
             enableHiding: true,
             enableSorting: true,
             enableResizing: true, // Enable resizing for all columns
@@ -453,10 +453,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         // include cell padding approximation (24px per col)
         const total = visCols.reduce((sum, c) => {
             const width =
-                c.size !== undefined ? c.size : Math.max(c.width || 120, 120);
+                c.size !== undefined ? c.size : Math.max(c.width || 80, 80);
             return sum + width + 24;
         }, 0);
-        return Math.max(total, 800); // enforce a reasonable floor
+        return Math.max(total, 1200); // enforce minimum width for horizontal scroll
     }, [localConfig?.columns]);
 
     // Sorting state mapped from config
@@ -480,8 +480,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         if (localConfig?.columns) {
             const savedSizes: Record<string, number> = {};
             localConfig.columns.forEach((col) => {
-                // Use size if available, otherwise use width as fallback
-                const width = col.size !== undefined ? col.size : col.width;
+                // Use size if available, otherwise use width as fallback, with narrower defaults
+                const width = col.size !== undefined ? col.size : Math.max(col.width || 80, 80);
                 if (width > 0) {
                     savedSizes[col.key] = width;
                 }
@@ -1512,8 +1512,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 style={{
                     marginTop: isEditing ? 140 : 0,
                     width: "100%",
-                    // Ensure the component never pushes header out of viewport
-                    maxHeight: "calc(100vh - 220px)",
+                    // Reduce height to fit better between components and show scrollbar
+                    maxHeight: "calc(100vh - 300px)",
+                    height: "400px", // Fixed height to ensure scrollbar visibility
+                    overflow: "auto", // Force scrollbars to be visible
                     // Let CSS handle overflow settings
                     minWidth: 0,
                     minHeight: 0,
@@ -1527,8 +1529,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     style={{
                         width: "max-content",
                         minWidth: tableMinWidth
-                            ? `${tableMinWidth}px` // use calculated width without forcing 4000px minimum
-                            : "100%",
+                            ? `${Math.max(tableMinWidth, 1200)}px` // ensure minimum width for horizontal scroll
+                            : "1200px", // fallback minimum width
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
                         color: safeTheme.text,
