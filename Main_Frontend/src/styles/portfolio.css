@@ -52,9 +52,9 @@
 
 /* Force table to be wider than container to trigger horizontal scrollbar */
 .portfolio-table-scroll > table {
-    width: 5000px !important; /* Force table to be wider than container (4004px) */
-    min-width: 5000px !important; /* Backup min-width */
-    table-layout: fixed; /* Use fixed layout for consistent column widths */
+    width: 6000px !important; /* Force table to be wider than container (5004px + 996px) */
+    min-width: 6000px !important; /* Backup min-width */
+    table-layout: auto; /* Use auto layout for proper column sizing */
 }
 
 /* Prevent wrapping (keeps columns stable) */
