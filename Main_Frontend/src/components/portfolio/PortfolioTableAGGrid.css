@@ -54,6 +54,33 @@
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* Force AG Grid to fill full height and eliminate white space */
+.ag-theme-alpine .ag-root-wrapper {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.ag-theme-alpine .ag-root {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.ag-theme-alpine .ag-body {
+    height: 100% !important;
+    flex: 1 !important;
+}
+
+/* Ensure no white space below rows */
+.ag-theme-alpine .ag-body-viewport {
+    height: 100% !important;
+    overflow-x: scroll !important;
+    overflow-y: scroll !important;
+    flex: 1 !important;
 }
 
 /* Custom scrollbar styling - Using GZC Color Schema */
@@ -122,6 +149,26 @@
     background-color: var(--gzc-bg, #111111);
     border-color: var(--gzc-border, #333333);
     font-size: 9px;
+}
+
+/* Eliminate any white space below the table */
+.ag-theme-alpine .ag-body-horizontal-scroll {
+    display: none !important;
+}
+
+.ag-theme-alpine .ag-body-horizontal-scroll-viewport {
+    display: none !important;
+}
+
+/* Ensure rows fill available space */
+.ag-theme-alpine .ag-row {
+    height: 30px !important;
+}
+
+/* Remove any bottom padding/margin from the grid */
+.ag-theme-alpine .ag-body-container {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 /* Responsive adjustments */

@@ -359,7 +359,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const onGridReady = (params: GridReadyEvent) => {
         setGridApi(params.api);
         setColumnApi(params.columnApi);
-        
+
         // Automatically size columns to fit the grid width
         params.api.sizeColumnsToFit();
     };
@@ -414,7 +414,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     }
 
     return (
-        <div className="w-full" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+        <div
+            className="w-full"
+            style={{ height: "100%", display: "flex", flexDirection: "column" }}
+        >
             {/* Quick data summary */}
             {positions.length > 0 && (
                 <div
@@ -524,7 +527,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         alwaysShowHorizontalScroll: true,
                         alwaysShowVerticalScroll: true,
                         suppressRowTransform: true,
-                        domLayout: 'normal', // Use normal layout to fill available space
+                        domLayout: "normal", // Use normal layout to fill available space
+                        // Force the grid to fill the full height
+                        suppressAutoSize: false,
+                        suppressColumnVirtualisation: false,
+                        suppressRowVirtualisation: false,
                     }}
                 />
             </div>
