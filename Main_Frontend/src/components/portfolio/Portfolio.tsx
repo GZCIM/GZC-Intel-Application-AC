@@ -1523,6 +1523,10 @@ export const Portfolio: React.FC<
                                 borderRadius: 4,
                                 padding: 8,
                                 height: "100%",
+                                maxHeight: "100%",
+                                overflow: "hidden",
+                                display: "flex",
+                                flexDirection: "column",
                             }}
                         >
                             <PortfolioTableAGGrid
