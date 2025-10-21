@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef, GridReadyEvent, GridApi, ColumnApi, ModuleRegistry, AllCommunityModule } from "ag-grid-community";
+import {
+    ColDef,
+    GridReadyEvent,
+    GridApi,
+    ColumnApi,
+    ModuleRegistry,
+    AllCommunityModule,
+} from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "./PortfolioTableAGGrid.css";
@@ -117,9 +124,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 setIsEditing(false);
             }
         };
-        window.addEventListener("gzc:edit-mode-toggled", handler as EventListener);
+        window.addEventListener(
+            "gzc:edit-mode-toggled",
+            handler as EventListener
+        );
         return () =>
-            window.removeEventListener("gzc:edit-mode-toggled", handler as EventListener);
+            window.removeEventListener(
+                "gzc:edit-mode-toggled",
+                handler as EventListener
+            );
     }, [externalEditing, isEditing, localConfig, fundId]);
 
     // Load table configuration on mount
@@ -163,11 +176,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
         try {
             const token = await getToken();
-            
+
             // Get current column state from AG Grid
             const columnState = gridApi.getColumnState();
             const updatedColumns = localConfig.columns.map((col) => {
-                const colState = columnState.find(cs => cs.colId === col.key);
+                const colState = columnState.find((cs) => cs.colId === col.key);
                 return {
                     ...col,
                     visible: colState ? !colState.hide : col.visible,
@@ -237,7 +250,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         } catch (err: any) {
             const status = err?.response?.status;
             if (status === 502) {
-                setError("Backend temporarily unavailable (502). Please retry.");
+                setError(
+                    "Backend temporarily unavailable (502). Please retry."
+                );
             } else {
                 setError(
                     err.response?.data?.detail?.error ||
@@ -257,7 +272,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             for (let i = 0; i < attempts; i++) {
                 await loadPositions();
                 if (!error) break;
-                await new Promise(res => setTimeout(res, 500 * Math.pow(2, i)));
+                await new Promise((res) =>
+                    setTimeout(res, 500 * Math.pow(2, i))
+                );
             }
         } finally {
             setIsRetrying(false);
@@ -267,7 +284,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     // Convert config to AG Grid column definitions
     const columnDefs = useMemo<ColDef[]>(() => {
         const cfgCols = localConfig?.columns || [];
-        
+
         // If no config loaded yet, use fallback columns
         if (cfgCols.length === 0) {
             console.log("[AG Grid] No config loaded, using fallback columns");
@@ -277,15 +294,23 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 { field: "quantity", headerName: "Quantity", width: 80 },
                 { field: "trade_price", headerName: "Trade Price", width: 80 },
                 { field: "price", headerName: "Price", width: 80 },
-                { field: "trade_currency", headerName: "Trade Currency", width: 80 },
-                { field: "settlement_currency", headerName: "Settlement Currency", width: 80 },
+                {
+                    field: "trade_currency",
+                    headerName: "Trade Currency",
+                    width: 80,
+                },
+                {
+                    field: "settlement_currency",
+                    headerName: "Settlement Currency",
+                    width: 80,
+                },
                 { field: "itd_pnl", headerName: "ITD PnL", width: 80 },
                 { field: "ytd_pnl", headerName: "YTD PnL", width: 80 },
                 { field: "mtd_pnl", headerName: "MTD PnL", width: 80 },
                 { field: "dtd_pnl", headerName: "DTD PnL", width: 80 },
             ];
         }
-        
+
         console.log("[AG Grid] Using config columns:", cfgCols.length);
         return cfgCols.map((c) => ({
             field: c.key,
@@ -334,6 +359,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const onGridReady = (params: GridReadyEvent) => {
         setGridApi(params.api);
         setColumnApi(params.columnApi);
+        
+        // Automatically size columns to fit the grid width
+        params.api.sizeColumnsToFit();
     };
 
     const handleColumnToggle = (columnKey: string) => {
@@ -359,7 +387,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         localConfig: !!localConfig,
         loading,
         error,
-        positions: positions?.slice(0, 2) // First 2 positions for debugging
+        positions: positions?.slice(0, 2), // First 2 positions for debugging
     });
 
     if (loading) {
@@ -423,7 +451,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     <div
                         style={{
                             display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(15vw, 1fr))",
+                            gridTemplateColumns:
+                                "repeat(auto-fit, minmax(15vw, 1fr))",
                             gap: 12,
                         }}
                     >
