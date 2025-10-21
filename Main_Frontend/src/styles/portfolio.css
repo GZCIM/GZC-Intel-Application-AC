@@ -11,18 +11,14 @@
     overflow: visible;
 }
 
-/* Shrink-wrap the table so the scrollbars sit on the table’s right border */
+/* Container for table with proper scrollbars */
 .portfolio-table-scroll {
-    display: inline-block;
-    width: -moz-fit-content;
-    width: fit-content;
+    width: 100%;
     max-width: 100%;
-    min-width: 0;
-    overflow-x: auto;
-    overflow-y: auto;
+    max-height: 600px; /* Limit height to trigger vertical scrollbar */
+    overflow-x: auto; /* Horizontal scrollbar for columns */
+    overflow-y: auto; /* Vertical scrollbar for rows */
     box-sizing: border-box;
-    contain: content;
-    overflow-clip-margin: content-box;
     scrollbar-gutter: stable both-edges;
     padding-right: 4px; /* nudge to surface horiz bar when widths tie */
     padding-bottom: 14px; /* keep bar above footer/status */
@@ -32,20 +28,6 @@
     scrollbar-color: #333333 #1e1e1e;
 }
 
-/* Invisible spacer to guarantee minimal overflow so the horizontal bar appears */
-.portfolio-table-scroll::after {
-    content: "";
-    display: inline-block;
-    width: 12px; /* ensures scrollWidth > clientWidth */
-    height: 1px;
-}
-
-@supports not (width: fit-content) {
-    .portfolio-table-scroll {
-        display: inline-block;
-        width: auto;
-    }
-}
 
 /* WebKit scrollbar styling */
 .portfolio-table-scroll::-webkit-scrollbar {
@@ -68,11 +50,11 @@
     background: #1e1e1e;
 }
 
-/* Force table to be wider than container to trigger horizontal scrollbar */
+/* Ensure table has proper width for all columns and triggers scrollbars */
 .portfolio-table-scroll > table {
-    width: 4500px !important; /* Force absolute width - override any intrinsic width */
-    min-width: 4500px !important; /* Backup min-width */
-    border-right: 2px solid transparent; /* force tiny overflow so horiz bar appears */
+    width: max-content; /* Let table define its natural width based on content */
+    min-width: 2000px; /* Ensure minimum width for all columns to be readable */
+    table-layout: auto; /* Allow columns to size based on content */
 }
 
 /* Prevent wrapping (keeps columns stable) */
