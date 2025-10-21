@@ -50,11 +50,11 @@
     background: #1e1e1e;
 }
 
-/* Ensure table has proper width for all columns and triggers scrollbars */
+/* Force table to be wider than container to trigger horizontal scrollbar */
 .portfolio-table-scroll > table {
-    width: max-content; /* Let table define its natural width based on content */
-    min-width: 4500px; /* Force table to be wider than container (4004px + 496px) */
-    table-layout: auto; /* Allow columns to size based on content */
+    width: 5000px !important; /* Force table to be wider than container (4004px) */
+    min-width: 5000px !important; /* Backup min-width */
+    table-layout: fixed; /* Use fixed layout for consistent column widths */
 }
 
 /* Prevent wrapping (keeps columns stable) */
