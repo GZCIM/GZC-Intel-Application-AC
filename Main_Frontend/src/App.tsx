@@ -49,8 +49,11 @@ function AppContent() {
     const { isAuthenticated } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
     const { currentLayout, activeTabId, toggleTabEditMode } = useTabLayout();
-    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
-    
+    const [toast, setToast] = useState<{
+        message: string;
+        type: "success" | "error" | "info";
+    } | null>(null);
+
     // Subscribe to toast notifications
     useEffect(() => {
         const unsubscribe = toastManager.subscribe((newToast) => {
@@ -58,9 +61,9 @@ function AppContent() {
         });
         return unsubscribe;
     }, []);
-    
+
     // Get active tab from current layout
-    const activeTab = currentLayout?.tabs.find(tab => tab.id === activeTabId);
+    const activeTab = currentLayout?.tabs.find((tab) => tab.id === activeTabId);
 
     // Show login modal if not authenticated
     useEffect(() => {
@@ -141,7 +144,12 @@ function AppContent() {
                             alignItems: "center",
                         }}
                     >
-                        <span style={{ color: currentTheme.textSecondary, fontSize: "11px" }}>
+                        <span
+                            style={{
+                                color: currentTheme.textSecondary,
+                                fontSize: "11px",
+                            }}
+                        >
                             {getVersionString()}
                         </span>
                     </div>
@@ -173,9 +181,9 @@ function AppContent() {
                 {/* WebSocket connection debugger - Now available through Tools menu */}
 
                 {/* Debug Components - Completely removed for production */}
-                
+
                 {/* Layout Controller removed - integrated into navigation */}
-                
+
                 {/* Toast Notifications */}
                 {toast && (
                     <Toast
@@ -191,7 +199,7 @@ function AppContent() {
                 isOpen={showLoginModal}
                 onLogin={handleLoginModalClose}
             />
-            
+
             {/* Debug Panel - Shows in development mode */}
             {!import.meta.env.PROD && <DebugPanel />}
         </>
@@ -205,19 +213,19 @@ function App() {
     // }, [])
 
     useEffect(() => {
-        debugLogger.info('App initialized', {
+        debugLogger.info("App initialized", {
             timestamp: new Date().toISOString(),
             userAgent: navigator.userAgent,
             viewport: {
                 width: window.innerWidth,
-                height: window.innerHeight
+                height: window.innerHeight,
             },
             localStorage: {
                 keys: Object.keys(localStorage),
-                size: new Blob(Object.values(localStorage)).size
-            }
-        })
-    }, [])
+                size: new Blob(Object.values(localStorage)).size,
+            },
+        });
+    }, []);
 
     return (
         <SentryErrorBoundary
