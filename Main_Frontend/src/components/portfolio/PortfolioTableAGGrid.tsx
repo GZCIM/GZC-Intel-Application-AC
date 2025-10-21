@@ -496,8 +496,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 style={{
                     flex: 1,
                     width: "100%",
+                    height: "100%",
                     marginTop: isEditing ? "8vh" : 0,
                     minHeight: 0, // Important for flex children
+                    overflow: "hidden", // Prevent container overflow
                 }}
             >
                 <AgGridReact
@@ -532,6 +534,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         suppressAutoSize: false,
                         suppressColumnVirtualisation: false,
                         suppressRowVirtualisation: false,
+                        // Ensure table fills full height even with few records
+                        suppressSizeToFit: false,
+                        // Force minimum height to fill container
+                        getRowHeight: () => 30,
                     }}
                 />
             </div>

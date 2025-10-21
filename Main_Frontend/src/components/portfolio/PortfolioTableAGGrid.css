@@ -33,11 +33,15 @@
 .ag-theme-alpine .ag-root-wrapper {
     min-width: 1200px !important;
     height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
 }
 
 .ag-theme-alpine .ag-body-viewport {
     min-width: 1200px !important;
     height: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
 }
 
 /* Ensure table fills full height */
@@ -169,6 +173,22 @@
 .ag-theme-alpine .ag-body-container {
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
+}
+
+/* Ensure table fills full height by extending background */
+.ag-theme-alpine .ag-body-viewport {
+    background-color: var(--gzc-bg, #111111) !important;
+}
+
+/* Force minimum height to fill container */
+.ag-theme-alpine .ag-body-horizontal-scroll-viewport {
+    min-height: 100% !important;
+    background-color: var(--gzc-bg, #111111) !important;
+}
+
+/* Ensure the grid container doesn't shrink */
+.ag-theme-alpine .ag-root-wrapper {
+    min-height: 100% !important;
 }
 
 /* Responsive adjustments */
