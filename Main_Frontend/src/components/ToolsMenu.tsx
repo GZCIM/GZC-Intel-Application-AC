@@ -33,7 +33,10 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+    const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({
+        top: 0,
+        left: 0,
+    });
     const justOpenedRef = useRef<number>(0);
     const isOpeningRef = useRef<boolean>(false);
 
@@ -51,13 +54,15 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
         const rect = containerRef.current?.getBoundingClientRect();
         const newPos = {
             top: Math.round((rect?.bottom ?? 56) + 4),
-            left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
+            left: Math.round(
+                Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)
+            ),
         };
         setMenuPos(newPos);
-        
+
         // Reset the flag after a short delay
-        setTimeout(() => { 
-            isOpeningRef.current = false; 
+        setTimeout(() => {
+            isOpeningRef.current = false;
         }, 100);
     };
 
@@ -895,7 +900,9 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         e.preventDefault();
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
-                        console.log("[ToolsMenu] trigger mousedown (force open)");
+                        console.log(
+                            "[ToolsMenu] trigger mousedown (force open)"
+                        );
                         handleOpen();
                     }}
                     onClick={(e) => {
@@ -906,16 +913,26 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         console.log("[ToolsMenu] trigger click (ignored - v2)");
                     }}
                     onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
+                        if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
                             e.stopPropagation();
-                            const rect = containerRef.current?.getBoundingClientRect();
+                            const rect =
+                                containerRef.current?.getBoundingClientRect();
                             setIsOpen(true);
                             const newPos = {
                                 top: Math.round((rect?.bottom ?? 56) + 4),
-                                left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
+                                left: Math.round(
+                                    Math.max(
+                                        8,
+                                        (rect?.right ??
+                                            window.innerWidth - 240) - 240
+                                    )
+                                ),
                             };
-                            console.log("[ToolsMenu] setMenuPos (keydown)", newPos);
+                            console.log(
+                                "[ToolsMenu] setMenuPos (keydown)",
+                                newPos
+                            );
                             setMenuPos(newPos);
                         }
                     }}
@@ -931,7 +948,9 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         e.preventDefault();
                         e.stopPropagation();
                         (e as any).nativeEvent?.stopImmediatePropagation?.();
-                        console.log("[ToolsMenu] button mousedown (force open)");
+                        console.log(
+                            "[ToolsMenu] button mousedown (force open)"
+                        );
                         handleOpen();
                     }}
                     onClick={(e) => {
@@ -990,7 +1009,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                 </button>
             )}
 
-            {isOpen && (
+            {isOpen &&
                 createPortal(
                     <div
                         style={{
@@ -1008,11 +1027,15 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                             visibility: "visible",
                             pointerEvents: "auto",
                         }}
-                        ref={(el) => { 
-                            menuRef.current = el; 
-                            try { 
-                                console.log("[ToolsMenu] menuRef set", !!el, menuPos);
-                            } catch {} 
+                        ref={(el) => {
+                            menuRef.current = el;
+                            try {
+                                console.log(
+                                    "[ToolsMenu] menuRef set",
+                                    !!el,
+                                    menuPos
+                                );
+                            } catch {}
                         }}
                         onMouseDown={(e) => {
                             e.stopPropagation();
@@ -1098,8 +1121,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                         ))}
                     </div>,
                     document.body
-                )
-            )}
+                )}
         </div>
     );
 };
