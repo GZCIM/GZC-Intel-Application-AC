@@ -404,6 +404,7 @@ export const Portfolio: React.FC<
                 border: `1px solid ${currentTheme.border}`,
                 overflow: "hidden",
                 height: "100%",
+                maxHeight: "100%", // Ensure it doesn't exceed container
                 display: "flex",
                 flexDirection: "column",
                 ...cssVars,
@@ -1504,6 +1505,7 @@ export const Portfolio: React.FC<
                     style={{
                         flex: 1,
                         minHeight: 0,
+                        maxHeight: "100%", // Ensure it doesn't exceed container
                         backgroundColor: currentTheme.background,
                         padding: "12px 12px 0 12px",
                         display: "flex",
@@ -1512,6 +1514,7 @@ export const Portfolio: React.FC<
                         color: currentTheme.textSecondary,
                         fontSize: 12,
                         borderTop: `1px solid ${currentTheme.border}20`,
+                        overflow: "hidden", // Prevent overflow
                     }}
                 >
                     <div style={{ flex: 1, display: "flex", gap: 12 }}>

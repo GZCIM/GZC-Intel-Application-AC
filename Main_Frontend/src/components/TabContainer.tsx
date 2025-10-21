@@ -25,7 +25,9 @@ export const TabContainer: React.FC<TabContainerProps> = ({
         backgroundColor: theme.background,
         color: theme.text,
         padding: theme.spacing.md,
-        overflow: 'auto'
+        overflow: 'hidden', // Changed from 'auto' to prevent overflow
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
       {children}
