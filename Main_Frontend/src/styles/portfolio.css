@@ -68,10 +68,10 @@
     background: #1e1e1e;
 }
 
-/* Let table define intrinsic width; container scrolls */
+/* Force table to be wider than container to trigger horizontal scrollbar */
 .portfolio-table-scroll > table {
-    width: max-content;
-    min-width: 4500px; /* Force table to be significantly wider than container (4004px + 496px) */
+    width: 4500px !important; /* Force absolute width - override any intrinsic width */
+    min-width: 4500px !important; /* Backup min-width */
     border-right: 2px solid transparent; /* force tiny overflow so horiz bar appears */
 }
 
