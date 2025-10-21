@@ -205,19 +205,8 @@ export const Portfolio: React.FC<
             try {
                 // Proactively ensure token is available before first calls
                 const token = await auth.getToken();
-                try {
-                    console.debug(
-                        "[Portfolio] MSAL token acquired, length:",
-                        token?.length || 0
-                    );
-                } catch (_) {}
             } catch (e) {
                 // If token retrieval fails, still attempt loads; axios interceptor will attach if later available
-                try {
-                    console.warn(
-                        "[Portfolio] Proceeding without pre-fetched token"
-                    );
-                } catch (_) {}
             }
             // Load data once token is ready
             await loadFxTrades();
@@ -249,10 +238,6 @@ export const Portfolio: React.FC<
                     full_name: String(f.full_name),
                 }));
                 setFunds(list);
-                // Temporary debug: verify funds are coming from DB
-                try {
-                    console.log("[Portfolio] Funds loaded from DB:", list);
-                } catch (_) {}
             } catch (e) {
                 // keep fallback hardcoded options
             }
@@ -1087,11 +1072,9 @@ export const Portfolio: React.FC<
                                         </select>
                                         <button
                                             type="button"
-                                            onClick={() =>
-                                                console.log(
-                                                    "Create new virtual portfolio"
-                                                )
-                                            }
+                                            onClick={() => {
+                                                // Create new virtual portfolio
+                                            }}
                                             title="Create New Portfolio"
                                             style={{
                                                 position: "absolute",
@@ -1133,9 +1116,9 @@ export const Portfolio: React.FC<
                                 }}
                             >
                                 <button
-                                    onClick={() =>
-                                        console.log("Portfolio: Sync DB")
-                                    }
+                                    onClick={() => {
+                                        // Portfolio: Sync DB
+                                    }}
                                     title="Sync DB"
                                     style={{
                                         padding: "4px 12px",

@@ -38,32 +38,25 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
     const isOpeningRef = useRef<boolean>(false);
 
     useEffect(() => {
-        try { console.log("[ToolsMenu] state:isOpen", isOpen, "pos", menuPos); } catch {}
+        // Track menu state changes
     }, [isOpen, menuPos]);
 
     const handleOpen = () => {
-        console.log("[ToolsMenu] handleOpen called, isOpeningRef:", isOpeningRef.current);
         if (isOpeningRef.current) {
-            console.log("[ToolsMenu] handleOpen blocked by isOpeningRef guard");
             return; // Prevent double-triggering
         }
         isOpeningRef.current = true;
-        
-        console.log("[ToolsMenu] handleOpen executing");
         setIsOpen(true);
         justOpenedRef.current = Date.now();
         const rect = containerRef.current?.getBoundingClientRect();
-        console.log("[ToolsMenu] rect (handleOpen)", rect);
         const newPos = {
             top: Math.round((rect?.bottom ?? 56) + 4),
             left: Math.round(Math.max(8, (rect?.right ?? window.innerWidth - 240) - 240)),
         };
-        console.log("[ToolsMenu] setMenuPos", newPos);
         setMenuPos(newPos);
         
         // Reset the flag after a short delay
         setTimeout(() => { 
-            console.log("[ToolsMenu] resetting isOpeningRef guard");
             isOpeningRef.current = false; 
         }, 100);
     };
@@ -76,20 +69,11 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
             const now = Date.now();
             // Ignore the very first document click right after opening
             if (now - (justOpenedRef.current || 0) < 200) {
-                // Debug
-                try { console.log("[ToolsMenu] ignoring initial document click after open"); } catch {}
+                // Ignore initial document click after open
                 return;
             }
-            // Debug
-            try {
-                console.log("[ToolsMenu] document click", {
-                    targetTag: (target as HTMLElement)?.tagName,
-                    clickedInsideMenu,
-                    clickedTrigger,
-                });
-            } catch {}
+            // Handle click outside menu
             if (!clickedInsideMenu && !clickedTrigger) {
-                console.log("[ToolsMenu] closing via outside click");
                 setIsOpen(false);
             }
         };
