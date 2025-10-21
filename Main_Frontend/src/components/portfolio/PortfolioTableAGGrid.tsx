@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef, GridReadyEvent, GridApi, ColumnApi } from "ag-grid-community";
+import { ColDef, GridReadyEvent, GridApi, ColumnApi, ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "./PortfolioTableAGGrid.css";
 import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
 import axios from "axios";
+
+// Register AG Grid modules - THIS FIXES THE ERROR!
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 interface PortfolioPosition {
     trade_id: number;
