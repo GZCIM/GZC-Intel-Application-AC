@@ -179,7 +179,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     containerClientWidth: container.clientWidth,
                     containerScrollWidth: container.scrollWidth,
                     tableScrollWidth: tableEl.scrollWidth,
-                    needsHorizontalScroll: tableEl.scrollWidth > container.clientWidth,
+                    needsHorizontalScroll:
+                        tableEl.scrollWidth > container.clientWidth,
                 };
                 console.log("[PortfolioTable][SCROLL]", data);
             } catch (_) {}
@@ -314,7 +315,6 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     position: "footer",
                 },
             };
-
 
             const saveResp = await axios.post(
                 "/api/cosmos/portfolio-component-config",
@@ -451,13 +451,11 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         const visCols = (localConfig?.columns || []).filter((c) => c.visible);
         if (visCols.length === 0) return undefined as number | undefined;
         // include cell padding approximation (24px per col)
-        const total = visCols.reduce(
-            (sum, c) => {
-                const width = c.size !== undefined ? c.size : Math.max(c.width || 120, 120);
-                return sum + width + 24;
-            },
-            0
-        );
+        const total = visCols.reduce((sum, c) => {
+            const width =
+                c.size !== undefined ? c.size : Math.max(c.width || 120, 120);
+            return sum + width + 24;
+        }, 0);
         return Math.max(total, 800); // enforce a reasonable floor
     }, [localConfig?.columns]);
 
@@ -1584,23 +1582,39 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                                                 onMouseDown={(e) => {
                                                     e.preventDefault();
                                                     e.stopPropagation();
-                                                    console.log("[PortfolioTable] Resize handle mousedown", {
-                                                        columnId: header.column.id,
-                                                        currentSize: header.getSize(),
-                                                    });
+                                                    console.log(
+                                                        "[PortfolioTable] Resize handle mousedown",
+                                                        {
+                                                            columnId:
+                                                                header.column
+                                                                    .id,
+                                                            currentSize:
+                                                                header.getSize(),
+                                                        }
+                                                    );
                                                     try {
-                                                        header.getResizeHandler()(e);
+                                                        header.getResizeHandler()(
+                                                            e
+                                                        );
                                                     } catch (err) {
-                                                        console.error("[PortfolioTable] Resize handler failed:", err);
+                                                        console.error(
+                                                            "[PortfolioTable] Resize handler failed:",
+                                                            err
+                                                        );
                                                     }
                                                 }}
                                                 onTouchStart={(e) => {
                                                     e.preventDefault();
                                                     e.stopPropagation();
                                                     try {
-                                                        header.getResizeHandler()(e);
+                                                        header.getResizeHandler()(
+                                                            e
+                                                        );
                                                     } catch (err) {
-                                                        console.error("[PortfolioTable] Resize handler failed:", err);
+                                                        console.error(
+                                                            "[PortfolioTable] Resize handler failed:",
+                                                            err
+                                                        );
                                                     }
                                                 }}
                                                 style={{
