@@ -438,8 +438,8 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
             accessorKey: c.key as keyof PortfolioPosition,
             header: c.label,
             cell: (info) => formatValue(info.getValue() as any, c.key),
-            // Ensure Trade Type column is wide enough to avoid wrapping (e.g., "FX Option")
-            size: c.key === "trade_type" ? Math.max(c.width, 140) : c.width,
+            // Use size if available, otherwise use width, with minimum defaults
+            size: c.size !== undefined ? c.size : Math.max(c.width || 120, 120),
             enableHiding: true,
             enableSorting: true,
             enableResizing: true, // Enable resizing for all columns
@@ -452,10 +452,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         if (visCols.length === 0) return undefined as number | undefined;
         // include cell padding approximation (24px per col)
         const total = visCols.reduce(
-            (sum, c) =>
-                sum +
-                (c.key === "trade_type" ? Math.max(c.width, 140) : c.width) +
-                24,
+            (sum, c) => {
+                const width = c.size !== undefined ? c.size : Math.max(c.width || 120, 120);
+                return sum + width + 24;
+            },
             0
         );
         return Math.max(total, 800); // enforce a reasonable floor
@@ -482,8 +482,10 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
         if (localConfig?.columns) {
             const savedSizes: Record<string, number> = {};
             localConfig.columns.forEach((col) => {
-                if (col.size !== undefined) {
-                    savedSizes[col.key] = col.size;
+                // Use size if available, otherwise use width as fallback
+                const width = col.size !== undefined ? col.size : col.width;
+                if (width > 0) {
+                    savedSizes[col.key] = width;
                 }
             });
             setColumnSizing(savedSizes);
@@ -1527,7 +1529,7 @@ const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     style={{
                         width: "max-content",
                         minWidth: tableMinWidth
-                            ? `${Math.max(tableMinWidth + 500, 4000)}px` // force horizontal scrollbar
+                            ? `${tableMinWidth}px` // use calculated width without forcing 4000px minimum
                             : "100%",
                         borderCollapse: "collapse",
                         border: `1px solid ${safeTheme.border}`,
