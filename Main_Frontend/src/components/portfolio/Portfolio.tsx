@@ -464,7 +464,7 @@ export const Portfolio: React.FC<
 
                 /* React Datepicker dark theming */
                 .gzc-datepicker-popper {
-                    z-index: 9999 !important; /* ensure above all stacking contexts */
+                    z-index: 30000 !important; /* Higher than any other element */
                 }
                 /* Force right alignment when above (top-end) */
                 .gzc-datepicker-popper[data-popper-placement^="top-end"] {
@@ -1277,8 +1277,10 @@ export const Portfolio: React.FC<
                                                             position: "absolute",
                                                             top: "100%",
                                                             right: 0,
-                                                            zIndex: 9999, // Higher z-index to appear above table
+                                                            zIndex: 30000, // Higher than any other element (20060)
                                                             marginTop: "4px",
+                                                            isolation: "isolate", // Create new stacking context
+                                                            transform: "translateZ(0)", // Force hardware acceleration
                                                         }}
                                                     >
                                                         {children}
