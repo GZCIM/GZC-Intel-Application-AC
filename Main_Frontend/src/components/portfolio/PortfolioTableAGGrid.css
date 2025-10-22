@@ -40,9 +40,10 @@
 
 .ag-theme-alpine .ag-body-viewport {
     width: 100% !important;
-    height: calc(100% - 17px) !important; /* Account for horizontal scrollbar height */
+    height: calc(100% - 17px) !important; /* leave space for bottom bar */
     overflow-x: auto !important; /* Allow horizontal scrollbar when needed */
     overflow-y: auto !important;
+    scrollbar-gutter: stable both-edges; /* reserve space so bars don’t overlap */
 }
 
 /* Ensure horizontal scrollbar appears at bottom and is always visible */
@@ -206,6 +207,7 @@
     min-height: 100% !important;
     max-height: 100% !important;
     overflow: hidden !important;
+    padding-bottom: 6px; /* ensure horizontal bar visible above component border */
 }
 
 /* Ensure table body fills full height without vertical overflow */
