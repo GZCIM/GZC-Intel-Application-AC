@@ -555,8 +555,9 @@ export const Portfolio: React.FC<
                     display: "flex",
                     flexDirection: "column",
                     gap: 8,
-                    overflow: "visible",
+                    overflow: "hidden", // Constrain header to browser window width
                     position: "relative",
+                    maxWidth: "100%", // Ensure header doesn't exceed container width
                     // Reserve space on the right for floating window controls during edit mode
                     paddingRight: isEditMode || toolsEditing ? 140 : undefined,
                     // Ensure enough height so inner controls are not overlapped vertically

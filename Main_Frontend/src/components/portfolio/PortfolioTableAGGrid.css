@@ -41,26 +41,29 @@
 .ag-theme-alpine .ag-body-viewport {
     width: 100% !important;
     height: calc(100% - 17px) !important; /* leave space for bottom bar */
-    overflow-x: auto !important; /* Allow horizontal scrollbar when needed */
+    overflow-x: scroll !important; /* Force horizontal scrollbar to always show */
     overflow-y: auto !important;
-    scrollbar-gutter: stable both-edges; /* reserve space so bars don’t overlap */
+    scrollbar-gutter: stable both-edges; /* reserve space so bars don't overlap */
+    min-width: 2000px !important; /* Force minimum width to trigger scrollbar */
 }
 
 /* Ensure horizontal scrollbar appears at bottom and is always visible */
 .ag-theme-alpine .ag-body-horizontal-scroll {
     display: block !important;
     height: 17px !important;
-    overflow-x: auto !important;
+    overflow-x: scroll !important; /* Force scrollbar to always show */
     overflow-y: hidden !important;
     background-color: var(--gzc-surface, #1e1e1e) !important;
+    min-width: 2000px !important; /* Force minimum width to trigger scrollbar */
 }
 
 .ag-theme-alpine .ag-body-horizontal-scroll-viewport {
     display: block !important;
     height: 17px !important;
-    overflow-x: auto !important;
+    overflow-x: scroll !important; /* Force scrollbar to always show */
     overflow-y: hidden !important;
     width: 100% !important;
+    min-width: 2000px !important; /* Force minimum width to trigger scrollbar */
 }
 
 /* Ensure table fills full height */
