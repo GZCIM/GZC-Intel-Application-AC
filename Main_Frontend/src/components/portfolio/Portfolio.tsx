@@ -466,6 +466,10 @@ export const Portfolio: React.FC<
                 .gzc-datepicker-popper {
                     z-index: 30000 !important; /* Higher than any other element */
                 }
+                .gzc-datepicker-popper .react-datepicker {
+                    z-index: 30000 !important; /* Ensure calendar itself has high z-index */
+                    position: relative !important;
+                }
                 /* Force right alignment when above (top-end) */
                 .gzc-datepicker-popper[data-popper-placement^="top-end"] {
                     right: 0 !important;
@@ -545,6 +549,20 @@ export const Portfolio: React.FC<
                 .gzc-datepicker-popper .react-datepicker__navigation--previous,
                 .gzc-datepicker-popper .react-datepicker__navigation--next {
                     outline: none;
+                }
+                
+                /* Force calendar above all elements */
+                .react-datepicker {
+                    z-index: 30000 !important;
+                    position: relative !important;
+                }
+                .react-datepicker-popper {
+                    z-index: 30000 !important;
+                }
+                /* Additional specificity for calendar elements */
+                div.react-datepicker {
+                    z-index: 30000 !important;
+                    position: relative !important;
                 }
                 `}
             </style>
