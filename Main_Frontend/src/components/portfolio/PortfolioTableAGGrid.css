@@ -40,7 +40,7 @@
 
 .ag-theme-alpine .ag-body-viewport {
     width: 100% !important;
-    height: calc(100% - 17px) !important; /* leave space for bottom bar */
+    height: calc(100% - 20px) !important; /* leave space for bigger bottom bar */
     overflow-x: scroll !important; /* Force horizontal scrollbar to always show */
     overflow-y: auto !important;
     scrollbar-gutter: stable both-edges; /* reserve space so bars don't overlap */
@@ -50,7 +50,7 @@
 /* Ensure horizontal scrollbar appears at bottom and is always visible */
 .ag-theme-alpine .ag-body-horizontal-scroll {
     display: block !important;
-    height: 17px !important;
+    height: 20px !important; /* Made bigger */
     overflow-x: scroll !important; /* Force scrollbar to always show */
     overflow-y: hidden !important;
     background-color: var(--gzc-surface, #1e1e1e) !important;
@@ -59,7 +59,7 @@
 
 .ag-theme-alpine .ag-body-horizontal-scroll-viewport {
     display: block !important;
-    height: 17px !important;
+    height: 20px !important; /* Made bigger */
     overflow-x: scroll !important; /* Force scrollbar to always show */
     overflow-y: hidden !important;
     width: 100% !important;
@@ -115,8 +115,8 @@
 
 /* Custom scrollbar styling - Using GZC Color Schema */
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
+    width: 16px; /* Made bigger */
+    height: 16px; /* Made bigger */
 }
 
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-track {
@@ -125,7 +125,7 @@
 
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb {
     background: var(--gzc-success, #6aa84f);
-    border-radius: 6px;
+    border-radius: 8px; /* Made bigger */
 }
 
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb:hover {
@@ -192,6 +192,8 @@
 .ag-theme-alpine .ag-body-container {
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
+    height: 100% !important; /* Fill full height */
+    overflow: hidden !important; /* Prevent overflow */
 }
 
 /* Ensure table fills full height by extending background */
@@ -215,10 +217,11 @@
 
 /* Ensure table body fills full height without vertical overflow */
 .ag-theme-alpine .ag-body {
-    height: calc(100% - 17px) !important;
-    max-height: calc(100% - 17px) !important;
+    height: calc(100% - 20px) !important; /* Updated for bigger scrollbar */
+    max-height: calc(100% - 20px) !important; /* Updated for bigger scrollbar */
     overflow: hidden !important;
     width: 100% !important;
+    flex: 1 !important; /* Fill remaining space */
 }
 
 /* Ensure table fills full height and matches down */
