@@ -312,18 +312,18 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         }
 
         console.log("[AG Grid] Using config columns:", cfgCols.length);
-            return cfgCols.map((c) => ({
-                field: c.key,
-                headerName: c.label,
-                width: Math.max(c.size || c.width || 200, 200), // Increased width to ensure horizontal scroll
-                minWidth: 150, // Increased minimum width
-                maxWidth: 300, // Increased maximum width
-                hide: !c.visible,
-                resizable: true,
-                sortable: true,
-                filter: true,
-                cellRenderer: (params: any) => formatValue(params.value, c.key),
-            }));
+        return cfgCols.map((c) => ({
+            field: c.key,
+            headerName: c.label,
+            width: Math.max(c.size || c.width || 200, 200), // Increased width to ensure horizontal scroll
+            minWidth: 150, // Increased minimum width
+            maxWidth: 300, // Increased maximum width
+            hide: !c.visible,
+            resizable: true,
+            sortable: true,
+            filter: true,
+            cellRenderer: (params: any) => formatValue(params.value, c.key),
+        }));
     }, [localConfig]);
 
     const formatValue = (value: any, columnKey: string): string => {
@@ -357,15 +357,37 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     };
 
     const onGridReady = (params: GridReadyEvent) => {
-        setGridApi(params.api);
-        setColumnApi(params.columnApi);
-        
-        // Don't call sizeColumnsToFit() - let columns maintain their widths to trigger horizontal scroll
-        // params.api.sizeColumnsToFit();
-        
-        // Force horizontal scrollbar by ensuring total column width exceeds container
-        const totalWidth = params.api.getDisplayedColumns().reduce((sum, col) => sum + (col.getActualWidth() || 150), 0);
-        console.log('[AG Grid] Total column width:', totalWidth, 'Container width:', params.api.getGridBodyContainer().clientWidth);
+    setGridApi(params.api);
+    setColumnApi(params.columnApi);
+
+    // Columns/viewport diagnostics
+    const displayedCols = params.api.getDisplayedColumns();
+    const totalWidth = displayedCols.reduce((sum, col) => sum + (col.getActualWidth() || 150), 0);
+    const gridBodyDom = (params.api as any).gridBodyCtrl?.eBodyViewport || params.api.getGridBodyContainer();
+    const viewportW = gridBodyDom?.clientWidth;
+    const viewportH = gridBodyDom?.clientHeight;
+    console.log("[AG Grid] grid ready", {
+        displayedCols: displayedCols.length,
+    totalWidth,
+    viewportW,
+    viewportH,
+    rowCount: params.api.getDisplayedRowCount(),
+    });
+
+        // Check scroll positions and max scrollables
+        requestAnimationFrame(() => {
+            const el = gridBodyDom as HTMLElement | undefined;
+            if (el) {
+                console.log("[AG Grid] viewport scroll metrics", {
+                    scrollWidth: el.scrollWidth,
+                    clientWidth: el.clientWidth,
+                    scrollHeight: el.scrollHeight,
+                    clientHeight: el.clientHeight,
+                    canScrollX: el.scrollWidth > el.clientWidth,
+                    canScrollY: el.scrollHeight > el.clientHeight,
+                });
+            }
+        });
     };
 
     const handleColumnToggle = (columnKey: string) => {
@@ -502,11 +524,23 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     width: "100%",
                     height: "100%",
                     marginTop: isEditing ? "8vh" : 0,
-                    minHeight: 0, // Important for flex children
-                    overflow: "hidden", // Prevent container overflow
-                    maxHeight: "100%", // Ensure it doesn't exceed container
+                    minHeight: 0,
+                    overflow: "hidden",
+                    maxHeight: "100%",
                     display: "flex",
                     flexDirection: "column",
+                }}
+                ref={(el) => {
+                    if (!el) return;
+                    const body = el.querySelector('.ag-body-viewport') as HTMLElement | null;
+                    if (body) {
+                        console.log('[AG Grid] container sizes', {
+                            containerW: el.clientWidth,
+                            containerH: el.clientHeight,
+                            bodyW: body.clientWidth,
+                            bodyH: body.clientHeight,
+                        });
+                    }
                 }}
             >
                 <AgGridReact

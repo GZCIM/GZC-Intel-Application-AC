@@ -22,12 +22,10 @@
         "Helvetica Neue", sans-serif;
 }
 
-/* Ensure horizontal scrollbar is always visible */
+/* Ensure horizontal/vertical scrollbars policies without conflicting heights */
 .ag-theme-alpine .ag-body-viewport {
-    overflow-x: scroll !important;
-    overflow-y: auto !important;
-    height: 100% !important;
-    min-height: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: scroll !important;
 }
 
 /* Force table to fill full width and height with horizontal scrollbar */
