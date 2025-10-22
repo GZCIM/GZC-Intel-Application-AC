@@ -550,11 +550,11 @@ export const Portfolio: React.FC<
                 .gzc-datepicker-popper .react-datepicker__navigation--next {
                     outline: none;
                 }
-                
+
                 /* Force calendar above all elements */
                 .react-datepicker {
                     z-index: 30000 !important;
-                    position: relative !important;
+                    position: absolute !important;
                 }
                 .react-datepicker-popper {
                     z-index: 30000 !important;
@@ -562,7 +562,13 @@ export const Portfolio: React.FC<
                 /* Additional specificity for calendar elements */
                 div.react-datepicker {
                     z-index: 30000 !important;
-                    position: relative !important;
+                    position: absolute !important;
+                }
+                /* Override any parent stacking contexts */
+                .gzc-datepicker-popper .react-datepicker {
+                    z-index: 30000 !important;
+                    position: absolute !important;
+                    transform: translateZ(0) !important;
                 }
                 `}
             </style>
@@ -1274,8 +1280,10 @@ export const Portfolio: React.FC<
                                                         style={{
                                                             width: 120,
                                                             textAlign: "left",
-                                                            display: "inline-block", // Ensure proper inline positioning
-                                                            position: "relative", // Ensure proper positioning context
+                                                            display:
+                                                                "inline-block", // Ensure proper inline positioning
+                                                            position:
+                                                                "relative", // Ensure proper positioning context
                                                         }}
                                                     >
                                                         {value || "yyyy-mm-dd"}
@@ -1292,13 +1300,16 @@ export const Portfolio: React.FC<
                                                     <div
                                                         className={`${className} gzc-datepicker-popper`}
                                                         style={{
-                                                            position: "absolute",
+                                                            position:
+                                                                "absolute",
                                                             top: "100%",
                                                             right: 0,
                                                             zIndex: 30000, // Higher than any other element (20060)
                                                             marginTop: "4px",
-                                                            isolation: "isolate", // Create new stacking context
-                                                            transform: "translateZ(0)", // Force hardware acceleration
+                                                            isolation:
+                                                                "isolate", // Create new stacking context
+                                                            transform:
+                                                                "translateZ(0)", // Force hardware acceleration
                                                         }}
                                                     >
                                                         {children}
@@ -1348,7 +1359,8 @@ export const Portfolio: React.FC<
                                                             {
                                                                 name: "preventOverflow",
                                                                 options: {
-                                                                    rootBoundary: "viewport",
+                                                                    rootBoundary:
+                                                                        "viewport",
                                                                     tether: false,
                                                                     padding: 8,
                                                                 },
@@ -1356,11 +1368,12 @@ export const Portfolio: React.FC<
                                                             {
                                                                 name: "flip",
                                                                 options: {
-                                                                    fallbackPlacements: [
-                                                                        "top-end",
-                                                                        "bottom-start",
-                                                                        "top-start",
-                                                                    ],
+                                                                    fallbackPlacements:
+                                                                        [
+                                                                            "top-end",
+                                                                            "bottom-start",
+                                                                            "top-start",
+                                                                        ],
                                                                 },
                                                             },
                                                         ]}
