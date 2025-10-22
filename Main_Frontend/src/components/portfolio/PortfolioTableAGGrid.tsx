@@ -7,16 +7,20 @@ import {
     ColumnApi,
     ModuleRegistry,
     AllCommunityModule,
+    CellSelectionModule,
+    IntegratedChartsModule,
 } from "ag-grid-community";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
 import "./PortfolioTableAGGrid.css";
 import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
 import axios from "axios";
 
-// Register AG Grid modules - THIS FIXES THE ERROR!
-ModuleRegistry.registerModules([AllCommunityModule]);
+// Register AG Grid modules
+ModuleRegistry.registerModules([
+    AllCommunityModule,
+    CellSelectionModule,
+    IntegratedChartsModule,
+]);
 
 interface PortfolioPosition {
     trade_id: number;
@@ -350,44 +354,83 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     };
 
     const onGridReady = (params: GridReadyEvent) => {
-    setGridApi(params.api);
-    setColumnApi(params.columnApi);
+        setGridApi(params.api);
+        setColumnApi(params.columnApi);
 
-    // Columns/viewport diagnostics
-    const displayedCols = params.api.getDisplayedColumns();
-    const totalWidth = displayedCols.reduce((sum, col) => sum + (col.getActualWidth() || 150), 0);
-    const gridBodyDom = (params.api as any).gridBodyCtrl?.eBodyViewport || params.api.getGridBodyContainer();
-    const viewportW = gridBodyDom?.clientWidth;
-    const viewportH = gridBodyDom?.clientHeight;
-    console.log("[AG Grid] grid ready", {
-    displayedCols: displayedCols.length,
-    totalWidth,
-    viewportW,
-    viewportH,
-    rowCount: params.api.getDisplayedRowCount(),
-    });
+        // Wait for grid to be fully ready before accessing API
+        setTimeout(() => {
+            try {
+                // Use a more robust way to get displayed columns
+                let displayedCols: any[] = [];
+                try {
+                    // Check if the API is fully ready and has the method
+                    if (params.api && typeof params.api.getDisplayedColumns === 'function') {
+                        displayedCols = params.api.getDisplayedColumns();
+                    } else if (params.api && typeof params.api.getAllColumns === 'function') {
+                        // Fallback: get all columns
+                        displayedCols = params.api.getAllColumns() || [];
+                    } else {
+                        console.warn("[AG Grid] API not ready, skipping column operations");
+                        return;
+                    }
+                } catch (e) {
+                    console.warn("[AG Grid] getDisplayedColumns failed, trying alternative method", e);
+                    // Fallback: get all columns
+                    try {
+                        displayedCols = params.api.getAllColumns() || [];
+                    } catch (e2) {
+                        console.warn("[AG Grid] getAllColumns also failed, skipping column operations", e2);
+                        return;
+                    }
+                }
 
-        // Narrow columns to fit content on first render
-        try {
-            params.columnApi.autoSizeAllColumns();
-        } catch (e) {
-            console.warn("[AG Grid] autoSizeAllColumns failed", e);
-        }
+                const totalWidth = displayedCols.reduce((sum, col) => {
+                    try {
+                        return sum + (col.getActualWidth?.() || col.getWidth?.() || 150);
+                    } catch (e) {
+                        return sum + 150; // fallback width
+                    }
+                }, 0);
 
-        // Check scroll positions and max scrollables
-        requestAnimationFrame(() => {
-            const el = gridBodyDom as HTMLElement | undefined;
-            if (el) {
-                console.log("[AG Grid] viewport scroll metrics", {
-                    scrollWidth: el.scrollWidth,
-                    clientWidth: el.clientWidth,
-                    scrollHeight: el.scrollHeight,
-                    clientHeight: el.clientHeight,
-                    canScrollX: el.scrollWidth > el.clientWidth,
-                    canScrollY: el.scrollHeight > el.clientHeight,
+                const gridBodyDom = (params.api as any).gridBodyCtrl?.eBodyViewport || params.api.getGridBodyContainer();
+                const viewportW = gridBodyDom?.clientWidth;
+                const viewportH = gridBodyDom?.clientHeight;
+                
+                console.log("[AG Grid] grid ready", {
+                    displayedCols: displayedCols.length,
+                    totalWidth,
+                    viewportW,
+                    viewportH,
+                    rowCount: params.api.getDisplayedRowCount(),
                 });
+
+                // Narrow columns to fit content on first render
+                try {
+                    if (params.columnApi && typeof params.columnApi.autoSizeAllColumns === 'function') {
+                        params.columnApi.autoSizeAllColumns();
+                    }
+                } catch (e) {
+                    console.warn("[AG Grid] autoSizeAllColumns failed", e);
+                }
+
+                // Check scroll positions and max scrollables
+                requestAnimationFrame(() => {
+                    const el = gridBodyDom as HTMLElement | undefined;
+                    if (el) {
+                        console.log("[AG Grid] viewport scroll metrics", {
+                            scrollWidth: el.scrollWidth,
+                            clientWidth: el.clientWidth,
+                            scrollHeight: el.scrollHeight,
+                            clientHeight: el.clientHeight,
+                            canScrollX: el.scrollWidth > el.clientWidth,
+                            canScrollY: el.scrollHeight > el.clientHeight,
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error("[AG Grid] Error in onGridReady:", error);
             }
-        });
+        }, 1000); // Increased delay to ensure grid is fully ready
     };
 
     const handleColumnToggle = (columnKey: string) => {
@@ -525,8 +568,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     height: "100%",
                     marginTop: isEditing ? "8vh" : 0,
                     minHeight: 0,
-                    overflow: "hidden",
-                    maxHeight: "100%",
                     display: "flex",
                     flexDirection: "column",
                 }}
@@ -547,12 +588,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     rowData={positions}
                     columnDefs={columnDefs}
                     onGridReady={onGridReady}
-                    suppressHorizontalScroll={false}
-                    suppressVerticalScroll={false}
-                    alwaysShowHorizontalScroll={true}
-                    enableRangeSelection={true}
-                    enableCharts={true}
                     animateRows={true}
+                    cellSelection={true}
+                    enableCharts={true}
                     rowSelection="multiple"
                     defaultColDef={{
                         resizable: true,
@@ -562,18 +600,14 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         maxWidth: 180,
                     }}
                     gridOptions={{
-                        suppressRowClickSelection: true,
                         rowHeight: 30,
                         headerHeight: 40,
                         suppressScrollOnNewData: false,
-                        alwaysShowHorizontalScroll: true,
-                        alwaysShowVerticalScroll: true,
                         suppressRowTransform: true,
                         domLayout: "normal",
                         suppressAutoSize: false,
                         suppressColumnVirtualisation: false,
                         suppressRowVirtualisation: false,
-                        suppressSizeToFit: true, // do not stretch to grid width
                         getRowHeight: () => 30,
                     }}
                 />

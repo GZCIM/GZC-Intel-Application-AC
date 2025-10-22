@@ -555,7 +555,8 @@ export const Portfolio: React.FC<
                     display: "flex",
                     flexDirection: "column",
                     gap: 8,
-                    overflow: "hidden", // Constrain header to browser window width
+                    overflowX: "hidden", // prevent horizontal overflow
+                    overflowY: "hidden",
                     position: "relative",
                     maxWidth: "100%", // Ensure header doesn't exceed container width
                     // Reserve space on the right for floating window controls during edit mode
@@ -1515,7 +1516,7 @@ export const Portfolio: React.FC<
                         color: currentTheme.textSecondary,
                         fontSize: 12,
                         borderTop: `1px solid ${currentTheme.border}20`,
-                        overflow: "hidden", // Prevent overflow
+                        overflow: "hidden", // Keep scrollbars inside table, not here
                     }}
                 >
                     <div style={{ flex: 1, display: "flex", gap: 12 }}>
@@ -1528,9 +1529,10 @@ export const Portfolio: React.FC<
                                 padding: 8,
                                 height: "100%",
                                 maxHeight: "100%",
-                                overflow: "hidden",
+                                overflow: "hidden", // container stays clipped
                                 display: "flex",
                                 flexDirection: "column",
+                                minHeight: 0, // allow child grid to size/scroll
                             }}
                         >
                             <PortfolioTableAGGrid

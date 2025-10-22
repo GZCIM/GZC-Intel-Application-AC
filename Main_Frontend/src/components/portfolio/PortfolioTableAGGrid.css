@@ -20,36 +20,78 @@
     --ag-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
         "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
         "Helvetica Neue", sans-serif;
+    
+    /* Main AG Grid container - fills available space */
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important; /* outer container shouldn't scroll */
 }
 
-/* Ensure horizontal/vertical scrollbars policies without conflicting heights */
-.ag-theme-alpine .ag-body-viewport {
-    overflow-x: auto !important;
-    overflow-y: scroll !important;
-}
-
-/* Force table to fill full width and height with horizontal scrollbar */
+/* Root wrapper - contains the entire grid */
 .ag-theme-alpine .ag-root-wrapper {
     width: 100% !important;
     height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
     overflow: hidden !important;
+    max-height: 100% !important;
+    padding-bottom: 0; /* align grid bottom border with component */
+}
+
+/* Root element - the main grid container */
+.ag-theme-alpine .ag-root {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    width: 100% !important;
     max-height: 100% !important;
 }
 
+/* Body container - contains rows and viewport */
+.ag-theme-alpine .ag-body {
+    height: calc(100% - 20px) !important; /* Updated for bigger scrollbar */
+    max-height: calc(100% - 20px) !important; /* Updated for bigger scrollbar */
+    overflow: hidden !important;
+    width: 100% !important;
+    flex: 1 !important; /* Fill remaining space */
+}
+
+/* Body viewport - the scrollable area with data rows */
 .ag-theme-alpine .ag-body-viewport {
     width: 100% !important;
-    height: calc(100% - var(--gzc-hscroll-h)) !important; /* leave space for bottom horizontal bar */
-    overflow-x: scroll !important; /* force show horizontal */
-    overflow-y: scroll !important; /* always show vertical bar on the right */
+    height: 100% !important; /* fill container; no artificial extra space */
+    overflow-x: auto !important; /* native horizontal behavior */
+    overflow-y: auto !important; /* native vertical behavior */
     scrollbar-gutter: stable both-edges;
     position: relative;
     z-index: 1;
+    flex: 1 !important;
+    /* Force scrollbar styling */
+    scrollbar-width: auto;
+    scrollbar-color: var(--gzc-success, #6aa84f) var(--gzc-surface, #1e1e1e);
+    background-color: var(--gzc-bg, #111111) !important;
 }
 
-/* Ensure horizontal scrollbar appears at bottom and is always visible */
+/* Center columns viewport - contains the actual data */
+.ag-theme-alpine .ag-center-cols-viewport {
+    overflow-x: scroll !important; /* force show inner horizontal */
+    overflow-y: scroll !important;
+    scrollbar-gutter: stable both-edges;
+}
+
+/* Center columns container - holds the row data */
+.ag-theme-alpine .ag-center-cols-container {
+    min-width: 150vw !important; /* responsive minimum to trigger horizontal overflow */
+    width: max-content !important; /* grow to content width */
+}
+
+/* Horizontal scrollbar container */
 .ag-theme-alpine .ag-body-horizontal-scroll {
     display: block !important;
-    height: var(--gzc-hscroll-h) !important; /* responsive */
+    height: var(--gzc-hscroll-h, 16px) !important; /* responsive */
     overflow-x: auto !important; /* native horizontal behavior */
     overflow-y: hidden !important;
     background-color: var(--gzc-surface, #1e1e1e) !important;
@@ -60,72 +102,15 @@
 
 .ag-theme-alpine .ag-body-horizontal-scroll-viewport {
     display: block !important;
-    height: var(--gzc-hscroll-h) !important; /* responsive */
+    height: var(--gzc-hscroll-h, 16px) !important; /* responsive */
     overflow-x: auto !important; /* native horizontal behavior */
     overflow-y: hidden !important;
     width: 100% !important;
     position: relative;
     z-index: 6;
     pointer-events: auto;
-}
-
-/* Ensure table fills full height */
-.ag-theme-alpine .ag-root {
-    height: 100% !important;
-}
-
-.ag-theme-alpine .ag-body {
-    height: 100% !important;
-}
-
-/* Ensure AG Grid container fills available space */
-.ag-theme-alpine {
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important;
-    min-height: 0 !important;
-    --gzc-hscroll-h: clamp(12px, 1.8vh, 24px);
-}
-
-/* Force AG Grid to fill full height and eliminate white space */
-.ag-theme-alpine .ag-root-wrapper {
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-}
-
-.ag-theme-alpine .ag-root {
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-}
-
-.ag-theme-alpine .ag-body {
-    height: 100% !important;
-    flex: 1 !important;
-}
-
-/* Ensure no white space below rows and horizontal scrollbar is visible */
-.ag-theme-alpine .ag-body-viewport {
-    height: 100% !important;
-    overflow-x: auto !important;
-    overflow-y: scroll !important;
-    flex: 1 !important;
-    /* Force scrollbar styling */
-    scrollbar-width: auto;
-    scrollbar-color: var(--gzc-success, #6aa84f) var(--gzc-surface, #1e1e1e);
-}
-
-/* Hard guarantee horizontal scrollability at the table content layer */
-.ag-theme-alpine .ag-center-cols-viewport {
-    overflow-x: scroll !important; /* force show inner horizontal */
-    overflow-y: scroll !important;
-    scrollbar-gutter: stable both-edges;
-}
-.ag-theme-alpine .ag-center-cols-container {
-    min-width: 150vw !important; /* responsive minimum to trigger horizontal overflow */
-    width: max-content !important; /* grow to content width */
+    min-height: 100% !important;
+    background-color: var(--gzc-bg, #111111) !important;
 }
 
 /* Custom scrollbar styling - Using GZC Color Schema */
@@ -196,8 +181,6 @@
     font-size: 9px;
 }
 
-/* Horizontal scrollbar is now visible at bottom */
-
 /* Ensure rows fill available space */
 .ag-theme-alpine .ag-row {
     height: 30px !important;
@@ -209,42 +192,6 @@
     margin-bottom: 0 !important;
     height: 100% !important; /* Fill full height */
     overflow: hidden !important; /* Prevent overflow */
-}
-
-/* Ensure table fills full height by extending background */
-.ag-theme-alpine .ag-body-viewport {
-    background-color: var(--gzc-bg, #111111) !important;
-}
-
-/* Force minimum height to fill container */
-.ag-theme-alpine .ag-body-horizontal-scroll-viewport {
-    min-height: 100% !important;
-    background-color: var(--gzc-bg, #111111) !important;
-}
-
-/* Ensure the grid container doesn't shrink and stays within bounds */
-.ag-theme-alpine .ag-root-wrapper {
-    min-height: 100% !important;
-    max-height: 100% !important;
-    overflow: hidden !important;
-    padding-bottom: 0; /* align grid bottom border with component */
-}
-
-/* Ensure table body fills full height without vertical overflow */
-.ag-theme-alpine .ag-body {
-    height: calc(100% - 20px) !important; /* Updated for bigger scrollbar */
-    max-height: calc(100% - 20px) !important; /* Updated for bigger scrollbar */
-    overflow: hidden !important;
-    width: 100% !important;
-    flex: 1 !important; /* Fill remaining space */
-}
-
-/* Ensure table fills full height and matches down */
-.ag-theme-alpine .ag-root {
-    height: 100% !important;
-    width: 100% !important;
-    max-height: 100% !important;
-    overflow: hidden !important;
 }
 
 /* Responsive adjustments */

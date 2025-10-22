@@ -2,65 +2,14 @@
 
 .portfolio-card-body {
     min-width: 0;
-    overflow: visible;
+    overflow: hidden; /* Keep scrollbars within the table */
 }
 
 .portfolio-dashed-wrap {
     display: flex;
     min-width: 0;
-    overflow: hidden;
+    overflow: hidden; /* Keep scrollbars within the table */
     height: 100%;
     max-height: 100%;
     flex-direction: column;
-}
-
-/* Container for table with proper scrollbars */
-.portfolio-table-scroll {
-    width: 100%;
-    max-width: 100%;
-    max-height: 600px; /* Limit height to trigger vertical scrollbar */
-    overflow-x: auto; /* Horizontal scrollbar for columns */
-    overflow-y: auto; /* Vertical scrollbar for rows */
-    box-sizing: border-box;
-    scrollbar-gutter: stable both-edges;
-    padding-right: 4px; /* nudge to surface horiz bar when widths tie */
-    padding-bottom: 14px; /* keep bar above footer/status */
-
-    /* Firefox scrollbar styling */
-    scrollbar-width: auto;
-    scrollbar-color: #333333 #1e1e1e;
-}
-
-/* WebKit scrollbar styling */
-.portfolio-table-scroll::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
-}
-.portfolio-table-scroll::-webkit-scrollbar-track {
-    background: #1e1e1e;
-    border-radius: 6px;
-}
-.portfolio-table-scroll::-webkit-scrollbar-thumb {
-    background: #333333;
-    border-radius: 6px;
-    border: 2px solid #1e1e1e;
-}
-.portfolio-table-scroll::-webkit-scrollbar-thumb:hover {
-    background: #2a2a2a;
-}
-.portfolio-table-scroll::-webkit-scrollbar-corner {
-    background: #1e1e1e;
-}
-
-/* Force table to be wider than container to trigger horizontal scrollbar */
-.portfolio-table-scroll > table {
-    width: 6000px !important; /* Force table to be wider than container (5004px + 996px) */
-    min-width: 6000px !important; /* Backup min-width */
-    table-layout: auto; /* Use auto layout for proper column sizing */
-}
-
-/* Prevent wrapping (keeps columns stable) */
-.portfolio-table-scroll th,
-.portfolio-table-scroll td {
-    white-space: nowrap;
 }
