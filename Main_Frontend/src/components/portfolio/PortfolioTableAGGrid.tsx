@@ -289,25 +289,17 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         if (cfgCols.length === 0) {
             console.log("[AG Grid] No config loaded, using fallback columns");
             return [
-                { field: "trade_id", headerName: "Trade ID", width: 200 },
-                { field: "trade_type", headerName: "Type", width: 200 },
-                { field: "quantity", headerName: "Quantity", width: 200 },
-                { field: "trade_price", headerName: "Trade Price", width: 200 },
-                { field: "price", headerName: "Price", width: 200 },
-                {
-                    field: "trade_currency",
-                    headerName: "Trade Currency",
-                    width: 200,
-                },
-                {
-                    field: "settlement_currency",
-                    headerName: "Settlement Currency",
-                    width: 200,
-                },
-                { field: "itd_pnl", headerName: "ITD PnL", width: 200 },
-                { field: "ytd_pnl", headerName: "YTD PnL", width: 200 },
-                { field: "mtd_pnl", headerName: "MTD PnL", width: 200 },
-                { field: "dtd_pnl", headerName: "DTD PnL", width: 200 },
+                { field: "trade_id", headerName: "Trade ID", minWidth: 80 },
+                { field: "trade_type", headerName: "Type", minWidth: 80 },
+                { field: "quantity", headerName: "Quantity", minWidth: 90 },
+                { field: "trade_price", headerName: "Trade Price", minWidth: 110 },
+                { field: "price", headerName: "Price", minWidth: 90 },
+                { field: "trade_currency", headerName: "Trade Currency", minWidth: 90 },
+                { field: "settlement_currency", headerName: "Settlement Currency", minWidth: 120 },
+                { field: "itd_pnl", headerName: "ITD PnL", minWidth: 110 },
+                { field: "ytd_pnl", headerName: "YTD PnL", minWidth: 110 },
+                { field: "mtd_pnl", headerName: "MTD PnL", minWidth: 110 },
+                { field: "dtd_pnl", headerName: "DTD PnL", minWidth: 110 },
             ];
         }
 
@@ -315,9 +307,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         return cfgCols.map((c) => ({
             field: c.key,
             headerName: c.label,
-            width: Math.max(c.size || c.width || 200, 200), // Increased width to ensure horizontal scroll
-            minWidth: 150, // Increased minimum width
-            maxWidth: 300, // Increased maximum width
+            // allow AG Grid to auto-size based on content/header
+            minWidth: 70,
+            maxWidth: 180,
+            width: c.size || c.width || undefined,
             hide: !c.visible,
             resizable: true,
             sortable: true,
@@ -367,12 +360,19 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const viewportW = gridBodyDom?.clientWidth;
     const viewportH = gridBodyDom?.clientHeight;
     console.log("[AG Grid] grid ready", {
-        displayedCols: displayedCols.length,
+    displayedCols: displayedCols.length,
     totalWidth,
     viewportW,
     viewportH,
     rowCount: params.api.getDisplayedRowCount(),
     });
+
+        // Narrow columns to fit content on first render
+        try {
+            params.columnApi.autoSizeAllColumns();
+        } catch (e) {
+            console.warn("[AG Grid] autoSizeAllColumns failed", e);
+        }
 
         // Check scroll positions and max scrollables
         requestAnimationFrame(() => {
@@ -558,27 +558,22 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         resizable: true,
                         sortable: true,
                         filter: true,
-                        width: 200, // Increased width to ensure horizontal scroll
-                        minWidth: 150,
-                        maxWidth: 300,
+                        minWidth: 70,
+                        maxWidth: 180,
                     }}
                     gridOptions={{
                         suppressRowClickSelection: true,
                         rowHeight: 30,
                         headerHeight: 40,
-                        // Force scrollbars to be visible
                         suppressScrollOnNewData: false,
                         alwaysShowHorizontalScroll: true,
                         alwaysShowVerticalScroll: true,
                         suppressRowTransform: true,
-                        domLayout: "normal", // Use normal layout to fill available space
-                        // Force the grid to fill the full height
+                        domLayout: "normal",
                         suppressAutoSize: false,
                         suppressColumnVirtualisation: false,
                         suppressRowVirtualisation: false,
-                        // Ensure table fills full height even with few records
-                        suppressSizeToFit: false,
-                        // Force minimum height to fill container
+                        suppressSizeToFit: true, // do not stretch to grid width
                         getRowHeight: () => 30,
                     }}
                 />
