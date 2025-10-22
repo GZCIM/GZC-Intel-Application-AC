@@ -80,7 +80,7 @@ body {
     flex: 1;
     overflow-y: auto; /* Enable independent vertical scrolling */
     overflow-x: auto; /* Allow horizontal scrollbars within children */
-    height: 100vh; /* Fixed height to viewport */
+    height: auto; /* Let flex handle height instead of fixed 100vh */
     position: relative;
 }
 
@@ -175,7 +175,9 @@ body.leftpanel-full .dashboard-left-panel {
     height: 100%;
     padding: 8px;
     position: relative;
-    overflow: visible; /* Allow child scrollbars to be visible */
+    overflow: hidden; /* Constrain children to prevent overflow */
+    display: flex;
+    flex-direction: column;
 }
 
 /* Toast notification animation */
