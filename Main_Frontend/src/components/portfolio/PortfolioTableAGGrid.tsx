@@ -296,10 +296,22 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 { field: "trade_id", headerName: "Trade ID", minWidth: 80 },
                 { field: "trade_type", headerName: "Type", minWidth: 80 },
                 { field: "quantity", headerName: "Quantity", minWidth: 90 },
-                { field: "trade_price", headerName: "Trade Price", minWidth: 110 },
+                {
+                    field: "trade_price",
+                    headerName: "Trade Price",
+                    minWidth: 110,
+                },
                 { field: "price", headerName: "Price", minWidth: 90 },
-                { field: "trade_currency", headerName: "Trade Currency", minWidth: 90 },
-                { field: "settlement_currency", headerName: "Settlement Currency", minWidth: 120 },
+                {
+                    field: "trade_currency",
+                    headerName: "Trade Currency",
+                    minWidth: 90,
+                },
+                {
+                    field: "settlement_currency",
+                    headerName: "Settlement Currency",
+                    minWidth: 120,
+                },
                 { field: "itd_pnl", headerName: "ITD PnL", minWidth: 110 },
                 { field: "ytd_pnl", headerName: "YTD PnL", minWidth: 110 },
                 { field: "mtd_pnl", headerName: "MTD PnL", minWidth: 110 },
@@ -364,38 +376,57 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 let displayedCols: any[] = [];
                 try {
                     // Check if the API is fully ready and has the method
-                    if (params.api && typeof params.api.getDisplayedColumns === 'function') {
+                    if (
+                        params.api &&
+                        typeof params.api.getDisplayedColumns === "function"
+                    ) {
                         displayedCols = params.api.getDisplayedColumns();
-                    } else if (params.api && typeof params.api.getAllColumns === 'function') {
+                    } else if (
+                        params.api &&
+                        typeof params.api.getAllColumns === "function"
+                    ) {
                         // Fallback: get all columns
                         displayedCols = params.api.getAllColumns() || [];
                     } else {
-                        console.warn("[AG Grid] API not ready, skipping column operations");
+                        console.warn(
+                            "[AG Grid] API not ready, skipping column operations"
+                        );
                         return;
                     }
                 } catch (e) {
-                    console.warn("[AG Grid] getDisplayedColumns failed, trying alternative method", e);
+                    console.warn(
+                        "[AG Grid] getDisplayedColumns failed, trying alternative method",
+                        e
+                    );
                     // Fallback: get all columns
                     try {
                         displayedCols = params.api.getAllColumns() || [];
                     } catch (e2) {
-                        console.warn("[AG Grid] getAllColumns also failed, skipping column operations", e2);
+                        console.warn(
+                            "[AG Grid] getAllColumns also failed, skipping column operations",
+                            e2
+                        );
                         return;
                     }
                 }
 
                 const totalWidth = displayedCols.reduce((sum, col) => {
                     try {
-                        return sum + (col.getActualWidth?.() || col.getWidth?.() || 150);
+                        return (
+                            sum +
+                            (col.getActualWidth?.() || col.getWidth?.() || 150)
+                        );
                     } catch (e) {
                         return sum + 150; // fallback width
                     }
                 }, 0);
 
-                const gridBodyDom = (params.api as any).gridBodyCtrl?.eBodyViewport || params.api.getGridBodyContainer();
+                const gridBodyDom =
+                    (params.api as any).gridBodyCtrl?.eBodyViewport ||
+                    params.api.getGridBodyContainer();
                 const viewportW = gridBodyDom?.clientWidth;
                 const viewportH = gridBodyDom?.clientHeight;
-                
+
                 console.log("[AG Grid] grid ready", {
                     displayedCols: displayedCols.length,
                     totalWidth,
@@ -406,7 +437,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
                 // Narrow columns to fit content on first render
                 try {
-                    if (params.columnApi && typeof params.columnApi.autoSizeAllColumns === 'function') {
+                    if (
+                        params.columnApi &&
+                        typeof params.columnApi.autoSizeAllColumns ===
+                            "function"
+                    ) {
                         params.columnApi.autoSizeAllColumns();
                     }
                 } catch (e) {
@@ -573,9 +608,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 }}
                 ref={(el) => {
                     if (!el) return;
-                    const body = el.querySelector('.ag-body-viewport') as HTMLElement | null;
+                    const body = el.querySelector(
+                        ".ag-body-viewport"
+                    ) as HTMLElement | null;
                     if (body) {
-                        console.log('[AG Grid] container sizes', {
+                        console.log("[AG Grid] container sizes", {
                             containerW: el.clientWidth,
                             containerH: el.clientHeight,
                             bodyW: body.clientWidth,

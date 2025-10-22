@@ -20,7 +20,7 @@
     --ag-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
         "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
         "Helvetica Neue", sans-serif;
-    
+
     /* Main AG Grid container - fills available space */
     height: 100% !important;
     display: flex !important;
