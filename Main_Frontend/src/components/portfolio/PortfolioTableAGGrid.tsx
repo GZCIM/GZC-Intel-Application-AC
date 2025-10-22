@@ -7,8 +7,6 @@ import {
     ColumnApi,
     ModuleRegistry,
     AllCommunityModule,
-    CellSelectionModule,
-    IntegratedChartsModule,
 } from "ag-grid-community";
 import "./PortfolioTableAGGrid.css";
 import { useAuthContext } from "../../modules/ui-library";
@@ -16,11 +14,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import axios from "axios";
 
 // Register AG Grid modules
-ModuleRegistry.registerModules([
-    AllCommunityModule,
-    CellSelectionModule,
-    IntegratedChartsModule,
-]);
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 interface PortfolioPosition {
     trade_id: number;
@@ -626,8 +620,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     columnDefs={columnDefs}
                     onGridReady={onGridReady}
                     animateRows={true}
-                    cellSelection={true}
-                    enableCharts={true}
                     rowSelection="multiple"
                     defaultColDef={{
                         resizable: true,
