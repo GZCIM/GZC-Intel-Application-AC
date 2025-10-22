@@ -30,19 +30,21 @@
     min-height: 100% !important;
 }
 
-/* Force table to fill full width and height */
+/* Force table to fill full width and height with horizontal scrollbar */
 .ag-theme-alpine .ag-root-wrapper {
     width: 100% !important;
     height: 100% !important;
     overflow: hidden !important;
     max-height: 100% !important;
+    min-width: 1200px !important; /* Force minimum width to trigger horizontal scroll */
 }
 
 .ag-theme-alpine .ag-body-viewport {
     width: 100% !important;
     height: calc(100% - 17px) !important; /* Account for horizontal scrollbar height */
-    overflow-x: auto !important;
+    overflow-x: scroll !important; /* Force horizontal scrollbar */
     overflow-y: auto !important;
+    min-width: 1200px !important; /* Force minimum width to trigger horizontal scroll */
 }
 
 /* Ensure horizontal scrollbar appears at bottom and is always visible */
@@ -52,6 +54,7 @@
     overflow-x: scroll !important;
     overflow-y: hidden !important;
     background-color: var(--gzc-surface, #1e1e1e) !important;
+    min-width: 1200px !important;
 }
 
 .ag-theme-alpine .ag-body-horizontal-scroll-viewport {
@@ -60,6 +63,7 @@
     overflow-x: scroll !important;
     overflow-y: hidden !important;
     min-width: 1200px !important;
+    width: 100% !important;
 }
 
 /* Ensure table fills full height */
@@ -77,6 +81,7 @@
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
+    min-height: 0 !important;
 }
 
 /* Force AG Grid to fill full height and eliminate white space */

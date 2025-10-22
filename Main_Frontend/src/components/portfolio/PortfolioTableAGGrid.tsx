@@ -501,6 +501,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     minHeight: 0, // Important for flex children
                     overflow: "hidden", // Prevent container overflow
                     maxHeight: "100%", // Ensure it doesn't exceed container
+                    display: "flex",
+                    flexDirection: "column",
                 }}
             >
                 <AgGridReact
