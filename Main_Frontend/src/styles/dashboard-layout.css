@@ -5,7 +5,8 @@ html,
 body {
     margin: 0;
     padding: 0;
-    overflow: auto; /* Allow scrolling when content exceeds viewport */
+    overflow-y: auto; /* Allow vertical scrolling when content exceeds viewport */
+    overflow-x: hidden; /* Prevent horizontal page scroll */
     height: 100vh; /* Full viewport height */
     min-height: 100vh; /* Ensure minimum height */
 }
@@ -15,7 +16,8 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh; /* Fixed height to viewport */
-    overflow: auto; /* Allow scrolling when content exceeds container */
+    overflow-y: auto; /* Allow vertical scrolling when content exceeds container */
+    overflow-x: hidden; /* Prevent horizontal overflow at root container */
     min-height: 100vh; /* Ensure minimum height */
 }
 
@@ -30,7 +32,8 @@ body {
 .dashboard-body {
     display: flex;
     flex: 1;
-    overflow: auto; /* Allow scrolling when content exceeds body */
+    overflow-y: auto; /* Allow vertical scrolling when content exceeds body */
+    overflow-x: hidden; /* Prevent horizontal overflow at body level */
     min-height: 0; /* Allow flex children to shrink */
 }
 
@@ -178,7 +181,8 @@ body.leftpanel-full .dashboard-left-panel {
     height: 100%;
     padding: 8px;
     position: relative;
-    overflow: auto; /* Allow scrolling when content exceeds container */
+    overflow-y: auto; /* Allow vertical scrolling when content exceeds container */
+    overflow-x: hidden; /* Prevent horizontal overflow in canvas container */
     display: flex;
     flex-direction: column;
 }

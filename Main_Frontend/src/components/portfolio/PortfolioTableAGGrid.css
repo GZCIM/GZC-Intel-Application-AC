@@ -84,8 +84,9 @@
 
 /* Center columns container - holds the row data */
 .ag-theme-alpine .ag-center-cols-container {
-    min-width: 150vw !important; /* responsive minimum to trigger horizontal overflow */
-    width: max-content !important; /* grow to content width */
+    /* Avoid forcing the grid wider than viewport; let columns define min width */
+    min-width: 100% !important;
+    width: max-content !important; /* grow only as needed for columns */
 }
 
 /* Horizontal scrollbar container */

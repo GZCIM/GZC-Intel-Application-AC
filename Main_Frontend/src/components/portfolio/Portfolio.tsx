@@ -1533,6 +1533,7 @@ export const Portfolio: React.FC<
                                 display: "flex",
                                 flexDirection: "column",
                                 minHeight: 0, // allow child grid to size/scroll
+                                width: "100%",
                             }}
                         >
                             <PortfolioTableAGGrid
