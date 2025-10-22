@@ -2,7 +2,7 @@
 # Includes: gzc-intel-app frontend, FXSpotStream backend, Portfolio backend, Bloomberg gateway
 
 # Stage 1: Build React Frontend (gzc-intel-app)
-FROM node:20-alpine as frontend-builder
+FROM node:22-alpine as frontend-builder
 
 WORKDIR /app/frontend
 
@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build:skip-ts
 
 # Stage 2: Build Bloomberg Volatility Surface Frontend
-FROM node:20-alpine as bloomberg-builder
+FROM node:22-alpine as bloomberg-builder
 
 WORKDIR /app/bloomberg-frontend
 
