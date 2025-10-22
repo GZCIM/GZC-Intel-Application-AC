@@ -39,10 +39,9 @@
 .ag-theme-alpine .ag-body-viewport {
     width: 100% !important;
     height: calc(100% - 20px) !important; /* leave space for bottom horizontal bar */
-    overflow-x: auto !important; /* native horizontal behavior */
+    overflow-x: scroll !important; /* force show horizontal */
     overflow-y: scroll !important; /* always show vertical bar on the right */
-    scrollbar-gutter: stable both-edges; /* reserve space so bars don’t overlap */
-    padding-right: 4px; /* keep content clear of vertical bar */
+    scrollbar-gutter: stable both-edges;
 }
 
 /* Ensure horizontal scrollbar appears at bottom and is always visible */
@@ -111,7 +110,7 @@
 
 /* Hard guarantee horizontal scrollability at the table content layer */
 .ag-theme-alpine .ag-center-cols-viewport {
-    overflow-x: auto !important;
+    overflow-x: scroll !important; /* force show inner horizontal */
     overflow-y: scroll !important;
     scrollbar-gutter: stable both-edges;
 }
