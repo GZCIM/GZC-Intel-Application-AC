@@ -38,7 +38,7 @@
 
 .ag-theme-alpine .ag-body-viewport {
     width: 100% !important;
-    height: calc(100% - 20px) !important; /* leave space for bottom horizontal bar */
+    height: calc(100% - var(--gzc-hscroll-h)) !important; /* leave space for bottom horizontal bar */
     overflow-x: scroll !important; /* force show horizontal */
     overflow-y: scroll !important; /* always show vertical bar on the right */
     scrollbar-gutter: stable both-edges;
@@ -49,7 +49,7 @@
 /* Ensure horizontal scrollbar appears at bottom and is always visible */
 .ag-theme-alpine .ag-body-horizontal-scroll {
     display: block !important;
-    height: 20px !important; /* Bigger, visible */
+    height: var(--gzc-hscroll-h) !important; /* responsive */
     overflow-x: auto !important; /* native horizontal behavior */
     overflow-y: hidden !important;
     background-color: var(--gzc-surface, #1e1e1e) !important;
@@ -60,7 +60,7 @@
 
 .ag-theme-alpine .ag-body-horizontal-scroll-viewport {
     display: block !important;
-    height: 20px !important; /* Bigger, visible */
+    height: var(--gzc-hscroll-h) !important; /* responsive */
     overflow-x: auto !important; /* native horizontal behavior */
     overflow-y: hidden !important;
     width: 100% !important;
@@ -85,6 +85,7 @@
     flex-direction: column !important;
     overflow: hidden !important;
     min-height: 0 !important;
+    --gzc-hscroll-h: clamp(12px, 1.8vh, 24px);
 }
 
 /* Force AG Grid to fill full height and eliminate white space */
@@ -123,7 +124,7 @@
     scrollbar-gutter: stable both-edges;
 }
 .ag-theme-alpine .ag-center-cols-container {
-    min-width: 2400px !important; /* ensures horizontal overflow when columns are many */
+    min-width: 150vw !important; /* responsive minimum to trigger horizontal overflow */
     width: max-content !important; /* grow to content width */
 }
 
