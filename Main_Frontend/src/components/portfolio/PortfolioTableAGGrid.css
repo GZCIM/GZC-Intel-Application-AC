@@ -36,33 +36,29 @@
     height: 100% !important;
     overflow: hidden !important;
     max-height: 100% !important;
-    min-width: 1200px !important; /* Force minimum width to trigger horizontal scroll */
 }
 
 .ag-theme-alpine .ag-body-viewport {
     width: 100% !important;
     height: calc(100% - 17px) !important; /* Account for horizontal scrollbar height */
-    overflow-x: scroll !important; /* Force horizontal scrollbar */
+    overflow-x: auto !important; /* Allow horizontal scrollbar when needed */
     overflow-y: auto !important;
-    min-width: 1200px !important; /* Force minimum width to trigger horizontal scroll */
 }
 
 /* Ensure horizontal scrollbar appears at bottom and is always visible */
 .ag-theme-alpine .ag-body-horizontal-scroll {
     display: block !important;
     height: 17px !important;
-    overflow-x: scroll !important;
+    overflow-x: auto !important;
     overflow-y: hidden !important;
     background-color: var(--gzc-surface, #1e1e1e) !important;
-    min-width: 1200px !important;
 }
 
 .ag-theme-alpine .ag-body-horizontal-scroll-viewport {
     display: block !important;
     height: 17px !important;
-    overflow-x: scroll !important;
+    overflow-x: auto !important;
     overflow-y: hidden !important;
-    min-width: 1200px !important;
     width: 100% !important;
 }
 

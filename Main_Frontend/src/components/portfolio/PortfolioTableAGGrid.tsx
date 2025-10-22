@@ -289,25 +289,25 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         if (cfgCols.length === 0) {
             console.log("[AG Grid] No config loaded, using fallback columns");
             return [
-                { field: "trade_id", headerName: "Trade ID", width: 150 },
-                { field: "trade_type", headerName: "Type", width: 150 },
-                { field: "quantity", headerName: "Quantity", width: 150 },
-                { field: "trade_price", headerName: "Trade Price", width: 150 },
-                { field: "price", headerName: "Price", width: 150 },
+                { field: "trade_id", headerName: "Trade ID", width: 200 },
+                { field: "trade_type", headerName: "Type", width: 200 },
+                { field: "quantity", headerName: "Quantity", width: 200 },
+                { field: "trade_price", headerName: "Trade Price", width: 200 },
+                { field: "price", headerName: "Price", width: 200 },
                 {
                     field: "trade_currency",
                     headerName: "Trade Currency",
-                    width: 150,
+                    width: 200,
                 },
                 {
                     field: "settlement_currency",
                     headerName: "Settlement Currency",
-                    width: 150,
+                    width: 200,
                 },
-                { field: "itd_pnl", headerName: "ITD PnL", width: 150 },
-                { field: "ytd_pnl", headerName: "YTD PnL", width: 150 },
-                { field: "mtd_pnl", headerName: "MTD PnL", width: 150 },
-                { field: "dtd_pnl", headerName: "DTD PnL", width: 150 },
+                { field: "itd_pnl", headerName: "ITD PnL", width: 200 },
+                { field: "ytd_pnl", headerName: "YTD PnL", width: 200 },
+                { field: "mtd_pnl", headerName: "MTD PnL", width: 200 },
+                { field: "dtd_pnl", headerName: "DTD PnL", width: 200 },
             ];
         }
 
@@ -315,9 +315,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             return cfgCols.map((c) => ({
                 field: c.key,
                 headerName: c.label,
-                width: Math.max(c.size || c.width || 150, 150), // Increased width to fill space
-                minWidth: 100, // Increased minimum width
-                maxWidth: 200, // Increased maximum width
+                width: Math.max(c.size || c.width || 200, 200), // Increased width to ensure horizontal scroll
+                minWidth: 150, // Increased minimum width
+                maxWidth: 300, // Increased maximum width
                 hide: !c.visible,
                 resizable: true,
                 sortable: true,
@@ -359,9 +359,13 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const onGridReady = (params: GridReadyEvent) => {
         setGridApi(params.api);
         setColumnApi(params.columnApi);
-
-        // Automatically size columns to fit the grid width
-        params.api.sizeColumnsToFit();
+        
+        // Don't call sizeColumnsToFit() - let columns maintain their widths to trigger horizontal scroll
+        // params.api.sizeColumnsToFit();
+        
+        // Force horizontal scrollbar by ensuring total column width exceeds container
+        const totalWidth = params.api.getDisplayedColumns().reduce((sum, col) => sum + (col.getActualWidth() || 150), 0);
+        console.log('[AG Grid] Total column width:', totalWidth, 'Container width:', params.api.getGridBodyContainer().clientWidth);
     };
 
     const handleColumnToggle = (columnKey: string) => {
@@ -520,9 +524,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         resizable: true,
                         sortable: true,
                         filter: true,
-                        width: 150, // Increased width to fill horizontal space
-                        minWidth: 100,
-                        maxWidth: 200,
+                        width: 200, // Increased width to ensure horizontal scroll
+                        minWidth: 150,
+                        maxWidth: 300,
                     }}
                     gridOptions={{
                         suppressRowClickSelection: true,
