@@ -1256,6 +1256,8 @@ export const Portfolio: React.FC<
                                                         style={{
                                                             width: 120,
                                                             textAlign: "left",
+                                                            display: "inline-block", // Ensure proper inline positioning
+                                                            position: "relative", // Ensure proper positioning context
                                                         }}
                                                     >
                                                         {value || "yyyy-mm-dd"}
@@ -1263,114 +1265,24 @@ export const Portfolio: React.FC<
                                                 ));
                                             CustomInput.displayName =
                                                 "CustomDateInput";
-                                            // Variant B fallback: fixed-position portal anchored to button rect
-                                            const FixedPopperContainer = ({
+                                            // Use relative positioning container - simpler and more reliable
+                                            const RelativePopperContainer = ({
                                                 className,
                                                 children,
                                             }: any) => {
-                                                const btn =
-                                                    dateButtonRef.current as HTMLElement | null;
-                                                const rect =
-                                                    btn?.getBoundingClientRect?.();
-                                                // Measure calendar once it renders; fallback to responsive estimates
-                                                const containerRef =
-                                                    React.useRef<HTMLDivElement | null>(
-                                                        null
-                                                    );
-                                                const [measured, setMeasured] =
-                                                    React.useState({
-                                                        w: 0,
-                                                        h: 0,
-                                                    });
-                                                React.useLayoutEffect(() => {
-                                                    const el = containerRef
-                                                        .current
-                                                        ?.firstElementChild as HTMLElement | null;
-                                                    if (el) {
-                                                        const r =
-                                                            el.getBoundingClientRect();
-                                                        if (r.width && r.height)
-                                                            setMeasured({
-                                                                w: r.width,
-                                                                h: r.height,
-                                                            });
-                                                    }
-                                                }, [children]);
-                                                const approxWidth =
-                                                    measured.w ||
-                                                    Math.min(
-                                                        480,
-                                                        Math.max(
-                                                            280,
-                                                            Math.round(
-                                                                window.innerWidth *
-                                                                    0.24
-                                                            )
-                                                        )
-                                                    );
-                                                const approxHeight =
-                                                    measured.h ||
-                                                    Math.min(
-                                                        420,
-                                                        Math.max(
-                                                            260,
-                                                            Math.round(
-                                                                window.innerHeight *
-                                                                    0.38
-                                                            )
-                                                        )
-                                                    );
-                                                const spaceBelow = rect
-                                                    ? window.innerHeight -
-                                                      rect.bottom
-                                                    : 0;
-                                                const showAbove = rect
-                                                    ? spaceBelow <
-                                                      approxHeight + 16
-                                                    : false;
-                                                const top = rect
-                                                    ? showAbove
-                                                        ? Math.max(
-                                                              16,
-                                                              rect.top -
-                                                                  (approxHeight +
-                                                                      12)
-                                                          )
-                                                        : rect.bottom + 12
-                                                    : 16;
-                                                // Clamp horizontally within viewport
-                                                const right = rect
-                                                    ? (() => {
-                                                          const spaceRight =
-                                                              window.innerWidth -
-                                                              rect.right;
-                                                          const overlap =
-                                                              Math.max(
-                                                                  0,
-                                                                  approxWidth -
-                                                                      spaceRight
-                                                              );
-                                                          // Extra nudge left by 24px beyond overlap + keep at least 16px from edge
-                                                          return Math.max(
-                                                              16,
-                                                              40 + overlap
-                                                          );
-                                                      })()
-                                                    : 16;
-                                                return createPortal(
+                                                return (
                                                     <div
-                                                        ref={containerRef}
-                                                        className={className}
+                                                        className={`${className} gzc-datepicker-popper`}
                                                         style={{
-                                                            position: "fixed",
-                                                            top,
-                                                            right,
-                                                            zIndex: 2147483647,
+                                                            position: "absolute",
+                                                            top: "100%",
+                                                            right: 0,
+                                                            zIndex: 1000,
+                                                            marginTop: "4px",
                                                         }}
                                                     >
                                                         {children}
-                                                    </div>,
-                                                    document.body
+                                                    </div>
                                                 );
                                             };
                                             return (
@@ -1416,44 +1328,24 @@ export const Portfolio: React.FC<
                                                             {
                                                                 name: "preventOverflow",
                                                                 options: {
-                                                                    rootBoundary:
-                                                                        "viewport",
-                                                                    tether: true,
+                                                                    rootBoundary: "viewport",
+                                                                    tether: false,
                                                                     padding: 8,
                                                                 },
                                                             },
                                                             {
                                                                 name: "flip",
                                                                 options: {
-                                                                    fallbackPlacements:
-                                                                        [
-                                                                            "top-end",
-                                                                            "bottom-start",
-                                                                            "top-start",
-                                                                        ],
-                                                                },
-                                                            },
-                                                            {
-                                                                name: "offset",
-                                                                options: {
-                                                                    offset: [
-                                                                        0, 8,
+                                                                    fallbackPlacements: [
+                                                                        "top-end",
+                                                                        "bottom-start",
+                                                                        "top-start",
                                                                     ],
-                                                                },
-                                                            },
-                                                            // Use Popper 'arrow' positioning so right edges align
-                                                            {
-                                                                name: "computeStyles",
-                                                                options: {
-                                                                    adaptive:
-                                                                        false,
-                                                                    gpuAcceleration:
-                                                                        false,
                                                                 },
                                                             },
                                                         ]}
                                                         popperContainer={
-                                                            FixedPopperContainer
+                                                            RelativePopperContainer
                                                         }
                                                         customInput={
                                                             <CustomInput />
