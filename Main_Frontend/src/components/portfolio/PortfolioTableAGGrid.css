@@ -101,12 +101,23 @@
 /* Ensure no white space below rows and horizontal scrollbar is visible */
 .ag-theme-alpine .ag-body-viewport {
     height: 100% !important;
-    overflow-x: scroll !important;
-    overflow-y: auto !important;
+    overflow-x: auto !important;
+    overflow-y: scroll !important;
     flex: 1 !important;
-    /* Force horizontal scrollbar to always be visible */
-    scrollbar-width: thin;
+    /* Force scrollbar styling */
+    scrollbar-width: auto;
     scrollbar-color: var(--gzc-success, #6aa84f) var(--gzc-surface, #1e1e1e);
+}
+
+/* Hard guarantee horizontal scrollability at the table content layer */
+.ag-theme-alpine .ag-center-cols-viewport {
+    overflow-x: auto !important;
+    overflow-y: scroll !important;
+    scrollbar-gutter: stable both-edges;
+}
+.ag-theme-alpine .ag-center-cols-container {
+    min-width: 2400px !important; /* ensures horizontal overflow when columns are many */
+    width: max-content !important; /* grow to content width */
 }
 
 /* Custom scrollbar styling - Using GZC Color Schema */
