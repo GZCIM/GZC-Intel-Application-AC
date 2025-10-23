@@ -414,39 +414,6 @@ export const Portfolio: React.FC<
             {/* Themed utility styles for chips and datepicker (match GZC Dark) */}
             <style>
                 {`
-                /* CRITICAL: Fixed scrollbar anchored to component viewport border */
-                .portfolio-table-scroll-container {
-                    /* Ensure scrollbar gutter is always reserved */
-                    scrollbar-gutter: stable;
-                }
-                
-                .portfolio-table-scroll-container::-webkit-scrollbar {
-                    width: 16px;
-                    position: fixed;
-                    right: 0;
-                }
-                
-                .portfolio-table-scroll-container::-webkit-scrollbar-track {
-                    background: ${currentTheme.surface || "#1e1e1e"};
-                    border-radius: 8px;
-                    border-left: 1px solid ${currentTheme.border || "#333333"};
-                }
-                
-                .portfolio-table-scroll-container::-webkit-scrollbar-thumb {
-                    background: ${currentTheme.success || "#6aa84f"};
-                    border-radius: 8px;
-                    border: 2px solid ${currentTheme.surface || "#1e1e1e"};
-                    min-height: 20px;
-                }
-                
-                .portfolio-table-scroll-container::-webkit-scrollbar-thumb:hover {
-                    background: color-mix(in hsl, ${currentTheme.success || "#6aa84f"} 80%, white);
-                }
-                
-                .portfolio-table-scroll-container::-webkit-scrollbar-corner {
-                    background: ${currentTheme.surface || "#1e1e1e"};
-                }
-                
                 /* Chip buttons used by Live/EOD selectors */
                 .gzc-chip {
                     padding: 4px 8px;
@@ -1580,16 +1547,12 @@ export const Portfolio: React.FC<
                             <div
                                 style={{
                                     flex: 1,
-                                    overflowY: "auto", // CRITICAL: Enable vertical scrolling for table content
-                                    overflowX: "hidden", // CRITICAL: Let AG Grid handle horizontal scrolling
                                     height: "100%",
                                     width: "100%",
                                     position: "relative",
-                                    // CRITICAL: Custom scrollbar styling to match design
-                                    scrollbarWidth: "thin",
-                                    scrollbarColor: `${currentTheme.success || "#6aa84f"} ${currentTheme.surface || "#1e1e1e"}`,
+                                    overflow: "hidden", // CRITICAL: Hide all scrollbars at this level
                                 }}
-                                className="portfolio-table-scroll-container"
+                                className="portfolio-table-container"
                             >
                                 <PortfolioTableAGGrid
                                     selectedDate={effectiveDate}
@@ -1601,6 +1564,11 @@ export const Portfolio: React.FC<
                                         (window as any)?.componentId ||
                                         undefined
                                     }
+                                    componentBorderInfo={{
+                                        rightBorder: currentTheme.border || "#333333",
+                                        surfaceColor: currentTheme.surface || "#1e1e1e",
+                                        successColor: currentTheme.success || "#6aa84f",
+                                    }}
                                 />
                             </div>
                         </div>

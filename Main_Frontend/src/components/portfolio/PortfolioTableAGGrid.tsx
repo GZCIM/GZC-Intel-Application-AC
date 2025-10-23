@@ -61,6 +61,12 @@ interface TableConfig {
     filters: Record<string, any>;
 }
 
+interface ComponentBorderInfo {
+    rightBorder: string;
+    surfaceColor: string;
+    successColor: string;
+}
+
 interface PortfolioTableAGGridProps {
     selectedDate: string;
     fundId: number;
@@ -68,6 +74,7 @@ interface PortfolioTableAGGridProps {
     externalEditing?: boolean;
     componentId?: string;
     deviceType?: "laptop" | "mobile" | "bigscreen";
+    componentBorderInfo?: ComponentBorderInfo;
 }
 
 const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
@@ -77,6 +84,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     externalEditing,
     componentId,
     deviceType,
+    componentBorderInfo,
 }) => {
     const { getToken } = useAuthContext();
     const { currentTheme: theme } = useTheme();
@@ -588,35 +596,46 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 </div>
             )}
 
-            {/* AG Grid Table */}
+            {/* AG Grid Table with Fixed Scrollbar */}
             <div
-                className="ag-theme-alpine"
                 style={{
                     flex: 1,
                     width: "100%",
                     height: "100%",
-                    marginTop: isEditing ? "8vh" : 0,
-                    minHeight: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    overflow: "visible", // CRITICAL: Allow scrollbars to show and be functional
+                    position: "relative",
+                    overflow: "hidden", // CRITICAL: Hide native scrollbars
                 }}
-                ref={(el) => {
-                    if (!el) return;
-                    const body = el.querySelector(
-                        ".ag-body-viewport"
-                    ) as HTMLElement | null;
-                    if (body) {
-                        console.log("[AG Grid] container sizes", {
-                            containerW: el.clientWidth,
-                            containerH: el.clientHeight,
-                            bodyW: body.clientWidth,
-                            bodyH: body.clientHeight,
-                        });
-                    }
-                }}
+                className="portfolio-table-wrapper"
             >
-                <AgGridReact
+                {/* AG Grid with hidden scrollbar */}
+                <div
+                    className="ag-theme-alpine"
+                    style={{
+                        flex: 1,
+                        width: "100%",
+                        height: "100%",
+                        marginTop: isEditing ? "8vh" : 0,
+                        minHeight: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        overflow: "hidden", // CRITICAL: Hide native scrollbars
+                    }}
+                    ref={(el) => {
+                        if (!el) return;
+                        const body = el.querySelector(
+                            ".ag-body-viewport"
+                        ) as HTMLElement | null;
+                        if (body) {
+                            console.log("[AG Grid] container sizes", {
+                                containerW: el.clientWidth,
+                                containerH: el.clientHeight,
+                                bodyW: body.clientWidth,
+                                bodyH: body.clientHeight,
+                            });
+                        }
+                    }}
+                >
+                    <AgGridReact
                     rowData={positions}
                     columnDefs={columnDefs}
                     onGridReady={onGridReady}
@@ -646,6 +665,38 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         alwaysShowVerticalScroll: true,
                     }}
                 />
+                
+                {/* CRITICAL: Fixed scrollbar positioned at component's right edge */}
+                <div
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        width: "16px",
+                        height: "100%",
+                        backgroundColor: componentBorderInfo?.surfaceColor || "#1e1e1e",
+                        borderLeft: `1px solid ${componentBorderInfo?.rightBorder || "#333333"}`,
+                        zIndex: 10,
+                        pointerEvents: "none", // Allow clicks to pass through to content
+                        borderRadius: "0 4px 4px 0",
+                    }}
+                    className="portfolio-fixed-scrollbar-track"
+                >
+                    {/* Scrollbar thumb - will be positioned dynamically */}
+                    <div
+                        style={{
+                            position: "absolute",
+                            left: "2px",
+                            width: "12px",
+                            height: "20px", // Will be calculated dynamically
+                            backgroundColor: componentBorderInfo?.successColor || "#6aa84f",
+                            borderRadius: "6px",
+                            top: "0px", // Will be calculated dynamically
+                            transition: "background-color 0.2s ease",
+                        }}
+                        className="portfolio-fixed-scrollbar-thumb"
+                    />
+                </div>
             </div>
 
             {/* Error display for partial loads */}
