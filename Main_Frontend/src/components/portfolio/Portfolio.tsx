@@ -1568,21 +1568,39 @@ export const Portfolio: React.FC<
                                     componentBorderInfo={(() => {
                                         const borderInfo = {
                                             rightBorder:
-                                                currentTheme.border || "#333333",
+                                                currentTheme.border ||
+                                                "#333333",
                                             surfaceColor:
-                                                currentTheme.surface || "#1e1e1e",
+                                                currentTheme.surface ||
+                                                "#1e1e1e",
                                             successColor:
-                                                currentTheme.success || "#6aa84f",
+                                                currentTheme.success ||
+                                                "#6aa84f",
                                         };
-                                        
-                                        console.log("[Portfolio] Component Border Info:", {
-                                            componentId: id || (window as any)?.componentId || "default",
-                                            containerId: `portfolio-container-${id || "default"}`,
-                                            currentTheme,
-                                            borderInfo,
-                                            containerRect: document.getElementById(`portfolio-container-${id || "default"}`)?.getBoundingClientRect()
-                                        });
-                                        
+
+                                        console.log(
+                                            "[Portfolio] Component Border Info:",
+                                            {
+                                                componentId:
+                                                    id ||
+                                                    (window as any)
+                                                        ?.componentId ||
+                                                    "default",
+                                                containerId: `portfolio-container-${
+                                                    id || "default"
+                                                }`,
+                                                currentTheme,
+                                                borderInfo,
+                                                containerRect: document
+                                                    .getElementById(
+                                                        `portfolio-container-${
+                                                            id || "default"
+                                                        }`
+                                                    )
+                                                    ?.getBoundingClientRect(),
+                                            }
+                                        );
+
                                         return borderInfo;
                                     })()}
                                 />
