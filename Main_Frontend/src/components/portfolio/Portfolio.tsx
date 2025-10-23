@@ -1318,19 +1318,77 @@ export const Portfolio: React.FC<
                                                 className,
                                                 children,
                                             }: any) => {
+                                                // Calculate position relative to the date button
+                                                const getButtonPosition =
+                                                    () => {
+                                                        if (
+                                                            !dateButtonRef.current
+                                                        ) {
+                                                            return {
+                                                                top: 0,
+                                                                right: 0,
+                                                            };
+                                                        }
+
+                                                        const buttonRect =
+                                                            dateButtonRef.current.getBoundingClientRect();
+                                                        const viewportWidth =
+                                                            window.innerWidth;
+                                                        const viewportHeight =
+                                                            window.innerHeight;
+
+                                                        // Position below the button, aligned to its right edge
+                                                        let top =
+                                                            buttonRect.bottom +
+                                                            4; // 4px margin
+                                                        let right = Math.max(
+                                                            8,
+                                                            viewportWidth -
+                                                                buttonRect.right
+                                                        ); // Ensure it doesn't go off-screen
+
+                                                        // If there's not enough space below, position above the button
+                                                        if (
+                                                            top + 300 >
+                                                            viewportHeight
+                                                        ) {
+                                                            // Assuming calendar height ~300px
+                                                            top =
+                                                                buttonRect.top -
+                                                                304; // 4px margin above
+                                                        }
+
+                                                        // If there's not enough space on the right, align to left edge
+                                                        if (right < 200) {
+                                                            // Assuming calendar width ~200px
+                                                            right = Math.max(
+                                                                8,
+                                                                viewportWidth -
+                                                                    buttonRect.left
+                                                            );
+                                                        }
+
+                                                        return { top, right };
+                                                    };
+
+                                                const buttonPos =
+                                                    getButtonPosition();
+
                                                 // Use React Portal to render outside React Grid Layout
-                                                const portalRoot = document.body;
+                                                const portalRoot =
+                                                    document.body;
                                                 return createPortal(
                                                     <div
                                                         className={`${className} gzc-datepicker-popper`}
                                                         style={{
-                                                            position: "absolute",
-                                                            top: "100%",
-                                                            right: 0,
+                                                            position: "fixed", // Use fixed to position relative to viewport
+                                                            top: `${buttonPos.top}px`,
+                                                            right: `${buttonPos.right}px`,
                                                             zIndex: 50000, // Match our CSS override
-                                                            marginTop: "4px",
-                                                            isolation: "isolate", // Create new stacking context
-                                                            transform: "translateZ(0)", // Force hardware acceleration
+                                                            isolation:
+                                                                "isolate", // Create new stacking context
+                                                            transform:
+                                                                "translateZ(0)", // Force hardware acceleration
                                                         }}
                                                     >
                                                         {children}
@@ -1386,7 +1444,7 @@ export const Portfolio: React.FC<
                                                                     tether: false,
                                                                     padding: 8,
                                                                 },
-                                                            },
+                                                            } as any,
                                                             {
                                                                 name: "flip",
                                                                 options: {
@@ -1397,7 +1455,7 @@ export const Portfolio: React.FC<
                                                                             "top-start",
                                                                         ],
                                                                 },
-                                                            },
+                                                            } as any,
                                                         ]}
                                                         popperContainer={
                                                             PortalPopperContainer
