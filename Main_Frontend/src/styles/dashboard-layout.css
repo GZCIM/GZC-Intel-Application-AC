@@ -17,7 +17,7 @@ body {
     flex-direction: column;
     height: 100vh; /* Fixed height to viewport */
     overflow-y: auto; /* Allow vertical scrolling when content exceeds container */
-    overflow-x: hidden; /* Prevent horizontal overflow at root container */
+    overflow-x: visible; /* CRITICAL: Allow horizontal scrollbars from children */
     min-height: 100vh; /* Ensure minimum height */
 }
 
@@ -33,7 +33,7 @@ body {
     display: flex;
     flex: 1;
     overflow-y: auto; /* Allow vertical scrolling when content exceeds body */
-    overflow-x: hidden; /* Prevent horizontal overflow at body level */
+    overflow-x: visible; /* CRITICAL: Allow horizontal scrollbars from children */
     min-height: 0; /* Allow flex children to shrink */
 }
 
@@ -85,7 +85,7 @@ body {
 .dashboard-content {
     flex: 1;
     overflow-y: auto; /* Enable independent vertical scrolling */
-    overflow-x: hidden; /* Prevent horizontal overflow at this level - let children handle it */
+    overflow-x: visible; /* CRITICAL: Allow horizontal scrollbars from children */
     height: calc(100vh - 48px); /* Fixed height: viewport minus header */
     min-height: calc(100vh - 48px); /* Ensure minimum height */
     position: relative;
@@ -187,7 +187,7 @@ body.leftpanel-full .dashboard-left-panel {
     padding: 8px;
     position: relative;
     overflow-y: auto; /* Allow vertical scrolling when content exceeds container */
-    overflow-x: hidden; /* Prevent horizontal overflow in canvas container */
+    overflow-x: visible; /* CRITICAL: Allow horizontal scrollbars from children */
     display: flex;
     flex-direction: column;
 }

@@ -1522,7 +1522,7 @@ export const Portfolio: React.FC<
                         color: currentTheme.textSecondary,
                         fontSize: 12,
                         borderTop: `1px solid ${currentTheme.border}20`,
-                        overflow: "hidden", // Keep scrollbars inside table, not here
+                        overflow: "visible", // CRITICAL: Allow scrollbars to show
                     }}
                 >
                     <div style={{ flex: 1, display: "flex", gap: 12 }}>
@@ -1535,7 +1535,7 @@ export const Portfolio: React.FC<
                                 padding: 8,
                                 height: "100%",
                                 maxHeight: "100%",
-                                overflow: "hidden", // container stays clipped
+                                overflow: "visible", // CRITICAL: Allow scrollbars to show
                                 display: "flex",
                                 flexDirection: "column",
                                 minHeight: "250px", // Fixed minimum height for consistency
