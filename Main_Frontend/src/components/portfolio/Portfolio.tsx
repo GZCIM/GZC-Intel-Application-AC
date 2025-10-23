@@ -553,22 +553,27 @@ export const Portfolio: React.FC<
 
                 /* Force calendar above all elements */
                 .react-datepicker {
-                    z-index: 30000 !important;
+                    z-index: 50000 !important;
                     position: absolute !important;
                 }
                 .react-datepicker-popper {
-                    z-index: 30000 !important;
+                    z-index: 50000 !important;
                 }
                 /* Additional specificity for calendar elements */
                 div.react-datepicker {
-                    z-index: 30000 !important;
+                    z-index: 50000 !important;
                     position: absolute !important;
                 }
                 /* Override any parent stacking contexts */
                 .gzc-datepicker-popper .react-datepicker {
-                    z-index: 30000 !important;
+                    z-index: 50000 !important;
                     position: absolute !important;
                     transform: translateZ(0) !important;
+                }
+                /* Break out of React Grid Layout stacking context */
+                .gzc-datepicker-popper {
+                    z-index: 50000 !important;
+                    position: fixed !important;
                 }
                 `}
             </style>
