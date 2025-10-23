@@ -26,7 +26,7 @@
     min-height: 150px !important; /* Reduced minimum height for smaller containers */
     display: flex !important;
     flex-direction: column !important;
-    overflow: visible !important; /* CRITICAL: Allow horizontal scrollbars to show */
+    overflow: hidden !important; /* CRITICAL: Contain scrollbars within component boundaries */
 }
 
 /* Root wrapper - contains the entire grid */
@@ -35,7 +35,7 @@
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow: visible !important; /* CRITICAL: Allow horizontal scrollbars to show */
+    overflow: hidden !important; /* CRITICAL: Contain scrollbars within component boundaries */
     max-height: 100% !important;
     padding-bottom: 0; /* align grid bottom border with component */
 }
@@ -45,7 +45,7 @@
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow: visible !important; /* CRITICAL: Allow horizontal scrollbars to show */
+    overflow: hidden !important; /* CRITICAL: Contain scrollbars within component boundaries */
     width: 100% !important;
     max-height: 100% !important;
 }
@@ -58,7 +58,7 @@
     max-height: calc(
         100% - 20px
     ) !important; /* Reserve space for horizontal scrollbar */
-    overflow: visible !important; /* CRITICAL: Allow scrollbars to show */
+    overflow: hidden !important; /* CRITICAL: Contain scrollbars within component boundaries */
     width: 100% !important;
     flex: 1 !important; /* Fill remaining space */
     min-height: 150px !important; /* Reduced minimum height for smaller containers */

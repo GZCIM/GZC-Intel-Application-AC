@@ -17,7 +17,7 @@ body {
     flex-direction: column;
     height: 100vh; /* Fixed height to viewport */
     overflow-y: auto; /* Allow vertical scrolling when content exceeds container */
-    overflow-x: visible; /* CRITICAL: Allow horizontal scrollbars from children */
+    overflow-x: hidden; /* Prevent horizontal overflow at root container - let AG Grid handle it */
     min-height: 100vh; /* Ensure minimum height */
 }
 
@@ -33,7 +33,7 @@ body {
     display: flex;
     flex: 1;
     overflow-y: auto; /* Allow vertical scrolling when content exceeds body */
-    overflow-x: visible; /* CRITICAL: Allow horizontal scrollbars from children */
+    overflow-x: hidden; /* Prevent horizontal overflow at body level - let AG Grid handle it */
     min-height: 0; /* Allow flex children to shrink */
 }
 
