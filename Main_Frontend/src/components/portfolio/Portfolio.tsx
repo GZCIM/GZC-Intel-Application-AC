@@ -573,7 +573,18 @@ export const Portfolio: React.FC<
                 /* Break out of React Grid Layout stacking context */
                 .gzc-datepicker-popper {
                     z-index: 50000 !important;
-                    position: absolute !important;
+                    position: fixed !important;
+                }
+                /* Override React Grid Layout stacking context completely */
+                .react-grid-item .gzc-datepicker-popper {
+                    z-index: 50000 !important;
+                    position: fixed !important;
+                    transform: none !important;
+                }
+                /* Ensure datepicker appears above react-grid-layout */
+                .react-grid-layout .gzc-datepicker-popper {
+                    z-index: 50000 !important;
+                    position: fixed !important;
                 }
                 `}
             </style>
