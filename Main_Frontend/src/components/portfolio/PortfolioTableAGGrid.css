@@ -64,32 +64,25 @@
     min-height: 150px !important; /* Reduced minimum height for smaller containers */
 }
 
-/* Force scrollbars to always be visible when content overflows */
+/* AG Grid body viewport - disable ALL internal scrollbars */
 .ag-theme-alpine .ag-body-viewport {
     width: 100% !important;
-    height: 100% !important; /* fill container; no artificial extra space */
-    overflow-x: auto !important; /* Enable horizontal scrollbar when needed */
-    overflow-y: hidden !important; /* DISABLE vertical scrollbar - let parent handle it */
+    height: 100% !important;
+    overflow: hidden !important; /* CRITICAL: Disable ALL AG Grid scrollbars */
     scrollbar-gutter: stable both-edges;
     position: relative;
     z-index: 1;
     flex: 1 !important;
-    /* Force scrollbar styling and visibility */
-    scrollbar-width: auto;
-    scrollbar-color: var(--gzc-success, #6aa84f) var(--gzc-surface, #1e1e1e);
     background-color: var(--gzc-bg, #111111) !important;
-    /* Ensure scrollbars are always visible when content overflows */
-    min-height: 0 !important; /* Allow shrinking */
-    max-height: 100% !important; /* Don't exceed container */
-    /* CRITICAL: Make scrollbars stick to component borders */
-    border-right: 1px solid var(--gzc-border, #333333) !important;
-    border-bottom: 1px solid var(--gzc-border, #333333) !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    /* Remove borders since we're using custom scrollbar */
+    border: none !important;
 }
 
-/* Center columns viewport - contains the actual data */
+/* Center columns viewport - disable ALL scrollbars */
 .ag-theme-alpine .ag-center-cols-viewport {
-    overflow-x: scroll !important; /* force show inner horizontal */
-    overflow-y: hidden !important; /* DISABLE vertical scrollbar - let parent handle it */
+    overflow: hidden !important; /* CRITICAL: Disable ALL scrollbars */
     scrollbar-gutter: stable both-edges;
 }
 
@@ -100,14 +93,9 @@
     width: max-content !important; /* grow only as needed for columns */
 }
 
-/* Horizontal scrollbar container */
+/* Horizontal scrollbar container - disable it */
 .ag-theme-alpine .ag-body-horizontal-scroll {
-    display: block !important;
-    height: 16px !important; /* Ensure horizontal scrollbar height */
-    overflow-x: auto !important; /* Enable horizontal scrolling */
-    overflow-y: hidden !important;
-    width: 100% !important;
-    background-color: var(--gzc-bg, #111111) !important;
+    display: none !important; /* CRITICAL: Hide horizontal scrollbar completely */
 }
 
 /* Ensure scrollbars are always visible when content overflows */
@@ -148,16 +136,7 @@
 }
 
 .ag-theme-alpine .ag-body-horizontal-scroll-viewport {
-    display: block !important;
-    height: var(--gzc-hscroll-h, 16px) !important; /* responsive */
-    overflow-x: auto !important; /* native horizontal behavior */
-    overflow-y: hidden !important;
-    width: 100% !important;
-    position: relative;
-    z-index: 6;
-    pointer-events: auto;
-    min-height: 100% !important;
-    background-color: var(--gzc-bg, #111111) !important;
+    display: none !important; /* CRITICAL: Hide horizontal scrollbar viewport */
 }
 
 /* Custom scrollbar styling - Using GZC Color Schema - REMOVED DUPLICATE */
