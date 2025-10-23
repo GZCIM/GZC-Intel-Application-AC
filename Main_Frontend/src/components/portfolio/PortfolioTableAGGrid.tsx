@@ -672,22 +672,46 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         (() => {
                             // Find the actual portfolio component container (not the table container)
                             // First try to find by component ID, then by class hierarchy
-                            const portfolioComponent = document.querySelector(`[data-component-id="${componentId || "default"}"]`) || 
-                                                   document.querySelector('.portfolio-card-body') ||
-                                                   document.querySelector('[class*="portfolio-card"]') ||
-                                                   document.querySelector('[class*="portfolio"]');
-                            
+                            const portfolioComponent =
+                                document.querySelector(
+                                    `[data-component-id="${
+                                        componentId || "default"
+                                    }"]`
+                                ) ||
+                                document.querySelector(
+                                    ".portfolio-card-body"
+                                ) ||
+                                document.querySelector(
+                                    '[class*="portfolio-card"]'
+                                ) ||
+                                document.querySelector('[class*="portfolio"]');
+
                             // If still not found, try to find the parent portfolio container by traversing up from the table
                             let actualPortfolioComponent = portfolioComponent;
                             if (!actualPortfolioComponent) {
-                                const tableContainer = document.getElementById(`portfolio-container-${componentId || "default"}`);
+                                const tableContainer = document.getElementById(
+                                    `portfolio-container-${
+                                        componentId || "default"
+                                    }`
+                                );
                                 if (tableContainer) {
                                     // Find the portfolio card body by traversing up the DOM tree
                                     let current = tableContainer.parentElement;
-                                    while (current && !actualPortfolioComponent) {
-                                        if (current.classList.contains('portfolio-card-body') || 
-                                            current.classList.contains('portfolio-card') ||
-                                            current.getAttribute('data-component-id')) {
+                                    while (
+                                        current &&
+                                        !actualPortfolioComponent
+                                    ) {
+                                        if (
+                                            current.classList.contains(
+                                                "portfolio-card-body"
+                                            ) ||
+                                            current.classList.contains(
+                                                "portfolio-card"
+                                            ) ||
+                                            current.getAttribute(
+                                                "data-component-id"
+                                            )
+                                        ) {
                                             actualPortfolioComponent = current;
                                             break;
                                         }
@@ -695,18 +719,23 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     }
                                 }
                             }
-                            
+
                             console.log(
                                 "[PortfolioTableAGGrid] Scrollbar Debug:",
                                 {
                                     componentId,
-                                    portfolioComponentFound: !!actualPortfolioComponent,
-                                    portfolioComponentRect: actualPortfolioComponent
-                                        ? actualPortfolioComponent.getBoundingClientRect()
-                                        : null,
+                                    portfolioComponentFound:
+                                        !!actualPortfolioComponent,
+                                    portfolioComponentRect:
+                                        actualPortfolioComponent
+                                            ? actualPortfolioComponent.getBoundingClientRect()
+                                            : null,
                                     componentBorderInfo,
-                                    scrollbarPosition: "fixed, left: portfolioComponent.right - 16",
-                                    searchMethod: actualPortfolioComponent ? "found" : "not found",
+                                    scrollbarPosition:
+                                        "fixed, left: portfolioComponent.right - 16",
+                                    searchMethod: actualPortfolioComponent
+                                        ? "found"
+                                        : "not found",
                                 }
                             );
 
@@ -714,10 +743,19 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 <div
                                     style={{
                                         position: "fixed", // CRITICAL: Use fixed positioning relative to viewport
-                                        top: actualPortfolioComponent ? actualPortfolioComponent.getBoundingClientRect().top : 0,
-                                        left: actualPortfolioComponent ? actualPortfolioComponent.getBoundingClientRect().right - 16 : 0, // CRITICAL: Position at portfolio component's right edge
+                                        top: actualPortfolioComponent
+                                            ? actualPortfolioComponent.getBoundingClientRect()
+                                                  .top
+                                            : 0,
+                                        left: actualPortfolioComponent
+                                            ? actualPortfolioComponent.getBoundingClientRect()
+                                                  .right - 16
+                                            : 0, // CRITICAL: Position at portfolio component's right edge
                                         width: "16px",
-                                        height: actualPortfolioComponent ? actualPortfolioComponent.getBoundingClientRect().height : "100%",
+                                        height: actualPortfolioComponent
+                                            ? actualPortfolioComponent.getBoundingClientRect()
+                                                  .height
+                                            : "100%",
                                         backgroundColor:
                                             componentBorderInfo.surfaceColor,
                                         borderLeft: `1px solid ${componentBorderInfo.rightBorder}`,
