@@ -573,18 +573,24 @@ export const Portfolio: React.FC<
                 /* Break out of React Grid Layout stacking context */
                 .gzc-datepicker-popper {
                     z-index: 50000 !important;
-                    position: fixed !important;
+                    position: absolute !important;
                 }
                 /* Override React Grid Layout stacking context completely */
                 .react-grid-item .gzc-datepicker-popper {
                     z-index: 50000 !important;
-                    position: fixed !important;
-                    transform: none !important;
+                    position: absolute !important;
+                    transform: translateZ(0) !important;
                 }
                 /* Ensure datepicker appears above react-grid-layout */
                 .react-grid-layout .gzc-datepicker-popper {
                     z-index: 50000 !important;
-                    position: fixed !important;
+                    position: absolute !important;
+                }
+                /* Force datepicker to render at document body level to escape stacking contexts */
+                .gzc-datepicker-popper {
+                    z-index: 50000 !important;
+                    position: absolute !important;
+                    isolation: isolate !important;
                 }
                 `}
             </style>
@@ -1307,29 +1313,29 @@ export const Portfolio: React.FC<
                                                 ));
                                             CustomInput.displayName =
                                                 "CustomDateInput";
-                                            // Use relative positioning container - simpler and more reliable
-                                            const RelativePopperContainer = ({
+                                            // Use portal container to escape React Grid Layout stacking context
+                                            const PortalPopperContainer = ({
                                                 className,
                                                 children,
                                             }: any) => {
-                                                return (
+                                                // Use React Portal to render outside React Grid Layout
+                                                const portalRoot = document.body;
+                                                return createPortal(
                                                     <div
                                                         className={`${className} gzc-datepicker-popper`}
                                                         style={{
-                                                            position:
-                                                                "absolute",
+                                                            position: "absolute",
                                                             top: "100%",
                                                             right: 0,
-                                                            zIndex: 30000, // Higher than any other element (20060)
+                                                            zIndex: 50000, // Match our CSS override
                                                             marginTop: "4px",
-                                                            isolation:
-                                                                "isolate", // Create new stacking context
-                                                            transform:
-                                                                "translateZ(0)", // Force hardware acceleration
+                                                            isolation: "isolate", // Create new stacking context
+                                                            transform: "translateZ(0)", // Force hardware acceleration
                                                         }}
                                                     >
                                                         {children}
-                                                    </div>
+                                                    </div>,
+                                                    portalRoot
                                                 );
                                             };
                                             return (
@@ -1394,7 +1400,7 @@ export const Portfolio: React.FC<
                                                             },
                                                         ]}
                                                         popperContainer={
-                                                            RelativePopperContainer
+                                                            PortalPopperContainer
                                                         }
                                                         customInput={
                                                             <CustomInput />
