@@ -410,6 +410,8 @@ export const Portfolio: React.FC<
                 flexDirection: "column",
                 ...cssVars,
             }}
+            data-component-id={id || (window as any)?.componentId || "default"}
+            className="portfolio-card-body"
         >
             {/* Themed utility styles for chips and datepicker (match GZC Dark) */}
             <style>

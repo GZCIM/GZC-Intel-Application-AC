@@ -670,34 +670,54 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     {/* CRITICAL: Fixed scrollbar positioned at portfolio component's right edge */}
                     {componentBorderInfo &&
                         (() => {
-                            const containerId = `portfolio-container-${
-                                componentId || "default"
-                            }`;
-                            const container =
-                                document.getElementById(containerId);
-
+                            // Find the actual portfolio component container (not the table container)
+                            // First try to find by component ID, then by class hierarchy
+                            const portfolioComponent = document.querySelector(`[data-component-id="${componentId || "default"}"]`) || 
+                                                   document.querySelector('.portfolio-card-body') ||
+                                                   document.querySelector('[class*="portfolio-card"]') ||
+                                                   document.querySelector('[class*="portfolio"]');
+                            
+                            // If still not found, try to find the parent portfolio container by traversing up from the table
+                            let actualPortfolioComponent = portfolioComponent;
+                            if (!actualPortfolioComponent) {
+                                const tableContainer = document.getElementById(`portfolio-container-${componentId || "default"}`);
+                                if (tableContainer) {
+                                    // Find the portfolio card body by traversing up the DOM tree
+                                    let current = tableContainer.parentElement;
+                                    while (current && !actualPortfolioComponent) {
+                                        if (current.classList.contains('portfolio-card-body') || 
+                                            current.classList.contains('portfolio-card') ||
+                                            current.getAttribute('data-component-id')) {
+                                            actualPortfolioComponent = current;
+                                            break;
+                                        }
+                                        current = current.parentElement;
+                                    }
+                                }
+                            }
+                            
                             console.log(
                                 "[PortfolioTableAGGrid] Scrollbar Debug:",
                                 {
                                     componentId,
-                                    containerId,
-                                    containerFound: !!container,
-                                    containerRect: container
-                                        ? container.getBoundingClientRect()
+                                    portfolioComponentFound: !!actualPortfolioComponent,
+                                    portfolioComponentRect: actualPortfolioComponent
+                                        ? actualPortfolioComponent.getBoundingClientRect()
                                         : null,
                                     componentBorderInfo,
-                                    scrollbarPosition: "absolute, right: 0",
+                                    scrollbarPosition: "fixed, left: portfolioComponent.right - 16",
+                                    searchMethod: actualPortfolioComponent ? "found" : "not found",
                                 }
                             );
 
                             return createPortal(
                                 <div
                                     style={{
-                                        position: "absolute",
-                                        top: 0,
-                                        right: 0,
+                                        position: "fixed", // CRITICAL: Use fixed positioning relative to viewport
+                                        top: actualPortfolioComponent ? actualPortfolioComponent.getBoundingClientRect().top : 0,
+                                        left: actualPortfolioComponent ? actualPortfolioComponent.getBoundingClientRect().right - 16 : 0, // CRITICAL: Position at portfolio component's right edge
                                         width: "16px",
-                                        height: "100%",
+                                        height: actualPortfolioComponent ? actualPortfolioComponent.getBoundingClientRect().height : "100%",
                                         backgroundColor:
                                             componentBorderInfo.surfaceColor,
                                         borderLeft: `1px solid ${componentBorderInfo.rightBorder}`,
@@ -724,7 +744,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                         className="portfolio-fixed-scrollbar-thumb"
                                     ></div>
                                 </div>,
-                                container || document.body
+                                document.body // CRITICAL: Render directly to body for fixed positioning
                             );
                         })()}
                 </div>
