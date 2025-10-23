@@ -637,71 +637,79 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     }}
                 >
                     <AgGridReact
-                    rowData={positions}
-                    columnDefs={columnDefs}
-                    onGridReady={onGridReady}
-                    animateRows={true}
-                    rowSelection="multiple"
-                    defaultColDef={{
-                        resizable: true,
-                        sortable: true,
-                        filter: true,
-                        minWidth: 70,
-                        maxWidth: 180,
-                    }}
-                    gridOptions={{
-                        rowHeight: 30,
-                        headerHeight: 40,
-                        suppressScrollOnNewData: false,
-                        suppressRowTransform: true,
-                        domLayout: "normal",
-                        suppressAutoSize: false,
-                        suppressColumnVirtualisation: false,
-                        suppressRowVirtualisation: false,
-                        getRowHeight: () => 30,
-                        // CRITICAL: Force scrollbars to always be visible
-                        suppressHorizontalScroll: false,
-                        suppressVerticalScroll: false,
-                        alwaysShowHorizontalScroll: true,
-                        alwaysShowVerticalScroll: true,
-                    }}
-                />
-                
-                {/* CRITICAL: Fixed scrollbar positioned at portfolio component's right edge */}
-                {componentBorderInfo && createPortal(
-                    <div
-                        style={{
-                            position: "absolute",
-                            top: 0,
-                            right: 0,
-                            width: "16px",
-                            height: "100%",
-                            backgroundColor: componentBorderInfo.surfaceColor,
-                            borderLeft: `1px solid ${componentBorderInfo.rightBorder}`,
-                            zIndex: 10,
-                            pointerEvents: "none", // Allow clicks to pass through to content
-                            borderRadius: "0 4px 4px 0",
+                        rowData={positions}
+                        columnDefs={columnDefs}
+                        onGridReady={onGridReady}
+                        animateRows={true}
+                        rowSelection="multiple"
+                        defaultColDef={{
+                            resizable: true,
+                            sortable: true,
+                            filter: true,
+                            minWidth: 70,
+                            maxWidth: 180,
                         }}
-                        className="portfolio-fixed-scrollbar-track"
-                    >
-                        {/* Scrollbar thumb - will be positioned dynamically */}
-                        <div
-                            style={{
-                                position: "absolute",
-                                left: "2px",
-                                width: "12px",
-                                height: "20px", // Will be calculated dynamically
-                                backgroundColor: componentBorderInfo.successColor,
-                                borderRadius: "6px",
-                                top: "0px", // Will be calculated dynamically
-                                transition: "background-color 0.2s ease",
-                            }}
-                            className="portfolio-fixed-scrollbar-thumb"
-                        ></div>
-                    </div>,
-                    document.getElementById(`portfolio-container-${componentId || 'default'}`) || document.body
-                )}
-            </div>
+                        gridOptions={{
+                            rowHeight: 30,
+                            headerHeight: 40,
+                            suppressScrollOnNewData: false,
+                            suppressRowTransform: true,
+                            domLayout: "normal",
+                            suppressAutoSize: false,
+                            suppressColumnVirtualisation: false,
+                            suppressRowVirtualisation: false,
+                            getRowHeight: () => 30,
+                            // CRITICAL: Force scrollbars to always be visible
+                            suppressHorizontalScroll: false,
+                            suppressVerticalScroll: false,
+                            alwaysShowHorizontalScroll: true,
+                            alwaysShowVerticalScroll: true,
+                        }}
+                    />
+
+                    {/* CRITICAL: Fixed scrollbar positioned at portfolio component's right edge */}
+                    {componentBorderInfo &&
+                        createPortal(
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    right: 0,
+                                    width: "16px",
+                                    height: "100%",
+                                    backgroundColor:
+                                        componentBorderInfo.surfaceColor,
+                                    borderLeft: `1px solid ${componentBorderInfo.rightBorder}`,
+                                    zIndex: 10,
+                                    pointerEvents: "none", // Allow clicks to pass through to content
+                                    borderRadius: "0 4px 4px 0",
+                                }}
+                                className="portfolio-fixed-scrollbar-track"
+                            >
+                                {/* Scrollbar thumb - will be positioned dynamically */}
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        left: "2px",
+                                        width: "12px",
+                                        height: "20px", // Will be calculated dynamically
+                                        backgroundColor:
+                                            componentBorderInfo.successColor,
+                                        borderRadius: "6px",
+                                        top: "0px", // Will be calculated dynamically
+                                        transition:
+                                            "background-color 0.2s ease",
+                                    }}
+                                    className="portfolio-fixed-scrollbar-thumb"
+                                ></div>
+                            </div>,
+                            document.getElementById(
+                                `portfolio-container-${
+                                    componentId || "default"
+                                }`
+                            ) || document.body
+                        )}
+                </div>
             </div>
 
             {/* Error display for partial loads */}

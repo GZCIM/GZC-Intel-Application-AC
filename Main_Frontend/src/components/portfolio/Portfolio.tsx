@@ -1553,7 +1553,7 @@ export const Portfolio: React.FC<
                                     overflow: "hidden", // CRITICAL: Hide all scrollbars at this level
                                 }}
                                 className="portfolio-table-container"
-                                id={`portfolio-container-${id || 'default'}`}
+                                id={`portfolio-container-${id || "default"}`}
                             >
                                 <PortfolioTableAGGrid
                                     selectedDate={effectiveDate}
@@ -1566,9 +1566,12 @@ export const Portfolio: React.FC<
                                         undefined
                                     }
                                     componentBorderInfo={{
-                                        rightBorder: currentTheme.border || "#333333",
-                                        surfaceColor: currentTheme.surface || "#1e1e1e",
-                                        successColor: currentTheme.success || "#6aa84f",
+                                        rightBorder:
+                                            currentTheme.border || "#333333",
+                                        surfaceColor:
+                                            currentTheme.surface || "#1e1e1e",
+                                        successColor:
+                                            currentTheme.success || "#6aa84f",
                                     }}
                                 />
                             </div>
