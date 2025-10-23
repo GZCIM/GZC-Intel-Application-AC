@@ -573,7 +573,7 @@ export const Portfolio: React.FC<
                 /* Break out of React Grid Layout stacking context */
                 .gzc-datepicker-popper {
                     z-index: 50000 !important;
-                    position: fixed !important;
+                    position: absolute !important;
                 }
                 `}
             </style>
