@@ -1512,7 +1512,7 @@ export const Portfolio: React.FC<
                     className="portfolio-card-body"
                     style={{
                         flex: 1,
-                        minHeight: "300px", // Fixed minimum height for consistency
+                        minHeight: "250px", // Reduced minimum height for smaller containers
                         maxHeight: "100%", // Ensure it doesn't exceed container
                         backgroundColor: currentTheme.background,
                         padding: "12px 12px 0 12px",
@@ -1538,7 +1538,7 @@ export const Portfolio: React.FC<
                                 overflow: "visible", // CRITICAL: Allow scrollbars to show
                                 display: "flex",
                                 flexDirection: "column",
-                                minHeight: "250px", // Fixed minimum height for consistency
+                                minHeight: "200px", // Reduced minimum height for smaller containers
                                 width: "100%",
                             }}
                         >

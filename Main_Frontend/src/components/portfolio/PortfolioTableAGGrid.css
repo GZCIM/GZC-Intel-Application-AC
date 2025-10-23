@@ -23,7 +23,7 @@
 
     /* Main AG Grid container - fills available space with proper height */
     height: 100% !important;
-    min-height: 200px !important; /* Reduced minimum height for consistency with parent containers */
+    min-height: 150px !important; /* Reduced minimum height for smaller containers */
     display: flex !important;
     flex-direction: column !important;
     overflow: visible !important; /* CRITICAL: Allow horizontal scrollbars to show */
@@ -58,18 +58,18 @@
     max-height: calc(
         100% - 20px
     ) !important; /* Reserve space for horizontal scrollbar */
-    overflow: hidden !important;
+    overflow: visible !important; /* CRITICAL: Allow scrollbars to show */
     width: 100% !important;
     flex: 1 !important; /* Fill remaining space */
-    min-height: 200px !important; /* Ensure minimum height for scrollbar visibility */
+    min-height: 150px !important; /* Reduced minimum height for smaller containers */
 }
 
-/* Body viewport - the scrollable area with data rows */
+/* Force scrollbars to always be visible when content overflows */
 .ag-theme-alpine .ag-body-viewport {
     width: 100% !important;
     height: 100% !important; /* fill container; no artificial extra space */
-    overflow-x: auto !important; /* native horizontal behavior */
-    overflow-y: auto !important; /* native vertical behavior */
+    overflow-x: scroll !important; /* FORCE horizontal scrollbar to always show */
+    overflow-y: scroll !important; /* FORCE vertical scrollbar to always show */
     scrollbar-gutter: stable both-edges;
     position: relative;
     z-index: 1;
