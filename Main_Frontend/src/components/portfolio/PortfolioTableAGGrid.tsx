@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { AgGridReact } from "ag-grid-react";
 import {
     ColDef,
@@ -665,38 +666,41 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         alwaysShowVerticalScroll: true,
                     }}
                 />
-
-                {/* CRITICAL: Fixed scrollbar positioned at component's right edge */}
-                <div
-                    style={{
-                        position: "absolute",
-                        top: 0,
-                        right: 0,
-                        width: "16px",
-                        height: "100%",
-                        backgroundColor: componentBorderInfo?.surfaceColor || "#1e1e1e",
-                        borderLeft: `1px solid ${componentBorderInfo?.rightBorder || "#333333"}`,
-                        zIndex: 10,
-                        pointerEvents: "none", // Allow clicks to pass through to content
-                        borderRadius: "0 4px 4px 0",
-                    }}
-                    className="portfolio-fixed-scrollbar-track"
-                >
-                    {/* Scrollbar thumb - will be positioned dynamically */}
+                
+                {/* CRITICAL: Fixed scrollbar positioned at portfolio component's right edge */}
+                {componentBorderInfo && createPortal(
                     <div
                         style={{
                             position: "absolute",
-                            left: "2px",
-                            width: "12px",
-                            height: "20px", // Will be calculated dynamically
-                            backgroundColor: componentBorderInfo?.successColor || "#6aa84f",
-                            borderRadius: "6px",
-                            top: "0px", // Will be calculated dynamically
-                            transition: "background-color 0.2s ease",
+                            top: 0,
+                            right: 0,
+                            width: "16px",
+                            height: "100%",
+                            backgroundColor: componentBorderInfo.surfaceColor,
+                            borderLeft: `1px solid ${componentBorderInfo.rightBorder}`,
+                            zIndex: 10,
+                            pointerEvents: "none", // Allow clicks to pass through to content
+                            borderRadius: "0 4px 4px 0",
                         }}
-                        className="portfolio-fixed-scrollbar-thumb"
-                    ></div>
-                </div>
+                        className="portfolio-fixed-scrollbar-track"
+                    >
+                        {/* Scrollbar thumb - will be positioned dynamically */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                left: "2px",
+                                width: "12px",
+                                height: "20px", // Will be calculated dynamically
+                                backgroundColor: componentBorderInfo.successColor,
+                                borderRadius: "6px",
+                                top: "0px", // Will be calculated dynamically
+                                transition: "background-color 0.2s ease",
+                            }}
+                            className="portfolio-fixed-scrollbar-thumb"
+                        ></div>
+                    </div>,
+                    document.getElementById(`portfolio-container-${componentId || 'default'}`) || document.body
+                )}
             </div>
             </div>
 

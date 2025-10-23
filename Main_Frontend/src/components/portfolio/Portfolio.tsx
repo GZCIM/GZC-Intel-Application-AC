@@ -1553,6 +1553,7 @@ export const Portfolio: React.FC<
                                     overflow: "hidden", // CRITICAL: Hide all scrollbars at this level
                                 }}
                                 className="portfolio-table-container"
+                                id={`portfolio-container-${id || 'default'}`}
                             >
                                 <PortfolioTableAGGrid
                                     selectedDate={effectiveDate}
