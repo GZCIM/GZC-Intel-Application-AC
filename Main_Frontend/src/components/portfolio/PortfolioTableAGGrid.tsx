@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, {
+    useState,
+    useEffect,
+    useMemo,
+    useRef,
+    useCallback,
+} from "react";
 import { createPortal } from "react-dom";
 import { AgGridReact } from "ag-grid-react";
 import {
@@ -106,7 +112,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     const [columnApi, setColumnApi] = useState<ColumnApi | null>(null);
-    
+
     // Scrollbar state and refs
     const [scrollbarState, setScrollbarState] = useState({
         scrollTop: 0,
@@ -116,9 +122,19 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         thumbTop: 0,
         isDragging: false,
         dragStartY: 0,
-        dragStartScrollTop: 0
+        dragStartScrollTop: 0,
+        // Horizontal scrollbar state
+        scrollLeft: 0,
+        scrollWidth: 0,
+        clientWidth: 0,
+        thumbWidth: 0,
+        thumbLeft: 0,
+        isDraggingHorizontal: false,
+        dragStartX: 0,
+        dragStartScrollLeft: 0,
     });
     const scrollbarRef = useRef<HTMLDivElement>(null);
+    const horizontalScrollbarRef = useRef<HTMLDivElement>(null);
     const tableBodyRef = useRef<HTMLElement | null>(null);
     const agGridRef = useRef<HTMLDivElement>(null);
 
@@ -307,17 +323,44 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const updateScrollbarState = useCallback(() => {
         if (!tableBodyRef.current) return;
 
-        const { scrollTop, scrollHeight, clientHeight } = tableBodyRef.current;
-        const thumbHeight = Math.max(20, (clientHeight / scrollHeight) * clientHeight);
-        const thumbTop = (scrollTop / (scrollHeight - clientHeight)) * (clientHeight - thumbHeight);
+        const { scrollTop, scrollHeight, clientHeight, scrollLeft, scrollWidth, clientWidth } = tableBodyRef.current;
+        
+        // Vertical scrollbar calculations
+        const thumbHeight = Math.max(
+            20,
+            (clientHeight / scrollHeight) * clientHeight
+        );
+        const thumbTop =
+            (scrollTop / (scrollHeight - clientHeight)) *
+            (clientHeight - thumbHeight);
 
-        setScrollbarState(prev => ({
+        // Horizontal scrollbar calculations
+        const thumbWidth = Math.max(
+            20,
+            (clientWidth / scrollWidth) * clientWidth
+        );
+        const thumbLeft =
+            (scrollLeft / (scrollWidth - clientWidth)) *
+            (clientWidth - thumbWidth);
+
+        setScrollbarState((prev) => ({
             ...prev,
             scrollTop,
             scrollHeight,
             clientHeight,
             thumbHeight,
-            thumbTop: Math.max(0, Math.min(thumbTop, clientHeight - thumbHeight))
+            thumbTop: Math.max(
+                0,
+                Math.min(thumbTop, clientHeight - thumbHeight)
+            ),
+            scrollLeft,
+            scrollWidth,
+            clientWidth,
+            thumbWidth,
+            thumbLeft: Math.max(
+                0,
+                Math.min(thumbLeft, clientWidth - thumbWidth)
+            ),
         }));
     }, []);
 
@@ -331,48 +374,130 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         const scrollTop = (y / clientHeight) * (scrollHeight - clientHeight);
 
         tableBodyRef.current.scrollTop = scrollTop;
-        setScrollbarState(prev => ({
+        setScrollbarState((prev) => ({
             ...prev,
             isDragging: true,
             dragStartY: e.clientY,
-            dragStartScrollTop: scrollTop
+            dragStartScrollTop: scrollTop,
         }));
     }, []);
 
-    const handleScrollbarDrag = useCallback((e: MouseEvent) => {
-        if (!scrollbarState.isDragging || !tableBodyRef.current) return;
+    const handleScrollbarDrag = useCallback(
+        (e: MouseEvent) => {
+            if (!scrollbarState.isDragging || !tableBodyRef.current) return;
 
-        const deltaY = e.clientY - scrollbarState.dragStartY;
-        const { clientHeight, scrollHeight } = tableBodyRef.current;
-        const deltaScroll = (deltaY / clientHeight) * (scrollHeight - clientHeight);
-        const newScrollTop = Math.max(0, Math.min(
-            scrollbarState.dragStartScrollTop + deltaScroll,
-            scrollHeight - clientHeight
-        ));
+            const deltaY = e.clientY - scrollbarState.dragStartY;
+            const { clientHeight, scrollHeight } = tableBodyRef.current;
+            const deltaScroll =
+                (deltaY / clientHeight) * (scrollHeight - clientHeight);
+            const newScrollTop = Math.max(
+                0,
+                Math.min(
+                    scrollbarState.dragStartScrollTop + deltaScroll,
+                    scrollHeight - clientHeight
+                )
+            );
 
-        tableBodyRef.current.scrollTop = newScrollTop;
-    }, [scrollbarState.isDragging, scrollbarState.dragStartY, scrollbarState.dragStartScrollTop]);
+            tableBodyRef.current.scrollTop = newScrollTop;
+        },
+        [
+            scrollbarState.isDragging,
+            scrollbarState.dragStartY,
+            scrollbarState.dragStartScrollTop,
+        ]
+    );
 
     const handleScrollbarDragEnd = useCallback(() => {
-        setScrollbarState(prev => ({ ...prev, isDragging: false }));
+        setScrollbarState((prev) => ({ ...prev, isDragging: false }));
+    }, []);
+
+    // Horizontal scrollbar handlers
+    const handleHorizontalScrollbarMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        const rect = horizontalScrollbarRef.current?.getBoundingClientRect();
+        if (!rect || !tableBodyRef.current) return;
+
+        const x = e.clientX - rect.left;
+        const { clientWidth, scrollWidth } = tableBodyRef.current;
+        const scrollLeft = (x / clientWidth) * (scrollWidth - clientWidth);
+
+        tableBodyRef.current.scrollLeft = scrollLeft;
+        setScrollbarState((prev) => ({
+            ...prev,
+            isDraggingHorizontal: true,
+            dragStartX: e.clientX,
+            dragStartScrollLeft: scrollLeft,
+        }));
+    }, []);
+
+    const handleHorizontalScrollbarDrag = useCallback(
+        (e: MouseEvent) => {
+            if (!scrollbarState.isDraggingHorizontal || !tableBodyRef.current) return;
+
+            const deltaX = e.clientX - scrollbarState.dragStartX;
+            const { clientWidth, scrollWidth } = tableBodyRef.current;
+            const deltaScroll =
+                (deltaX / clientWidth) * (scrollWidth - clientWidth);
+            const newScrollLeft = Math.max(
+                0,
+                Math.min(
+                    scrollbarState.dragStartScrollLeft + deltaScroll,
+                    scrollWidth - clientWidth
+                )
+            );
+
+            tableBodyRef.current.scrollLeft = newScrollLeft;
+        },
+        [
+            scrollbarState.isDraggingHorizontal,
+            scrollbarState.dragStartX,
+            scrollbarState.dragStartScrollLeft,
+        ]
+    );
+
+    const handleHorizontalScrollbarDragEnd = useCallback(() => {
+        setScrollbarState((prev) => ({ ...prev, isDraggingHorizontal: false }));
     }, []);
 
     // Set up scrollbar event listeners
     useEffect(() => {
         if (scrollbarState.isDragging) {
-            document.addEventListener('mousemove', handleScrollbarDrag);
-            document.addEventListener('mouseup', handleScrollbarDragEnd);
+            document.addEventListener("mousemove", handleScrollbarDrag);
+            document.addEventListener("mouseup", handleScrollbarDragEnd);
             return () => {
-                document.removeEventListener('mousemove', handleScrollbarDrag);
-                document.removeEventListener('mouseup', handleScrollbarDragEnd);
+                document.removeEventListener("mousemove", handleScrollbarDrag);
+                document.removeEventListener("mouseup", handleScrollbarDragEnd);
             };
         }
-    }, [scrollbarState.isDragging, handleScrollbarDrag, handleScrollbarDragEnd]);
+    }, [
+        scrollbarState.isDragging,
+        handleScrollbarDrag,
+        handleScrollbarDragEnd,
+    ]);
+
+    // Set up horizontal scrollbar event listeners
+    useEffect(() => {
+        if (scrollbarState.isDraggingHorizontal) {
+            document.addEventListener("mousemove", handleHorizontalScrollbarDrag);
+            document.addEventListener("mouseup", handleHorizontalScrollbarDragEnd);
+            return () => {
+                document.removeEventListener("mousemove", handleHorizontalScrollbarDrag);
+                document.removeEventListener("mouseup", handleHorizontalScrollbarDragEnd);
+            };
+        }
+    }, [
+        scrollbarState.isDraggingHorizontal,
+        handleHorizontalScrollbarDrag,
+        handleHorizontalScrollbarDragEnd,
+    ]);
 
     // Cleanup scrollbar listeners on unmount
     useEffect(() => {
         return () => {
-            if (tableBodyRef.current && (tableBodyRef.current as any)._scrollbarCleanup) {
+            if (
+                tableBodyRef.current &&
+                (tableBodyRef.current as any)._scrollbarCleanup
+            ) {
                 (tableBodyRef.current as any)._scrollbarCleanup();
             }
         };
@@ -557,17 +682,22 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         // Set up custom scrollbar
                         tableBodyRef.current = el;
                         updateScrollbarState();
-                        
+
                         // Listen for scroll events to update scrollbar
-                        el.addEventListener('scroll', updateScrollbarState);
-                        
+                        el.addEventListener("scroll", updateScrollbarState);
+
                         // Listen for resize events to update scrollbar
-                        const resizeObserver = new ResizeObserver(updateScrollbarState);
+                        const resizeObserver = new ResizeObserver(
+                            updateScrollbarState
+                        );
                         resizeObserver.observe(el);
-                        
+
                         // Store cleanup function
                         (el as any)._scrollbarCleanup = () => {
-                            el.removeEventListener('scroll', updateScrollbarState);
+                            el.removeEventListener(
+                                "scroll",
+                                updateScrollbarState
+                            );
                             resizeObserver.disconnect();
                         };
                     }
@@ -716,62 +846,62 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 className="portfolio-table-wrapper"
             >
                 {/* AG Grid with hidden scrollbar */}
-                <div
-                    className="ag-theme-alpine"
-                    style={{
-                        flex: 1,
-                        width: "100%",
-                        height: "100%",
-                        marginTop: isEditing ? "8vh" : 0,
-                        minHeight: 0,
-                        display: "flex",
-                        flexDirection: "column",
+            <div
+                className="ag-theme-alpine"
+                style={{
+                    flex: 1,
+                    width: "100%",
+                    height: "100%",
+                    marginTop: isEditing ? "8vh" : 0,
+                    minHeight: 0,
+                    display: "flex",
+                    flexDirection: "column",
                         overflow: "hidden", // CRITICAL: Hide native scrollbars
+                }}
+                ref={(el) => {
+                    if (!el) return;
+                    const body = el.querySelector(
+                        ".ag-body-viewport"
+                    ) as HTMLElement | null;
+                    if (body) {
+                        console.log("[AG Grid] container sizes", {
+                            containerW: el.clientWidth,
+                            containerH: el.clientHeight,
+                            bodyW: body.clientWidth,
+                            bodyH: body.clientHeight,
+                        });
+                    }
+                }}
+            >
+                <AgGridReact
+                    rowData={positions}
+                    columnDefs={columnDefs}
+                    onGridReady={onGridReady}
+                    animateRows={true}
+                    rowSelection="multiple"
+                    defaultColDef={{
+                        resizable: true,
+                        sortable: true,
+                        filter: true,
+                        minWidth: 70,
+                        maxWidth: 180,
                     }}
-                    ref={(el) => {
-                        if (!el) return;
-                        const body = el.querySelector(
-                            ".ag-body-viewport"
-                        ) as HTMLElement | null;
-                        if (body) {
-                            console.log("[AG Grid] container sizes", {
-                                containerW: el.clientWidth,
-                                containerH: el.clientHeight,
-                                bodyW: body.clientWidth,
-                                bodyH: body.clientHeight,
-                            });
-                        }
-                    }}
-                >
-                    <AgGridReact
-                        rowData={positions}
-                        columnDefs={columnDefs}
-                        onGridReady={onGridReady}
-                        animateRows={true}
-                        rowSelection="multiple"
-                        defaultColDef={{
-                            resizable: true,
-                            sortable: true,
-                            filter: true,
-                            minWidth: 70,
-                            maxWidth: 180,
+                    gridOptions={{
+                        rowHeight: 30,
+                        headerHeight: 40,
+                        suppressScrollOnNewData: false,
+                        suppressRowTransform: true,
+                        domLayout: "normal",
+                        suppressAutoSize: false,
+                        suppressColumnVirtualisation: false,
+                        suppressRowVirtualisation: false,
+                        getRowHeight: () => 30,
+                            // CRITICAL: Disable ALL AG Grid scrollbars
+                            suppressHorizontalScroll: true,
+                            suppressVerticalScroll: true,
+                            alwaysShowHorizontalScroll: false,
+                            alwaysShowVerticalScroll: false,
                         }}
-                            gridOptions={{
-                                rowHeight: 30,
-                                headerHeight: 40,
-                                suppressScrollOnNewData: false,
-                                suppressRowTransform: true,
-                                domLayout: "normal",
-                                suppressAutoSize: false,
-                                suppressColumnVirtualisation: false,
-                                suppressRowVirtualisation: false,
-                                getRowHeight: () => 30,
-                                // CRITICAL: Disable ALL AG Grid scrollbars
-                                suppressHorizontalScroll: true,
-                                suppressVerticalScroll: true,
-                                alwaysShowHorizontalScroll: false,
-                                alwaysShowVerticalScroll: false,
-                            }}
                     />
 
                     {/* CRITICAL: Functional scrollbar positioned at portfolio component's right edge */}
@@ -827,7 +957,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             }
 
                             // Only show scrollbar if there's content to scroll
-                            if (scrollbarState.scrollHeight <= scrollbarState.clientHeight) {
+                            if (
+                                scrollbarState.scrollHeight <=
+                                scrollbarState.clientHeight
+                            ) {
                                 return null;
                             }
 
@@ -835,9 +968,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 "[PortfolioTableAGGrid] Functional Scrollbar:",
                                 {
                                     componentId,
-                                    portfolioComponentFound: !!actualPortfolioComponent,
+                                    portfolioComponentFound:
+                                        !!actualPortfolioComponent,
                                     scrollbarState,
-                                    scrollbarPosition: "fixed, left: portfolioComponent.right - 16",
+                                    scrollbarPosition:
+                                        "fixed, left: portfolioComponent.right - 16",
                                 }
                             );
 
@@ -847,16 +982,20 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     style={{
                                         position: "fixed",
                                         top: actualPortfolioComponent
-                                            ? actualPortfolioComponent.getBoundingClientRect().top
+                                            ? actualPortfolioComponent.getBoundingClientRect()
+                                                  .top
                                             : 0,
                                         left: actualPortfolioComponent
-                                            ? actualPortfolioComponent.getBoundingClientRect().right - 16
+                                            ? actualPortfolioComponent.getBoundingClientRect()
+                                                  .right - 16
                                             : 0,
                                         width: "16px",
                                         height: actualPortfolioComponent
-                                            ? actualPortfolioComponent.getBoundingClientRect().height
+                                            ? actualPortfolioComponent.getBoundingClientRect()
+                                                  .height
                                             : "100%",
-                                        backgroundColor: componentBorderInfo.surfaceColor,
+                                        backgroundColor:
+                                            componentBorderInfo.surfaceColor,
                                         borderLeft: `1px solid ${componentBorderInfo.rightBorder}`,
                                         zIndex: 10,
                                         cursor: "pointer",
@@ -872,13 +1011,119 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                             left: "2px",
                                             width: "12px",
                                             height: `${scrollbarState.thumbHeight}px`,
-                                            backgroundColor: componentBorderInfo.successColor,
+                                            backgroundColor:
+                                                componentBorderInfo.successColor,
                                             borderRadius: "6px",
                                             top: `${scrollbarState.thumbTop}px`,
-                                            transition: scrollbarState.isDragging ? "none" : "background-color 0.2s ease",
+                                            transition:
+                                                scrollbarState.isDragging
+                                                    ? "none"
+                                                    : "background-color 0.2s ease",
                                             cursor: "pointer",
                                         }}
                                         className="portfolio-functional-scrollbar-thumb"
+                                    />
+                                </div>,
+                                document.body
+                            );
+                        })()}
+
+                    {/* CRITICAL: Functional horizontal scrollbar positioned at portfolio component's bottom edge */}
+                    {componentBorderInfo &&
+                        (() => {
+                            // Find the actual portfolio component container (same logic as vertical)
+                            const portfolioComponent =
+                                document.querySelector(
+                                    `[data-component-id="${
+                                        componentId || "default"
+                                    }"]`
+                                ) ||
+                                document.querySelector(
+                                    ".portfolio-card-body"
+                                ) ||
+                                document.querySelector(
+                                    '[class*="portfolio-card"]'
+                                ) ||
+                                document.querySelector('[class*="portfolio"]');
+
+                            let actualPortfolioComponent = portfolioComponent;
+                            if (!actualPortfolioComponent) {
+                                const tableContainer = document.getElementById(
+                                    `portfolio-container-${
+                                        componentId || "default"
+                                    }`
+                                );
+                                if (tableContainer) {
+                                    let current = tableContainer.parentElement;
+                                    while (
+                                        current &&
+                                        !actualPortfolioComponent
+                                    ) {
+                                        if (
+                                            current.classList.contains(
+                                                "portfolio-card-body"
+                                            ) ||
+                                            current.classList.contains(
+                                                "portfolio-card"
+                                            ) ||
+                                            current.getAttribute(
+                                                "data-component-id"
+                                            )
+                                        ) {
+                                            actualPortfolioComponent = current;
+                                            break;
+                                        }
+                                        current = current.parentElement;
+                                    }
+                                }
+                            }
+
+                            // Only show horizontal scrollbar if there's content to scroll horizontally
+                            if (scrollbarState.scrollWidth <= scrollbarState.clientWidth) {
+                                return null;
+                            }
+
+                            return createPortal(
+                                <div
+                                    ref={horizontalScrollbarRef}
+                                    style={{
+                                        position: "fixed",
+                                        top: actualPortfolioComponent
+                                            ? actualPortfolioComponent.getBoundingClientRect().bottom - 16
+                                            : 0,
+                                        left: actualPortfolioComponent
+                                            ? actualPortfolioComponent.getBoundingClientRect().left
+                                            : 0,
+                                        width: actualPortfolioComponent
+                                            ? actualPortfolioComponent.getBoundingClientRect().width
+                                            : "100%",
+                                        height: "16px",
+                                        backgroundColor: componentBorderInfo.surfaceColor,
+                                        borderTop: `1px solid ${componentBorderInfo.rightBorder}`,
+                                        zIndex: 10,
+                                        cursor: "pointer",
+                                        borderRadius: "4px 4px 0 0",
+                                    }}
+                                    className="portfolio-functional-horizontal-scrollbar-track"
+                                    onMouseDown={handleHorizontalScrollbarMouseDown}
+                                >
+                                    {/* Functional horizontal scrollbar thumb */}
+                                    <div
+                                        style={{
+                                            position: "absolute",
+                                            top: "2px",
+                                            height: "12px",
+                                            width: `${scrollbarState.thumbWidth}px`,
+                                            backgroundColor: componentBorderInfo.successColor,
+                                            borderRadius: "6px",
+                                            left: `${scrollbarState.thumbLeft}px`,
+                                            transition:
+                                                scrollbarState.isDraggingHorizontal
+                                                    ? "none"
+                                                    : "background-color 0.2s ease",
+                                            cursor: "pointer",
+                                        }}
+                                        className="portfolio-functional-horizontal-scrollbar-thumb"
                                     />
                                 </div>,
                                 document.body
