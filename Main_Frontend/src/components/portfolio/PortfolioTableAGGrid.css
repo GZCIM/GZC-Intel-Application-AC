@@ -26,7 +26,7 @@
     min-height: 200px !important; /* Reduced minimum height for consistency with parent containers */
     display: flex !important;
     flex-direction: column !important;
-    overflow: hidden !important; /* outer container shouldn't scroll */
+    overflow: visible !important; /* CRITICAL: Allow horizontal scrollbars to show */
 }
 
 /* Root wrapper - contains the entire grid */
@@ -35,7 +35,7 @@
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow: hidden !important;
+    overflow: visible !important; /* CRITICAL: Allow horizontal scrollbars to show */
     max-height: 100% !important;
     padding-bottom: 0; /* align grid bottom border with component */
 }
@@ -45,7 +45,7 @@
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow: hidden !important;
+    overflow: visible !important; /* CRITICAL: Allow horizontal scrollbars to show */
     width: 100% !important;
     max-height: 100% !important;
 }
@@ -100,6 +100,11 @@
 /* Horizontal scrollbar container */
 .ag-theme-alpine .ag-body-horizontal-scroll {
     display: block !important;
+    height: 16px !important; /* Ensure horizontal scrollbar height */
+    overflow-x: auto !important; /* Enable horizontal scrolling */
+    overflow-y: hidden !important;
+    width: 100% !important;
+    background-color: var(--gzc-bg, #111111) !important;
 }
 
 /* Ensure scrollbars are always visible when content overflows */

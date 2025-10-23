@@ -599,7 +599,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     minHeight: 0,
                     display: "flex",
                     flexDirection: "column",
-                    overflow: "hidden", // prevent grid from causing page overflow
+                    overflow: "visible", // CRITICAL: Allow horizontal scrollbars to show
                 }}
                 ref={(el) => {
                     if (!el) return;
