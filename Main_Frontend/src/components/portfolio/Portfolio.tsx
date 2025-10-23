@@ -402,7 +402,7 @@ export const Portfolio: React.FC<
                 backgroundColor: currentTheme.surface,
                 borderRadius: "8px",
                 border: `1px solid ${currentTheme.border}`,
-                overflow: "hidden",
+                overflow: "visible", // CRITICAL: Allow scrollbars to show
                 height: "100%",
                 minHeight: "400px", // Fixed minimum height for consistency
                 maxHeight: "100%", // Ensure it doesn't exceed container

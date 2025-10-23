@@ -84,7 +84,7 @@ body {
 /* Main content area - independent scrolling */
 .dashboard-content {
     flex: 1;
-    overflow-y: auto; /* Enable independent vertical scrolling */
+    overflow-y: visible; /* CRITICAL: Disable vertical scrolling to prevent duplicate scrollbar */
     overflow-x: visible; /* CRITICAL: Allow horizontal scrollbars from children */
     height: calc(100vh - 48px); /* Fixed height: viewport minus header */
     min-height: calc(100vh - 48px); /* Ensure minimum height */
@@ -143,28 +143,9 @@ body.leftpanel-full .dashboard-left-panel {
     }
 }
 
-/* Better scrollbar for main content */
+/* Better scrollbar for main content - DISABLED to prevent conflicts with AG Grid */
 .dashboard-content::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-.dashboard-content::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 4px;
-}
-
-.dashboard-content::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-}
-
-.dashboard-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.dashboard-content::-webkit-scrollbar-corner {
-    background: transparent;
+    display: none; /* Hide scrollbar to prevent conflicts */
 }
 
 /* Status bar - fixed at bottom */
@@ -188,7 +169,7 @@ body.leftpanel-full .dashboard-left-panel {
     ); /* Match dashboard-content height for consistency */
     padding: 8px;
     position: relative;
-    overflow-y: auto; /* Allow vertical scrolling when content exceeds container */
+    overflow-y: visible; /* CRITICAL: Remove vertical scrolling to prevent duplicate scrollbar */
     overflow-x: visible; /* CRITICAL: Allow horizontal scrollbars from children */
     display: flex;
     flex-direction: column;

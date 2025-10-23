@@ -639,6 +639,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         suppressColumnVirtualisation: false,
                         suppressRowVirtualisation: false,
                         getRowHeight: () => 30,
+                        // CRITICAL: Force scrollbars to always be visible
+                        suppressHorizontalScroll: false,
+                        suppressVerticalScroll: false,
+                        alwaysShowHorizontalScroll: true,
+                        alwaysShowVerticalScroll: true,
                     }}
                 />
             </div>

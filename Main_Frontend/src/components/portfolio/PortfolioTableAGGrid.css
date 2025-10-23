@@ -109,19 +109,21 @@
 
 /* Ensure scrollbars are always visible when content overflows */
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar {
-    width: 12px !important;
-    height: 12px !important;
+    width: 16px !important;
+    height: 16px !important;
 }
 
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-track {
     background: var(--gzc-surface, #1e1e1e) !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
 }
 
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb {
     background: var(--gzc-success, #6aa84f) !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
     border: 2px solid var(--gzc-surface, #1e1e1e) !important;
+    min-height: 20px !important; /* Ensure thumb is always visible */
+    min-width: 20px !important; /* Ensure thumb is always visible */
 }
 
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb:hover {
@@ -155,24 +157,7 @@
     background-color: var(--gzc-bg, #111111) !important;
 }
 
-/* Custom scrollbar styling - Using GZC Color Schema */
-.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar {
-    width: 16px; /* Made bigger */
-    height: 16px; /* Made bigger */
-}
-
-.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-track {
-    background: var(--gzc-surface, #1e1e1e);
-}
-
-.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb {
-    background: var(--gzc-success, #6aa84f);
-    border-radius: 8px; /* Made bigger */
-}
-
-.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in hsl, var(--gzc-success, #6aa84f) 80%, black);
-}
+/* Custom scrollbar styling - Using GZC Color Schema - REMOVED DUPLICATE */
 
 /* Column resize handle - Using GZC Color Schema */
 .ag-theme-alpine .ag-header-cell-resize {
