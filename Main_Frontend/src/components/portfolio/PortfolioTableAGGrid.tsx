@@ -668,8 +668,20 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     />
 
                     {/* CRITICAL: Fixed scrollbar positioned at portfolio component's right edge */}
-                    {componentBorderInfo &&
-                        createPortal(
+                    {componentBorderInfo && (() => {
+                        const containerId = `portfolio-container-${componentId || "default"}`;
+                        const container = document.getElementById(containerId);
+                        
+                        console.log("[PortfolioTableAGGrid] Scrollbar Debug:", {
+                            componentId,
+                            containerId,
+                            containerFound: !!container,
+                            containerRect: container ? container.getBoundingClientRect() : null,
+                            componentBorderInfo,
+                            scrollbarPosition: "absolute, right: 0"
+                        });
+                        
+                        return createPortal(
                             <div
                                 style={{
                                     position: "absolute",
@@ -703,12 +715,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     className="portfolio-fixed-scrollbar-thumb"
                                 ></div>
                             </div>,
-                            document.getElementById(
-                                `portfolio-container-${
-                                    componentId || "default"
-                                }`
-                            ) || document.body
-                        )}
+                            container || document.body
+                        );
+                    })()}
                 </div>
             </div>
 
