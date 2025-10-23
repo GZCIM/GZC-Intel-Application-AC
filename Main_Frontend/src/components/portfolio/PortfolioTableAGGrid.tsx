@@ -665,7 +665,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         alwaysShowVerticalScroll: true,
                     }}
                 />
-                
+
                 {/* CRITICAL: Fixed scrollbar positioned at component's right edge */}
                 <div
                     style={{
@@ -695,7 +695,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             transition: "background-color 0.2s ease",
                         }}
                         className="portfolio-fixed-scrollbar-thumb"
-                    />
+                    ></div>
                 </div>
             </div>
 
