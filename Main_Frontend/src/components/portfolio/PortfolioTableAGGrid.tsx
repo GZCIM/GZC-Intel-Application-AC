@@ -698,6 +698,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     ></div>
                 </div>
             </div>
+            </div>
 
             {/* Error display for partial loads */}
             {error && positions.length > 0 && (
