@@ -23,7 +23,7 @@
 
     /* Main AG Grid container - fills available space with proper height */
     height: 100% !important;
-    min-height: 300px !important; /* Ensure minimum height for scrollbar visibility */
+    min-height: 200px !important; /* Reduced minimum height for consistency with parent containers */
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important; /* outer container shouldn't scroll */

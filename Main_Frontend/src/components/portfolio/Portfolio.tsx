@@ -404,7 +404,7 @@ export const Portfolio: React.FC<
                 border: `1px solid ${currentTheme.border}`,
                 overflow: "hidden",
                 height: "100%",
-                minHeight: "400px", // Ensure minimum height for scrollbar visibility
+                minHeight: "400px", // Fixed minimum height for consistency
                 maxHeight: "100%", // Ensure it doesn't exceed container
                 display: "flex",
                 flexDirection: "column",
@@ -1512,7 +1512,7 @@ export const Portfolio: React.FC<
                     className="portfolio-card-body"
                     style={{
                         flex: 1,
-                        minHeight: "300px", // Ensure minimum height for scrollbar visibility
+                        minHeight: "300px", // Fixed minimum height for consistency
                         maxHeight: "100%", // Ensure it doesn't exceed container
                         backgroundColor: currentTheme.background,
                         padding: "12px 12px 0 12px",
@@ -1538,7 +1538,7 @@ export const Portfolio: React.FC<
                                 overflow: "hidden", // container stays clipped
                                 display: "flex",
                                 flexDirection: "column",
-                                minHeight: "300px", // Ensure minimum height for scrollbar visibility
+                                minHeight: "250px", // Fixed minimum height for consistency
                                 width: "100%",
                             }}
                         >

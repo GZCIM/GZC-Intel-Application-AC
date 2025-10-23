@@ -183,6 +183,7 @@ body.leftpanel-full .dashboard-left-panel {
     min-height: calc(
         100vh - 48px
     ); /* Ensure minimum height for scrollbar visibility */
+    max-height: calc(100vh - 48px); /* Match dashboard-content height for consistency */
     padding: 8px;
     position: relative;
     overflow-y: auto; /* Allow vertical scrolling when content exceeds container */
