@@ -1,4 +1,4 @@
-/* Custom AG Grid Theme for Portfolio Table - Using GZC Color Schema */
+/* Main AG Grid container - fills available space */
 .ag-theme-alpine {
     /* Use GZC CSS custom properties for consistent theming */
     --ag-background-color: var(--gzc-bg, #111111);
@@ -21,11 +21,11 @@
         "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
         "Helvetica Neue", sans-serif;
 
-    /* Main AG Grid container - fills available space */
+    /* Main AG Grid container - fills available space with proper height */
     height: 100% !important;
+    min-height: 300px !important; /* Ensure minimum height for scrollbar visibility */
     display: flex !important;
     flex-direction: column !important;
-    min-height: 0 !important;
     overflow: hidden !important; /* outer container shouldn't scroll */
 }
 
@@ -52,11 +52,16 @@
 
 /* Body container - contains rows and viewport */
 .ag-theme-alpine .ag-body {
-    height: calc(100% - 20px) !important; /* Updated for bigger scrollbar */
-    max-height: calc(100% - 20px) !important; /* Updated for bigger scrollbar */
+    height: calc(
+        100% - 20px
+    ) !important; /* Reserve space for horizontal scrollbar */
+    max-height: calc(
+        100% - 20px
+    ) !important; /* Reserve space for horizontal scrollbar */
     overflow: hidden !important;
     width: 100% !important;
     flex: 1 !important; /* Fill remaining space */
+    min-height: 200px !important; /* Ensure minimum height for scrollbar visibility */
 }
 
 /* Body viewport - the scrollable area with data rows */
@@ -69,10 +74,13 @@
     position: relative;
     z-index: 1;
     flex: 1 !important;
-    /* Force scrollbar styling */
+    /* Force scrollbar styling and visibility */
     scrollbar-width: auto;
     scrollbar-color: var(--gzc-success, #6aa84f) var(--gzc-surface, #1e1e1e);
     background-color: var(--gzc-bg, #111111) !important;
+    /* Ensure scrollbars are always visible when content overflows */
+    min-height: 0 !important; /* Allow shrinking */
+    max-height: 100% !important; /* Don't exceed container */
 }
 
 /* Center columns viewport - contains the actual data */
@@ -92,13 +100,41 @@
 /* Horizontal scrollbar container */
 .ag-theme-alpine .ag-body-horizontal-scroll {
     display: block !important;
-    height: var(--gzc-hscroll-h, 16px) !important; /* responsive */
-    overflow-x: auto !important; /* native horizontal behavior */
-    overflow-y: hidden !important;
-    background-color: var(--gzc-surface, #1e1e1e) !important;
-    position: relative; /* surface above cells */
-    z-index: 5;
-    pointer-events: auto;
+}
+
+/* Ensure scrollbars are always visible when content overflows */
+.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar {
+    width: 12px !important;
+    height: 12px !important;
+}
+
+.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-track {
+    background: var(--gzc-surface, #1e1e1e) !important;
+    border-radius: 6px !important;
+}
+
+.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb {
+    background: var(--gzc-success, #6aa84f) !important;
+    border-radius: 6px !important;
+    border: 2px solid var(--gzc-surface, #1e1e1e) !important;
+}
+
+.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb:hover {
+    background: color-mix(
+        in hsl,
+        var(--gzc-success, #6aa84f) 80%,
+        white
+    ) !important;
+}
+
+.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-corner {
+    background: var(--gzc-surface, #1e1e1e) !important;
+}
+
+/* Force scrollbar visibility for Firefox */
+.ag-theme-alpine .ag-body-viewport {
+    scrollbar-width: auto !important;
+    scrollbar-color: var(--gzc-success, #6aa84f) var(--gzc-surface, #1e1e1e) !important;
 }
 
 .ag-theme-alpine .ag-body-horizontal-scroll-viewport {

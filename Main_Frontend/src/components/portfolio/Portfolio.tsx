@@ -404,6 +404,7 @@ export const Portfolio: React.FC<
                 border: `1px solid ${currentTheme.border}`,
                 overflow: "hidden",
                 height: "100%",
+                minHeight: "400px", // Ensure minimum height for scrollbar visibility
                 maxHeight: "100%", // Ensure it doesn't exceed container
                 display: "flex",
                 flexDirection: "column",
@@ -1341,7 +1342,8 @@ export const Portfolio: React.FC<
                                                         let top =
                                                             buttonRect.bottom +
                                                             4; // 4px margin
-                                                        let left = buttonRect.left; // Align to button's left edge
+                                                        let left =
+                                                            buttonRect.left; // Align to button's left edge
 
                                                         // If there's not enough space below, position above the button
                                                         if (
@@ -1355,9 +1357,16 @@ export const Portfolio: React.FC<
                                                         }
 
                                                         // If there's not enough space on the right, move left
-                                                        if (left + 250 > viewportWidth) {
+                                                        if (
+                                                            left + 250 >
+                                                            viewportWidth
+                                                        ) {
                                                             // Assuming calendar width ~250px
-                                                            left = Math.max(8, viewportWidth - 250);
+                                                            left = Math.max(
+                                                                8,
+                                                                viewportWidth -
+                                                                    250
+                                                            );
                                                         }
 
                                                         return { top, left };
@@ -1503,7 +1512,7 @@ export const Portfolio: React.FC<
                     className="portfolio-card-body"
                     style={{
                         flex: 1,
-                        minHeight: 0,
+                        minHeight: "300px", // Ensure minimum height for scrollbar visibility
                         maxHeight: "100%", // Ensure it doesn't exceed container
                         backgroundColor: currentTheme.background,
                         padding: "12px 12px 0 12px",
@@ -1529,7 +1538,7 @@ export const Portfolio: React.FC<
                                 overflow: "hidden", // container stays clipped
                                 display: "flex",
                                 flexDirection: "column",
-                                minHeight: 0, // allow child grid to size/scroll
+                                minHeight: "300px", // Ensure minimum height for scrollbar visibility
                                 width: "100%",
                             }}
                         >
