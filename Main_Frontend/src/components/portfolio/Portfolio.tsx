@@ -1326,7 +1326,7 @@ export const Portfolio: React.FC<
                                                         ) {
                                                             return {
                                                                 top: 0,
-                                                                right: 0,
+                                                                left: 0,
                                                             };
                                                         }
 
@@ -1337,15 +1337,11 @@ export const Portfolio: React.FC<
                                                         const viewportHeight =
                                                             window.innerHeight;
 
-                                                        // Position below the button, aligned to its right edge
+                                                        // Position below the button, aligned to its left edge
                                                         let top =
                                                             buttonRect.bottom +
                                                             4; // 4px margin
-                                                        let right = Math.max(
-                                                            8,
-                                                            viewportWidth -
-                                                                buttonRect.right
-                                                        ); // Ensure it doesn't go off-screen
+                                                        let left = buttonRect.left; // Align to button's left edge
 
                                                         // If there's not enough space below, position above the button
                                                         if (
@@ -1358,17 +1354,13 @@ export const Portfolio: React.FC<
                                                                 304; // 4px margin above
                                                         }
 
-                                                        // If there's not enough space on the right, align to left edge
-                                                        if (right < 200) {
-                                                            // Assuming calendar width ~200px
-                                                            right = Math.max(
-                                                                8,
-                                                                viewportWidth -
-                                                                    buttonRect.left
-                                                            );
+                                                        // If there's not enough space on the right, move left
+                                                        if (left + 250 > viewportWidth) {
+                                                            // Assuming calendar width ~250px
+                                                            left = Math.max(8, viewportWidth - 250);
                                                         }
 
-                                                        return { top, right };
+                                                        return { top, left };
                                                     };
 
                                                 const buttonPos =
@@ -1383,7 +1375,7 @@ export const Portfolio: React.FC<
                                                         style={{
                                                             position: "fixed", // Use fixed to position relative to viewport
                                                             top: `${buttonPos.top}px`,
-                                                            right: `${buttonPos.right}px`,
+                                                            left: `${buttonPos.left}px`,
                                                             zIndex: 50000, // Match our CSS override
                                                             isolation:
                                                                 "isolate", // Create new stacking context
