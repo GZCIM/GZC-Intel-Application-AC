@@ -26,7 +26,7 @@
     min-height: 150px !important; /* Reduced minimum height for smaller containers */
     display: flex !important;
     flex-direction: column !important;
-    overflow: hidden !important; /* CRITICAL: Contain scrollbars within component boundaries */
+    overflow: visible !important; /* CRITICAL: Allow scrollbars to show and be functional */
 }
 
 /* Root wrapper - contains the entire grid */
@@ -35,7 +35,7 @@
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow: hidden !important; /* CRITICAL: Contain scrollbars within component boundaries */
+    overflow: visible !important; /* CRITICAL: Allow scrollbars to show and be functional */
     max-height: 100% !important;
     padding-bottom: 0; /* align grid bottom border with component */
 }
@@ -45,7 +45,7 @@
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow: hidden !important; /* CRITICAL: Contain scrollbars within component boundaries */
+    overflow: visible !important; /* CRITICAL: Allow scrollbars to show and be functional */
     width: 100% !important;
     max-height: 100% !important;
 }
@@ -58,7 +58,7 @@
     max-height: calc(
         100% - 20px
     ) !important; /* Reserve space for horizontal scrollbar */
-    overflow: hidden !important; /* CRITICAL: Contain scrollbars within component boundaries */
+    overflow: visible !important; /* CRITICAL: Allow scrollbars to show and be functional */
     width: 100% !important;
     flex: 1 !important; /* Fill remaining space */
     min-height: 150px !important; /* Reduced minimum height for smaller containers */
@@ -68,8 +68,8 @@
 .ag-theme-alpine .ag-body-viewport {
     width: 100% !important;
     height: 100% !important; /* fill container; no artificial extra space */
-    overflow-x: scroll !important; /* FORCE horizontal scrollbar to always show */
-    overflow-y: scroll !important; /* FORCE vertical scrollbar to always show */
+    overflow-x: auto !important; /* Enable horizontal scrollbar when needed */
+    overflow-y: auto !important; /* Enable vertical scrollbar when needed */
     scrollbar-gutter: stable both-edges;
     position: relative;
     z-index: 1;
@@ -81,6 +81,9 @@
     /* Ensure scrollbars are always visible when content overflows */
     min-height: 0 !important; /* Allow shrinking */
     max-height: 100% !important; /* Don't exceed container */
+    /* CRITICAL: Make scrollbars stick to component borders */
+    border-right: 1px solid var(--gzc-border, #333333) !important;
+    border-bottom: 1px solid var(--gzc-border, #333333) !important;
 }
 
 /* Center columns viewport - contains the actual data */

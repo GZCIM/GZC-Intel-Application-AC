@@ -84,8 +84,8 @@ body {
 /* Main content area - independent scrolling */
 .dashboard-content {
     flex: 1;
-    overflow-y: visible; /* CRITICAL: Disable vertical scrolling to prevent duplicate scrollbar */
-    overflow-x: visible; /* CRITICAL: Allow horizontal scrollbars from children */
+    overflow-y: hidden; /* CRITICAL: Prevent duplicate vertical scrollbars - let AG Grid handle it */
+    overflow-x: hidden; /* CRITICAL: Prevent duplicate horizontal scrollbars - let AG Grid handle it */
     height: calc(100vh - 48px); /* Fixed height: viewport minus header */
     min-height: calc(100vh - 48px); /* Ensure minimum height */
     position: relative;
@@ -169,8 +169,8 @@ body.leftpanel-full .dashboard-left-panel {
     ); /* Match dashboard-content height for consistency */
     padding: 8px;
     position: relative;
-    overflow-y: visible; /* CRITICAL: Remove vertical scrolling to prevent duplicate scrollbar */
-    overflow-x: visible; /* CRITICAL: Allow horizontal scrollbars from children */
+    overflow-y: hidden; /* CRITICAL: Prevent duplicate vertical scrollbars - let AG Grid handle it */
+    overflow-x: hidden; /* CRITICAL: Prevent duplicate horizontal scrollbars - let AG Grid handle it */
     display: flex;
     flex-direction: column;
 }

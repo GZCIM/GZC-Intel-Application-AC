@@ -599,7 +599,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     minHeight: 0,
                     display: "flex",
                     flexDirection: "column",
-                    overflow: "hidden", // CRITICAL: Contain scrollbars within component boundaries
+                    overflow: "visible", // CRITICAL: Allow scrollbars to show and be functional
                 }}
                 ref={(el) => {
                     if (!el) return;
