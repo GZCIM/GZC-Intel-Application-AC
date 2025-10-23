@@ -84,7 +84,7 @@ body {
 /* Main content area - independent scrolling */
 .dashboard-content {
     flex: 1;
-    overflow-y: hidden; /* CRITICAL: Prevent duplicate vertical scrollbars - let AG Grid handle it */
+    overflow-y: auto; /* CRITICAL: Enable vertical scrolling for parent container */
     overflow-x: hidden; /* CRITICAL: Prevent duplicate horizontal scrollbars - let AG Grid handle it */
     height: calc(100vh - 48px); /* Fixed height: viewport minus header */
     min-height: calc(100vh - 48px); /* Ensure minimum height */
@@ -169,10 +169,13 @@ body.leftpanel-full .dashboard-left-panel {
     ); /* Match dashboard-content height for consistency */
     padding: 8px;
     position: relative;
-    overflow-y: hidden; /* CRITICAL: Prevent duplicate vertical scrollbars - let AG Grid handle it */
+    overflow-y: auto; /* CRITICAL: Enable vertical scrolling for parent container */
     overflow-x: hidden; /* CRITICAL: Prevent duplicate horizontal scrollbars - let AG Grid handle it */
     display: flex;
     flex-direction: column;
+    /* CRITICAL: Make scrollbar stick to component's right border */
+    border-right: 1px solid var(--gzc-border, #333333);
+    box-sizing: border-box;
 }
 
 /* Toast notification animation */

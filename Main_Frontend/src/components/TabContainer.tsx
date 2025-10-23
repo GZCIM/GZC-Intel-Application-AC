@@ -25,7 +25,7 @@ export const TabContainer: React.FC<TabContainerProps> = ({
         backgroundColor: theme.background,
         color: theme.text,
         padding: theme.spacing.md,
-        overflow: 'hidden', // Prevent overflow
+        overflow: 'visible', // CRITICAL: Allow scrollbars to show and stick to borders
         display: 'flex',
         flexDirection: 'column',
         minHeight: 0, // Important for flex children

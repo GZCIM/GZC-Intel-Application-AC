@@ -69,7 +69,7 @@
     width: 100% !important;
     height: 100% !important; /* fill container; no artificial extra space */
     overflow-x: auto !important; /* Enable horizontal scrollbar when needed */
-    overflow-y: auto !important; /* Enable vertical scrollbar when needed */
+    overflow-y: hidden !important; /* DISABLE vertical scrollbar - let parent handle it */
     scrollbar-gutter: stable both-edges;
     position: relative;
     z-index: 1;
@@ -89,7 +89,7 @@
 /* Center columns viewport - contains the actual data */
 .ag-theme-alpine .ag-center-cols-viewport {
     overflow-x: scroll !important; /* force show inner horizontal */
-    overflow-y: scroll !important;
+    overflow-y: hidden !important; /* DISABLE vertical scrollbar - let parent handle it */
     scrollbar-gutter: stable both-edges;
 }
 
