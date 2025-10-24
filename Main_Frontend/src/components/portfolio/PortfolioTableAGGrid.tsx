@@ -998,6 +998,19 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             positions.length > 10) &&
                         (() => {
                             // Find the actual portfolio component container
+                            console.log("🔍 [DEBUG] Component Finding Process:", {
+                                componentId: componentId || "default",
+                                step1_dataComponentId: document.querySelector(
+                                    `[data-component-id="${componentId || "default"}"]`
+                                ),
+                                step2_portfolioCardBody: document.querySelector(".portfolio-card-body"),
+                                step3_portfolioCard: document.querySelector('[class*="portfolio-card"]'),
+                                step4_portfolio: document.querySelector('[class*="portfolio"]'),
+                                step5_tableContainer: document.getElementById(
+                                    `portfolio-container-${componentId || "default"}`
+                                )
+                            });
+
                             const portfolioComponent =
                                 document.querySelector(
                                     `[data-component-id="${
@@ -1078,26 +1091,34 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             const verticalScrollbarTop = verticalComponentRect ? verticalComponentRect.top : 0;
                             const verticalScrollbarHeight = verticalComponentRect ? verticalComponentRect.height : 0;
 
-                            console.log("[Vertical Scrollbar] Component dimensions:", {
-                                componentRect: verticalComponentRect ? {
-                                    width: verticalComponentRect.width,
-                                    height: verticalComponentRect.height,
-                                    left: verticalComponentRect.left,
-                                    top: verticalComponentRect.top,
-                                    right: verticalComponentRect.right,
-                                    bottom: verticalComponentRect.bottom
-                                } : null,
-                                scrollbarDimensions: {
-                                    width: verticalScrollbarWidth,
-                                    left: verticalScrollbarLeft,
-                                    top: verticalScrollbarTop,
-                                    height: verticalScrollbarHeight
+                            console.log("🔍 [DEBUG] Vertical Scrollbar Analysis:", {
+                                componentId: componentId || "default",
+                                actualPortfolioComponent: {
+                                    found: !!actualPortfolioComponent,
+                                    tagName: actualPortfolioComponent?.tagName,
+                                    className: actualPortfolioComponent?.className,
+                                    id: actualPortfolioComponent?.id,
+                                    rect: verticalComponentRect ? {
+                                        width: verticalComponentRect.width,
+                                        height: verticalComponentRect.height,
+                                        left: verticalComponentRect.left,
+                                        top: verticalComponentRect.top,
+                                        right: verticalComponentRect.right,
+                                        bottom: verticalComponentRect.bottom
+                                    } : null
+                                },
+                                scrollbarCalculations: {
+                                    scrollbarWidth: verticalScrollbarWidth,
+                                    scrollbarLeft: verticalScrollbarLeft,
+                                    scrollbarTop: verticalScrollbarTop,
+                                    scrollbarHeight: verticalScrollbarHeight
                                 },
                                 scrollbarState: {
                                     scrollHeight: scrollbarState.scrollHeight,
                                     clientHeight: scrollbarState.clientHeight,
                                     thumbHeight: scrollbarState.thumbHeight,
-                                    thumbTop: scrollbarState.thumbTop
+                                    thumbTop: scrollbarState.thumbTop,
+                                    needsVerticalScroll: scrollbarState.scrollHeight > scrollbarState.clientHeight
                                 }
                             });
 
@@ -1231,25 +1252,63 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             const scrollbarLeft = componentRect ? componentRect.left : 0;
                             const scrollbarTop = componentRect ? componentRect.bottom - 16 : 0;
 
-                            console.log("[Horizontal Scrollbar] Component dimensions:", {
-                                componentRect: componentRect ? {
-                                    width: componentRect.width,
-                                    height: componentRect.height,
-                                    left: componentRect.left,
-                                    top: componentRect.top,
-                                    bottom: componentRect.bottom
+                            // Get table body dimensions for comparison
+                            const tableBodyRect = tableBodyRef.current?.getBoundingClientRect();
+                            
+                            // Debug all possible component selectors
+                            const allPortfolioElements = document.querySelectorAll('[class*="portfolio"]');
+                            const allComponentElements = document.querySelectorAll('[data-component-id]');
+                            
+                            console.log("🔍 [DEBUG] Horizontal Scrollbar Analysis:", {
+                                componentId: componentId || "default",
+                                actualPortfolioComponent: {
+                                    found: !!actualPortfolioComponent,
+                                    tagName: actualPortfolioComponent?.tagName,
+                                    className: actualPortfolioComponent?.className,
+                                    id: actualPortfolioComponent?.id,
+                                    rect: componentRect ? {
+                                        width: componentRect.width,
+                                        height: componentRect.height,
+                                        left: componentRect.left,
+                                        top: componentRect.top,
+                                        right: componentRect.right,
+                                        bottom: componentRect.bottom
+                                    } : null
+                                },
+                                tableBodyRect: tableBodyRect ? {
+                                    width: tableBodyRect.width,
+                                    height: tableBodyRect.height,
+                                    left: tableBodyRect.left,
+                                    top: tableBodyRect.top,
+                                    right: tableBodyRect.right,
+                                    bottom: tableBodyRect.bottom
                                 } : null,
-                                scrollbarDimensions: {
-                                    width: scrollbarWidth,
-                                    left: scrollbarLeft,
-                                    top: scrollbarTop
+                                scrollbarCalculations: {
+                                    scrollbarWidth: scrollbarWidth,
+                                    scrollbarLeft: scrollbarLeft,
+                                    scrollbarTop: scrollbarTop,
+                                    scrollbarHeight: 16
                                 },
                                 scrollbarState: {
                                     scrollWidth: scrollbarState.scrollWidth,
                                     clientWidth: scrollbarState.clientWidth,
                                     thumbWidth: scrollbarState.thumbWidth,
-                                    thumbLeft: scrollbarState.thumbLeft
-                                }
+                                    thumbLeft: scrollbarState.thumbLeft,
+                                    needsHorizontalScroll: scrollbarState.scrollWidth > scrollbarState.clientWidth
+                                },
+                                allPortfolioElements: Array.from(allPortfolioElements).map(el => ({
+                                    tagName: el.tagName,
+                                    className: el.className,
+                                    id: el.id,
+                                    rect: el.getBoundingClientRect()
+                                })),
+                                allComponentElements: Array.from(allComponentElements).map(el => ({
+                                    tagName: el.tagName,
+                                    className: el.className,
+                                    id: el.id,
+                                    dataComponentId: el.getAttribute('data-component-id'),
+                                    rect: el.getBoundingClientRect()
+                                }))
                             });
 
                             return createPortal(
