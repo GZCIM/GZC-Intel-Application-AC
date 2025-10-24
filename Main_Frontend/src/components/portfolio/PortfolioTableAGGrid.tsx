@@ -392,10 +392,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         }
 
         // Vertical scrollbar calculations
-        const thumbHeight = Math.max(
-            20,
-            (actualClientHeight / actualScrollHeight) * actualClientHeight
-        );
+        const thumbHeight = actualScrollHeight > actualClientHeight
+            ? Math.max(20, (actualClientHeight / actualScrollHeight) * actualClientHeight)
+            : actualClientHeight;
         const thumbTop =
             actualScrollHeight > actualClientHeight
                 ? (scrollTop / (actualScrollHeight - actualClientHeight)) *
@@ -403,10 +402,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 : 0;
 
         // Horizontal scrollbar calculations
-        const thumbWidth = Math.max(
-            20,
-            (actualClientWidth / actualScrollWidth) * actualClientWidth
-        );
+        const thumbWidth = actualScrollWidth > actualClientWidth
+            ? Math.max(20, (actualClientWidth / actualScrollWidth) * actualClientWidth)
+            : actualClientWidth;
         const thumbLeft =
             actualScrollWidth > actualClientWidth
                 ? (scrollLeft / (actualScrollWidth - actualClientWidth)) *
@@ -1057,10 +1055,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
                     {/* CRITICAL: Functional scrollbar positioned at portfolio component's right edge */}
                     {componentBorderInfo &&
-                        (scrollbarState.scrollHeight >
-                            scrollbarState.clientHeight ||
-                            scrollbarState.scrollHeight > 0 ||
-                            positions.length > 10) &&
+                        scrollbarState.scrollHeight > scrollbarState.clientHeight &&
                         (() => {
                             // Find the actual portfolio component container
                             console.log("🔍 [DEBUG] Component Finding Process:", {
@@ -1145,7 +1140,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                         scrollbarState.scrollHeight >
                                         scrollbarState.clientHeight,
                                     positionsCount: positions.length,
-                                    forceShow: positions.length > 10,
                                 }
                             );
 
@@ -1235,10 +1229,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
                     {/* CRITICAL: Functional horizontal scrollbar positioned at portfolio component's bottom edge */}
                     {componentBorderInfo &&
-                        (scrollbarState.scrollWidth >
-                            scrollbarState.clientWidth ||
-                            scrollbarState.scrollWidth > 0 ||
-                            (columnDefs && columnDefs.length > 6)) &&
+                        scrollbarState.scrollWidth > scrollbarState.clientWidth &&
                         (() => {
                             // Find the actual portfolio component container (same logic as vertical)
                             const portfolioComponent =
@@ -1306,8 +1297,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                         scrollbarState.scrollWidth >
                                         scrollbarState.clientWidth,
                                     columnsCount: columnDefs?.length || 0,
-                                    forceShow:
-                                        columnDefs && columnDefs.length > 6,
                                 }
                             );
 
