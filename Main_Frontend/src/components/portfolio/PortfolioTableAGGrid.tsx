@@ -11,7 +11,6 @@ import {
     ColDef,
     GridReadyEvent,
     GridApi,
-    ColumnApi,
     ModuleRegistry,
     AllCommunityModule,
 } from "ag-grid-community";
@@ -95,7 +94,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 }) => {
     const { getToken } = useAuthContext();
     const { currentTheme: theme } = useTheme();
-    const safeTheme = (theme as any) || {
+    const safeTheme = (theme as unknown as Record<string, string>) || {
         border: "#333333",
         text: "#eaeaea",
         background: "#111111",
@@ -107,11 +106,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isRetrying, setIsRetrying] = useState(false);
-    const [tableConfig, setTableConfig] = useState<TableConfig | null>(null);
+    const [, setTableConfig] = useState<TableConfig | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
-    const [columnApi, setColumnApi] = useState<ColumnApi | null>(null);
 
     // Scrollbar state and refs
     const [scrollbarState, setScrollbarState] = useState({
@@ -136,14 +134,13 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const scrollbarRef = useRef<HTMLDivElement>(null);
     const horizontalScrollbarRef = useRef<HTMLDivElement>(null);
     const tableBodyRef = useRef<HTMLElement | null>(null);
-    const agGridRef = useRef<HTMLDivElement>(null);
 
     // Component-scoped config identifiers
     const resolvedDeviceType = (deviceType ||
-        (window as any)?.deviceConfig?.getInfo?.()?.deviceType ||
+        (window as unknown as { deviceConfig?: { getInfo?: () => { deviceType?: string } } })?.deviceConfig?.getInfo?.()?.deviceType ||
         "bigscreen") as "laptop" | "mobile" | "bigscreen";
     const resolvedComponentId =
-        componentId || (window as any)?.componentId || "portfolio-default";
+        componentId || (window as unknown as { componentId?: string })?.componentId || "portfolio-default";
 
     // Sync with global Tools menu Unlock/Lock editing
     useEffect(() => {
@@ -272,29 +269,30 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             ]);
 
             const fxPositions: PortfolioPosition[] = fxResponse.data.data.map(
-                (pos: any) => ({
+                (pos: Record<string, unknown>) => ({
                     ...pos,
                     trade_type: "FX Forward" as const,
                 })
             );
 
             const fxOptionPositions: PortfolioPosition[] =
-                fxOptionsResponse.data.data.map((pos: any) => ({
+                fxOptionsResponse.data.data.map((pos: Record<string, unknown>) => ({
                     ...pos,
                     trade_type: "FX Option" as const,
                 }));
 
             setPositions([...fxPositions, ...fxOptionPositions]);
-        } catch (err: any) {
-            const status = err?.response?.status;
+        } catch (err: unknown) {
+            const error = err as { response?: { status?: number; data?: { detail?: { error?: string } } }; message?: string };
+            const status = error?.response?.status;
             if (status === 502) {
                 setError(
                     "Backend temporarily unavailable (502). Please retry."
                 );
             } else {
                 setError(
-                    err.response?.data?.detail?.error ||
-                        err.message ||
+                    error.response?.data?.detail?.error ||
+                        error.message ||
                         "Failed to load positions"
                 );
             }
@@ -330,18 +328,18 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             20,
             (clientHeight / scrollHeight) * clientHeight
         );
-        const thumbTop =
-            (scrollTop / (scrollHeight - clientHeight)) *
-            (clientHeight - thumbHeight);
+        const thumbTop = scrollHeight > clientHeight 
+            ? (scrollTop / (scrollHeight - clientHeight)) * (clientHeight - thumbHeight)
+            : 0;
 
         // Horizontal scrollbar calculations
         const thumbWidth = Math.max(
             20,
             (clientWidth / scrollWidth) * clientWidth
         );
-        const thumbLeft =
-            (scrollLeft / (scrollWidth - clientWidth)) *
-            (clientWidth - thumbWidth);
+        const thumbLeft = scrollWidth > clientWidth
+            ? (scrollLeft / (scrollWidth - clientWidth)) * (clientWidth - thumbWidth)
+            : 0;
 
         setScrollbarState((prev) => ({
             ...prev,
@@ -349,18 +347,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             scrollHeight,
             clientHeight,
             thumbHeight,
-            thumbTop: Math.max(
-                0,
-                Math.min(thumbTop, clientHeight - thumbHeight)
-            ),
+            thumbTop: Math.max(0, Math.min(thumbTop, clientHeight - thumbHeight)),
             scrollLeft,
             scrollWidth,
             clientWidth,
             thumbWidth,
-            thumbLeft: Math.max(
-                0,
-                Math.min(thumbLeft, clientWidth - thumbWidth)
-            ),
+            thumbLeft: Math.max(0, Math.min(thumbLeft, clientWidth - thumbWidth)),
         }));
     }, []);
 
@@ -371,7 +363,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
         const y = e.clientY - rect.top;
         const { clientHeight, scrollHeight } = tableBodyRef.current;
-        const scrollTop = (y / clientHeight) * (scrollHeight - clientHeight);
+        const scrollTop = scrollHeight > clientHeight 
+            ? (y / clientHeight) * (scrollHeight - clientHeight)
+            : 0;
 
         tableBodyRef.current.scrollTop = scrollTop;
         setScrollbarState((prev) => ({
@@ -388,8 +382,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
             const deltaY = e.clientY - scrollbarState.dragStartY;
             const { clientHeight, scrollHeight } = tableBodyRef.current;
-            const deltaScroll =
-                (deltaY / clientHeight) * (scrollHeight - clientHeight);
+            const deltaScroll = scrollHeight > clientHeight
+                ? (deltaY / clientHeight) * (scrollHeight - clientHeight)
+                : 0;
             const newScrollTop = Math.max(
                 0,
                 Math.min(
@@ -419,7 +414,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
         const x = e.clientX - rect.left;
         const { clientWidth, scrollWidth } = tableBodyRef.current;
-        const scrollLeft = (x / clientWidth) * (scrollWidth - clientWidth);
+        const scrollLeft = scrollWidth > clientWidth 
+            ? (x / clientWidth) * (scrollWidth - clientWidth)
+            : 0;
 
         tableBodyRef.current.scrollLeft = scrollLeft;
         setScrollbarState((prev) => ({
@@ -436,8 +433,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
             const deltaX = e.clientX - scrollbarState.dragStartX;
             const { clientWidth, scrollWidth } = tableBodyRef.current;
-            const deltaScroll =
-                (deltaX / clientWidth) * (scrollWidth - clientWidth);
+            const deltaScroll = scrollWidth > clientWidth
+                ? (deltaX / clientWidth) * (scrollWidth - clientWidth)
+                : 0;
             const newScrollLeft = Math.max(
                 0,
                 Math.min(
@@ -496,9 +494,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         return () => {
             if (
                 tableBodyRef.current &&
-                (tableBodyRef.current as any)._scrollbarCleanup
+                (tableBodyRef.current as HTMLElement & { _scrollbarCleanup?: () => void })._scrollbarCleanup
             ) {
-                (tableBodyRef.current as any)._scrollbarCleanup();
+                (tableBodyRef.current as HTMLElement & { _scrollbarCleanup?: () => void })._scrollbarCleanup!();
             }
         };
     }, []);
@@ -549,19 +547,19 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             resizable: true,
             sortable: true,
             filter: true,
-            cellRenderer: (params: any) => formatValue(params.value, c.key),
+            cellRenderer: (params: { value: unknown }) => formatValue(params.value, c.key),
         }));
     }, [localConfig]);
 
-    const formatValue = (value: any, columnKey: string): string => {
+    const formatValue = (value: unknown, columnKey: string): string => {
         if (value === null || value === undefined) return "-";
 
         switch (columnKey) {
             case "trade_date":
             case "maturity_date":
-                return new Date(value).toLocaleDateString();
+                return new Date(value as string).toLocaleDateString();
             case "quantity":
-                return new Intl.NumberFormat().format(value);
+                return new Intl.NumberFormat().format(value as number);
             case "trade_price":
             case "price":
             case "eoy_price":
@@ -585,7 +583,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
     const onGridReady = (params: GridReadyEvent) => {
         setGridApi(params.api);
-        setColumnApi(params.columnApi);
 
         // Wait for grid to be fully ready before accessing API
         setTimeout(() => {
@@ -596,15 +593,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     // Check if the API is fully ready and has the method
                     if (
                         params.api &&
-                        typeof params.api.getDisplayedColumns === "function"
+                        typeof params.api.getAllDisplayedColumns === "function"
                     ) {
-                        displayedCols = params.api.getDisplayedColumns();
+                        displayedCols = params.api.getAllDisplayedColumns();
                     } else if (
                         params.api &&
-                        typeof params.api.getAllColumns === "function"
+                        typeof params.api.getColumns === "function"
                     ) {
                         // Fallback: get all columns
-                        displayedCols = params.api.getAllColumns() || [];
+                        displayedCols = params.api.getColumns() || [];
                     } else {
                         console.warn(
                             "[AG Grid] API not ready, skipping column operations"
@@ -613,15 +610,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     }
                 } catch (e) {
                     console.warn(
-                        "[AG Grid] getDisplayedColumns failed, trying alternative method",
+                        "[AG Grid] getAllDisplayedColumns failed, trying alternative method",
                         e
                     );
                     // Fallback: get all columns
                     try {
-                        displayedCols = params.api.getAllColumns() || [];
+                        displayedCols = params.api.getColumns() || [];
                     } catch (e2) {
                         console.warn(
-                            "[AG Grid] getAllColumns also failed, skipping column operations",
+                            "[AG Grid] getColumns also failed, skipping column operations",
                             e2
                         );
                         return;
@@ -639,9 +636,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     }
                 }, 0);
 
-                const gridBodyDom =
-                    (params.api as any).gridBodyCtrl?.eBodyViewport ||
-                    params.api.getGridBodyContainer();
+                const gridBodyDom = document.querySelector('.ag-body-viewport') as HTMLElement;
                 const viewportW = gridBodyDom?.clientWidth;
                 const viewportH = gridBodyDom?.clientHeight;
 
@@ -656,14 +651,14 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 // Narrow columns to fit content on first render
                 try {
                     if (
-                        params.columnApi &&
-                        typeof params.columnApi.autoSizeAllColumns ===
+                        params.api &&
+                        typeof params.api.autoSizeAllColumns ===
                             "function"
                     ) {
-                        params.columnApi.autoSizeAllColumns();
+                        params.api.autoSizeAllColumns();
                     }
-                } catch (e) {
-                    console.warn("[AG Grid] autoSizeAllColumns failed", e);
+                } catch (error) {
+                    console.warn("[AG Grid] autoSizeAllColumns failed", error);
                 }
 
                 // Check scroll positions and max scrollables
@@ -693,7 +688,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         resizeObserver.observe(el);
 
                         // Store cleanup function
-                        (el as any)._scrollbarCleanup = () => {
+                        (el as HTMLElement & { _scrollbarCleanup?: () => void })._scrollbarCleanup = () => {
                             el.removeEventListener(
                                 "scroll",
                                 updateScrollbarState
@@ -712,7 +707,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         if (!gridApi) return;
         const column = gridApi.getColumn(columnKey);
         if (column) {
-            gridApi.setColumnVisible(columnKey, !column.isVisible());
+            gridApi.setColumnsVisible([columnKey], !column.isVisible());
         }
     };
 
@@ -896,16 +891,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         suppressColumnVirtualisation: false,
                         suppressRowVirtualisation: false,
                         getRowHeight: () => 30,
-                            // CRITICAL: Disable ALL AG Grid scrollbars
-                            suppressHorizontalScroll: true,
-                            suppressVerticalScroll: true,
-                            alwaysShowHorizontalScroll: false,
-                            alwaysShowVerticalScroll: false,
-                        }}
+                        // CRITICAL: Disable ALL AG Grid scrollbars
+                        suppressHorizontalScroll: true,
+                        alwaysShowHorizontalScroll: false,
+                        alwaysShowVerticalScroll: false,
+                    }}
                     />
 
                     {/* CRITICAL: Functional scrollbar positioned at portfolio component's right edge */}
                     {componentBorderInfo &&
+                        scrollbarState.scrollHeight > scrollbarState.clientHeight &&
                         (() => {
                             // Find the actual portfolio component container
                             const portfolioComponent =
@@ -956,23 +951,21 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 }
                             }
 
-                            // Only show scrollbar if there's content to scroll
-                            if (
-                                scrollbarState.scrollHeight <=
-                                scrollbarState.clientHeight
-                            ) {
-                                return null;
-                            }
+                            // Scrollbar visibility already checked at component level
 
                             console.log(
-                                "[PortfolioTableAGGrid] Functional Scrollbar:",
+                                "[PortfolioTableAGGrid] Vertical Scrollbar:",
                                 {
                                     componentId,
-                                    portfolioComponentFound:
-                                        !!actualPortfolioComponent,
-                                    scrollbarState,
-                                    scrollbarPosition:
-                                        "fixed, left: portfolioComponent.right - 16",
+                                    portfolioComponentFound: !!actualPortfolioComponent,
+                                    scrollbarState: {
+                                        scrollHeight: scrollbarState.scrollHeight,
+                                        clientHeight: scrollbarState.clientHeight,
+                                        scrollTop: scrollbarState.scrollTop,
+                                        thumbHeight: scrollbarState.thumbHeight,
+                                        thumbTop: scrollbarState.thumbTop,
+                                    },
+                                    shouldShow: scrollbarState.scrollHeight > scrollbarState.clientHeight,
                                 }
                             );
 
@@ -1030,6 +1023,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
                     {/* CRITICAL: Functional horizontal scrollbar positioned at portfolio component's bottom edge */}
                     {componentBorderInfo &&
+                        scrollbarState.scrollWidth > scrollbarState.clientWidth &&
                         (() => {
                             // Find the actual portfolio component container (same logic as vertical)
                             const portfolioComponent =
@@ -1078,10 +1072,23 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 }
                             }
 
-                            // Only show horizontal scrollbar if there's content to scroll horizontally
-                            if (scrollbarState.scrollWidth <= scrollbarState.clientWidth) {
-                                return null;
-                            }
+                            // Scrollbar visibility already checked at component level
+
+                            console.log(
+                                "[PortfolioTableAGGrid] Horizontal Scrollbar:",
+                                {
+                                    componentId,
+                                    portfolioComponentFound: !!actualPortfolioComponent,
+                                    scrollbarState: {
+                                        scrollWidth: scrollbarState.scrollWidth,
+                                        clientWidth: scrollbarState.clientWidth,
+                                        scrollLeft: scrollbarState.scrollLeft,
+                                        thumbWidth: scrollbarState.thumbWidth,
+                                        thumbLeft: scrollbarState.thumbLeft,
+                                    },
+                                    shouldShow: scrollbarState.scrollWidth > scrollbarState.clientWidth,
+                                }
+                            );
 
                             return createPortal(
                                 <div

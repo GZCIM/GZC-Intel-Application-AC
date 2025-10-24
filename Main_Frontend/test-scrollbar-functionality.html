@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Scrollbar Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #111111;
+            color: #eaeaea;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            background: #1e1e1e;
+        }
+        
+        .test-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #6aa84f;
+        }
+        
+        .test-description {
+            margin-bottom: 16px;
+            color: #eaeaea;
+            line-height: 1.5;
+        }
+        
+        .test-steps {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .test-steps li {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background: #2a2a2a;
+            border-radius: 4px;
+            border-left: 3px solid #6aa84f;
+        }
+        
+        .test-status {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .test-status.pending {
+            background: #2a2a2a;
+            color: #eaeaea;
+            border: 1px solid #333333;
+        }
+        
+        .test-status.success {
+            background: #1a3a1a;
+            color: #6aa84f;
+            border: 1px solid #6aa84f;
+        }
+        
+        .test-status.error {
+            background: #3a1a1a;
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+        }
+        
+        .portfolio-container {
+            height: 400px;
+            width: 100%;
+            border: 1px solid #333333;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .debug-info {
+            margin-top: 16px;
+            padding: 12px;
+            background: #2a2a2a;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #eaeaea;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Portfolio Custom Scrollbar Functionality Test</h1>
+        
+        <div class="test-section">
+            <div class="test-title">Test Overview</div>
+            <div class="test-description">
+                This test verifies that both vertical and horizontal custom scrollbars are working correctly in the Portfolio component.
+                The scrollbars should appear when content overflows and should be functional for scrolling.
+            </div>
+            
+            <ul class="test-steps">
+                <li>1. Load the Portfolio component with sufficient data to trigger scrollbars</li>
+                <li>2. Verify vertical scrollbar appears on the right edge of the component</li>
+                <li>3. Verify horizontal scrollbar appears on the bottom edge of the component</li>
+                <li>4. Test vertical scrolling by dragging the vertical scrollbar thumb</li>
+                <li>5. Test horizontal scrolling by dragging the horizontal scrollbar thumb</li>
+                <li>6. Verify scrollbar thumbs move smoothly and content scrolls correctly</li>
+                <li>7. Test scrollbar visibility when content fits within container</li>
+            </ul>
+            
+            <div class="test-status pending" id="test-status">
+                Test Status: Ready to run
+            </div>
+            
+            <div class="debug-info" id="debug-info">
+                Debug information will appear here when the test runs...
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">Portfolio Component Test Area</div>
+            <div class="test-description">
+                The Portfolio component should be rendered below. Look for custom scrollbars on the right and bottom edges.
+            </div>
+            
+            <div class="portfolio-container" id="portfolio-test-container">
+                <!-- Portfolio component will be rendered here -->
+                <div style="padding: 20px; text-align: center; color: #666;">
+                    Portfolio component should be loaded here...
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">Manual Test Instructions</div>
+            <div class="test-description">
+                To manually test the scrollbar functionality:
+            </div>
+            
+            <ul class="test-steps">
+                <li>1. Open the main application and navigate to the Portfolio component</li>
+                <li>2. Ensure there are enough portfolio positions to trigger scrolling</li>
+                <li>3. Look for a green scrollbar on the right edge (vertical scrolling)</li>
+                <li>4. Look for a green scrollbar on the bottom edge (horizontal scrolling)</li>
+                <li>5. Click and drag the scrollbar thumbs to scroll the content</li>
+                <li>6. Verify that the content scrolls smoothly and the thumbs move correctly</li>
+                <li>7. Check browser console for debug logs about scrollbar state</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Test script to verify scrollbar functionality
+        function runScrollbarTest() {
+            const statusEl = document.getElementById('test-status');
+            const debugEl = document.getElementById('debug-info');
+            
+            statusEl.textContent = 'Test Status: Running...';
+            statusEl.className = 'test-status pending';
+            
+            // Check if Portfolio component is loaded
+            const portfolioComponent = document.querySelector('[data-component-id]');
+            if (!portfolioComponent) {
+                statusEl.textContent = 'Test Status: Portfolio component not found';
+                statusEl.className = 'test-status error';
+                debugEl.textContent = 'Error: Portfolio component with data-component-id not found in DOM';
+                return;
+            }
+            
+            // Check for custom scrollbars
+            const verticalScrollbar = document.querySelector('.portfolio-functional-scrollbar-track');
+            const horizontalScrollbar = document.querySelector('.portfolio-functional-horizontal-scrollbar-track');
+            
+            let testResults = [];
+            
+            if (verticalScrollbar) {
+                testResults.push('✓ Vertical scrollbar found');
+            } else {
+                testResults.push('✗ Vertical scrollbar not found');
+            }
+            
+            if (horizontalScrollbar) {
+                testResults.push('✓ Horizontal scrollbar found');
+            } else {
+                testResults.push('✗ Horizontal scrollbar not found');
+            }
+            
+            // Check scrollbar state
+            const agGridBody = document.querySelector('.ag-body-viewport');
+            if (agGridBody) {
+                const scrollHeight = agGridBody.scrollHeight;
+                const clientHeight = agGridBody.clientHeight;
+                const scrollWidth = agGridBody.scrollWidth;
+                const clientWidth = agGridBody.clientWidth;
+                
+                testResults.push(`Scroll dimensions: ${scrollWidth}x${scrollHeight} (client: ${clientWidth}x${clientHeight})`);
+                
+                if (scrollHeight > clientHeight) {
+                    testResults.push('✓ Vertical scrolling needed');
+                } else {
+                    testResults.push('✗ Vertical scrolling not needed');
+                }
+                
+                if (scrollWidth > clientWidth) {
+                    testResults.push('✓ Horizontal scrolling needed');
+                } else {
+                    testResults.push('✗ Horizontal scrolling not needed');
+                }
+            }
+            
+            debugEl.textContent = testResults.join('\n');
+            
+            if (testResults.every(result => result.startsWith('✓'))) {
+                statusEl.textContent = 'Test Status: All tests passed!';
+                statusEl.className = 'test-status success';
+            } else {
+                statusEl.textContent = 'Test Status: Some tests failed';
+                statusEl.className = 'test-status error';
+            }
+        }
+        
+        // Run test when page loads
+        window.addEventListener('load', () => {
+            setTimeout(runScrollbarTest, 2000); // Wait for component to load
+        });
+        
+        // Also run test when clicking the test area
+        document.getElementById('portfolio-test-container').addEventListener('click', runScrollbarTest);
+    </script>
+</body>
+</html>

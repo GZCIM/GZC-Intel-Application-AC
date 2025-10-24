@@ -78,6 +78,8 @@
     max-height: 100% !important;
     /* Remove borders since we're using custom scrollbar */
     border: none !important;
+    /* Ensure proper scrolling context for custom scrollbars */
+    scroll-behavior: smooth;
 }
 
 /* Center columns viewport - disable ALL scrollbars */
