@@ -760,9 +760,20 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         const resizeObserver = new ResizeObserver(() => {
                             setTimeout(() => {
                                 updateScrollbarState();
+                                // Force re-render to update scrollbar dimensions
+                                setScrollbarState(prev => ({ ...prev }));
                             }, 50);
                         });
                         resizeObserver.observe(el);
+                        
+                        // Also observe the portfolio component for size changes
+                        const portfolioComponent = document.querySelector(
+                            `[data-component-id="${componentId || "default"}"]`
+                        ) || document.querySelector(".portfolio-card-body");
+                        
+                        if (portfolioComponent) {
+                            resizeObserver.observe(portfolioComponent);
+                        }
 
                         // Store cleanup function
                         (
@@ -1060,24 +1071,45 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 }
                             );
 
+                            // Calculate proper dimensions for this specific portfolio component
+                            const verticalComponentRect = actualPortfolioComponent?.getBoundingClientRect();
+                            const verticalScrollbarWidth = 16;
+                            const verticalScrollbarLeft = verticalComponentRect ? verticalComponentRect.right - 16 : 0;
+                            const verticalScrollbarTop = verticalComponentRect ? verticalComponentRect.top : 0;
+                            const verticalScrollbarHeight = verticalComponentRect ? verticalComponentRect.height : 0;
+
+                            console.log("[Vertical Scrollbar] Component dimensions:", {
+                                componentRect: verticalComponentRect ? {
+                                    width: verticalComponentRect.width,
+                                    height: verticalComponentRect.height,
+                                    left: verticalComponentRect.left,
+                                    top: verticalComponentRect.top,
+                                    right: verticalComponentRect.right,
+                                    bottom: verticalComponentRect.bottom
+                                } : null,
+                                scrollbarDimensions: {
+                                    width: verticalScrollbarWidth,
+                                    left: verticalScrollbarLeft,
+                                    top: verticalScrollbarTop,
+                                    height: verticalScrollbarHeight
+                                },
+                                scrollbarState: {
+                                    scrollHeight: scrollbarState.scrollHeight,
+                                    clientHeight: scrollbarState.clientHeight,
+                                    thumbHeight: scrollbarState.thumbHeight,
+                                    thumbTop: scrollbarState.thumbTop
+                                }
+                            });
+
                             return createPortal(
                                 <div
                                     ref={scrollbarRef}
                                     style={{
                                         position: "fixed",
-                                        top: actualPortfolioComponent
-                                            ? actualPortfolioComponent.getBoundingClientRect()
-                                                  .top
-                                            : 0,
-                                        left: actualPortfolioComponent
-                                            ? actualPortfolioComponent.getBoundingClientRect()
-                                                  .right - 16
-                                            : 0,
-                                        width: "16px",
-                                        height: actualPortfolioComponent
-                                            ? actualPortfolioComponent.getBoundingClientRect()
-                                                  .height
-                                            : "100%",
+                                        top: verticalScrollbarTop,
+                                        left: verticalScrollbarLeft,
+                                        width: `${verticalScrollbarWidth}px`,
+                                        height: `${verticalScrollbarHeight}px`,
                                         backgroundColor:
                                             componentBorderInfo.surfaceColor,
                                         borderLeft: `1px solid ${componentBorderInfo.rightBorder}`,
@@ -1193,23 +1225,41 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 }
                             );
 
+                            // Calculate proper dimensions for this specific portfolio component
+                            const componentRect = actualPortfolioComponent?.getBoundingClientRect();
+                            const scrollbarWidth = componentRect ? componentRect.width : 0;
+                            const scrollbarLeft = componentRect ? componentRect.left : 0;
+                            const scrollbarTop = componentRect ? componentRect.bottom - 16 : 0;
+
+                            console.log("[Horizontal Scrollbar] Component dimensions:", {
+                                componentRect: componentRect ? {
+                                    width: componentRect.width,
+                                    height: componentRect.height,
+                                    left: componentRect.left,
+                                    top: componentRect.top,
+                                    bottom: componentRect.bottom
+                                } : null,
+                                scrollbarDimensions: {
+                                    width: scrollbarWidth,
+                                    left: scrollbarLeft,
+                                    top: scrollbarTop
+                                },
+                                scrollbarState: {
+                                    scrollWidth: scrollbarState.scrollWidth,
+                                    clientWidth: scrollbarState.clientWidth,
+                                    thumbWidth: scrollbarState.thumbWidth,
+                                    thumbLeft: scrollbarState.thumbLeft
+                                }
+                            });
+
                             return createPortal(
                                 <div
                                     ref={horizontalScrollbarRef}
                                     style={{
                                         position: "fixed",
-                                        top: actualPortfolioComponent
-                                            ? actualPortfolioComponent.getBoundingClientRect()
-                                                  .bottom - 16
-                                            : 0,
-                                        left: actualPortfolioComponent
-                                            ? actualPortfolioComponent.getBoundingClientRect()
-                                                  .left
-                                            : 0,
-                                        width: actualPortfolioComponent
-                                            ? actualPortfolioComponent.getBoundingClientRect()
-                                                  .width
-                                            : "100%",
+                                        top: scrollbarTop,
+                                        left: scrollbarLeft,
+                                        width: `${scrollbarWidth}px`,
                                         height: "16px",
                                         backgroundColor:
                                             componentBorderInfo.surfaceColor,
