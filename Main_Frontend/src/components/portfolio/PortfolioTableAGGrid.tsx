@@ -394,7 +394,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         // Vertical scrollbar calculations
         const thumbHeight = actualScrollHeight > actualClientHeight
             ? Math.max(20, (actualClientHeight / actualScrollHeight) * actualClientHeight)
-            : actualClientHeight;
+            : 20;
         const thumbTop =
             actualScrollHeight > actualClientHeight
                 ? (scrollTop / (actualScrollHeight - actualClientHeight)) *
@@ -404,7 +404,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         // Horizontal scrollbar calculations
         const thumbWidth = actualScrollWidth > actualClientWidth
             ? Math.max(20, (actualClientWidth / actualScrollWidth) * actualClientWidth)
-            : actualClientWidth;
+            : 20;
         const thumbLeft =
             actualScrollWidth > actualClientWidth
                 ? (scrollLeft / (actualScrollWidth - actualClientWidth)) *
@@ -794,27 +794,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         // Set up custom scrollbar
                         tableBodyRef.current = el;
 
-                        // Initial scrollbar state update with multiple attempts
-                        const attemptUpdate = (attempt: number) => {
-                            if (attempt > 5) {
-                                console.warn("[AG Grid] Max attempts reached for scrollbar update");
-                                return;
-                            }
-                            
-                            setTimeout(() => {
-                                updateScrollbarState();
-                                
-                                // Check if we got valid dimensions
-                                if (scrollbarState.scrollWidth === 0 || scrollbarState.clientWidth === 0) {
-                                    console.log(`[AG Grid] Attempt ${attempt}: Invalid dimensions, retrying...`);
-                                    attemptUpdate(attempt + 1);
-                                } else {
-                                    console.log(`[AG Grid] Attempt ${attempt}: Valid dimensions obtained`);
-                                }
-                            }, 100 * attempt); // Increasing delay
-                        };
-                        
-                        attemptUpdate(1);
+                        // Initial scrollbar state update
+                        updateScrollbarState();
 
                         // Listen for scroll events to update scrollbar
                         el.addEventListener("scroll", updateScrollbarState);
