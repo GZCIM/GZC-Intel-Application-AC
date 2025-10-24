@@ -10,13 +10,16 @@ export default defineConfig({
       // Use automatic JSX runtime
       jsxRuntime: 'automatic'
     }),
-    visualizer({
-      open: true,
-      filename: 'bundle-stats.html',
-      gzipSize: true,
-      brotliSize: true,
-      template: 'treemap'
-    })
+    // Only enable visualizer in development or when explicitly requested
+    ...(process.env.ANALYZE_BUNDLE ? [
+      visualizer({
+        open: true,
+        filename: 'bundle-stats.html',
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap'
+      })
+    ] : [])
   ],
   server: {
     port: parseInt(process.env.VITE_PORT || '9000'),
@@ -48,7 +51,7 @@ export default defineConfig({
       strict: false // Allow serving files outside of root
     }
   },
-  // Optimize dependencies
+  // Optimize dependencies for faster builds
   optimizeDeps: {
     include: [
       'react', 
@@ -58,34 +61,49 @@ export default defineConfig({
       'framer-motion',
       'lightweight-charts',
       '@azure/msal-browser',
-      '@azure/msal-react'
+      '@azure/msal-react',
+      'ag-grid-react',
+      'ag-grid-community',
+      'axios',
+      'react-datepicker'
     ],
-    force: true, // Force pre-bundling of dependencies
+    force: false, // Don't force pre-bundling on every build
     esbuildOptions: {
-      target: 'esnext'
+      target: 'esnext',
+      // Optimize for faster builds
+      treeShaking: true,
+      minifyIdentifiers: false, // Skip identifier minification during dev
+      minifySyntax: false, // Skip syntax minification during dev
+      minifyWhitespace: false // Skip whitespace minification during dev
     }
   },
-  // Build settings
+  // Build settings - Optimized for faster builds
   build: {
     sourcemap: false, // Disable sourcemaps to reduce memory usage
     outDir: 'dist',
     minify: 'esbuild', // Use esbuild for faster minification
-    chunkSizeWarningLimit: 2000, // Increase chunk size warning limit
+    chunkSizeWarningLimit: 3000, // Increase chunk size warning limit
+    target: 'esnext', // Use modern target for faster builds
+    cssCodeSplit: false, // Disable CSS code splitting for faster builds
     rollupOptions: {
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['framer-motion', 'lucide-react'],
-          'analytics': ['lightweight-charts', '@tanstack/react-table']
+          'analytics': ['lightweight-charts', '@tanstack/react-table'],
+          'ag-grid': ['ag-grid-react', 'ag-grid-community']
         },
         // Optimize chunk generation
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
       },
-      // Increase memory limit for Rollup
-      maxParallelFileOps: 5,
-      cache: false
+      // Optimize for faster builds
+      maxParallelFileOps: 10, // Increase parallel operations
+      cache: true, // Enable caching for faster subsequent builds
+      treeshake: {
+        moduleSideEffects: false // Enable aggressive tree shaking
+      }
     }
   },
   resolve: {
