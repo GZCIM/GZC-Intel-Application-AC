@@ -333,7 +333,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
     // Scrollbar functionality
     const updateScrollbarState = useCallback(() => {
-        if (!tableBodyRef.current) return;
+        if (!tableBodyRef.current) {
+            console.log("[Scrollbar Debug] No tableBodyRef.current");
+            return;
+        }
 
         const {
             scrollTop,
@@ -351,50 +354,95 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             clientHeight,
             needsHorizontalScroll: scrollWidth > clientWidth,
             needsVerticalScroll: scrollHeight > clientHeight,
+            elementRect: tableBodyRef.current.getBoundingClientRect(),
         });
+
+        // If dimensions are 0, try to get them from the grid container
+        let actualScrollWidth = scrollWidth;
+        let actualClientWidth = clientWidth;
+        let actualScrollHeight = scrollHeight;
+        let actualClientHeight = clientHeight;
+
+        if (scrollWidth === 0 || clientWidth === 0 || scrollHeight === 0 || clientHeight === 0) {
+            console.log("[Scrollbar Debug] Zero dimensions detected, trying alternative methods");
+            
+            // Try to get dimensions from the grid container
+            const gridContainer = document.querySelector('.ag-theme-alpine');
+            if (gridContainer) {
+                const gridRect = gridContainer.getBoundingClientRect();
+                actualClientWidth = gridRect.width;
+                actualClientHeight = gridRect.height;
+                
+                // For scroll dimensions, we need to check if there's content overflow
+                const gridBody = gridContainer.querySelector('.ag-body-viewport');
+                if (gridBody) {
+                    const bodyRect = gridBody.getBoundingClientRect();
+                    actualScrollWidth = Math.max(actualScrollWidth, bodyRect.width);
+                    actualScrollHeight = Math.max(actualScrollHeight, bodyRect.height);
+                }
+                
+                console.log("[Scrollbar Debug] Alternative dimensions:", {
+                    gridRect: { width: gridRect.width, height: gridRect.height },
+                    actualScrollWidth,
+                    actualClientWidth,
+                    actualScrollHeight,
+                    actualClientHeight,
+                });
+            }
+        }
 
         // Vertical scrollbar calculations
         const thumbHeight = Math.max(
             20,
-            (clientHeight / scrollHeight) * clientHeight
+            (actualClientHeight / actualScrollHeight) * actualClientHeight
         );
         const thumbTop =
-            scrollHeight > clientHeight
-                ? (scrollTop / (scrollHeight - clientHeight)) *
-                  (clientHeight - thumbHeight)
+            actualScrollHeight > actualClientHeight
+                ? (scrollTop / (actualScrollHeight - actualClientHeight)) *
+                  (actualClientHeight - thumbHeight)
                 : 0;
 
         // Horizontal scrollbar calculations
         const thumbWidth = Math.max(
             20,
-            (clientWidth / scrollWidth) * clientWidth
+            (actualClientWidth / actualScrollWidth) * actualClientWidth
         );
         const thumbLeft =
-            scrollWidth > clientWidth
-                ? (scrollLeft / (scrollWidth - clientWidth)) *
-                  (clientWidth - thumbWidth)
+            actualScrollWidth > actualClientWidth
+                ? (scrollLeft / (actualScrollWidth - actualClientWidth)) *
+                  (actualClientWidth - thumbWidth)
                 : 0;
 
         setScrollbarState((prev) => ({
             ...prev,
             scrollTop,
-            scrollHeight,
-            clientHeight,
+            scrollHeight: actualScrollHeight,
+            clientHeight: actualClientHeight,
             thumbHeight,
             thumbTop: Math.max(
                 0,
-                Math.min(thumbTop, clientHeight - thumbHeight)
+                Math.min(thumbTop, actualClientHeight - thumbHeight)
             ),
             scrollLeft,
-            scrollWidth,
-            clientWidth,
+            scrollWidth: actualScrollWidth,
+            clientWidth: actualClientWidth,
             thumbWidth,
             thumbLeft: Math.max(
                 0,
-                Math.min(thumbLeft, clientWidth - thumbWidth)
+                Math.min(thumbLeft, actualClientWidth - thumbWidth)
             ),
         }));
     }, []);
+
+    // Update scrollbar when positions change
+    useEffect(() => {
+        if (positions.length > 0 && tableBodyRef.current) {
+            console.log("[PortfolioTableAGGrid] Positions loaded, updating scrollbar");
+            setTimeout(() => {
+                updateScrollbarState();
+            }, 200);
+        }
+    }, [positions.length, updateScrollbarState]);
 
     const handleScrollbarMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
@@ -748,10 +796,27 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         // Set up custom scrollbar
                         tableBodyRef.current = el;
 
-                        // Initial scrollbar state update
-                        setTimeout(() => {
-                            updateScrollbarState();
-                        }, 100);
+                        // Initial scrollbar state update with multiple attempts
+                        const attemptUpdate = (attempt: number) => {
+                            if (attempt > 5) {
+                                console.warn("[AG Grid] Max attempts reached for scrollbar update");
+                                return;
+                            }
+                            
+                            setTimeout(() => {
+                                updateScrollbarState();
+                                
+                                // Check if we got valid dimensions
+                                if (scrollbarState.scrollWidth === 0 || scrollbarState.clientWidth === 0) {
+                                    console.log(`[AG Grid] Attempt ${attempt}: Invalid dimensions, retrying...`);
+                                    attemptUpdate(attempt + 1);
+                                } else {
+                                    console.log(`[AG Grid] Attempt ${attempt}: Valid dimensions obtained`);
+                                }
+                            }, 100 * attempt); // Increasing delay
+                        };
+                        
+                        attemptUpdate(1);
 
                         // Listen for scroll events to update scrollbar
                         el.addEventListener("scroll", updateScrollbarState);
