@@ -1596,16 +1596,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             // Get the portfolio component rect (visible boundaries)
                             const portfolioComponentRect = actualPortfolioComponent?.getBoundingClientRect();
 
-                            // Horizontal scrollbar should span the full visible viewport (component width)
+                            // Horizontal scrollbar should align with table content's left edge (not component padding)
                             // Width must account for vertical scrollbar width - end before the vertical scrollbar
                             const verticalScrollbarWidth = 16;
-                            const scrollbarWidth = portfolioComponentRect
-                                ? portfolioComponentRect.width - verticalScrollbarWidth  // Full viewport width minus vertical scrollbar
-                                : (tableBodyRect ? tableBodyRect.width - verticalScrollbarWidth : 0);
-                            // Position at the left edge of the viewport (component's left edge), not table's edge
-                            const scrollbarLeft = portfolioComponentRect
-                                ? portfolioComponentRect.left  // Align with component's left edge
-                                : (tableBodyRect ? tableBodyRect.left : 0);
+                            const scrollbarWidth = tableBodyRect
+                                ? tableBodyRect.width - verticalScrollbarWidth  // Table content width minus vertical scrollbar
+                                : (portfolioComponentRect ? portfolioComponentRect.width - verticalScrollbarWidth : 0);
+                            // Position at the table content's left edge (where content starts), not component padding
+                            const scrollbarLeft = tableBodyRect
+                                ? tableBodyRect.left  // Align with table content's left edge
+                                : (portfolioComponentRect ? portfolioComponentRect.left : 0);
                             // Position horizontal scrollbar at the bottom of the table body (lower border)
                             const scrollbarTop = tableBodyRect
                                 ? tableBodyRect.bottom - 16
@@ -1673,15 +1673,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     left: scrollbarLeft,
                                     top: scrollbarTop,
                                     width: scrollbarWidth,
-                                    note: "Horizontal scrollbar width = portfolioComponentRect.width - 16px (spans full viewport, ends before vertical scrollbar)",
+                                    note: "Horizontal scrollbar positioned at table content edge (tableBodyRect.left, tableBodyRect.width - 16px)",
                                 },
                                 widthCalculation: {
                                     portfolioComponentWidth: portfolioComponentRect?.width,
                                     tableBodyWidth: tableBodyRect?.width,
                                     verticalScrollbarWidth: 16,
                                     calculatedWidth: scrollbarWidth,
-                                    formula: "portfolioComponentRect.width - 16px (spans full viewport, ends before vertical scrollbar)",
-                                    note: "Horizontal scrollbar spans component viewport width, ends before vertical scrollbar",
+                                    formula: "tableBodyRect.width - 16px (table content width minus vertical scrollbar)",
+                                    note: "Horizontal scrollbar aligned with table content left edge, ends before vertical scrollbar",
                                 },
                             });
 
