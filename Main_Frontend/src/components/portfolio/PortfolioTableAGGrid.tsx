@@ -1256,13 +1256,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             const containerRect = containerElement?.getBoundingClientRect();
 
                             // Position scrollbar at the VISIBLE viewport's right edge
-                            // Use clientWidth (visible area) not scrollWidth (total content area)
-                            // Container rect gives us the wrapper, but we need the viewport edge
-                            const verticalScrollbarLeft = containerRect
-                                ? containerRect.right
-                                : (tableBodyElement && tableBodyRect
-                                      ? tableBodyRect.left + tableBodyElement.clientWidth
-                                      : 0);
+                            // ALWAYS use clientWidth (visible area) not the container edge
+                            // This ensures the scrollbar aligns with the actual table viewport
+                            const verticalScrollbarLeft = tableBodyElement && tableBodyRect
+                                ? tableBodyRect.left + tableBodyElement.clientWidth
+                                : (containerRect?.right || 0);
 
                             // Debug per-instance positioning
                             console.log(`[VERTICAL SCROLLBAR] componentId="${componentId || "default"}"`, {
