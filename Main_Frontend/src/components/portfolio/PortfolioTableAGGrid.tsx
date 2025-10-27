@@ -1596,24 +1596,35 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             // Get the portfolio component rect (visible boundaries)
                             const portfolioComponentRect = actualPortfolioComponent?.getBoundingClientRect();
 
-                            // Horizontal scrollbar should align with table content's left edge (not component padding)
-                            // Width must account for vertical scrollbar width - end before the vertical scrollbar
+                            // Find AG Grid's native horizontal scrollbar element to get its exact dimensions
+                            let nativeHorizontalScrollbar: Element | null = null;
+                            if (tableContainer) {
+                                nativeHorizontalScrollbar = tableContainer.querySelector('.ag-body-horizontal-scroll-viewport') ||
+                                                              tableContainer.querySelector('.ag-body-horizontal-scroll');
+                            }
+                            const nativeHorizontalScrollbarRect = nativeHorizontalScrollbar?.getBoundingClientRect();
+
+                            // Use native scrollbar dimensions if found, otherwise fallback to table body
                             const verticalScrollbarWidth = 16;
-                            const scrollbarWidth = tableBodyRect
-                                ? tableBodyRect.width - verticalScrollbarWidth  // Table content width minus vertical scrollbar
-                                : (portfolioComponentRect ? portfolioComponentRect.width - verticalScrollbarWidth : 0);
-                            // Position at the table content's left edge (where content starts), not component padding
-                            const scrollbarLeft = tableBodyRect
-                                ? tableBodyRect.left  // Align with table content's left edge
-                                : (portfolioComponentRect ? portfolioComponentRect.left : 0);
-                            // Position horizontal scrollbar at the bottom of the table body (lower border)
-                            const scrollbarTop = tableBodyRect
-                                ? tableBodyRect.bottom - 16
-                                : (tableHeaderRect
-                                      ? tableHeaderRect.bottom
-                                      : componentRect
-                                      ? componentRect.bottom - 16
-                                      : 0);
+                            const scrollbarWidth = nativeHorizontalScrollbarRect
+                                ? nativeHorizontalScrollbarRect.width - verticalScrollbarWidth  // Use native scrollbar width
+                                : (tableBodyRect
+                                      ? tableBodyRect.width - verticalScrollbarWidth
+                                      : (portfolioComponentRect ? portfolioComponentRect.width - verticalScrollbarWidth : 0));
+                            const scrollbarLeft = nativeHorizontalScrollbarRect
+                                ? nativeHorizontalScrollbarRect.left  // Use native scrollbar left position
+                                : (tableBodyRect
+                                      ? tableBodyRect.left
+                                      : (portfolioComponentRect ? portfolioComponentRect.left : 0));
+                            const scrollbarTop = nativeHorizontalScrollbarRect
+                                ? nativeHorizontalScrollbarRect.top  // Use native scrollbar top position
+                                : (tableBodyRect
+                                      ? tableBodyRect.bottom - 16
+                                      : (tableHeaderRect
+                                            ? tableHeaderRect.bottom
+                                            : componentRect
+                                            ? componentRect.bottom - 16
+                                            : 0));
 
                             // Debug parent hierarchy and CSS
                             const getParentHierarchy = (element: Element | null) => {
@@ -1651,6 +1662,14 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     tableBodyElement: tableBodyElement ? getParentHierarchy(tableBodyElement) : null,
                                     portfolioComponent: actualPortfolioComponent ? getParentHierarchy(actualPortfolioComponent) : null,
                                 },
+                                nativeScrollbar: {
+                                    found: !!nativeHorizontalScrollbar,
+                                    left: nativeHorizontalScrollbarRect?.left,
+                                    top: nativeHorizontalScrollbarRect?.top,
+                                    width: nativeHorizontalScrollbarRect?.width,
+                                    height: nativeHorizontalScrollbarRect?.height,
+                                    note: "Native AG Grid horizontal scrollbar dimensions (hidden, but used for positioning)",
+                                },
                                 portfolioComponentViewport: {
                                     left: portfolioComponentRect?.left,
                                     right: portfolioComponentRect?.right,
@@ -1673,15 +1692,22 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     left: scrollbarLeft,
                                     top: scrollbarTop,
                                     width: scrollbarWidth,
-                                    note: "Horizontal scrollbar positioned at table content edge (tableBodyRect.left, tableBodyRect.width - 16px)",
+                                    note: nativeHorizontalScrollbarRect
+                                        ? "Using native AG Grid scrollbar dimensions (exact position/width)"
+                                        : "Horizontal scrollbar positioned at table content edge (tableBodyRect.left, tableBodyRect.width - 16px)",
                                 },
                                 widthCalculation: {
+                                    nativeScrollbarWidth: nativeHorizontalScrollbarRect?.width,
                                     portfolioComponentWidth: portfolioComponentRect?.width,
                                     tableBodyWidth: tableBodyRect?.width,
                                     verticalScrollbarWidth: 16,
                                     calculatedWidth: scrollbarWidth,
-                                    formula: "tableBodyRect.width - 16px (table content width minus vertical scrollbar)",
-                                    note: "Horizontal scrollbar aligned with table content left edge, ends before vertical scrollbar",
+                                    formula: nativeHorizontalScrollbarRect
+                                        ? "nativeScrollbarRect.width - 16px (uses AG Grid's native scrollbar width)"
+                                        : "tableBodyRect.width - 16px (table content width minus vertical scrollbar)",
+                                    note: nativeHorizontalScrollbarRect
+                                        ? "Using native scrollbar dimensions for exact positioning"
+                                        : "Horizontal scrollbar aligned with table content left edge, ends before vertical scrollbar",
                                 },
                             });
 
