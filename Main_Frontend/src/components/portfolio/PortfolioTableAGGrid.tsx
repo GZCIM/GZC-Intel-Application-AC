@@ -1263,15 +1263,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             }
                             const containerRect = containerElement?.getBoundingClientRect();
 
-                            // ✓ USING PORTFOLIO COMPONENT VISIBLE VIEWPORT
-                            // The scrollbar should be positioned at the portfolio component's visible right edge
-                            // NOT at the table's edge (which may be partially hidden)
-                            // verticalComponentRect = the actual visible boundaries of the portfolio component
-
-                            // Position scrollbar at portfolio component's visible right edge
-                            const verticalScrollbarLeft = verticalComponentRect
-                                ? verticalComponentRect.right  // Portfolio component's visible right edge
-                                : (tableBodyRect?.right || 0);
+                            // Position scrollbar at table's visible right edge (exactly where the table content ends)
+                            const verticalScrollbarLeft = tableBodyRect
+                                ? tableBodyRect.right  // Exact visible right edge of the table
+                                : (verticalComponentRect ? verticalComponentRect.right : 0);
 
                             // Position scrollbar to start below the table header, not at component top
                             const verticalScrollbarTop = tableHeaderRect
@@ -1283,8 +1278,43 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 ? tableBodyRect.height
                                 : (verticalComponentRect ? verticalComponentRect.height : 0);
 
-                            // Debug: Portfolio component visible viewport
+                            // Debug parent hierarchy and CSS for vertical scrollbar
+                            const getParentHierarchyForVertical = (element: Element | null) => {
+                                const hierarchy: any[] = [];
+                                let current: Element | null = element;
+                                while (current && hierarchy.length < 10) {
+                                    const computedStyle = window.getComputedStyle(current);
+                                    hierarchy.push({
+                                        tagName: current.tagName,
+                                        className: current.className,
+                                        id: current.id,
+                                        rect: current.getBoundingClientRect(),
+                                        css: {
+                                            position: computedStyle.position,
+                                            transform: computedStyle.transform,
+                                            overflow: computedStyle.overflow,
+                                            overflowX: computedStyle.overflowX,
+                                            overflowY: computedStyle.overflowY,
+                                            left: computedStyle.left,
+                                            top: computedStyle.top,
+                                            width: computedStyle.width,
+                                            height: computedStyle.height,
+                                            padding: computedStyle.padding,
+                                            margin: computedStyle.margin,
+                                        }
+                                    });
+                                    current = current.parentElement;
+                                }
+                                return hierarchy;
+                            };
+
+                            // Debug: Portfolio component visible viewport with parent hierarchy
                             console.log(`[VERTICAL SCROLLBAR] componentId="${componentId || "default"}"`, {
+                                parentHierarchy: {
+                                    tableBodyElement: tableBodyElement ? getParentHierarchyForVertical(tableBodyElement) : null,
+                                    portfolioComponent: actualPortfolioComponent ? getParentHierarchyForVertical(actualPortfolioComponent) : null,
+                                    containerElement: containerElement ? getParentHierarchyForVertical(containerElement) : null,
+                                },
                                 cloudDBConfig: {
                                     gridWidth,
                                     gridHeight,
@@ -1309,9 +1339,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     note: "Table content may extend beyond component viewport",
                                 },
                                 calculation: {
-                                    method: "verticalComponentRect.right (portfolio component's visible right edge)",
+                                    method: "tableBodyRect.right (table's visible right edge)",
+                                    tableBodyRight: tableBodyRect?.right,
                                     portfolioComponentRight: verticalComponentRect?.right,
-                                    note: "Positioned at visible component boundary, not table edge",
+                                    positionDifference: tableBodyRect?.right && verticalComponentRect?.right ? tableBodyRect.right - verticalComponentRect.right : null,
+                                    note: "NOW: Using table's actual visible edge (tableBodyRect.right)",
                                 },
                                 finalPosition: {
                                     left: verticalScrollbarLeft,
@@ -1319,8 +1351,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     height: verticalScrollbarHeight,
                                 },
                                 verification: {
-                                    rightEdgeMatchesComponentRight: Math.abs(verticalScrollbarLeft - (verticalComponentRect?.right || 0)) < 1,
-                                    rightEdgeGap: verticalScrollbarLeft - (verticalComponentRect?.right || 0),
+                                    rightEdgeMatchesTableRight: Math.abs(verticalScrollbarLeft - (tableBodyRect?.right || 0)) < 1,
+                                    rightEdgeGap: verticalScrollbarLeft - (tableBodyRect?.right || 0),
                                 },
                             });
 
@@ -1562,9 +1594,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             // Get the portfolio component rect (visible boundaries)
                             const portfolioComponentRect = actualPortfolioComponent?.getBoundingClientRect();
 
-                            const scrollbarWidth = portfolioComponentRect
-                                ? portfolioComponentRect.width  // Use portfolio component viewport width (cloud DB config)
-                                : (tableBodyRect ? tableBodyRect.width : 0);
+                            // Horizontal scrollbar width must account for vertical scrollbar width
+                            // End before the vertical scrollbar (subtract ~16px for vertical scrollbar width)
+                            const verticalScrollbarWidth = 16;
+                            const scrollbarWidth = tableBodyRect
+                                ? tableBodyRect.width - verticalScrollbarWidth  // End before vertical scrollbar
+                                : (portfolioComponentRect ? portfolioComponentRect.width - verticalScrollbarWidth : 0);
                             const scrollbarLeft = tableBodyRect
                                 ? tableBodyRect.left  // Align with table's left edge (not component padding)
                                 : (portfolioComponentRect ? portfolioComponentRect.left : 0);
@@ -1577,8 +1612,42 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                       ? componentRect.bottom - 16
                                       : 0);
 
-                            // Debug per-instance positioning
+                            // Debug parent hierarchy and CSS
+                            const getParentHierarchy = (element: Element | null) => {
+                                const hierarchy: any[] = [];
+                                let current: Element | null = element;
+                                while (current && hierarchy.length < 10) {
+                                    const computedStyle = window.getComputedStyle(current);
+                                    hierarchy.push({
+                                        tagName: current.tagName,
+                                        className: current.className,
+                                        id: current.id,
+                                        rect: current.getBoundingClientRect(),
+                                        css: {
+                                            position: computedStyle.position,
+                                            transform: computedStyle.transform,
+                                            overflow: computedStyle.overflow,
+                                            overflowX: computedStyle.overflowX,
+                                            overflowY: computedStyle.overflowY,
+                                            left: computedStyle.left,
+                                            top: computedStyle.top,
+                                            width: computedStyle.width,
+                                            height: computedStyle.height,
+                                            padding: computedStyle.padding,
+                                            margin: computedStyle.margin,
+                                        }
+                                    });
+                                    current = current.parentElement;
+                                }
+                                return hierarchy;
+                            };
+
+                            // Debug per-instance positioning with parent hierarchy
                             console.log(`[HORIZONTAL SCROLLBAR] componentId="${componentId || "default"}"`, {
+                                parentHierarchy: {
+                                    tableBodyElement: tableBodyElement ? getParentHierarchy(tableBodyElement) : null,
+                                    portfolioComponent: actualPortfolioComponent ? getParentHierarchy(actualPortfolioComponent) : null,
+                                },
                                 portfolioComponentViewport: {
                                     left: portfolioComponentRect?.left,
                                     right: portfolioComponentRect?.right,
@@ -1601,6 +1670,14 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     left: scrollbarLeft,
                                     top: scrollbarTop,
                                     width: scrollbarWidth,
+                                    note: "Horizontal scrollbar width = tableBodyRect.width - 16px (vertical scrollbar width)",
+                                },
+                                widthCalculation: {
+                                    tableBodyWidth: tableBodyRect?.width,
+                                    verticalScrollbarWidth: 16,
+                                    calculatedWidth: scrollbarWidth,
+                                    formula: "tableBodyRect.width - 16px",
+                                    note: "Horizontal scrollbar ends before vertical scrollbar",
                                 },
                             });
 
