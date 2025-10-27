@@ -1470,8 +1470,11 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                 instanceId={instance.id}
                                 props={{
                                     ...(instance.props || {}),
+                                    id: instance.id, // Pass component instance ID to component
                                     customTitle: instance.customTitle,
                                     displayMode: instance.displayMode,
+                                    gridWidth: instance.w, // Pass grid width for positioning calculations
+                                    gridHeight: instance.h, // Pass grid height for positioning calculations
                                 }}
                                 isEditMode={isEditMode}
                                 onRemove={() => removeComponent(instance.id)}
@@ -2566,10 +2569,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                             props={{
                                                                 ...(fullScreenInstance.props ||
                                                                     {}),
+                                                                id: fullScreenInstance.id, // Pass component instance ID to component
                                                                 customTitle:
                                                                     fullScreenInstance.customTitle,
                                                                 displayMode:
                                                                     fullScreenInstance.displayMode,
+                                                                gridWidth: fullScreenInstance.w, // Pass grid width for positioning calculations
+                                                                gridHeight: fullScreenInstance.h, // Pass grid height for positioning calculations
                                                             }}
                                                             isEditMode={
                                                                 isEditMode
@@ -3120,10 +3126,13 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
                                                     props={{
                                                         ...(fullScreenInstance.props ||
                                                             {}),
+                                                        id: fullScreenInstance.id, // Pass component instance ID to component
                                                         customTitle:
                                                             fullScreenInstance.customTitle,
                                                         displayMode:
                                                             fullScreenInstance.displayMode,
+                                                        gridWidth: fullScreenInstance.w, // Pass grid width for positioning calculations
+                                                        gridHeight: fullScreenInstance.h, // Pass grid height for positioning calculations
                                                     }}
                                                     isEditMode={isEditMode}
                                                     onRemove={() =>

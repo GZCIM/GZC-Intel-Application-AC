@@ -25,6 +25,8 @@ export const Portfolio: React.FC<
         onRemove?: () => void;
         componentState?: "minimized" | "normal" | "maximized";
         id?: string; // component instance id from layout system
+        gridWidth?: number; // grid width from cloud DB config
+        gridHeight?: number; // grid height from cloud DB config
     }
 > = ({
     apiEndpoint = process.env.NODE_ENV === "development"
@@ -37,6 +39,8 @@ export const Portfolio: React.FC<
     onRemove,
     componentState = "normal",
     id,
+    gridWidth,
+    gridHeight,
 }) => {
     const { currentTheme } = useTheme();
     const auth = useAuthContext();
@@ -1567,6 +1571,8 @@ export const Portfolio: React.FC<
                                         (window as any)?.componentId ||
                                         undefined
                                     }
+                                    gridWidth={gridWidth}
+                                    gridHeight={gridHeight}
                                     componentBorderInfo={(() => {
                                         const borderInfo = {
                                             rightBorder:

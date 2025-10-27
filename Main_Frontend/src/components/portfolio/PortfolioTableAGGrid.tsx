@@ -79,6 +79,8 @@ interface PortfolioTableAGGridProps {
     isLive: boolean;
     externalEditing?: boolean;
     componentId?: string;
+    gridWidth?: number; // Grid width from cloud DB config
+    gridHeight?: number; // Grid height from cloud DB config
     deviceType?: "laptop" | "mobile" | "bigscreen";
     componentBorderInfo?: ComponentBorderInfo;
 }
@@ -89,10 +91,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     isLive,
     externalEditing,
     componentId,
+    gridWidth,
+    gridHeight,
     deviceType,
-    componentBorderInfo,
+    componentBorderInfo
 }) => {
-    console.log("[PortfolioTableAGGrid] Component initialized with componentId:", componentId);
+    console.log("[PortfolioTableAGGrid] Component initialized", {
+        componentId,
+        gridWidth,
+        gridHeight,
+    });
     const { getToken } = useAuthContext();
     const { currentTheme: theme } = useTheme();
     const safeTheme = (theme as unknown as Record<string, string>) || {
@@ -1256,10 +1264,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             const containerRect = containerElement?.getBoundingClientRect();
 
                             // Position scrollbar at the VISIBLE container's right edge
-                            // Use container width (includes scrollbar space) not viewport clientWidth
+                            // Calculate: left + visible container width (not containerRect.right which includes extra space)
                             // Container: 1733px, viewport: 1720px, difference = 13px (scrollbar space)
-                            const verticalScrollbarLeft = containerRect
-                                ? containerRect.right  // This already includes the scrollbar space
+                            const verticalScrollbarLeft = containerRect && tableBodyRect
+                                ? tableBodyRect.left + containerRect.width  // Use calculated position, not containerRect.right
                                 : (tableBodyElement && tableBodyRect
                                       ? tableBodyRect.left + tableBodyElement.clientWidth
                                       : 0);
@@ -1279,6 +1287,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     left: containerRect?.left,
                                     right: containerRect?.right,
                                     width: containerRect?.width,
+                                },
+                                calculation: {
+                                    leftPlusWidth: tableBodyRect && containerRect ? tableBodyRect.left + containerRect.width : null,
+                                    containerRight: containerRect?.right,
                                 },
                                 verticalScrollbarLeft
                             });
