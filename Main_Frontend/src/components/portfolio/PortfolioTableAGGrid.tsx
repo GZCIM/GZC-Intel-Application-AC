@@ -1263,17 +1263,21 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             }
                             const containerRect = containerElement?.getBoundingClientRect();
 
-                            // Position scrollbar at the VISIBLE container's right edge
-                            // Calculate: left + visible container width (not containerRect.right which includes extra space)
-                            // Container: 1733px, viewport: 1720px, difference = 13px (scrollbar space)
+                            // Use cloud DB config as source of truth for component dimensions
+                            // containerRect.width = visible container width (including scrollbar space)
+                            // Position scrollbar exactly at the container's visible right edge
                             const verticalScrollbarLeft = containerRect && tableBodyRect
-                                ? tableBodyRect.left + containerRect.width  // Use calculated position, not containerRect.right
+                                ? containerRect.right  // Use container's right edge as source of truth from cloud DB config
                                 : (tableBodyElement && tableBodyRect
                                       ? tableBodyRect.left + tableBodyElement.clientWidth
                                       : 0);
 
                             // Debug per-instance positioning
                             console.log(`[VERTICAL SCROLLBAR] componentId="${componentId || "default"}"`, {
+                                componentConfig: {
+                                    gridWidth,
+                                    gridHeight,
+                                },
                                 tableBodyRect: {
                                     left: tableBodyRect?.left,
                                     right: tableBodyRect?.right,
@@ -1289,10 +1293,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     width: containerRect?.width,
                                 },
                                 calculation: {
-                                    leftPlusWidth: tableBodyRect && containerRect ? tableBodyRect.left + containerRect.width : null,
-                                    containerRight: containerRect?.right,
+                                    usingConfigAsSourceOfTruth: true,
+                                    containerRightEdge: containerRect?.right,
+                                    leftPlusContainerWidth: tableBodyRect && containerRect ? tableBodyRect.left + containerRect.width : null,
                                 },
-                                verticalScrollbarLeft
+                                finalPosition: verticalScrollbarLeft,
                             });
 
                             // Position scrollbar to start below the table header, not at component top
