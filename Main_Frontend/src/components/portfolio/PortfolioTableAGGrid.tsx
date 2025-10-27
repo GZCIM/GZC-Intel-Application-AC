@@ -1558,23 +1558,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             // Get table body dimensions for scrollbar positioning using scoped element
                             const tableBodyRect = tableBodyElement?.getBoundingClientRect();
 
-                            // Debug per-instance positioning
-                            console.log(`[HORIZONTAL SCROLLBAR] componentId="${componentId || "default"}", tableBodyRect=`, {
-                                left: tableBodyRect?.left,
-                                right: tableBodyRect?.right,
-                                top: tableBodyRect?.top,
-                                bottom: tableBodyRect?.bottom,
-                                width: tableBodyRect?.width,
-                                height: tableBodyRect?.height
-                            });
+                            // Use portfolio component's visible viewport for scrollbar positioning (like vertical scrollbar)
+                            // Get the portfolio component rect (visible boundaries)
+                            const portfolioComponentRect = actualPortfolioComponent?.getBoundingClientRect();
 
-                            // Use table body dimensions for scrollbar positioning to ensure it's at the bottom of the table
-                            const scrollbarWidth = tableBodyRect
-                                ? tableBodyRect.width
-                                : (componentRect ? componentRect.width : 0);
-                            const scrollbarLeft = tableBodyRect
-                                ? tableBodyRect.left
-                                : (componentRect ? componentRect.left : 0);
+                            const scrollbarWidth = portfolioComponentRect
+                                ? portfolioComponentRect.width  // Use portfolio component viewport width
+                                : (tableBodyRect ? tableBodyRect.width : 0);
+                            const scrollbarLeft = portfolioComponentRect
+                                ? portfolioComponentRect.left  // Use portfolio component left edge
+                                : (tableBodyRect ? tableBodyRect.left : 0);
                             // Position horizontal scrollbar at the bottom of the table body (lower border)
                             const scrollbarTop = tableBodyRect
                                 ? tableBodyRect.bottom - 16
@@ -1583,6 +1576,33 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                       : componentRect
                                       ? componentRect.bottom - 16
                                       : 0);
+
+                            // Debug per-instance positioning
+                            console.log(`[HORIZONTAL SCROLLBAR] componentId="${componentId || "default"}"`, {
+                                portfolioComponentViewport: {
+                                    left: portfolioComponentRect?.left,
+                                    right: portfolioComponentRect?.right,
+                                    width: portfolioComponentRect?.width,
+                                    height: portfolioComponentRect?.height,
+                                    top: portfolioComponentRect?.top,
+                                    bottom: portfolioComponentRect?.bottom,
+                                    note: "Portfolio component's visible boundaries (from cloud DB config)",
+                                },
+                                tableBodyRect: {
+                                    left: tableBodyRect?.left,
+                                    right: tableBodyRect?.right,
+                                    top: tableBodyRect?.top,
+                                    bottom: tableBodyRect?.bottom,
+                                    width: tableBodyRect?.width,
+                                    height: tableBodyRect?.height,
+                                    note: "Table content may extend beyond component viewport",
+                                },
+                                scrollbarCalculated: {
+                                    left: scrollbarLeft,
+                                    top: scrollbarTop,
+                                    width: scrollbarWidth,
+                                },
+                            });
 
                             // Debug all possible component selectors
                             const allPortfolioElements =
