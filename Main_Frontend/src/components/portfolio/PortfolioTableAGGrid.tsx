@@ -1263,50 +1263,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             }
                             const containerRect = containerElement?.getBoundingClientRect();
 
-                            // ✓ USING CLOUD DB VIEW SIZE FROM CONFIG
-                            // Cloud DB config defines component view size: gridWidth=5 (Main) or 12 (New Tab)
-                            // This translates to: bodyW (1720px Main, 2282px New Tab) from AG Grid
-                            // Scrollbar should be positioned at: tableLeft + bodyW (the configured view width)
+                            // ✓ USING PORTFOLIO COMPONENT VISIBLE VIEWPORT
+                            // The scrollbar should be positioned at the portfolio component's visible right edge
+                            // NOT at the table's edge (which may be partially hidden)
+                            // verticalComponentRect = the actual visible boundaries of the portfolio component
 
-                            // Get bodyW from AG Grid (this is the cloud DB configured view width in pixels)
-                            const bodyW = tableBodyElement?.clientWidth || tableBodyRect?.width || 0;
-
-                            // Position scrollbar based on cloud DB configured view size
-                            const verticalScrollbarLeft = tableBodyRect && bodyW
-                                ? tableBodyRect.left + bodyW  // tableLeft + configured view width (from cloud DB)
+                            // Position scrollbar at portfolio component's visible right edge
+                            const verticalScrollbarLeft = verticalComponentRect
+                                ? verticalComponentRect.right  // Portfolio component's visible right edge
                                 : (tableBodyRect?.right || 0);
-
-                            // Debug: Cloud DB configured view size
-                            console.log(`[VERTICAL SCROLLBAR] componentId="${componentId || "default"}"`, {
-                                cloudDBConfig: {
-                                    gridWidth,
-                                    gridHeight,
-                                    viewSize: `${gridWidth} grid units × ${gridHeight} grid units`,
-                                },
-                                renderedViewSize: {
-                                    bodyW,
-                                    bodyH: tableBodyRect?.height,
-                                    note: "Cloud DB configured view width in pixels (from AG Grid)",
-                                },
-                                tableBodyRect: {
-                                    left: tableBodyRect?.left,
-                                    right: tableBodyRect?.right,
-                                    width: tableBodyRect?.width,
-                                },
-                                containerRect: {
-                                    left: containerRect?.left,
-                                    right: containerRect?.right,
-                                    width: containerRect?.width,
-                                    note: "Includes scrollbar space",
-                                },
-                                calculation: {
-                                    method: "tableLeft + bodyW (cloud DB configured view width)",
-                                    tableLeft: tableBodyRect?.left,
-                                    bodyW,
-                                    calculatedPosition: tableBodyRect?.left && bodyW ? tableBodyRect.left + bodyW : null,
-                                },
-                                finalPosition: verticalScrollbarLeft,
-                            });
 
                             // Position scrollbar to start below the table header, not at component top
                             const verticalScrollbarTop = tableHeaderRect
@@ -1317,6 +1282,47 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             const verticalScrollbarHeight = tableBodyRect
                                 ? tableBodyRect.height
                                 : (verticalComponentRect ? verticalComponentRect.height : 0);
+
+                            // Debug: Portfolio component visible viewport
+                            console.log(`[VERTICAL SCROLLBAR] componentId="${componentId || "default"}"`, {
+                                cloudDBConfig: {
+                                    gridWidth,
+                                    gridHeight,
+                                    configuredViewSize: `${gridWidth} grid units × ${gridHeight} grid units`,
+                                },
+                                portfolioComponentViewport: {
+                                    left: verticalComponentRect?.left,
+                                    right: verticalComponentRect?.right,
+                                    width: verticalComponentRect?.width,
+                                    top: verticalComponentRect?.top,
+                                    bottom: verticalComponentRect?.bottom,
+                                    height: verticalComponentRect?.height,
+                                    note: "Portfolio component's actual visible boundaries (from cloud DB config)",
+                                },
+                                tableBodyRect: {
+                                    left: tableBodyRect?.left,
+                                    right: tableBodyRect?.right,
+                                    width: tableBodyRect?.width,
+                                    top: tableBodyRect?.top,
+                                    bottom: tableBodyRect?.bottom,
+                                    height: tableBodyRect?.height,
+                                    note: "Table content may extend beyond component viewport",
+                                },
+                                calculation: {
+                                    method: "verticalComponentRect.right (portfolio component's visible right edge)",
+                                    portfolioComponentRight: verticalComponentRect?.right,
+                                    note: "Positioned at visible component boundary, not table edge",
+                                },
+                                finalPosition: {
+                                    left: verticalScrollbarLeft,
+                                    top: verticalScrollbarTop,
+                                    height: verticalScrollbarHeight,
+                                },
+                                verification: {
+                                    rightEdgeMatchesComponentRight: Math.abs(verticalScrollbarLeft - (verticalComponentRect?.right || 0)) < 1,
+                                    rightEdgeGap: verticalScrollbarLeft - (verticalComponentRect?.right || 0),
+                                },
+                            });
 
                             console.log(
                                 "🔍 [DEBUG] Vertical Scrollbar Analysis:",
