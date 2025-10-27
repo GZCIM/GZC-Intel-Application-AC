@@ -1592,9 +1592,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             // Get table body dimensions for scrollbar positioning using scoped element
                             const tableBodyRect = tableBodyElement?.getBoundingClientRect();
 
-                            // Use portfolio component's visible viewport for scrollbar positioning (like vertical scrollbar)
-                            // Get the portfolio component rect (visible boundaries)
-                            const portfolioComponentRect = actualPortfolioComponent?.getBoundingClientRect();
+                            // Use the AG Grid container (the actual visible viewport) for scrollbar positioning
+                            // The table container is what contains the visible table content
+                            const portfolioComponentRect = tableContainer?.getBoundingClientRect();
 
                             // Find AG Grid's native horizontal scrollbar element to get its exact dimensions
                             let nativeHorizontalScrollbar: Element | null = null;
@@ -1616,17 +1616,17 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 scrollbarLeft = nativeHorizontalScrollbarRect.left;
                                 scrollbarTop = nativeHorizontalScrollbarRect.top;
                             } else {
-                                // Case 2: No native scrollbar exists → use portfolio component's visible viewport
-                                // The scrollbar should align with the component's visible boundaries (not table content which may extend)
+                                // Case 2: No native scrollbar exists → use table container's visible boundaries
+                                // The scrollbar should align with the actual visible AG Grid viewport
                                 scrollbarWidth = portfolioComponentRect
-                                    ? portfolioComponentRect.width - verticalScrollbarWidth  // Component's visible width minus vertical scrollbar
+                                    ? portfolioComponentRect.width - verticalScrollbarWidth  // Table container's visible width minus vertical scrollbar
                                     : (tableBodyRect ? tableBodyRect.width - verticalScrollbarWidth : 0);
 
                                 scrollbarLeft = portfolioComponentRect
-                                    ? portfolioComponentRect.left  // Align with component's visible left edge
+                                    ? portfolioComponentRect.left  // Align with table container's visible left edge
                                     : (tableBodyRect ? tableBodyRect.left : 0);
                                 scrollbarTop = portfolioComponentRect
-                                    ? portfolioComponentRect.bottom - 16  // Just below the component's visible bottom edge
+                                    ? portfolioComponentRect.bottom - 16  // Just below the table container's visible bottom edge
                                     : (tableBodyRect
                                           ? tableBodyRect.bottom - 16
                                           : (tableHeaderRect
@@ -1687,7 +1687,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     height: portfolioComponentRect?.height,
                                     top: portfolioComponentRect?.top,
                                     bottom: portfolioComponentRect?.bottom,
-                                    note: "Portfolio component's visible boundaries (from cloud DB config)",
+                                    note: "Table container's visible boundaries (AG Grid viewport)",
                                 },
                                 tableBodyRect: {
                                     left: tableBodyRect?.left,
@@ -1704,7 +1704,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     width: scrollbarWidth,
                                 note: nativeHorizontalScrollbarRect
                                     ? "Using native AG Grid scrollbar dimensions (exact position/width)"
-                                    : "Using portfolio component's visible viewport (portfolioComponentRect.width/left)",
+                                    : "Using table container's visible boundaries (tableContainer.width/left)",
                                 },
                                 widthCalculation: {
                                     nativeScrollbarExists: !!nativeHorizontalScrollbarRect,
@@ -1715,10 +1715,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     calculatedWidth: scrollbarWidth,
                                     formula: nativeHorizontalScrollbarRect
                                         ? "nativeScrollbarRect.width - 16px (uses AG Grid's native scrollbar width)"
-                                        : "portfolioComponentRect.width - 16px (component's visible viewport width minus vertical scrollbar)",
+                                        : "tableContainer.width - 16px (table container's visible width minus vertical scrollbar)",
                                     note: nativeHorizontalScrollbarRect
                                         ? "Using native scrollbar dimensions for exact positioning"
-                                        : "Using portfolio component's visible viewport (aligns with component boundaries)",
+                                        : "Using table container's visible boundaries (aligns with AG Grid viewport)",
                                 },
                             });
 
