@@ -486,13 +486,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 : 0;
 
         tableBodyRef.current.scrollTop = scrollTop;
+        // Update scrollbar state after setting scroll position
+        updateScrollbarState();
         setScrollbarState((prev) => ({
             ...prev,
             isDragging: true,
             dragStartY: e.clientY,
             dragStartScrollTop: scrollTop,
         }));
-    }, []);
+    }, [updateScrollbarState]);
 
     const handleScrollbarDrag = useCallback(
         (e: MouseEvent) => {
@@ -542,6 +544,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     : 0;
 
             tableBodyRef.current.scrollLeft = scrollLeft;
+            // Update scrollbar state after setting scroll position
+            updateScrollbarState();
             setScrollbarState((prev) => ({
                 ...prev,
                 isDraggingHorizontal: true,
@@ -549,7 +553,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 dragStartScrollLeft: scrollLeft,
             }));
         },
-        []
+        [updateScrollbarState]
     );
 
     const handleHorizontalScrollbarDrag = useCallback(
