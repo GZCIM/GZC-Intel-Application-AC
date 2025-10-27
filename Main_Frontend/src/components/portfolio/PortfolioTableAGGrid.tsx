@@ -92,6 +92,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     deviceType,
     componentBorderInfo,
 }) => {
+    console.log("[PortfolioTableAGGrid] Component initialized with componentId:", componentId);
     const { getToken } = useAuthContext();
     const { currentTheme: theme } = useTheme();
     const safeTheme = (theme as unknown as Record<string, string>) || {
@@ -473,6 +474,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
     const handleScrollbarMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
+        e.stopPropagation(); // Prevent event from bubbling up and triggering other handlers
         const rect = scrollbarRef.current?.getBoundingClientRect();
         if (!rect || !tableBodyRef.current) return;
 
@@ -527,6 +529,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const handleHorizontalScrollbarMouseDown = useCallback(
         (e: React.MouseEvent) => {
             e.preventDefault();
+            e.stopPropagation(); // Prevent event from bubbling up and triggering other handlers
             const rect =
                 horizontalScrollbarRef.current?.getBoundingClientRect();
             if (!rect || !tableBodyRef.current) return;
@@ -770,7 +773,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     }
                 }
 
-                const totalWidth = displayedCols.reduce((sum, col) => {
+                const totalWidth = (displayedCols || []).reduce((sum, col) => {
                     try {
                         return (
                             sum +
