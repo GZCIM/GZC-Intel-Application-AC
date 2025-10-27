@@ -1225,6 +1225,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
                             const tableHeaderRect = tableHeader?.getBoundingClientRect();
 
+                            // Debug per-instance positioning
+                            console.log(`[VERTICAL SCROLLBAR] componentId="${componentId || "default"}", tableBodyRect=`, {
+                                left: tableBodyRect?.left,
+                                right: tableBodyRect?.right,
+                                top: tableBodyRect?.top,
+                                bottom: tableBodyRect?.bottom,
+                                width: tableBodyRect?.width,
+                                height: tableBodyRect?.height
+                            });
+
                             const verticalScrollbarWidth = 16;
                             // Use table body's right edge for scrollbar positioning to ensure it's always on the right
                             const verticalScrollbarLeft = tableBodyRect
@@ -1452,22 +1462,48 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
                             const tableHeaderRect = tableHeader?.getBoundingClientRect();
 
-                            const scrollbarWidth = componentRect
-                                ? componentRect.width
-                                : 0;
-                            const scrollbarLeft = componentRect
-                                ? componentRect.left
-                                : 0;
-                            // Position horizontal scrollbar at the bottom of the table header instead of at component bottom
-                            const scrollbarTop = tableHeaderRect
-                                ? tableHeaderRect.bottom
-                                : componentRect
-                                ? componentRect.bottom - 16
-                                : 0;
+                            // Find table container using componentId for THIS specific instance
+                            const tableContainer = document.getElementById(`portfolio-container-${componentId || "default"}`);
 
-                            // Get table body dimensions for comparison
-                            const tableBodyRect =
-                                tableBodyRef.current?.getBoundingClientRect();
+                            // Find table body within THIS component's container
+                            let tableBodyElement: Element | null = null;
+                            if (tableContainer) {
+                                tableBodyElement = tableContainer.querySelector('.ag-body-viewport');
+                            }
+
+                            // Fallback to using tableBodyRef
+                            if (!tableBodyElement) {
+                                tableBodyElement = tableBodyRef.current;
+                            }
+
+                            // Get table body dimensions for scrollbar positioning using scoped element
+                            const tableBodyRect = tableBodyElement?.getBoundingClientRect();
+
+                            // Debug per-instance positioning
+                            console.log(`[HORIZONTAL SCROLLBAR] componentId="${componentId || "default"}", tableBodyRect=`, {
+                                left: tableBodyRect?.left,
+                                right: tableBodyRect?.right,
+                                top: tableBodyRect?.top,
+                                bottom: tableBodyRect?.bottom,
+                                width: tableBodyRect?.width,
+                                height: tableBodyRect?.height
+                            });
+
+                            // Use table body dimensions for scrollbar positioning to ensure it's at the bottom of the table
+                            const scrollbarWidth = tableBodyRect
+                                ? tableBodyRect.width
+                                : (componentRect ? componentRect.width : 0);
+                            const scrollbarLeft = tableBodyRect
+                                ? tableBodyRect.left
+                                : (componentRect ? componentRect.left : 0);
+                            // Position horizontal scrollbar at the bottom of the table body (lower border)
+                            const scrollbarTop = tableBodyRect
+                                ? tableBodyRect.bottom - 16
+                                : (tableHeaderRect
+                                      ? tableHeaderRect.bottom
+                                      : componentRect
+                                      ? componentRect.bottom - 16
+                                      : 0);
 
                             // Debug all possible component selectors
                             const allPortfolioElements =
@@ -1521,6 +1557,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                   top: tableHeaderRect.top,
                                                   bottom: tableHeaderRect.bottom,
                                                   height: tableHeaderRect.height,
+                                              }
+                                            : null,
+                                    tableBodyRect: tableBodyRect
+                                            ? {
+                                                  top: tableBodyRect.top,
+                                                  bottom: tableBodyRect.bottom,
+                                                  left: tableBodyRect.left,
+                                                  right: tableBodyRect.right,
+                                                  width: tableBodyRect.width,
+                                                  height: tableBodyRect.height,
                                               }
                                             : null,
                                     },
