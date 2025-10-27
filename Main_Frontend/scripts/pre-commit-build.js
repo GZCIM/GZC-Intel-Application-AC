@@ -5,15 +5,19 @@
  * Ensures Vite compilation succeeds before allowing commits
  */
 
-const { execSync } = require("child_process");
-const path = require("path");
+import { execSync } from "child_process";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 console.log("🔨 Running pre-commit build verification...");
 
 try {
     // Use absolute path to Main_Frontend directory
-    const frontendDir = path.resolve(__dirname, "..");
-    const absolutePath = path.resolve(frontendDir);
+    const frontendDir = resolve(__dirname, "..");
+    const absolutePath = resolve(frontendDir);
 
     console.log("📦 Compiling with Vite...");
     console.log(`📁 Working directory: ${absolutePath}`);
