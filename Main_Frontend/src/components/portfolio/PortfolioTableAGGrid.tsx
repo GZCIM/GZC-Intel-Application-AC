@@ -1604,27 +1604,35 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             }
                             const nativeHorizontalScrollbarRect = nativeHorizontalScrollbar?.getBoundingClientRect();
 
-                            // Use native scrollbar dimensions if found, otherwise fallback to table body
+                            // Determine scrollbar dimensions based on whether native scrollbar exists
                             const verticalScrollbarWidth = 16;
-                            const scrollbarWidth = nativeHorizontalScrollbarRect
-                                ? nativeHorizontalScrollbarRect.width - verticalScrollbarWidth  // Use native scrollbar width
-                                : (tableBodyRect
-                                      ? tableBodyRect.width - verticalScrollbarWidth
-                                      : (portfolioComponentRect ? portfolioComponentRect.width - verticalScrollbarWidth : 0));
-                            const scrollbarLeft = nativeHorizontalScrollbarRect
-                                ? nativeHorizontalScrollbarRect.left  // Use native scrollbar left position
-                                : (tableBodyRect
-                                      ? tableBodyRect.left
-                                      : (portfolioComponentRect ? portfolioComponentRect.left : 0));
-                            const scrollbarTop = nativeHorizontalScrollbarRect
-                                ? nativeHorizontalScrollbarRect.top  // Use native scrollbar top position
-                                : (tableBodyRect
-                                      ? tableBodyRect.bottom - 16
-                                      : (tableHeaderRect
-                                            ? tableHeaderRect.bottom
-                                            : componentRect
-                                            ? componentRect.bottom - 16
-                                            : 0));
+                            let scrollbarWidth: number;
+                            let scrollbarLeft: number;
+                            let scrollbarTop: number;
+
+                            if (nativeHorizontalScrollbarRect) {
+                                // Case 1: Native scrollbar exists → use its dimensions (exact positioning)
+                                scrollbarWidth = nativeHorizontalScrollbarRect.width - verticalScrollbarWidth;
+                                scrollbarLeft = nativeHorizontalScrollbarRect.left;
+                                scrollbarTop = nativeHorizontalScrollbarRect.top;
+                            } else {
+                                // Case 2: No native scrollbar exists → use visible table body dimensions
+                                // The scrollbar should match the visible table area (not component padding)
+                                scrollbarWidth = tableBodyRect
+                                    ? tableBodyRect.width - verticalScrollbarWidth  // Visible table width minus vertical scrollbar
+                                    : 0;
+
+                                scrollbarLeft = tableBodyRect
+                                    ? tableBodyRect.left  // Align with table content's left edge
+                                    : (portfolioComponentRect ? portfolioComponentRect.left : 0);
+                                scrollbarTop = tableBodyRect
+                                    ? tableBodyRect.bottom - 16  // Just below the table content
+                                    : (tableHeaderRect
+                                          ? tableHeaderRect.bottom
+                                          : (componentRect
+                                                ? componentRect.bottom - 16
+                                                : 0));
+                            }
 
                             // Debug parent hierarchy and CSS
                             const getParentHierarchy = (element: Element | null) => {
@@ -1694,9 +1702,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     width: scrollbarWidth,
                                     note: nativeHorizontalScrollbarRect
                                         ? "Using native AG Grid scrollbar dimensions (exact position/width)"
-                                        : "Horizontal scrollbar positioned at table content edge (tableBodyRect.left, tableBodyRect.width - 16px)",
+                                        : "Using visible table body dimensions (tableBodyRect.width/left)",
                                 },
                                 widthCalculation: {
+                                    nativeScrollbarExists: !!nativeHorizontalScrollbarRect,
                                     nativeScrollbarWidth: nativeHorizontalScrollbarRect?.width,
                                     portfolioComponentWidth: portfolioComponentRect?.width,
                                     tableBodyWidth: tableBodyRect?.width,
@@ -1704,10 +1713,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     calculatedWidth: scrollbarWidth,
                                     formula: nativeHorizontalScrollbarRect
                                         ? "nativeScrollbarRect.width - 16px (uses AG Grid's native scrollbar width)"
-                                        : "tableBodyRect.width - 16px (table content width minus vertical scrollbar)",
+                                        : "tableBodyRect.width - 16px (visible table width minus vertical scrollbar)",
                                     note: nativeHorizontalScrollbarRect
                                         ? "Using native scrollbar dimensions for exact positioning"
-                                        : "Horizontal scrollbar aligned with table content left edge, ends before vertical scrollbar",
+                                        : "Using visible table body dimensions (not component padding)",
                                 },
                             });
 
