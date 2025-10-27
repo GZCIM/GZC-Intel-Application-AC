@@ -1563,11 +1563,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             const portfolioComponentRect = actualPortfolioComponent?.getBoundingClientRect();
 
                             const scrollbarWidth = portfolioComponentRect
-                                ? portfolioComponentRect.width  // Use portfolio component viewport width
+                                ? portfolioComponentRect.width  // Use portfolio component viewport width (cloud DB config)
                                 : (tableBodyRect ? tableBodyRect.width : 0);
-                            const scrollbarLeft = portfolioComponentRect
-                                ? portfolioComponentRect.left  // Use portfolio component left edge
-                                : (tableBodyRect ? tableBodyRect.left : 0);
+                            const scrollbarLeft = tableBodyRect
+                                ? tableBodyRect.left  // Align with table's left edge (not component padding)
+                                : (portfolioComponentRect ? portfolioComponentRect.left : 0);
                             // Position horizontal scrollbar at the bottom of the table body (lower border)
                             const scrollbarTop = tableBodyRect
                                 ? tableBodyRect.bottom - 16
