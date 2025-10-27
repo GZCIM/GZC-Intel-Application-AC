@@ -999,6 +999,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
             {/* AG Grid Table with Fixed Scrollbar */}
             <div
+                id={`portfolio-container-${componentId || "default"}`}
                 style={{
                     flex: 1,
                     width: "100%",
@@ -1177,22 +1178,37 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             const verticalComponentRect =
                                 actualPortfolioComponent?.getBoundingClientRect();
 
-                            // Use tableBodyRef for THIS specific component instance (most reliable)
-                            const tableBodyElement = tableBodyRef.current;
+                            // Find table container using componentId for THIS specific instance
+                            const tableContainer = document.getElementById(`portfolio-container-${componentId || "default"}`);
+
+                            // Find table body within THIS component's container
+                            let tableBodyElement: Element | null = null;
+                            if (tableContainer) {
+                                tableBodyElement = tableContainer.querySelector('.ag-body-viewport');
+                            }
+
+                            // Fallback to using tableBodyRef
+                            if (!tableBodyElement) {
+                                tableBodyElement = tableBodyRef.current;
+                            }
+
                             const tableBodyRect = tableBodyElement?.getBoundingClientRect();
 
                             // Find the table header that matches THIS table body
                             let tableHeader: Element | null = null;
 
-                            if (tableBodyElement) {
-                                // Find header within the same grid container as this table body
+                            if (tableContainer) {
+                                // Find header within the same table container
+                                tableHeader = tableContainer.querySelector('.ag-header');
+                            } else if (tableBodyElement) {
+                                // Fallback: find header within the same grid container as this table body
                                 const gridContainer = tableBodyElement.closest('.ag-theme-alpine');
                                 if (gridContainer) {
                                     tableHeader = gridContainer.querySelector('.ag-header');
                                 }
                             }
 
-                            // Fallback if not found
+                            // Last fallback if not found
                             if (!tableHeader && actualPortfolioComponent) {
                                 const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine');
                                 if (gridContainer) {
@@ -1245,6 +1261,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                         scrollbarTop: verticalScrollbarTop,
                                         scrollbarHeight:
                                             verticalScrollbarHeight,
+                                        tableContainer: {
+                                            found: !!tableContainer,
+                                            id: `portfolio-container-${componentId || "default"}`,
+                                        },
                                         tableHeaderRect: tableHeaderRect
                                             ? {
                                                   top: tableHeaderRect.top,
