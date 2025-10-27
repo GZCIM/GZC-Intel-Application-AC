@@ -1263,10 +1263,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             }
                             const containerRect = containerElement?.getBoundingClientRect();
 
-                            // Position scrollbar at table's visible right edge (exactly where the table content ends)
-                            const verticalScrollbarLeft = tableBodyRect
-                                ? tableBodyRect.right  // Exact visible right edge of the table
-                                : (verticalComponentRect ? verticalComponentRect.right : 0);
+                            // Position scrollbar at portfolio component's visible right edge (cloud DB config viewport)
+                            // Use component viewport, not table edge (table may extend beyond viewport)
+                            const verticalScrollbarLeft = verticalComponentRect
+                                ? verticalComponentRect.right  // Portfolio component's visible right edge
+                                : (tableBodyRect ? tableBodyRect.right : 0);
 
                             // Position scrollbar to start below the table header, not at component top
                             const verticalScrollbarTop = tableHeaderRect
@@ -1339,11 +1340,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     note: "Table content may extend beyond component viewport",
                                 },
                                 calculation: {
-                                    method: "tableBodyRect.right (table's visible right edge)",
+                                    method: "verticalComponentRect.right (portfolio component's visible right edge)",
                                     tableBodyRight: tableBodyRect?.right,
                                     portfolioComponentRight: verticalComponentRect?.right,
                                     positionDifference: tableBodyRect?.right && verticalComponentRect?.right ? tableBodyRect.right - verticalComponentRect.right : null,
-                                    note: "NOW: Using table's actual visible edge (tableBodyRect.right)",
+                                    note: "NOW: Using portfolio component's visible viewport boundary (from cloud DB config)",
                                 },
                                 finalPosition: {
                                     left: verticalScrollbarLeft,
@@ -1351,8 +1352,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     height: verticalScrollbarHeight,
                                 },
                                 verification: {
-                                    rightEdgeMatchesTableRight: Math.abs(verticalScrollbarLeft - (tableBodyRect?.right || 0)) < 1,
-                                    rightEdgeGap: verticalScrollbarLeft - (tableBodyRect?.right || 0),
+                                    rightEdgeMatchesComponentRight: Math.abs(verticalScrollbarLeft - (verticalComponentRect?.right || 0)) < 1,
+                                    rightEdgeGap: verticalScrollbarLeft - (verticalComponentRect?.right || 0),
+                                    tableVsComponentDifference: verticalComponentRect?.right && tableBodyRect?.right ? verticalComponentRect.right - tableBodyRect.right : null,
                                 },
                             });
 
@@ -1594,15 +1596,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             // Get the portfolio component rect (visible boundaries)
                             const portfolioComponentRect = actualPortfolioComponent?.getBoundingClientRect();
 
-                            // Horizontal scrollbar width must account for vertical scrollbar width
-                            // End before the vertical scrollbar (subtract ~16px for vertical scrollbar width)
+                            // Horizontal scrollbar should span the full visible viewport (component width)
+                            // Width must account for vertical scrollbar width - end before the vertical scrollbar
                             const verticalScrollbarWidth = 16;
-                            const scrollbarWidth = tableBodyRect
-                                ? tableBodyRect.width - verticalScrollbarWidth  // End before vertical scrollbar
-                                : (portfolioComponentRect ? portfolioComponentRect.width - verticalScrollbarWidth : 0);
-                            const scrollbarLeft = tableBodyRect
-                                ? tableBodyRect.left  // Align with table's left edge (not component padding)
-                                : (portfolioComponentRect ? portfolioComponentRect.left : 0);
+                            const scrollbarWidth = portfolioComponentRect
+                                ? portfolioComponentRect.width - verticalScrollbarWidth  // Full viewport width minus vertical scrollbar
+                                : (tableBodyRect ? tableBodyRect.width - verticalScrollbarWidth : 0);
+                            // Position at the left edge of the viewport (component's left edge), not table's edge
+                            const scrollbarLeft = portfolioComponentRect
+                                ? portfolioComponentRect.left  // Align with component's left edge
+                                : (tableBodyRect ? tableBodyRect.left : 0);
                             // Position horizontal scrollbar at the bottom of the table body (lower border)
                             const scrollbarTop = tableBodyRect
                                 ? tableBodyRect.bottom - 16
@@ -1670,14 +1673,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     left: scrollbarLeft,
                                     top: scrollbarTop,
                                     width: scrollbarWidth,
-                                    note: "Horizontal scrollbar width = tableBodyRect.width - 16px (vertical scrollbar width)",
+                                    note: "Horizontal scrollbar width = portfolioComponentRect.width - 16px (spans full viewport, ends before vertical scrollbar)",
                                 },
                                 widthCalculation: {
+                                    portfolioComponentWidth: portfolioComponentRect?.width,
                                     tableBodyWidth: tableBodyRect?.width,
                                     verticalScrollbarWidth: 16,
                                     calculatedWidth: scrollbarWidth,
-                                    formula: "tableBodyRect.width - 16px",
-                                    note: "Horizontal scrollbar ends before vertical scrollbar",
+                                    formula: "portfolioComponentRect.width - 16px (spans full viewport, ends before vertical scrollbar)",
+                                    note: "Horizontal scrollbar spans component viewport width, ends before vertical scrollbar",
                                 },
                             });
 
