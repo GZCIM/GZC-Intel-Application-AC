@@ -195,6 +195,30 @@
     scrollbar-width: none !important;
 }
 
+/* Hide ALL possible scrollbars in ALL AG Grid containers - MORE AGGRESSIVE */
+.ag-theme-alpine * {
+    scrollbar-width: none !important;
+}
+
+.ag-theme-alpine *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Hide scrollbars in root wrapper and grid root */
+.ag-root-wrapper::-webkit-scrollbar,
+.ag-root::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.ag-root-wrapper,
+.ag-root {
+    scrollbar-width: none !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .ag-theme-alpine {

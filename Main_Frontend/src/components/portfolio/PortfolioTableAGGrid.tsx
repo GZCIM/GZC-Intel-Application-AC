@@ -1236,11 +1236,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             });
 
                             const verticalScrollbarWidth = 16;
-                            // Use table body's right edge for scrollbar positioning to ensure it's always on the right
+                            // Position scrollbar EXACTLY at the right edge to completely hide native scrollbar
                             const verticalScrollbarLeft = tableBodyRect
-                                ? tableBodyRect.right - verticalScrollbarWidth
+                                ? tableBodyRect.right
                                 : (verticalComponentRect
-                                      ? verticalComponentRect.right - verticalScrollbarWidth
+                                      ? verticalComponentRect.right
                                       : 0);
 
                             // Position scrollbar to start below the table header, not at component top
