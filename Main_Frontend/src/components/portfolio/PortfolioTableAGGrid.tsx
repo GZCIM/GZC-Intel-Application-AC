@@ -1173,20 +1173,32 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 }
                             );
 
-                            // Calculate proper dimensions for this specific portfolio component
+                            // Calculate proper dimensions for vertical scrollbar based on table body, not component
                             const verticalComponentRect =
                                 actualPortfolioComponent?.getBoundingClientRect();
+                            
+                            // Find the table body to get exact table boundaries
+                            const tableBody = document.querySelector('.ag-body-viewport');
+                            const tableBodyRect = tableBody?.getBoundingClientRect();
+                            
+                            // Find the table header to position scrollbar below it
+                            const tableHeader = document.querySelector('.ag-header');
+                            const tableHeaderRect = tableHeader?.getBoundingClientRect();
+                            
                             const verticalScrollbarWidth = 16;
                             const verticalScrollbarLeft = verticalComponentRect
                                 ? verticalComponentRect.right - 16
                                 : 0;
-                            const verticalScrollbarTop = verticalComponentRect
-                                ? verticalComponentRect.top
-                                : 0;
-                            const verticalScrollbarHeight =
-                                verticalComponentRect
-                                    ? verticalComponentRect.height
-                                    : 0;
+                            
+                            // Position scrollbar to start below the table header, not at component top
+                            const verticalScrollbarTop = tableHeaderRect
+                                ? tableHeaderRect.bottom
+                                : (verticalComponentRect ? verticalComponentRect.top : 0);
+                            
+                            // Calculate scrollbar height based on table body height, not entire component
+                            const verticalScrollbarHeight = tableBodyRect
+                                ? tableBodyRect.height
+                                : (verticalComponentRect ? verticalComponentRect.height : 0);
 
                             console.log(
                                 "🔍 [DEBUG] Vertical Scrollbar Analysis:",
@@ -1216,6 +1228,20 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                         scrollbarTop: verticalScrollbarTop,
                                         scrollbarHeight:
                                             verticalScrollbarHeight,
+                                        tableHeaderRect: tableHeaderRect
+                                            ? {
+                                                  top: tableHeaderRect.top,
+                                                  bottom: tableHeaderRect.bottom,
+                                                  height: tableHeaderRect.height,
+                                              }
+                                            : null,
+                                        tableBodyRect: tableBodyRect
+                                            ? {
+                                                  top: tableBodyRect.top,
+                                                  bottom: tableBodyRect.bottom,
+                                                  height: tableBodyRect.height,
+                                              }
+                                            : null,
                                     },
                                     scrollbarState: {
                                         scrollHeight:

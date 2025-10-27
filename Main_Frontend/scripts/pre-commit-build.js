@@ -23,7 +23,7 @@ try {
         timeout: 300000, // 5 minute timeout
     });
 
-    console.log("✅ Build successful! Proceeding with commit...");
+    console.log("✅ Build successful! Commit proceeding...");
 } catch (error) {
     console.error("❌ Build failed! Commit aborted.");
     console.error("Error:", error.message);
