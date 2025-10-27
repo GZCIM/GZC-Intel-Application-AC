@@ -1177,49 +1177,27 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             const verticalComponentRect =
                                 actualPortfolioComponent?.getBoundingClientRect();
 
-                            // Find the table body within THIS specific component instance
-                            // We need to find the table body within the actual portfolio component's scope
-                            let tableBody: Element | null = null;
+                            // Use tableBodyRef for THIS specific component instance (most reliable)
+                            const tableBodyElement = tableBodyRef.current;
+                            const tableBodyRect = tableBodyElement?.getBoundingClientRect();
 
-                            if (actualPortfolioComponent) {
-                                // Try to find the table body within the component hierarchy
-                                const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine') ||
-                                                      actualPortfolioComponent.querySelector('[class*="ag-theme"]');
-                                if (gridContainer) {
-                                    tableBody = gridContainer.querySelector('.ag-body-viewport');
-                                } else {
-                                    // Fallback: find the nearest ag-body-viewport starting from the component
-                                    tableBody = actualPortfolioComponent.closest('.portfolio-table-wrapper')?.querySelector('.ag-body-viewport') ||
-                                                actualPortfolioComponent.querySelector('.ag-body-viewport');
-                                }
-                            }
-
-                            // Fallback to global query if still not found
-                            if (!tableBody) {
-                                tableBody = document.querySelector('.ag-body-viewport');
-                            }
-
-                            const tableBodyRect = tableBody?.getBoundingClientRect();
-
-                            // Find the table header within THIS specific component instance
+                            // Find the table header that matches THIS table body
                             let tableHeader: Element | null = null;
 
-                            if (actualPortfolioComponent) {
-                                // Try to find the table header within the component hierarchy
-                                const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine') ||
-                                                      actualPortfolioComponent.querySelector('[class*="ag-theme"]');
+                            if (tableBodyElement) {
+                                // Find header within the same grid container as this table body
+                                const gridContainer = tableBodyElement.closest('.ag-theme-alpine');
                                 if (gridContainer) {
                                     tableHeader = gridContainer.querySelector('.ag-header');
-                                } else {
-                                    // Fallback: find the nearest ag-header starting from the component
-                                    tableHeader = actualPortfolioComponent.closest('.portfolio-table-wrapper')?.querySelector('.ag-header') ||
-                                                  actualPortfolioComponent.querySelector('.ag-header');
                                 }
                             }
 
-                            // Fallback to global query if still not found
-                            if (!tableHeader) {
-                                tableHeader = document.querySelector('.ag-header');
+                            // Fallback if not found
+                            if (!tableHeader && actualPortfolioComponent) {
+                                const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine');
+                                if (gridContainer) {
+                                    tableHeader = gridContainer.querySelector('.ag-header');
+                                }
                             }
 
                             const tableHeaderRect = tableHeader?.getBoundingClientRect();
