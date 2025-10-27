@@ -1176,14 +1176,14 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             // Calculate proper dimensions for vertical scrollbar based on table body, not component
                             const verticalComponentRect =
                                 actualPortfolioComponent?.getBoundingClientRect();
-                            
+
                             // Find the table body within THIS specific component instance
                             // We need to find the table body within the actual portfolio component's scope
                             let tableBody: Element | null = null;
-                            
+
                             if (actualPortfolioComponent) {
                                 // Try to find the table body within the component hierarchy
-                                const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine') || 
+                                const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine') ||
                                                       actualPortfolioComponent.querySelector('[class*="ag-theme"]');
                                 if (gridContainer) {
                                     tableBody = gridContainer.querySelector('.ag-body-viewport');
@@ -1193,20 +1193,20 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                 actualPortfolioComponent.querySelector('.ag-body-viewport');
                                 }
                             }
-                            
+
                             // Fallback to global query if still not found
                             if (!tableBody) {
                                 tableBody = document.querySelector('.ag-body-viewport');
                             }
-                            
+
                             const tableBodyRect = tableBody?.getBoundingClientRect();
-                            
+
                             // Find the table header within THIS specific component instance
                             let tableHeader: Element | null = null;
-                            
+
                             if (actualPortfolioComponent) {
                                 // Try to find the table header within the component hierarchy
-                                const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine') || 
+                                const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine') ||
                                                       actualPortfolioComponent.querySelector('[class*="ag-theme"]');
                                 if (gridContainer) {
                                     tableHeader = gridContainer.querySelector('.ag-header');
@@ -1216,12 +1216,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                   actualPortfolioComponent.querySelector('.ag-header');
                                 }
                             }
-                            
+
                             // Fallback to global query if still not found
                             if (!tableHeader) {
                                 tableHeader = document.querySelector('.ag-header');
                             }
-                            
+
                             const tableHeaderRect = tableHeader?.getBoundingClientRect();
 
                             const verticalScrollbarWidth = 16;
@@ -1423,10 +1423,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             // Find the table header to align horizontal scrollbar with its bottom border
                             // Scope to THIS specific component instance
                             let tableHeader: Element | null = null;
-                            
+
                             if (actualPortfolioComponent) {
                                 // Try to find the table header within the component hierarchy
-                                const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine') || 
+                                const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine') ||
                                                       actualPortfolioComponent.querySelector('[class*="ag-theme"]');
                                 if (gridContainer) {
                                     tableHeader = gridContainer.querySelector('.ag-header');
@@ -1436,12 +1436,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                   actualPortfolioComponent.querySelector('.ag-header');
                                 }
                             }
-                            
+
                             // Fallback to global query if still not found
                             if (!tableHeader) {
                                 tableHeader = document.querySelector('.ag-header');
                             }
-                            
+
                             const tableHeaderRect = tableHeader?.getBoundingClientRect();
 
                             const scrollbarWidth = componentRect

@@ -11,14 +11,16 @@ const path = require("path");
 console.log("🔨 Running pre-commit build verification...");
 
 try {
-    // Change to Main_Frontend directory
-    const frontendDir = path.join(__dirname, "..");
-    process.chdir(frontendDir);
+    // Use absolute path to Main_Frontend directory
+    const frontendDir = path.resolve(__dirname, "..");
+    const absolutePath = path.resolve(frontendDir);
 
     console.log("📦 Compiling with Vite...");
+    console.log(`📁 Working directory: ${absolutePath}`);
 
-    // Run the fast build (without TypeScript check for speed)
+    // Run the fast build (without TypeScript check for speed) from absolute path
     execSync("npm run build:fast", {
+        cwd: absolutePath,
         stdio: "inherit",
         timeout: 300000, // 5 minute timeout
     });
