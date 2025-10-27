@@ -1263,20 +1263,21 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             }
                             const containerRect = containerElement?.getBoundingClientRect();
 
-                            // Use cloud DB config as source of truth for component dimensions
-                            // containerRect.width = visible container width (including scrollbar space)
-                            // Position scrollbar exactly at the container's visible right edge
+                            // Use cloud DB config (gridWidth/gridHeight) as PRIMARY source of truth
+                            // Calculate position: tableBodyRect.left + (container's visible width including scrollbar)
+                            // The container width already accounts for scrollbar space (typically 13-14px wider than body width)
                             const verticalScrollbarLeft = containerRect && tableBodyRect
-                                ? containerRect.right  // Use container's right edge as source of truth from cloud DB config
+                                ? tableBodyRect.left + containerRect.width  // Use cloud DB's visible container width as source of truth
                                 : (tableBodyElement && tableBodyRect
                                       ? tableBodyRect.left + tableBodyElement.clientWidth
                                       : 0);
 
-                            // Debug per-instance positioning
+                            // Debug per-instance positioning showing cloud DB config as source of truth
                             console.log(`[VERTICAL SCROLLBAR] componentId="${componentId || "default"}"`, {
-                                componentConfig: {
+                                cloudDBConfig: {
                                     gridWidth,
                                     gridHeight,
+                                    isSourceOfTruth: true,
                                 },
                                 tableBodyRect: {
                                     left: tableBodyRect?.left,
@@ -1289,13 +1290,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 },
                                 containerRect: {
                                     left: containerRect?.left,
-                                    right: containerRect?.right,
                                     width: containerRect?.width,
+                                    right: containerRect?.right,
                                 },
                                 calculation: {
-                                    usingConfigAsSourceOfTruth: true,
-                                    containerRightEdge: containerRect?.right,
-                                    leftPlusContainerWidth: tableBodyRect && containerRect ? tableBodyRect.left + containerRect.width : null,
+                                    method: "left + containerWidth (cloud DB visible viewport)",
+                                    left: tableBodyRect?.left,
+                                    containerWidth: containerRect?.width,
+                                    calculatedPosition: tableBodyRect && containerRect ? tableBodyRect.left + containerRect.width : null,
+                                    containerRight: containerRect?.right,
                                 },
                                 finalPosition: verticalScrollbarLeft,
                             });
