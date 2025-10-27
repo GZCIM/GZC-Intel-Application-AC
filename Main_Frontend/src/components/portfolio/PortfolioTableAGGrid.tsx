@@ -1176,13 +1176,52 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             // Calculate proper dimensions for vertical scrollbar based on table body, not component
                             const verticalComponentRect =
                                 actualPortfolioComponent?.getBoundingClientRect();
-
-                            // Find the table body to get exact table boundaries
-                            const tableBody = document.querySelector('.ag-body-viewport');
+                            
+                            // Find the table body within THIS specific component instance
+                            // We need to find the table body within the actual portfolio component's scope
+                            let tableBody: Element | null = null;
+                            
+                            if (actualPortfolioComponent) {
+                                // Try to find the table body within the component hierarchy
+                                const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine') || 
+                                                      actualPortfolioComponent.querySelector('[class*="ag-theme"]');
+                                if (gridContainer) {
+                                    tableBody = gridContainer.querySelector('.ag-body-viewport');
+                                } else {
+                                    // Fallback: find the nearest ag-body-viewport starting from the component
+                                    tableBody = actualPortfolioComponent.closest('.portfolio-table-wrapper')?.querySelector('.ag-body-viewport') ||
+                                                actualPortfolioComponent.querySelector('.ag-body-viewport');
+                                }
+                            }
+                            
+                            // Fallback to global query if still not found
+                            if (!tableBody) {
+                                tableBody = document.querySelector('.ag-body-viewport');
+                            }
+                            
                             const tableBodyRect = tableBody?.getBoundingClientRect();
-
-                            // Find the table header to position scrollbar below it
-                            const tableHeader = document.querySelector('.ag-header');
+                            
+                            // Find the table header within THIS specific component instance
+                            let tableHeader: Element | null = null;
+                            
+                            if (actualPortfolioComponent) {
+                                // Try to find the table header within the component hierarchy
+                                const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine') || 
+                                                      actualPortfolioComponent.querySelector('[class*="ag-theme"]');
+                                if (gridContainer) {
+                                    tableHeader = gridContainer.querySelector('.ag-header');
+                                } else {
+                                    // Fallback: find the nearest ag-header starting from the component
+                                    tableHeader = actualPortfolioComponent.closest('.portfolio-table-wrapper')?.querySelector('.ag-header') ||
+                                                  actualPortfolioComponent.querySelector('.ag-header');
+                                }
+                            }
+                            
+                            // Fallback to global query if still not found
+                            if (!tableHeader) {
+                                tableHeader = document.querySelector('.ag-header');
+                            }
+                            
                             const tableHeaderRect = tableHeader?.getBoundingClientRect();
 
                             const verticalScrollbarWidth = 16;
@@ -1382,10 +1421,28 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 actualPortfolioComponent?.getBoundingClientRect();
 
                             // Find the table header to align horizontal scrollbar with its bottom border
-                            const tableHeader =
-                                document.querySelector(".ag-header");
-                            const tableHeaderRect =
-                                tableHeader?.getBoundingClientRect();
+                            // Scope to THIS specific component instance
+                            let tableHeader: Element | null = null;
+                            
+                            if (actualPortfolioComponent) {
+                                // Try to find the table header within the component hierarchy
+                                const gridContainer = actualPortfolioComponent.querySelector('.ag-theme-alpine') || 
+                                                      actualPortfolioComponent.querySelector('[class*="ag-theme"]');
+                                if (gridContainer) {
+                                    tableHeader = gridContainer.querySelector('.ag-header');
+                                } else {
+                                    // Fallback: find the nearest ag-header starting from the component
+                                    tableHeader = actualPortfolioComponent.closest('.portfolio-table-wrapper')?.querySelector('.ag-header') ||
+                                                  actualPortfolioComponent.querySelector('.ag-header');
+                                }
+                            }
+                            
+                            // Fallback to global query if still not found
+                            if (!tableHeader) {
+                                tableHeader = document.querySelector('.ag-header');
+                            }
+                            
+                            const tableHeaderRect = tableHeader?.getBoundingClientRect();
 
                             const scrollbarWidth = componentRect
                                 ? componentRect.width
