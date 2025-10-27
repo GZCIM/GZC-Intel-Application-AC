@@ -348,27 +348,43 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             clientWidth,
         } = tableBodyRef.current;
 
-        console.log("[Scrollbar Debug] Update state:", {
-            scrollWidth,
-            clientWidth,
-            scrollHeight,
-            clientHeight,
-            needsHorizontalScroll: scrollWidth > clientWidth,
-            needsVerticalScroll: scrollHeight > clientHeight,
-            elementRect: tableBodyRef.current.getBoundingClientRect(),
-        });
-
-        // If dimensions are 0, try to get them from the grid container
+        // CRITICAL: For accurate horizontal scroll detection, read scrollWidth from the content container
+        // because the viewport has overflow: hidden which can affect scrollWidth calculation
         let actualScrollWidth = scrollWidth;
         let actualClientWidth = clientWidth;
         let actualScrollHeight = scrollHeight;
         let actualClientHeight = clientHeight;
 
+        // Try to get the actual content container width for horizontal scrolling
+        if (tableBodyRef.current) {
+            const contentContainer = tableBodyRef.current.querySelector('.ag-center-cols-container') as HTMLElement;
+            if (contentContainer) {
+                const contentRect = contentContainer.getBoundingClientRect();
+                actualScrollWidth = contentRect.width; // Use the actual content width
+                console.log("[Scrollbar Debug] Content container scrollWidth:", {
+                    viewportScrollWidth: scrollWidth,
+                    viewportClientWidth: clientWidth,
+                    contentContainerWidth: contentRect.width,
+                    needsHorizontalScroll: contentRect.width > clientWidth
+                });
+            }
+        }
+
+        console.log("[Scrollbar Debug] Update state:", {
+            scrollWidth: actualScrollWidth,
+            clientWidth: actualClientWidth,
+            scrollHeight: actualScrollHeight,
+            clientHeight: actualClientHeight,
+            needsHorizontalScroll: actualScrollWidth > actualClientWidth,
+            needsVerticalScroll: actualScrollHeight > actualClientHeight,
+            elementRect: tableBodyRef.current.getBoundingClientRect(),
+        });
+
         if (
-            scrollWidth === 0 ||
-            clientWidth === 0 ||
-            scrollHeight === 0 ||
-            clientHeight === 0
+            actualScrollWidth === 0 ||
+            actualClientWidth === 0 ||
+            actualScrollHeight === 0 ||
+            actualClientHeight === 0
         ) {
             console.log(
                 "[Scrollbar Debug] Zero dimensions detected, trying alternative methods"
@@ -386,14 +402,20 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     gridContainer.querySelector(".ag-body-viewport");
                 if (gridBody) {
                     const bodyRect = gridBody.getBoundingClientRect();
-                    actualScrollWidth = Math.max(
-                        actualScrollWidth,
-                        bodyRect.width
-                    );
-                    actualScrollHeight = Math.max(
-                        actualScrollHeight,
-                        bodyRect.height
-                    );
+                    actualClientWidth = bodyRect.width;
+                    actualClientHeight = bodyRect.height;
+
+                    // Get actual content width from the content container
+                    const contentContainer = gridBody.querySelector('.ag-center-cols-container') as HTMLElement;
+                    if (contentContainer) {
+                        const contentRect = contentContainer.getBoundingClientRect();
+                        actualScrollWidth = contentRect.width;
+                    }
+
+                    // For vertical scroll, use scrollHeight from the element
+                    if (gridBody instanceof HTMLElement) {
+                        actualScrollHeight = gridBody.scrollHeight;
+                    }
                 }
 
                 console.log("[Scrollbar Debug] Alternative dimensions:", {
@@ -1225,23 +1247,35 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
                             const tableHeaderRect = tableHeader?.getBoundingClientRect();
 
-                            // Debug per-instance positioning
-                            console.log(`[VERTICAL SCROLLBAR] componentId="${componentId || "default"}", tableBodyRect=`, {
-                                left: tableBodyRect?.left,
-                                right: tableBodyRect?.right,
-                                top: tableBodyRect?.top,
-                                bottom: tableBodyRect?.bottom,
-                                width: tableBodyRect?.width,
-                                height: tableBodyRect?.height
-                            });
-
                             const verticalScrollbarWidth = 16;
-                            // Position scrollbar EXACTLY at the right edge to completely hide native scrollbar
-                            const verticalScrollbarLeft = tableBodyRect
-                                ? tableBodyRect.right
-                                : (verticalComponentRect
-                                      ? verticalComponentRect.right
-                                      : 0);
+                            // Find the actual container element (portfolio-table-wrapper) for accurate positioning
+                            let containerElement: Element | null = null;
+                            if (tableBodyElement) {
+                                containerElement = tableBodyElement.closest('.portfolio-table-wrapper');
+                            }
+                            const containerRect = containerElement?.getBoundingClientRect();
+
+                            // Position scrollbar at the visible container's right edge, not the table body's full scrollable width
+                            const verticalScrollbarLeft = containerRect
+                                ? containerRect.right
+                                : (tableBodyRect?.right
+                                      ? tableBodyRect.right
+                                      : (verticalComponentRect?.right || 0));
+
+                            // Debug per-instance positioning
+                            console.log(`[VERTICAL SCROLLBAR] componentId="${componentId || "default"}"`, {
+                                tableBodyRect: {
+                                    left: tableBodyRect?.left,
+                                    right: tableBodyRect?.right,
+                                    width: tableBodyRect?.width,
+                                },
+                                containerRect: {
+                                    left: containerRect?.left,
+                                    right: containerRect?.right,
+                                    width: containerRect?.width,
+                                },
+                                verticalScrollbarLeft
+                            });
 
                             // Position scrollbar to start below the table header, not at component top
                             const verticalScrollbarTop = tableHeaderRect
@@ -1361,10 +1395,18 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         })()}
 
                     {/* CRITICAL: Functional horizontal scrollbar positioned at portfolio component's bottom edge */}
-                    {componentBorderInfo &&
-                        scrollbarState.scrollWidth >
-                            scrollbarState.clientWidth &&
-                        (() => {
+                    {(() => {
+                        console.log("[HORIZONTAL SCROLLBAR CHECK] Evaluating visibility:", {
+                            hasComponentBorderInfo: !!componentBorderInfo,
+                            scrollWidth: scrollbarState.scrollWidth,
+                            clientWidth: scrollbarState.clientWidth,
+                            needsHorizontalScroll: scrollbarState.scrollWidth > scrollbarState.clientWidth,
+                            componentId: componentId || "default"
+                        });
+                        return componentBorderInfo &&
+                            scrollbarState.scrollWidth >
+                                scrollbarState.clientWidth;
+                    })() && (() => {
                             // Find the actual portfolio component container (same logic as vertical)
                             const portfolioComponent =
                                 document.querySelector(

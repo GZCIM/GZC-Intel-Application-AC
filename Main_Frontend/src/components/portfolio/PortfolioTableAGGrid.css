@@ -219,6 +219,21 @@
     scrollbar-width: none !important;
 }
 
+/* Hide scrollbars on parent portfolio card containers without affecting overflow behavior */
+.portfolio-card-body::-webkit-scrollbar,
+.portfolio-card::-webkit-scrollbar,
+[class*="portfolio-card"]::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.portfolio-card-body,
+.portfolio-card,
+[class*="portfolio-card"] {
+    scrollbar-width: none !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .ag-theme-alpine {
