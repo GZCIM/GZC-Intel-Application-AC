@@ -293,8 +293,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             const fxOptionPositions: PortfolioPosition[] =
                 fxOptionsResponse.data.data.map(
                     (pos: Record<string, unknown>) => ({
-                        ...pos,
-                        trade_type: "FX Option" as const,
+                    ...pos,
+                    trade_type: "FX Option" as const,
                     })
                 );
 
@@ -560,28 +560,28 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     // Horizontal scrollbar handlers
     const handleHorizontalScrollbarMouseDown = useCallback(
         (e: React.MouseEvent) => {
-            e.preventDefault();
+        e.preventDefault();
             e.stopPropagation(); // Prevent event from bubbling up and triggering other handlers
             const rect =
                 horizontalScrollbarRef.current?.getBoundingClientRect();
-            if (!rect || !tableBodyRef.current) return;
+        if (!rect || !tableBodyRef.current) return;
 
-            const x = e.clientX - rect.left;
-            const { clientWidth, scrollWidth } = tableBodyRef.current;
+        const x = e.clientX - rect.left;
+        const { clientWidth, scrollWidth } = tableBodyRef.current;
             const scrollLeft =
                 scrollWidth > clientWidth
                     ? (x / clientWidth) * (scrollWidth - clientWidth)
                     : 0;
 
-            tableBodyRef.current.scrollLeft = scrollLeft;
+        tableBodyRef.current.scrollLeft = scrollLeft;
             // Update scrollbar state after setting scroll position
             updateScrollbarState();
-            setScrollbarState((prev) => ({
-                ...prev,
-                isDraggingHorizontal: true,
-                dragStartX: e.clientX,
-                dragStartScrollLeft: scrollLeft,
-            }));
+        setScrollbarState((prev) => ({
+            ...prev,
+            isDraggingHorizontal: true,
+            dragStartX: e.clientX,
+            dragStartScrollLeft: scrollLeft,
+        }));
         },
         [updateScrollbarState]
     );
@@ -1047,56 +1047,56 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 className="portfolio-table-wrapper"
             >
                 {/* AG Grid with hidden scrollbar */}
-                <div
-                    className="ag-theme-alpine"
-                    style={{
-                        flex: 1,
-                        width: "100%",
-                        height: "100%",
-                        marginTop: isEditing ? "8vh" : 0,
-                        minHeight: 0,
-                        display: "flex",
-                        flexDirection: "column",
+            <div
+                className="ag-theme-alpine"
+                style={{
+                    flex: 1,
+                    width: "100%",
+                    height: "100%",
+                    marginTop: isEditing ? "8vh" : 0,
+                    minHeight: 0,
+                    display: "flex",
+                    flexDirection: "column",
                         overflow: "hidden", // CRITICAL: Hide native scrollbars
+                }}
+                ref={(el) => {
+                    if (!el) return;
+                    const body = el.querySelector(
+                        ".ag-body-viewport"
+                    ) as HTMLElement | null;
+                    if (body) {
+                        console.log("[AG Grid] container sizes", {
+                            containerW: el.clientWidth,
+                            containerH: el.clientHeight,
+                            bodyW: body.clientWidth,
+                            bodyH: body.clientHeight,
+                        });
+                    }
+                }}
+            >
+                <AgGridReact
+                    rowData={positions}
+                    columnDefs={columnDefs}
+                    onGridReady={onGridReady}
+                    animateRows={true}
+                    rowSelection="multiple"
+                    defaultColDef={{
+                        resizable: true,
+                        sortable: true,
+                        filter: true,
+                        minWidth: 70,
+                        maxWidth: 180,
                     }}
-                    ref={(el) => {
-                        if (!el) return;
-                        const body = el.querySelector(
-                            ".ag-body-viewport"
-                        ) as HTMLElement | null;
-                        if (body) {
-                            console.log("[AG Grid] container sizes", {
-                                containerW: el.clientWidth,
-                                containerH: el.clientHeight,
-                                bodyW: body.clientWidth,
-                                bodyH: body.clientHeight,
-                            });
-                        }
-                    }}
-                >
-                    <AgGridReact
-                        rowData={positions}
-                        columnDefs={columnDefs}
-                        onGridReady={onGridReady}
-                        animateRows={true}
-                        rowSelection="multiple"
-                        defaultColDef={{
-                            resizable: true,
-                            sortable: true,
-                            filter: true,
-                            minWidth: 70,
-                            maxWidth: 180,
-                        }}
-                        gridOptions={{
-                            rowHeight: 30,
-                            headerHeight: 40,
-                            suppressScrollOnNewData: false,
-                            suppressRowTransform: true,
-                            domLayout: "normal",
-                            suppressAutoSize: false,
-                            suppressColumnVirtualisation: false,
-                            suppressRowVirtualisation: false,
-                            getRowHeight: () => 30,
+                    gridOptions={{
+                        rowHeight: 30,
+                        headerHeight: 40,
+                        suppressScrollOnNewData: false,
+                        suppressRowTransform: true,
+                        domLayout: "normal",
+                        suppressAutoSize: false,
+                        suppressColumnVirtualisation: false,
+                        suppressRowVirtualisation: false,
+                        getRowHeight: () => 30,
                             // CRITICAL: Disable ALL AG Grid scrollbars
                             suppressHorizontalScroll: true,
                             alwaysShowHorizontalScroll: false,
@@ -1263,42 +1263,47 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             }
                             const containerRect = containerElement?.getBoundingClientRect();
 
-                            // Use cloud DB config (gridWidth/gridHeight) as PRIMARY source of truth
-                            // Calculate position: tableBodyRect.left + (container's visible width including scrollbar)
-                            // The container width already accounts for scrollbar space (typically 13-14px wider than body width)
-                            const verticalScrollbarLeft = containerRect && tableBodyRect
-                                ? tableBodyRect.left + containerRect.width  // Use cloud DB's visible container width as source of truth
-                                : (tableBodyElement && tableBodyRect
-                                      ? tableBodyRect.left + tableBodyElement.clientWidth
-                                      : 0);
+                            // ✓ USING CLOUD DB VIEW SIZE FROM CONFIG
+                            // Cloud DB config defines component view size: gridWidth=5 (Main) or 12 (New Tab)
+                            // This translates to: bodyW (1720px Main, 2282px New Tab) from AG Grid
+                            // Scrollbar should be positioned at: tableLeft + bodyW (the configured view width)
 
-                            // Debug per-instance positioning showing cloud DB config as source of truth
+                            // Get bodyW from AG Grid (this is the cloud DB configured view width in pixels)
+                            const bodyW = tableBodyElement?.clientWidth || tableBodyRect?.width || 0;
+
+                            // Position scrollbar based on cloud DB configured view size
+                            const verticalScrollbarLeft = tableBodyRect && bodyW
+                                ? tableBodyRect.left + bodyW  // tableLeft + configured view width (from cloud DB)
+                                : (tableBodyRect?.right || 0);
+
+                            // Debug: Cloud DB configured view size
                             console.log(`[VERTICAL SCROLLBAR] componentId="${componentId || "default"}"`, {
                                 cloudDBConfig: {
                                     gridWidth,
                                     gridHeight,
-                                    isSourceOfTruth: true,
+                                    viewSize: `${gridWidth} grid units × ${gridHeight} grid units`,
+                                },
+                                renderedViewSize: {
+                                    bodyW,
+                                    bodyH: tableBodyRect?.height,
+                                    note: "Cloud DB configured view width in pixels (from AG Grid)",
                                 },
                                 tableBodyRect: {
                                     left: tableBodyRect?.left,
                                     right: tableBodyRect?.right,
                                     width: tableBodyRect?.width,
                                 },
-                                viewport: {
-                                    clientWidth: tableBodyElement?.clientWidth,
-                                    scrollWidth: tableBodyElement?.scrollWidth,
-                                },
                                 containerRect: {
                                     left: containerRect?.left,
-                                    width: containerRect?.width,
                                     right: containerRect?.right,
+                                    width: containerRect?.width,
+                                    note: "Includes scrollbar space",
                                 },
                                 calculation: {
-                                    method: "left + containerWidth (cloud DB visible viewport)",
-                                    left: tableBodyRect?.left,
-                                    containerWidth: containerRect?.width,
-                                    calculatedPosition: tableBodyRect && containerRect ? tableBodyRect.left + containerRect.width : null,
-                                    containerRight: containerRect?.right,
+                                    method: "tableLeft + bodyW (cloud DB configured view width)",
+                                    tableLeft: tableBodyRect?.left,
+                                    bodyW,
+                                    calculatedPosition: tableBodyRect?.left && bodyW ? tableBodyRect.left + bodyW : null,
                                 },
                                 finalPosition: verticalScrollbarLeft,
                             });
