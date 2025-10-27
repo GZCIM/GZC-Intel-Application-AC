@@ -100,41 +100,16 @@
     display: none !important; /* CRITICAL: Hide horizontal scrollbar completely */
 }
 
-/* Ensure scrollbars are always visible when content overflows */
+/* Hide ALL native scrollbars completely */
 .ag-theme-alpine .ag-body-viewport::-webkit-scrollbar {
-    width: 16px !important;
-    height: 16px !important;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
-.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-track {
-    background: var(--gzc-surface, #1e1e1e) !important;
-    border-radius: 8px !important;
-}
-
-.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb {
-    background: var(--gzc-success, #6aa84f) !important;
-    border-radius: 8px !important;
-    border: 2px solid var(--gzc-surface, #1e1e1e) !important;
-    min-height: 20px !important; /* Ensure thumb is always visible */
-    min-width: 20px !important; /* Ensure thumb is always visible */
-}
-
-.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-thumb:hover {
-    background: color-mix(
-        in hsl,
-        var(--gzc-success, #6aa84f) 80%,
-        white
-    ) !important;
-}
-
-.ag-theme-alpine .ag-body-viewport::-webkit-scrollbar-corner {
-    background: var(--gzc-surface, #1e1e1e) !important;
-}
-
-/* Force scrollbar visibility for Firefox */
+/* Force scrollbar invisibility for Firefox */
 .ag-theme-alpine .ag-body-viewport {
-    scrollbar-width: auto !important;
-    scrollbar-color: var(--gzc-success, #6aa84f) var(--gzc-surface, #1e1e1e) !important;
+    scrollbar-width: none !important;
 }
 
 .ag-theme-alpine .ag-body-horizontal-scroll-viewport {
@@ -203,6 +178,21 @@
     margin-bottom: 0 !important;
     height: 100% !important; /* Fill full height */
     overflow: hidden !important; /* Prevent overflow */
+}
+
+/* Portfolio table wrapper - hide overflow scrollbars */
+.portfolio-table-wrapper {
+    overflow: hidden !important;
+}
+
+.portfolio-table-wrapper::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.portfolio-table-wrapper {
+    scrollbar-width: none !important;
 }
 
 /* Responsive adjustments */
