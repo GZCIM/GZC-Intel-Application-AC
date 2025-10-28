@@ -1263,21 +1263,23 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             }
                             const containerRect = containerElement?.getBoundingClientRect();
 
-                            // Position scrollbar at portfolio component's visible right edge (cloud DB config viewport)
-                            // Use component viewport, not table edge (table may extend beyond viewport)
-                            const verticalScrollbarLeft = verticalComponentRect
-                                ? verticalComponentRect.right  // Portfolio component's visible right edge
-                                : (tableBodyRect ? tableBodyRect.right : 0);
+                            // Use the AG Grid table container as the source of truth for visible viewport
+                            const containerRectForVertical = tableContainer?.getBoundingClientRect();
 
-                            // Position scrollbar to start below the table header, not at component top
-                            const verticalScrollbarTop = tableHeaderRect
+                            // Position scrollbar at the container's visible right edge
+                            const verticalScrollbarLeft = containerRectForVertical
+                                ? containerRectForVertical.right
+                                : (verticalComponentRect ? verticalComponentRect.right : (tableBodyRect ? tableBodyRect.right : 0));
+
+                            // Start below the table header's bottom edge (align to header border)
+                            const verticalScrollbarTop = (tableHeaderRect && containerRectForVertical)
                                 ? tableHeaderRect.bottom
-                                : (verticalComponentRect ? verticalComponentRect.top : 0);
+                                : (containerRectForVertical ? containerRectForVertical.top : (verticalComponentRect ? verticalComponentRect.top : 0));
 
-                            // Calculate scrollbar height based on table body height, not entire component
-                            const verticalScrollbarHeight = tableBodyRect
-                                ? tableBodyRect.height
-                                : (verticalComponentRect ? verticalComponentRect.height : 0);
+                            // Height from header bottom to container bottom to hit the table's low border exactly
+                            const verticalScrollbarHeight = (containerRectForVertical && tableHeaderRect)
+                                ? Math.max(0, containerRectForVertical.bottom - tableHeaderRect.bottom)
+                                : (tableBodyRect ? tableBodyRect.height : (verticalComponentRect ? verticalComponentRect.height : 0));
 
                             // Debug parent hierarchy and CSS for vertical scrollbar
                             const getParentHierarchyForVertical = (element: Element | null) => {
