@@ -10,7 +10,6 @@ import {
 import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
 import PortfolioTableAGGrid from "./PortfolioTableAGGrid";
-import PortfolioHeader from "./PortfolioHeader";
 import "../../styles/portfolio.css";
 
 interface PortfolioProps {
@@ -1604,24 +1603,7 @@ export const Portfolio: React.FC<
                                 gap: 8,
                             }}
                         >
-                            {/* Unified sticky header (occupies visible width; table scrolls underneath) */}
-                            <PortfolioHeader
-                                title={title}
-                                dateText={formatDateBadge(effectiveDate)}
-                                portfolioMode={portfolioMode}
-                                onChangePortfolioMode={(m) => setPortfolioMode(m)}
-                                funds={funds}
-                                selectedFundId={selectedFundId}
-                                onChangeFund={(fid) => setSelectedFundId(fid)}
-                                onSyncDb={() => {
-                                    // hook for sync db action
-                                }}
-                                onLoadFxTrades={loadFxTrades}
-                                onLoadFxOptions={loadFxOptions}
-                                dataMode={dataMode}
-                                onChangeDataMode={(m) => setDataMode(m)}
-                            />
-                            {/* Dedicated horizontal scroll viewport so header never moves */}
+                            {/* Dedicated horizontal scroll viewport */}
                             <div
                                 className="portfolio-scroll-viewport"
                                 style={{
