@@ -22,6 +22,15 @@ import axios from "axios";
 // Register AG Grid modules
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+// Unified, toggleable debug logger for this component
+const SCROLLBAR_DEBUG = true; // set to false to silence new debug output
+const dlog = (label: string, data?: unknown) => {
+    if (SCROLLBAR_DEBUG) {
+        if (data !== undefined) console.info(label, data);
+        else console.info(label);
+    }
+};
+
 interface PortfolioPosition {
     trade_id: number;
     trade_type: "FX Forward" | "FX Option";
@@ -369,7 +378,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             if (contentContainer) {
                 const contentRect = contentContainer.getBoundingClientRect();
                 actualScrollWidth = contentRect.width; // Use the actual content width
-                console.log("[Scrollbar Debug] Content container scrollWidth:", {
+                dlog("[Scrollbar] content container width", {
                     viewportScrollWidth: scrollWidth,
                     viewportClientWidth: clientWidth,
                     contentContainerWidth: contentRect.width,
@@ -378,7 +387,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             }
         }
 
-        console.log("[Scrollbar Debug] Update state:", {
+        dlog("[Scrollbar] state", {
             scrollWidth: actualScrollWidth,
             clientWidth: actualClientWidth,
             scrollHeight: actualScrollHeight,
@@ -866,6 +875,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         // Listen for scroll events to update scrollbar
                         el.addEventListener("scroll", updateScrollbarState);
 
+
                         // Listen for resize events to update scrollbar
                         const resizeObserver = new ResizeObserver(() => {
                             setTimeout(() => {
@@ -894,10 +904,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 _scrollbarCleanup?: () => void;
                             }
                         )._scrollbarCleanup = () => {
-                            el.removeEventListener(
-                                "scroll",
-                                updateScrollbarState
-                            );
+                            el.removeEventListener("scroll", updateScrollbarState);
                             resizeObserver.disconnect();
                         };
                     }
@@ -1266,9 +1273,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             // Use the AG Grid table container as the source of truth for visible viewport
                             const containerRectForVertical = tableContainer?.getBoundingClientRect();
 
-                            // Position scrollbar at the container's visible right edge
+                            // Position scrollbar inside the container's visible right edge
                             const verticalScrollbarLeft = containerRectForVertical
-                                ? containerRectForVertical.right
+                                ? containerRectForVertical.right - verticalScrollbarWidth
                                 : (verticalComponentRect ? verticalComponentRect.right : (tableBodyRect ? tableBodyRect.right : 0));
 
                             // Start below the table header's bottom edge (align to header border)
@@ -1312,7 +1319,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             };
 
                             // Debug: Portfolio component visible viewport with parent hierarchy
-                            console.log(`[VERTICAL SCROLLBAR] componentId="${componentId || "default"}"`, {
+                            dlog(`[VerticalScrollbar] componentId="${componentId || "default"}"`, {
                                 parentHierarchy: {
                                     tableBodyElement: tableBodyElement ? getParentHierarchyForVertical(tableBodyElement) : null,
                                     portfolioComponent: actualPortfolioComponent ? getParentHierarchyForVertical(actualPortfolioComponent) : null,
@@ -1360,8 +1367,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 },
                             });
 
-                            console.log(
-                                "🔍 [DEBUG] Vertical Scrollbar Analysis:",
+                            dlog(
+                                "[VerticalScrollbar] analysis",
                                 {
                                     componentId: componentId || "default",
                                     actualPortfolioComponent: {
@@ -1661,7 +1668,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             };
 
                             // Debug per-instance positioning with parent hierarchy
-                            console.log(`[HORIZONTAL SCROLLBAR] componentId="${componentId || "default"}"`, {
+                            dlog(`[HorizontalScrollbar] componentId="${componentId || "default"}"`, {
                                 parentHierarchy: {
                                     tableBodyElement: tableBodyElement ? getParentHierarchy(tableBodyElement) : null,
                                     portfolioComponent: actualPortfolioComponent ? getParentHierarchy(actualPortfolioComponent) : null,
@@ -1726,8 +1733,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     "[data-component-id]"
                                 );
 
-                            console.log(
-                                "🔍 [DEBUG] Horizontal Scrollbar Analysis:",
+                            dlog(
+                                "[HorizontalScrollbar] analysis",
                                 {
                                     componentId: componentId || "default",
                                     actualPortfolioComponent: {
