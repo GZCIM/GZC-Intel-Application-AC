@@ -122,6 +122,11 @@
     display: none !important;
 }
 
+/* Any AG Grid vertical scrollbar remnants (defensive) */
+.ag-theme-alpine [class*="vertical-scroll"] {
+    display: none !important;
+}
+
 /* Custom scrollbar styling - Using GZC Color Schema - REMOVED DUPLICATE */
 
 /* Column resize handle - Using GZC Color Schema */

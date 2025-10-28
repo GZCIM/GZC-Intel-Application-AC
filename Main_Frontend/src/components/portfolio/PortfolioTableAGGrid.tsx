@@ -889,7 +889,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 const viewportH = gridBodyDom?.clientHeight;
 
                 console.log("[AG Grid] grid ready", {
-                    displayedCols: displayedCols.length,
+                    displayedCols: Array.isArray(displayedCols) ? displayedCols.length : 0,
                     totalWidth,
                     viewportW,
                     viewportH,

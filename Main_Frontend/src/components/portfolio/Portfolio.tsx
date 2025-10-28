@@ -348,6 +348,52 @@ export const Portfolio: React.FC<
         fetchPortfolios();
     }, [apiEndpoint]);
 
+    // Debug: log full parent hierarchy from the portfolio table container up to <body>
+    useEffect(() => {
+        try {
+            const containerId = `portfolio-container-${id || "default"}`;
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            const chain: any[] = [];
+            let current: HTMLElement | null = el;
+            let hop = 0;
+            while (current && hop < 15) {
+                const cs = window.getComputedStyle(current);
+                const rect = current.getBoundingClientRect();
+                chain.push({
+                    tag: current.tagName,
+                    id: current.id,
+                    className: current.className,
+                    rect: {
+                        left: rect.left,
+                        top: rect.top,
+                        right: rect.right,
+                        bottom: rect.bottom,
+                        width: rect.width,
+                        height: rect.height,
+                    },
+                    css: {
+                        position: cs.position,
+                        overflow: cs.overflow,
+                        overflowX: cs.overflowX,
+                        overflowY: cs.overflowY,
+                        transform: cs.transform,
+                        padding: cs.padding,
+                        margin: cs.margin,
+                        border: `${cs.borderTopWidth} ${cs.borderRightWidth} ${cs.borderBottomWidth} ${cs.borderLeftWidth}`,
+                    },
+                });
+                current = current.parentElement as HTMLElement | null;
+                hop++;
+            }
+            console.info("[Portfolio DEBUG] Parent hierarchy from table container → body", {
+                componentId: id || (window as any)?.componentId || "default",
+                containerId,
+                chain,
+            });
+        } catch {}
+    }, [id]);
+
     const selectedPortfolio = useMemo(
         () => portfolios.find((p) => p.id === selectedPortfolioId) || null,
         [portfolios, selectedPortfolioId]
