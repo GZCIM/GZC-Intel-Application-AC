@@ -15,6 +15,8 @@ const PortfolioHeader: React.FC<PortfolioHeaderProps> = ({ title, dateText }) =>
             style={{
                 position: "sticky",
                 top: 0,
+                left: 0,
+                width: "100%",
                 zIndex: 10,
                 display: "flex",
                 alignItems: "center",
