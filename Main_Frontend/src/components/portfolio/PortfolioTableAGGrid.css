@@ -153,6 +153,21 @@
     letter-spacing: 0.5px;
 }
 
+/* Keep the header always inside the visible view area */
+.ag-theme-alpine .ag-header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 3; /* above rows, below our custom scrollbars */
+}
+
+/* Ensure header container doesn't overflow outside grid viewport */
+.ag-theme-alpine .ag-header-viewport,
+.ag-theme-alpine .ag-header-container {
+    overflow: hidden;
+}
+
 .ag-theme-alpine .ag-header-cell:hover {
     background-color: var(--gzc-surface, #2a2a2a);
 }
