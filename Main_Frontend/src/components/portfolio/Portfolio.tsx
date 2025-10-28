@@ -10,6 +10,7 @@ import {
 import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
 import PortfolioTableAGGrid from "./PortfolioTableAGGrid";
+import PortfolioHeader from "./PortfolioHeader";
 import "../../styles/portfolio.css";
 
 interface PortfolioProps {
@@ -1590,28 +1591,47 @@ export const Portfolio: React.FC<
                                 padding: 8,
                                 height: "100%",
                                 maxHeight: "100%",
-                                // Allow horizontal scroll while letting the grid grow vertically
-                                overflowX: "auto",
-                                overflowY: "visible",
+                                // Keep wrapper itself non-scrolling; dedicate a viewport below
+                                overflow: "visible",
                                 display: "flex",
                                 flexDirection: "column",
                                 minHeight: "200px",
                                 width: "100%",
                                 position: "relative",
+                                gap: 8,
                             }}
                         >
-                            {/* CRITICAL: Create scrollable container with fixed scrollbar */}
+                            {/* Fixed header always visible */}
+                            <PortfolioHeader
+                                title={title}
+                                dateText={formatDateBadge(effectiveDate)}
+                            />
+                            {/* Dedicated horizontal scroll viewport so header never moves */}
                             <div
+                                className="portfolio-scroll-viewport"
                                 style={{
                                     flex: 1,
-                                    height: "100%",
                                     width: "100%",
+                                    height: "100%",
+                                    overflowX: "auto",
+                                    overflowY: "hidden",
                                     position: "relative",
-                                    overflow: "hidden", // CRITICAL: Hide all scrollbars at this level
                                 }}
-                                className="portfolio-table-container"
-                                id={`portfolio-container-${id || "default"}`}
                             >
+                                {/* Grid container grows; no scrollbars inside */}
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        height: "100%",
+                                        width: "max-content",
+                                        minWidth: "100%",
+                                        position: "relative",
+                                        overflow: "hidden",
+                                        display: "inline-block",
+                                    }}
+                                    className="portfolio-table-container"
+                                    id={`portfolio-container-${id || "default"}`}
+                                >
                                 <PortfolioTableAGGrid
                                     selectedDate={effectiveDate}
                                     fundId={Number(selectedFundId) || 0}
@@ -1661,6 +1681,7 @@ export const Portfolio: React.FC<
                                         return borderInfo;
                                     })()}
                                 />
+                                </div>
                             </div>
                         </div>
                     </div>
