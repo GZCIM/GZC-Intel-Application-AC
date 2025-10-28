@@ -1590,12 +1590,14 @@ export const Portfolio: React.FC<
                                 padding: 8,
                                 height: "100%",
                                 maxHeight: "100%",
-                                overflow: "hidden", // CRITICAL: Prevent overflow at this level
+                                // Allow horizontal scroll while letting the grid grow vertically
+                                overflowX: "auto",
+                                overflowY: "visible",
                                 display: "flex",
                                 flexDirection: "column",
-                                minHeight: "200px", // Reduced minimum height for smaller containers
+                                minHeight: "200px",
                                 width: "100%",
-                                position: "relative", // CRITICAL: Enable absolute positioning for scrollbar
+                                position: "relative",
                             }}
                         >
                             {/* CRITICAL: Create scrollable container with fixed scrollbar */}

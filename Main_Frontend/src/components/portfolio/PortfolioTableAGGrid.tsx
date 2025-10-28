@@ -1155,7 +1155,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         headerHeight: 40,
                         suppressScrollOnNewData: false,
                         suppressRowTransform: true,
-                        domLayout: "normal",
+                        // Let grid grow to fit all rows (no vertical scrollbar inside grid)
+                        domLayout: "autoHeight",
                         suppressAutoSize: false,
                         suppressColumnVirtualisation: false,
                         suppressRowVirtualisation: false,
