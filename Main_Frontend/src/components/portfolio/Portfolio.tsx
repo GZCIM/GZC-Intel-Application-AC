@@ -610,7 +610,10 @@ export const Portfolio: React.FC<
                     gap: 8,
                     overflowX: "hidden", // prevent horizontal overflow
                     overflowY: "hidden",
-                    position: "relative",
+                    position: "sticky", // keep header in view
+                    top: 0,
+                    zIndex: 5,
+                    background: currentTheme.surface,
                     maxWidth: "100%", // Ensure header doesn't exceed container width
                     // Reserve space on the right for floating window controls during edit mode
                     paddingRight: isEditMode || toolsEditing ? 140 : undefined,
