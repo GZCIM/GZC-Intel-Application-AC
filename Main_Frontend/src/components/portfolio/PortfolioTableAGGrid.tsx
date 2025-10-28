@@ -1097,10 +1097,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         suppressColumnVirtualisation: false,
                         suppressRowVirtualisation: false,
                         getRowHeight: () => 30,
-                            // CRITICAL: Disable ALL AG Grid scrollbars
-                            suppressHorizontalScroll: true,
-                            alwaysShowHorizontalScroll: false,
-                            alwaysShowVerticalScroll: false,
+                        // Force use of component vertical scrollbar only
+                        suppressHorizontalScroll: true,
+                        alwaysShowHorizontalScroll: false,
+                        alwaysShowVerticalScroll: false,
                         }}
                     />
 
@@ -1469,16 +1469,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
                     {/* CRITICAL: Functional horizontal scrollbar positioned at portfolio component's bottom edge */}
                     {(() => {
-                        console.log("[HORIZONTAL SCROLLBAR CHECK] Evaluating visibility:", {
-                            hasComponentBorderInfo: !!componentBorderInfo,
-                            scrollWidth: scrollbarState.scrollWidth,
-                            clientWidth: scrollbarState.clientWidth,
-                            needsHorizontalScroll: scrollbarState.scrollWidth > scrollbarState.clientWidth,
-                            componentId: componentId || "default"
-                        });
-                        return componentBorderInfo &&
-                            scrollbarState.scrollWidth >
-                                scrollbarState.clientWidth;
+                        console.log("[HORIZONTAL SCROLLBAR CHECK] Disabled by request: removing horizontal bar");
+                        return false; // Force-disable horizontal scrollbar rendering
                     })() && (() => {
                             // Find the actual portfolio component container (same logic as vertical)
                             const portfolioComponent =
