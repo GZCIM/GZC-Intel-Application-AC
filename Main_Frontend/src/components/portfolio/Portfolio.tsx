@@ -653,8 +653,11 @@ export const Portfolio: React.FC<
                     padding: "8px",
                     borderBottom: `1px solid ${currentTheme.border}`,
                     display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
+                    flexDirection: "row", // single unified header row
+                    alignItems: "center",
+                    gap: 12,
+                    flexWrap: "wrap",
+                    width: "100%",
                     overflowX: "hidden", // prevent horizontal overflow
                     overflowY: "hidden",
                     position: "sticky", // keep header in view
@@ -1601,11 +1604,6 @@ export const Portfolio: React.FC<
                                 gap: 8,
                             }}
                         >
-                            {/* Fixed header always visible */}
-                            <PortfolioHeader
-                                title={title}
-                                dateText={formatDateBadge(effectiveDate)}
-                            />
                             {/* Dedicated horizontal scroll viewport so header never moves */}
                             <div
                                 className="portfolio-scroll-viewport"

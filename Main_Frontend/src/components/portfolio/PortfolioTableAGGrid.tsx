@@ -154,6 +154,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const tableBodyRef = useRef<HTMLElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const isSyncingScrollRef = useRef(false);
+    // When true, this component will NOT own scrolling; the parent Portfolio viewport does.
+    const useExternalScrollViewport = true;
 
     // Component-scoped config identifiers
     const resolvedDeviceType = (deviceType ||
@@ -399,27 +401,28 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             elementRect: tableBodyRef.current.getBoundingClientRect(),
         });
 
-        // Ensure the portfolio container has a real scroll range via an invisible ghost element
-        try {
-            const host = containerRef.current;
-            if (host) {
-                const ghostId = `portfolio-scroll-ghost-${componentId || "default"}`;
-                let ghost = host.querySelector(`#${ghostId}`) as HTMLDivElement | null;
-                if (!ghost) {
-                    ghost = document.createElement("div");
-                    ghost.id = ghostId;
-                    ghost.style.position = "absolute";
-                    ghost.style.left = "0";
-                    ghost.style.top = "0";
-                    ghost.style.pointerEvents = "none";
-                    ghost.style.opacity = "0";
-                    host.appendChild(ghost);
+        // External viewport owns native scrollbars; no ghost sizing needed here
+        if (!useExternalScrollViewport) {
+            try {
+                const host = containerRef.current;
+                if (host) {
+                    const ghostId = `portfolio-scroll-ghost-${componentId || "default"}`;
+                    let ghost = host.querySelector(`#${ghostId}`) as HTMLDivElement | null;
+                    if (!ghost) {
+                        ghost = document.createElement("div");
+                        ghost.id = ghostId;
+                        ghost.style.position = "absolute";
+                        ghost.style.left = "0";
+                        ghost.style.top = "0";
+                        ghost.style.pointerEvents = "none";
+                        ghost.style.opacity = "0";
+                        host.appendChild(ghost);
+                    }
+                    ghost.style.width = `${Math.max(actualScrollWidth, host.clientWidth)}px`;
+                    ghost.style.height = `${Math.max(actualScrollHeight, host.clientHeight)}px`;
                 }
-                // Size the ghost to content so native container scrollbars reflect grid content
-                ghost.style.width = `${Math.max(actualScrollWidth, host.clientWidth)}px`;
-                ghost.style.height = `${Math.max(actualScrollHeight, host.clientHeight)}px`;
-            }
-        } catch {}
+            } catch {}
+        }
 
         if (
             actualScrollWidth === 0 ||
@@ -525,6 +528,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
     // Sync native container scroll with AG Grid viewport (mouse wheel, drag on bars)
     useEffect(() => {
+        if (useExternalScrollViewport) {
+            // Parent Portfolio viewport handles scroll; skip syncing here
+            return;
+        }
         const host = containerRef.current;
         const body = tableBodyRef.current as HTMLElement | null;
         if (!host || !body) return;
@@ -1104,7 +1111,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     width: "100%",
                     height: "100%",
                     position: "relative",
-                    overflow: "auto", // Show native scrollbars on the component container
+                    overflow: "hidden", // Scrollbars are owned by outer Portfolio viewport
                 }}
                 className="portfolio-table-wrapper"
                 ref={containerRef}
