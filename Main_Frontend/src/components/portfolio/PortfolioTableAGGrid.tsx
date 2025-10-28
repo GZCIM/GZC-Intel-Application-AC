@@ -152,6 +152,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const scrollbarRef = useRef<HTMLDivElement>(null);
     const horizontalScrollbarRef = useRef<HTMLDivElement>(null);
     const tableBodyRef = useRef<HTMLElement | null>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const isSyncingScrollRef = useRef(false);
 
     // Component-scoped config identifiers
     const resolvedDeviceType = (deviceType ||
@@ -397,6 +399,28 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             elementRect: tableBodyRef.current.getBoundingClientRect(),
         });
 
+        // Ensure the portfolio container has a real scroll range via an invisible ghost element
+        try {
+            const host = containerRef.current;
+            if (host) {
+                const ghostId = `portfolio-scroll-ghost-${componentId || "default"}`;
+                let ghost = host.querySelector(`#${ghostId}`) as HTMLDivElement | null;
+                if (!ghost) {
+                    ghost = document.createElement("div");
+                    ghost.id = ghostId;
+                    ghost.style.position = "absolute";
+                    ghost.style.left = "0";
+                    ghost.style.top = "0";
+                    ghost.style.pointerEvents = "none";
+                    ghost.style.opacity = "0";
+                    host.appendChild(ghost);
+                }
+                // Size the ghost to content so native container scrollbars reflect grid content
+                ghost.style.width = `${Math.max(actualScrollWidth, host.clientWidth)}px`;
+                ghost.style.height = `${Math.max(actualScrollHeight, host.clientHeight)}px`;
+            }
+        } catch {}
+
         if (
             actualScrollWidth === 0 ||
             actualClientWidth === 0 ||
@@ -498,6 +522,37 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             ),
         }));
     }, []);
+
+    // Sync native container scroll with AG Grid viewport (mouse wheel, drag on bars)
+    useEffect(() => {
+        const host = containerRef.current;
+        const body = tableBodyRef.current as HTMLElement | null;
+        if (!host || !body) return;
+
+        const onHostScroll = () => {
+            if (!tableBodyRef.current) return;
+            isSyncingScrollRef.current = true;
+            tableBodyRef.current.scrollTop = host.scrollTop;
+            tableBodyRef.current.scrollLeft = host.scrollLeft;
+            isSyncingScrollRef.current = false;
+            updateScrollbarState();
+        };
+
+        const onBodyScroll = () => {
+            if (!containerRef.current || isSyncingScrollRef.current) return;
+            isSyncingScrollRef.current = true;
+            containerRef.current.scrollTop = body.scrollTop;
+            containerRef.current.scrollLeft = body.scrollLeft;
+            isSyncingScrollRef.current = false;
+        };
+
+        host.addEventListener("scroll", onHostScroll, { passive: true });
+        body.addEventListener("scroll", onBodyScroll, { passive: true });
+        return () => {
+            host.removeEventListener("scroll", onHostScroll as EventListener);
+            body.removeEventListener("scroll", onBodyScroll as EventListener);
+        };
+    }, [positions.length, componentId, updateScrollbarState]);
 
     // Update scrollbar when positions change
     useEffect(() => {
@@ -816,7 +871,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     }
                 }
 
-                const totalWidth = (displayedCols || []).reduce((sum, col) => {
+                const totalWidth = (Array.isArray(displayedCols) ? displayedCols : []).reduce((sum, col) => {
                     try {
                         return (
                             sum +
@@ -1041,7 +1096,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 </div>
             )}
 
-            {/* AG Grid Table with Fixed Scrollbar */}
+            {/* AG Grid Table driven by portfolio container native scrollbars */}
             <div
                 id={`portfolio-container-${componentId || "default"}`}
                 style={{
@@ -1049,9 +1104,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     width: "100%",
                     height: "100%",
                     position: "relative",
-                    overflow: "hidden", // CRITICAL: Hide native scrollbars
+                    overflow: "auto", // Show native scrollbars on the component container
                 }}
                 className="portfolio-table-wrapper"
+                ref={containerRef}
             >
                 {/* AG Grid with hidden scrollbar */}
             <div
@@ -1104,18 +1160,37 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         suppressColumnVirtualisation: false,
                         suppressRowVirtualisation: false,
                         getRowHeight: () => 30,
-                        // Force use of component vertical scrollbar only
-                        suppressHorizontalScroll: true,
-                        alwaysShowHorizontalScroll: false,
-                        alwaysShowVerticalScroll: false,
+                        // Force AG Grid to not render its own scrollbars
+                            suppressHorizontalScroll: true,
+                            alwaysShowHorizontalScroll: false,
+                            alwaysShowVerticalScroll: false,
                         }}
                     />
 
-                    {/* CRITICAL: Functional scrollbar positioned at portfolio component's right edge */}
-                    {componentBorderInfo &&
-                        scrollbarState.scrollHeight >
-                            scrollbarState.clientHeight &&
-                        (() => {
+                    {/* Invisible sizing ghost ensures the container has real scroll ranges */}
+                    {(() => {
+                        const ghostId = `portfolio-scroll-ghost-${componentId || "default"}`;
+                        // Ensure ghost div exists after first mount
+                        if (typeof window !== "undefined") {
+                            const host = containerRef.current;
+                            if (host && !host.querySelector(`#${ghostId}`)) {
+                                const ghost = document.createElement("div");
+                                ghost.id = ghostId;
+                                ghost.style.position = "absolute";
+                                ghost.style.left = "0";
+                                ghost.style.top = "0";
+                                ghost.style.width = "0px";
+                                ghost.style.height = "0px";
+                                ghost.style.pointerEvents = "none";
+                                ghost.style.opacity = "0";
+                                host.appendChild(ghost);
+                            }
+                        }
+                        return null;
+                    })()}
+
+                    {/* Disable custom vertical scrollbar: use native container scrollbars */}
+                    {false && (() => {
                             // Find the actual portfolio component container
                             console.log(
                                 "🔍 [DEBUG] Component Finding Process:",
@@ -1475,10 +1550,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         })()}
 
                     {/* CRITICAL: Functional horizontal scrollbar positioned at portfolio component's bottom edge */}
-                    {(() => {
-                        console.log("[HORIZONTAL SCROLLBAR CHECK] Disabled by request: removing horizontal bar");
-                        return false; // Force-disable horizontal scrollbar rendering
-                    })() && (() => {
+                    {false && (() => {
                             // Find the actual portfolio component container (same logic as vertical)
                             const portfolioComponent =
                                 document.querySelector(

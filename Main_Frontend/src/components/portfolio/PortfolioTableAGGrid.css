@@ -116,6 +116,12 @@
     display: none !important; /* CRITICAL: Hide horizontal scrollbar viewport */
 }
 
+/* Hide AG Grid native vertical scrollbar containers entirely */
+.ag-theme-alpine .ag-body-vertical-scroll-viewport,
+.ag-theme-alpine .ag-body-vertical-scroll {
+    display: none !important;
+}
+
 /* Custom scrollbar styling - Using GZC Color Schema - REMOVED DUPLICATE */
 
 /* Column resize handle - Using GZC Color Schema */
@@ -196,18 +202,20 @@
 }
 
 /* Portfolio table wrapper - hide overflow scrollbars */
+/* The portfolio component container should own the native scrollbars */
 .portfolio-table-wrapper {
-    overflow: hidden !important;
+    overflow: auto !important;
 }
 
+/* Show native scrollbars on the component container */
 .portfolio-table-wrapper::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
+    display: initial !important;
+    width: auto !important;
+    height: auto !important;
 }
 
 .portfolio-table-wrapper {
-    scrollbar-width: none !important;
+    scrollbar-width: auto !important;
 }
 
 /* Hide ALL possible scrollbars in ALL AG Grid containers - MORE AGGRESSIVE */
