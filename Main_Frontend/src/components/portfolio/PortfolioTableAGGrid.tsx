@@ -74,6 +74,7 @@ interface TableConfig {
     sorting: { column: string; direction: "asc" | "desc" };
     grouping: string[];
     filters: Record<string, any>;
+    aggregations?: Record<string, "sum" | "avg" | "min" | "max" | "count" | "none">;
 }
 
 interface ComponentBorderInfo {
@@ -128,6 +129,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const [isEditing, setIsEditing] = useState(false);
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
+    // Edit UI: which settings tab is active
+    const [activeEditTab, setActiveEditTab] = useState<"columns" | "orderBy" | "groupBy">("columns");
 
     // Scrollbar state and refs
     const [scrollbarState, setScrollbarState] = useState({
@@ -242,6 +245,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
             // Get current column state from AG Grid
             const columnState = gridApi.getColumnState();
+            const rowGroupState = gridApi.getColumnState().filter((s) => s.rowGroup);
             const updatedColumns = localConfig.columns.map((col) => {
                 const colState = columnState.find((cs) => cs.colId === col.key);
                 return {
@@ -255,6 +259,17 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             const updatedConfig = {
                 ...localConfig,
                 columns: updatedColumns,
+                // Persist latest grouping and aggregations from grid state
+                grouping: rowGroupState
+                    .sort((a, b) => (a.rowGroupIndex || 0) - (b.rowGroupIndex || 0))
+                    .map((s) => String(s.colId)),
+                aggregations: {
+                    ...(localConfig.aggregations || {}),
+                    ...columnState.reduce((acc: Record<string, any>, s) => {
+                        if (s.aggFunc) acc[String(s.colId)] = s.aggFunc as any;
+                        return acc;
+                    }, {}),
+                },
             };
 
             await axios.post(
@@ -276,6 +291,44 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             console.error("Failed to save table config:", err);
         }
     };
+
+    // Apply current localConfig to AG Grid (used both in edit and locked modes)
+    const applyConfigToGrid = useCallback(() => {
+        if (!gridApi || !localConfig) return;
+        try {
+            // Column visibility/widths
+            const state = localConfig.columns.map((c) => ({
+                colId: c.key,
+                hide: !c.visible,
+                width: c.size || c.width,
+            }));
+            gridApi.applyColumnState({ state, defaultState: {} });
+
+            // Sorting
+            if (localConfig.sorting?.column) {
+                gridApi.applyColumnState({
+                    defaultState: { sort: null },
+                    state: [ { colId: localConfig.sorting.column, sort: localConfig.sorting.direction } ],
+                });
+            }
+
+            // Grouping
+            const groupState = (localConfig.grouping || []).map((k, idx) => ({ colId: k, rowGroup: true, rowGroupIndex: idx }));
+            gridApi.applyColumnState({ defaultState: { rowGroup: false }, state: groupState });
+
+            // Aggregations
+            const aggs = localConfig.aggregations || {};
+            const aggState = Object.keys(aggs).map((k) => ({ colId: k, aggFunc: aggs[k] === "none" ? undefined : aggs[k] }));
+            if (aggState.length > 0) gridApi.applyColumnState({ state: aggState, defaultState: {} });
+        } catch (e) {
+            console.warn("[AG Grid] applyConfigToGrid failed", e);
+        }
+    }, [gridApi, localConfig]);
+
+    // Re-apply config whenever grid is ready or config changes
+    useEffect(() => {
+        applyConfigToGrid();
+    }, [applyConfigToGrid]);
 
     const loadPositions = async () => {
         setLoading(true);
@@ -799,6 +852,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             resizable: true,
             sortable: true,
             filter: true,
+            enableValue: true,
             cellRenderer: (params: { value: unknown }) =>
                 formatValue(params.value, c.key),
         }));
@@ -985,6 +1039,65 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         }
     };
 
+    // Apply default sort selection to grid and local config
+    const applyDefaultSort = useCallback((columnKey: string, direction: "asc" | "desc") => {
+        if (!gridApi || !localConfig) return;
+        setLocalConfig((prev) => prev ? { ...prev, sorting: { column: columnKey, direction } } : prev);
+        try {
+            gridApi.applyColumnState({
+                defaultState: { sort: null },
+                state: [
+                    { colId: columnKey, sort: direction },
+                ],
+            });
+        } catch (e) {
+            console.warn("[AG Grid] applyColumnState(sort) failed", e);
+        }
+    }, [gridApi, localConfig]);
+
+    // Toggle group-by for a column and update grid
+    const toggleGroupBy = useCallback((columnKey: string) => {
+        if (!gridApi) return;
+        setLocalConfig((prev) => {
+            if (!prev) return prev;
+            const isGrouped = prev.grouping.includes(columnKey);
+            const nextGrouping = isGrouped
+                ? prev.grouping.filter((k) => k !== columnKey)
+                : [...prev.grouping, columnKey];
+            // Apply to grid
+            try {
+                const state = nextGrouping.map((k, idx) => ({ colId: k, rowGroup: true, rowGroupIndex: idx }));
+                gridApi.applyColumnState({
+                    defaultState: { rowGroup: false },
+                    state,
+                });
+            } catch (e) {
+                console.warn("[AG Grid] applyColumnState(rowGroup) failed", e);
+            }
+            return { ...prev, grouping: nextGrouping };
+        });
+    }, [gridApi]);
+
+    // Set aggregation function for a column
+    const setAggregation = useCallback((columnKey: string, agg: "sum" | "avg" | "min" | "max" | "count" | "none") => {
+        if (!gridApi) return;
+        setLocalConfig((prev) => {
+            if (!prev) return prev;
+            const nextAggs = { ...(prev.aggregations || {}) } as Record<string, any>;
+            if (agg === "none") delete nextAggs[columnKey];
+            else nextAggs[columnKey] = agg;
+            try {
+                gridApi.applyColumnState({
+                    state: [ { colId: columnKey, aggFunc: agg === "none" ? undefined : agg } ],
+                    defaultState: {},
+                });
+            } catch (e) {
+                console.warn("[AG Grid] applyColumnState(aggFunc) failed", e);
+            }
+            return { ...prev, aggregations: nextAggs };
+        });
+    }, [gridApi]);
+
     const tradeTypeCounts = useMemo(() => {
         const counts: Record<string, number> = {};
         positions.forEach((p) => {
@@ -1047,58 +1160,157 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 </div>
             )}
 
-            {/* Column Controls - visible only while editing */}
+            {/* Edit Controls - visible only while editing */}
             {isEditing && localConfig && (
                 <div
-                    className="flex justify-between items-center mb-4 p-4 rounded"
+                    className="mb-4 rounded"
                     style={{
-                        overflowX: "auto",
                         position: "sticky",
                         top: 0,
                         zIndex: 300,
-                        paddingRight: 8,
                         background: safeTheme.surface,
                         border: `1px solid ${safeTheme.border}`,
                     }}
                 >
-                    <h3 className="text-lg font-semibold">
-                        Portfolio Positions ({positions.length})
-                    </h3>
+                    {/* Tabs header */}
                     <div
+                        className="flex items-center"
                         style={{
-                            display: "grid",
-                            gridTemplateColumns:
-                                "repeat(auto-fit, minmax(15vw, 1fr))",
-                            gap: 12,
+                            borderBottom: `1px solid ${safeTheme.border}`,
                         }}
                     >
-                        {localConfig.columns.map((col) => (
-                            <label
-                                key={col.key}
-                                className="flex items-center gap-3 text-sm"
-                                style={{
-                                    cursor: "pointer",
-                                    userSelect: "none",
-                                    padding: "6px 8px",
-                                    borderRadius: 6,
-                                    border: `1px solid ${safeTheme.border}`,
-                                    background: safeTheme.surfaceAlt,
-                                }}
-                                onClick={() => handleColumnToggle(col.key)}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={col.visible}
-                                    onChange={() => handleColumnToggle(col.key)}
+                        {[{k:"columns",t:"Columns"},{k:"orderBy",t:"Default Order By"},{k:"groupBy",t:"Group By"}] as Array<{k:typeof activeEditTab, t:string}>}
+                            .map(tab => (
+                                <button
+                                    key={tab.k}
+                                    onClick={() => setActiveEditTab(tab.k)}
                                     style={{
-                                        width: 18,
-                                        height: 18,
+                                        padding: "8px 12px",
+                                        background: activeEditTab===tab.k ? safeTheme.surfaceAlt : "transparent",
+                                        color: safeTheme.text,
+                                        borderRight: `1px solid ${safeTheme.border}`,
                                         cursor: "pointer",
                                     }}
-                                />
-                                <span>{col.label}</span>
-                            </label>
-                        ))}
+                                >{tab.t}</button>
+                            ))
+                    </div>
+
+                    {/* Tabs body */}
+                    <div className="p-3" style={{ overflowX: "auto" }}>
+                        {activeEditTab === "columns" && (
+                            <div
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                                    gap: 12,
+                                }}
+                            >
+                                {localConfig.columns.map((col) => (
+                                    <label
+                                        key={col.key}
+                                        className="flex items-center gap-3 text-sm"
+                                        style={{
+                                            cursor: "pointer",
+                                            userSelect: "none",
+                                            padding: "6px 8px",
+                                            borderRadius: 6,
+                                            border: `1px solid ${safeTheme.border}`,
+                                            background: safeTheme.surfaceAlt,
+                                        }}
+                                        onClick={() => handleColumnToggle(col.key)}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={col.visible}
+                                            onChange={() => handleColumnToggle(col.key)}
+                                            style={{ width: 18, height: 18, cursor: "pointer" }}
+                                        />
+                                        <span>{col.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+
+                        {activeEditTab === "orderBy" && (
+                            <div className="flex gap-3 items-center">
+                                <span>Sort by</span>
+                                <select
+                                    value={localConfig.sorting?.column || ""}
+                                    onChange={(e) => applyDefaultSort(e.target.value, localConfig.sorting?.direction || "asc")}
+                                    style={{ background: safeTheme.surfaceAlt, border: `1px solid ${safeTheme.border}`, padding: "6px 8px" }}
+                                >
+                                    <option value="" disabled>Select column</option>
+                                    {localConfig.columns.map(c => (
+                                        <option key={c.key} value={c.key}>{c.label}</option>
+                                    ))}
+                                </select>
+                                <select
+                                    value={localConfig.sorting?.direction || "asc"}
+                                    onChange={(e) => applyDefaultSort(localConfig.sorting?.column || localConfig.columns[0]?.key, e.target.value as "asc" | "desc")}
+                                    style={{ background: safeTheme.surfaceAlt, border: `1px solid ${safeTheme.border}`, padding: "6px 8px" }}
+                                >
+                                    <option value="asc">Ascending</option>
+                                    <option value="desc">Descending</option>
+                                </select>
+                            </div>
+                        )}
+
+                        {activeEditTab === "groupBy" && (
+                            <div
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                                    gap: 12,
+                                }}
+                            >
+                                {localConfig.columns.map((col) => {
+                                    const isGrouped = localConfig.grouping.includes(col.key);
+                                    const currentAgg = (localConfig.aggregations && localConfig.aggregations[col.key]) || "none";
+                                    return (
+                                        <div
+                                            key={col.key}
+                                            className="flex items-center gap-3 text-sm"
+                                            style={{
+                                                padding: "6px 8px",
+                                                borderRadius: 6,
+                                                border: `1px solid ${safeTheme.border}`,
+                                                background: safeTheme.surfaceAlt,
+                                                alignItems: "center",
+                                            }}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={isGrouped}
+                                                onChange={() => toggleGroupBy(col.key)}
+                                                style={{ width: 18, height: 18, cursor: "pointer" }}
+                                            />
+                                            <span style={{ minWidth: 120 }}>{col.label}</span>
+                                            {isGrouped && (
+                                                <>
+                                                    <span style={{ opacity: 0.8 }}>Aggregation</span>
+                                                    <select
+                                                        value={currentAgg}
+                                                        onChange={(e) => setAggregation(col.key, e.target.value as any)}
+                                                        style={{
+                                                            background: safeTheme.surface,
+                                                            border: `1px solid ${safeTheme.border}`,
+                                                            padding: "4px 8px",
+                                                        }}
+                                                    >
+                                                        <option value="none">None</option>
+                                                        <option value="sum">Sum</option>
+                                                        <option value="avg">Average</option>
+                                                        <option value="min">Min</option>
+                                                        <option value="max">Max</option>
+                                                        <option value="count">Count</option>
+                                                    </select>
+                                                </>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
