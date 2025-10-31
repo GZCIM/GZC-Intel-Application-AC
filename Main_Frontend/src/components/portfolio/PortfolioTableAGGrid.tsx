@@ -1038,9 +1038,26 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
     const handleColumnToggle = (columnKey: string) => {
         if (!gridApi) return;
-        const column = gridApi.getColumn(columnKey);
-        if (column) {
-            gridApi.setColumnsVisible([columnKey], !column.isVisible());
+        try {
+            const colState = gridApi.getColumnState().find((s) => s.colId === columnKey);
+            const newVisible = colState ? !!colState.hide === true ? true : !colState.hide : true;
+            // Apply directly via column state (more robust across scenarios)
+            gridApi.applyColumnState({
+                state: [{ colId: columnKey, hide: !newVisible }],
+                defaultState: {},
+            });
+            // Reflect in local config so the checkbox state updates immediately
+            setLocalConfig((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    columns: prev.columns.map((c) =>
+                        c.key === columnKey ? { ...c, visible: newVisible } : c
+                    ),
+                };
+            });
+        } catch (e) {
+            console.warn("[AG Grid] handleColumnToggle failed", e);
         }
     };
 
@@ -1202,37 +1219,42 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     {/* Tabs body */}
                     <div className="p-3" style={{ overflowX: "auto" }}>
                         {activeEditTab === "columns" && (
-                            <div
+                    <div
+                        style={{
+                            display: "grid",
+                                    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                                    gap: 8,
+                        }}
+                    >
+                        {localConfig.columns.map((col) => (
+                            <label
+                                key={col.key}
+                                        className="flex items-center gap-2 text-sm"
                                 style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                                    gap: 12,
+                                    cursor: "pointer",
+                                    userSelect: "none",
+                                            padding: "4px 6px",
+                        fontSize: 12,
+                                    borderRadius: 6,
+                                    border: `1px solid ${safeTheme.border}`,
+                                    background: safeTheme.surfaceAlt,
                                 }}
                             >
-                                {localConfig.columns.map((col) => (
-                                    <label
-                                        key={col.key}
-                                        className="flex items-center gap-3 text-sm"
-                                        style={{
-                                            cursor: "pointer",
-                                            userSelect: "none",
-                                            padding: "6px 8px",
-                                            borderRadius: 6,
-                                            border: `1px solid ${safeTheme.border}`,
-                                            background: safeTheme.surfaceAlt,
-                                        }}
-                                        onClick={() => handleColumnToggle(col.key)}
-                                    >
                                         <input
-                                            type="checkbox"
-                                            checked={col.visible}
-                                            onChange={() => handleColumnToggle(col.key)}
-                                            style={{ width: 18, height: 18, cursor: "pointer" }}
+                                    type="checkbox"
+                                    checked={col.visible}
+                                            onChange={(e) => { e.stopPropagation(); handleColumnToggle(col.key); }}
+                                            style={{ width: 14, height: 14, cursor: "pointer" }}
                                         />
-                                        <span>{col.label}</span>
-                                    </label>
-                                ))}
-                            </div>
+                                        <span style={{
+                                            whiteSpace: "nowrap",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            maxWidth: 120,
+                                        }}>{col.label}</span>
+                            </label>
+                        ))}
+                    </div>
                         )}
 
                         {activeEditTab === "orderBy" && (
@@ -1256,15 +1278,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     <option value="asc">Ascending</option>
                                     <option value="desc">Descending</option>
                                 </select>
-                            </div>
-                        )}
+                </div>
+            )}
 
                         {activeEditTab === "groupBy" && (
                             <div
                                 style={{
                                     display: "grid",
-                                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                                    gap: 12,
+                                    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+                                    gap: 8,
                                 }}
                             >
                                 {localConfig.columns.map((col) => {
@@ -1273,9 +1295,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     return (
                                         <div
                                             key={col.key}
-                                            className="flex items-center gap-3 text-sm"
+                                            className="flex items-center gap-2 text-sm"
                                             style={{
-                                                padding: "6px 8px",
+                                                padding: "4px 6px",
+                            fontSize: 12,
                                                 borderRadius: 6,
                                                 border: `1px solid ${safeTheme.border}`,
                                                 background: safeTheme.surfaceAlt,
@@ -1285,10 +1308,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                             <input
                                                 type="checkbox"
                                                 checked={isGrouped}
-                                                onChange={() => toggleGroupBy(col.key)}
-                                                style={{ width: 18, height: 18, cursor: "pointer" }}
+                                                onChange={(e) => { e.stopPropagation(); toggleGroupBy(col.key); }}
+                                                style={{ width: 14, height: 14, cursor: "pointer" }}
                                             />
-                                            <span style={{ minWidth: 120 }}>{col.label}</span>
+                                            <span style={{
+                                                minWidth: 100,
+                                                whiteSpace: "nowrap",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                            }}>{col.label}</span>
                                             {isGrouped && (
                                                 <>
                                                     <span style={{ opacity: 0.8 }}>Aggregation</span>
@@ -1298,7 +1326,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                         style={{
                                                             background: safeTheme.surface,
                                                             border: `1px solid ${safeTheme.border}`,
-                                                            padding: "4px 8px",
+                                                            padding: "2px 6px",
+                                                            fontSize: 12,
                                                         }}
                                                     >
                                                         <option value="none">None</option>
