@@ -19,8 +19,11 @@ import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
 import axios from "axios";
 
-// Register AG Grid modules
+// Register AG Grid modules (community only)
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+// Community build: we render grand totals via pinned bottom row
+const ENTERPRISE_FEATURES = false;
 
 // Unified, toggleable debug logger for this component
 const SCROLLBAR_DEBUG = true; // set to false to silence new debug output
@@ -394,14 +397,20 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 });
             }
 
-            // Grouping
-            const groupState = (localConfig.grouping || []).map((k, idx) => ({ colId: k, rowGroup: true, rowGroupIndex: idx }));
-            gridApi.applyColumnState({ defaultState: { rowGroup: false }, state: groupState });
+            // Grouping (skip in community build)
+            if (ENTERPRISE_FEATURES) {
+                const groupState = (localConfig.grouping || []).map((k, idx) => ({ colId: k, rowGroup: true, rowGroupIndex: idx }));
+                gridApi.applyColumnState({ defaultState: { rowGroup: false }, state: groupState });
+                console.info("[AG Grid] Applied grouping", localConfig.grouping || []);
+            }
 
             // Aggregations
-            const aggs = localConfig.aggregations || {};
-            const aggState = Object.keys(aggs).map((k) => ({ colId: k, aggFunc: aggs[k] === "none" ? undefined : aggs[k] }));
-            if (aggState.length > 0) gridApi.applyColumnState({ state: aggState, defaultState: {} });
+            if (ENTERPRISE_FEATURES) {
+                const aggs = localConfig.aggregations || {};
+                const aggState = Object.keys(aggs).map((k) => ({ colId: k, aggFunc: aggs[k] === "none" ? undefined : aggs[k] }));
+                if (aggState.length > 0) gridApi.applyColumnState({ state: aggState, defaultState: {} });
+                console.info("[AG Grid] Applied aggregations", aggs);
+            }
         } catch (e) {
             console.warn("[AG Grid] applyConfigToGrid failed", e);
         }
@@ -1182,6 +1191,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         });
         // Persist immediately so totals survive unlock/refresh
         setTimeout(() => {
+            console.info("[PortfolioTableAGGrid] Totals toggled", key);
             saveTableConfig();
         }, 0);
     };
@@ -1208,6 +1218,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             const next = { ...prev, grouping: nextGrouping } as TableConfig;
             // Persist right after user toggles grouping
             setTimeout(() => {
+                console.info("[PortfolioTableAGGrid] Grouping toggled", nextGrouping);
                 saveTableConfig();
             }, 0);
             return next;
@@ -1241,6 +1252,24 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         });
         return counts;
     }, [positions]);
+
+    // Community totals: compute a single pinned bottom totals row for selected PnL columns
+    const pinnedTotals = useMemo(() => {
+        const keys = (localConfig?.filters?.sumColumns || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]) as string[];
+        if (!positions || positions.length === 0) return [] as any[];
+        const totals: Record<string, any> = {};
+        keys.forEach((k) => (totals[k] = 0));
+        positions.forEach((row) => {
+            keys.forEach((k) => {
+                const v = (row as any)[k];
+                if (typeof v === "number" && !Number.isNaN(v)) totals[k] += v;
+            });
+        });
+        // Optional label cell
+        totals.trade_type = "Σ Totals";
+        console.info("[PortfolioTableAGGrid] Computed pinned totals", { keys, totals });
+        return [totals];
+    }, [positions, localConfig?.filters?.sumColumns]);
 
     // Debug logging
     console.log("[AG Grid Debug] Component render:", {
@@ -1510,7 +1539,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     onGridReady={onGridReady}
                     animateRows={true}
                     autoGroupColumnDef={{ headerName: "Group", minWidth: 180 }}
-                    rowSelection="multiple"
+                    rowSelection={{ mode: "multiRow" }}
+                    pinnedBottomRowData={pinnedTotals}
                     defaultColDef={{
                         resizable: true,
                         sortable: true,

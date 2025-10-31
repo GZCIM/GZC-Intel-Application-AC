@@ -57,9 +57,10 @@
     top: 0;
     right: 0;
     height: var(--ag-header-height, 48px);
-    width: 96px; /* wider to cover spacer while dragging horizontally */
+    width: 160px; /* medium view can leave a wider spacer */
     background-color: inherit;
     pointer-events: none;
+    z-index: 2;
 }
 
 /* Also overlay directly on the header viewport so the area under header stays masked */
@@ -72,7 +73,8 @@
     top: 0;
     right: 0;
     height: 100%;
-    width: 96px;
+    width: 160px; /* ensure coverage in medium layout */
     background-color: inherit;
     pointer-events: none;
+    z-index: 2;
 }
