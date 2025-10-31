@@ -88,6 +88,7 @@ interface PortfolioTableAGGridProps {
     fundId: number;
     isLive: boolean;
     externalEditing?: boolean;
+    editToggleNonce?: number;
     componentId?: string;
     gridWidth?: number; // Grid width from cloud DB config
     gridHeight?: number; // Grid height from cloud DB config
@@ -100,6 +101,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     fundId,
     isLive,
     externalEditing,
+    editToggleNonce,
     componentId,
     gridWidth,
     gridHeight,
@@ -206,6 +208,26 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             );
     }, [externalEditing, isEditing, localConfig, fundId]);
 
+    // Persist immediately on lock transitions signaled by parent
+    useEffect(() => {
+        if (!externalEditing && typeof editToggleNonce === "number" && editToggleNonce > 0) {
+            (async () => {
+                try {
+                    console.info("[PortfolioTableAGGrid] Auto-save on lock", {
+                        componentId: resolvedComponentId,
+                        deviceType: resolvedDeviceType,
+                        fundId,
+                        editToggleNonce,
+                    });
+                    await saveTableConfig();
+                } catch (e) {
+                    console.error("[PortfolioTableAGGrid] Auto-save failed", e);
+                }
+            })();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [editToggleNonce]);
+
     // Load table configuration on mount
     useEffect(() => {
         loadTableConfig();
@@ -261,7 +283,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
             if (gridApi && !gridApi.isDestroyed?.()) {
                 try {
-                    const columnState = gridApi.getColumnState();
+            const columnState = gridApi.getColumnState();
                     const rowGroupState = columnState.filter((s) => s.rowGroup);
                     groupingFromGrid = rowGroupState
                         .sort((a, b) => (a.rowGroupIndex || 0) - (b.rowGroupIndex || 0))
@@ -275,14 +297,14 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     );
 
                     updatedColumns = localConfig.columns.map((col) => {
-                        const colState = columnState.find((cs) => cs.colId === col.key);
-                        return {
-                            ...col,
-                            visible: colState ? !colState.hide : col.visible,
-                            width: colState ? colState.width || col.width : col.width,
-                            size: colState ? colState.width || col.width : col.width,
-                        };
-                    });
+                const colState = columnState.find((cs) => cs.colId === col.key);
+                return {
+                    ...col,
+                    visible: colState ? !colState.hide : col.visible,
+                    width: colState ? colState.width || col.width : col.width,
+                    size: colState ? colState.width || col.width : col.width,
+                };
+            });
                 } catch (e) {
                     console.warn("[PortfolioTableAGGrid] Falling back to localConfig for save (columnState unavailable)", e);
                 }
@@ -1293,7 +1315,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     background: safeTheme.surfaceAlt,
                                 }}
                             >
-                                        <input
+                                <input
                                     type="checkbox"
                                     checked={col.visible}
                                             onChange={(e) => { e.stopPropagation(); handleColumnToggle(col.key); }}

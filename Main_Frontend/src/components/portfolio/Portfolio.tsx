@@ -45,6 +45,7 @@ export const Portfolio: React.FC<
     const { currentTheme } = useTheme();
     const auth = useAuthContext();
     const [toolsEditing, setToolsEditing] = useState(false);
+    const [editToggleNonce, setEditToggleNonce] = useState(0);
     const headerRef = useRef<HTMLDivElement | null>(null);
     const [headerWidth, setHeaderWidth] = useState<number>(0);
     // Anchor element for EOD datepicker portal positioning
@@ -198,7 +199,12 @@ export const Portfolio: React.FC<
         // Listen to global Tools menu edit toggle so window controls appear
         const onEditToggle = (e: Event) => {
             const detail = (e as CustomEvent).detail || {};
-            setToolsEditing(!!detail.unlocked);
+            const unlocked = !!detail.unlocked;
+            setToolsEditing(unlocked);
+            if (!unlocked) {
+                // Count lock events so children can persist reliably
+                setEditToggleNonce((n) => n + 1);
+            }
         };
         window.addEventListener(
             "gzc:edit-mode-toggled",
@@ -1601,6 +1607,8 @@ export const Portfolio: React.FC<
                                 width: "100%",
                                 position: "relative",
                                 gap: 8,
+                                // Ensure consistent background with AG Grid theme to avoid gray bands
+                                backgroundColor: currentTheme.background,
                             }}
                         >
                             {/* Dedicated horizontal scroll viewport */}
@@ -1613,6 +1621,8 @@ export const Portfolio: React.FC<
                                     overflowX: "auto",
                                     overflowY: "hidden",
                                     position: "relative",
+                                    // Match grid background to remove subtle color seams above/below grid
+                                    backgroundColor: currentTheme.background,
                                 }}
                             >
                                 {/* Grid container grows; no scrollbars inside */}
@@ -1634,6 +1644,7 @@ export const Portfolio: React.FC<
                                     fundId={Number(selectedFundId) || 0}
                                     isLive={dataMode === "live"}
                                     externalEditing={isEditMode || toolsEditing}
+                                    editToggleNonce={editToggleNonce}
                                     componentId={
                                         id ||
                                         (window as any)?.componentId ||
