@@ -13,3 +13,24 @@
     max-height: 100%;
     flex-direction: column;
 }
+
+/* Ensure AG Grid header/body empty areas use the same dark background
+   to avoid gray seams to the right of the last column and below rows */
+.portfolio-scroll-viewport .ag-root-wrapper,
+.portfolio-scroll-viewport .ag-root,
+.portfolio-scroll-viewport .ag-header,
+.portfolio-scroll-viewport .ag-header-viewport,
+.portfolio-scroll-viewport .ag-center-cols-viewport,
+.portfolio-scroll-viewport .ag-body-vertical-scroll,
+.portfolio-scroll-viewport .ag-body-viewport,
+.portfolio-scroll-viewport .ag-center-cols-container,
+.portfolio-scroll-viewport .ag-floating-top,
+.portfolio-scroll-viewport .ag-floating-bottom {
+    background-color: var(--gzc-bg, #111111) !important;
+}
+
+/* Also match the header container side gutter (right side fade area) */
+.portfolio-scroll-viewport .ag-header-container,
+.portfolio-scroll-viewport .ag-header-row {
+    background-color: transparent !important; /* inherit from parent above */
+}

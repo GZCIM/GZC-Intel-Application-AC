@@ -228,10 +228,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editToggleNonce]);
 
-    // Load table configuration on mount
+    // Load table configuration on mount and when identifiers change
     useEffect(() => {
         loadTableConfig();
-    }, [fundId]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fundId, resolvedComponentId, resolvedDeviceType]);
 
     // Load positions when date/fund changes
     useEffect(() => {
@@ -1131,6 +1132,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     ),
                 };
             });
+            // Persist immediately so a refresh reflects the cloud value
+            // Defer to next tick to allow local state to settle
+            setTimeout(() => {
+                saveTableConfig();
+            }, 0);
         } catch (e) {
             console.warn("[AG Grid] handleColumnToggle failed", e);
         }
