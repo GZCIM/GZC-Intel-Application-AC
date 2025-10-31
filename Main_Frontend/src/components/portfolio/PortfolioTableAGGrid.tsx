@@ -924,7 +924,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         }
 
         console.log("[AG Grid] Using config columns:", cfgCols.length);
-        return cfgCols.map((c) => ({
+        return cfgCols.map((c) => {
+            const groupIndex = (localConfig?.grouping || []).indexOf(c.key);
+            const isGrouped = groupIndex >= 0;
+            return {
             field: c.key,
             headerName: c.label,
             // allow AG Grid to auto-size based on content/header
@@ -937,9 +940,13 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             filter: true,
             // When grouped, aggregate enabled PnL totals on group rows/footers
             aggFunc: sumKeys.has(c.key) ? "sum" : undefined,
+            // Reflect saved grouping on the column definitions
+            rowGroup: isGrouped,
+            rowGroupIndex: isGrouped ? groupIndex : undefined,
             cellRenderer: (params: { value: unknown }) =>
                 formatValue(params.value, c.key),
-        }));
+            };
+        });
     }, [localConfig]);
 
     const formatValue = (value: unknown, columnKey: string): string => {
@@ -1502,6 +1509,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     columnDefs={columnDefs}
                     onGridReady={onGridReady}
                     animateRows={true}
+                    autoGroupColumnDef={{ headerName: "Group", minWidth: 180 }}
                     rowSelection="multiple"
                     defaultColDef={{
                         resizable: true,
