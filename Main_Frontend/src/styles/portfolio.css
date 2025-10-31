@@ -44,3 +44,18 @@
 .portfolio-scroll-viewport .ag-horizontal-right-spacer {
     background-color: inherit !important;
 }
+
+/* Final guard: mask any residual right-edge header gutter so the area matches theme */
+.portfolio-scroll-viewport {
+    position: relative;
+}
+.portfolio-scroll-viewport::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: var(--ag-header-height, 48px);
+    width: 48px; /* covers spacer width variations */
+    background-color: inherit;
+    pointer-events: none;
+}
