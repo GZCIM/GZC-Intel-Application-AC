@@ -321,6 +321,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     ...(localConfig.aggregations || {}),
                     ...(aggregationsFromGrid || {}),
                 },
+                // Ensure default sorting persists
+                sorting: localConfig.sorting,
             };
 
             console.info("[PortfolioTableAGGrid] Saving table config", {
@@ -889,6 +891,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     // Convert config to AG Grid column definitions
     const columnDefs = useMemo<ColDef[]>(() => {
         const cfgCols = localConfig?.columns || [];
+        const sumKeys = new Set<string>(((localConfig?.filters || {}).sumColumns || []) as string[]);
 
         // If no config loaded yet, use fallback columns
         if (cfgCols.length === 0) {
@@ -932,6 +935,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             resizable: true,
             sortable: true,
             filter: true,
+            // When grouped, aggregate enabled PnL totals on group rows/footers
+            aggFunc: sumKeys.has(c.key) ? "sum" : undefined,
             cellRenderer: (params: { value: unknown }) =>
                 formatValue(params.value, c.key),
         }));
@@ -1168,6 +1173,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 filters: { ...(prev.filters || {}), sumColumns: Array.from(current) },
             } as TableConfig;
         });
+        // Persist immediately so totals survive unlock/refresh
+        setTimeout(() => {
+            saveTableConfig();
+        }, 0);
     };
 
     // Toggle group-by for a column and update grid
@@ -1189,7 +1198,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             } catch (e) {
                 console.warn("[AG Grid] applyColumnState(rowGroup) failed", e);
             }
-            return { ...prev, grouping: nextGrouping };
+            const next = { ...prev, grouping: nextGrouping } as TableConfig;
+            // Persist right after user toggles grouping
+            setTimeout(() => {
+                saveTableConfig();
+            }, 0);
+            return next;
         });
     }, [gridApi]);
 
@@ -1358,6 +1372,31 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     gap: 8,
                                 }}
                             >
+                                {/* Default Order By controls */}
+                                <div
+                                    className="flex items-center gap-2"
+                                    style={{ gridColumn: "1 / -1", padding: "4px 6px", border: `1px solid ${safeTheme.border}`, borderRadius: 6, background: safeTheme.surfaceAlt, fontSize: 12 }}
+                                >
+                                    <span style={{ opacity: 0.9 }}>Default order by</span>
+                                    <select
+                                        value={localConfig.sorting?.column || ""}
+                                        onChange={(e) => applyDefaultSort(e.target.value, localConfig.sorting?.direction || "asc")}
+                                        style={{ background: safeTheme.surface, border: `1px solid ${safeTheme.border}`, padding: "4px 6px" }}
+                                    >
+                                        <option value="" disabled>Select column</option>
+                                        {localConfig.columns.map(c => (
+                                            <option key={c.key} value={c.key}>{c.label}</option>
+                                        ))}
+                                    </select>
+                                    <select
+                                        value={localConfig.sorting?.direction || "asc"}
+                                        onChange={(e) => applyDefaultSort(localConfig.sorting?.column || localConfig.columns[0]?.key, e.target.value as "asc" | "desc")}
+                                        style={{ background: safeTheme.surface, border: `1px solid ${safeTheme.border}`, padding: "4px 6px" }}
+                                    >
+                                        <option value="asc">Ascending</option>
+                                        <option value="desc">Descending</option>
+                                    </select>
+                                </div>
                                 {/* Quick PnL totals toggles */}
                                 <div
                                     className="flex items-center gap-2"
@@ -1407,28 +1446,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
                                             }}>{col.label}</span>
-                                            {isGrouped && (
-                                                <>
-                                                    <span style={{ opacity: 0.8 }}>Aggregation</span>
-                                                    <select
-                                                        value={currentAgg}
-                                                        onChange={(e) => setAggregation(col.key, e.target.value as any)}
-                                                        style={{
-                                                            background: safeTheme.surface,
-                                                            border: `1px solid ${safeTheme.border}`,
-                                                            padding: "2px 6px",
-                                                            fontSize: 12,
-                                                        }}
-                                                    >
-                                                        <option value="none">None</option>
-                                                        <option value="sum">Sum</option>
-                                                        <option value="avg">Average</option>
-                                                        <option value="min">Min</option>
-                                                        <option value="max">Max</option>
-                                                        <option value="count">Count</option>
-                                                    </select>
-                                                </>
-                                            )}
+                                            {/* Aggregation selector intentionally hidden per request when grouping is used */}
                                         </div>
                                     );
                                 })}
@@ -1497,6 +1515,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         headerHeight: 40,
                         suppressScrollOnNewData: false,
                         suppressRowTransform: true,
+                        // Group subtotals rows and grand total row
+                        groupIncludeFooter: true,
+                        groupIncludeTotalFooter: true,
                         // Let grid grow to fit all rows (no vertical scrollbar inside grid)
                         domLayout: "autoHeight",
                         suppressAutoSize: false,
