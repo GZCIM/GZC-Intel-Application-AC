@@ -1040,7 +1040,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         if (!gridApi) return;
         try {
             const colState = gridApi.getColumnState().find((s) => s.colId === columnKey);
-            const newVisible = colState ? !!colState.hide === true ? true : !colState.hide : true;
+            const prevVisible = !(colState?.hide ?? false);
+            const newVisible = !prevVisible;
             // Apply directly via column state (more robust across scenarios)
             gridApi.applyColumnState({
                 state: [{ colId: columnKey, hide: !newVisible }],
