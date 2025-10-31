@@ -234,6 +234,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             );
 
             if (response.data.status === "success") {
+                console.info("[PortfolioTableAGGrid] Loaded table config", {
+                    deviceType: resolvedDeviceType,
+                    componentId: resolvedComponentId,
+                    fundId,
+                    columns: (response.data.data?.columns || []).map((c: any) => ({ key: c.key, visible: c.visible })),
+                });
                 setTableConfig(response.data.data);
                 setLocalConfig(response.data.data);
             }
@@ -277,6 +283,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 },
             };
 
+            console.info("[PortfolioTableAGGrid] Saving table config", {
+                deviceType: resolvedDeviceType,
+                componentId: resolvedComponentId,
+                fundId,
+                columns: updatedConfig.columns.map((c) => ({ key: c.key, visible: c.visible, width: c.width || c.size })),
+                grouping: updatedConfig.grouping,
+                aggregations: updatedConfig.aggregations,
+            });
+
             await axios.post(
                 "/api/cosmos/portfolio-component-config",
                 {
@@ -292,6 +307,26 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
             setTableConfig(updatedConfig);
             setLocalConfig(updatedConfig);
+
+            // Verify by reloading immediately and logging the result
+            try {
+                const verifyResp = await axios.get(
+                    "/api/cosmos/portfolio-component-config",
+                    {
+                        params: {
+                            deviceType: resolvedDeviceType,
+                            componentId: resolvedComponentId,
+                            fundId,
+                        },
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
+                );
+                console.info("[PortfolioTableAGGrid] Saved config (verification load)", {
+                    columns: (verifyResp.data?.data?.columns || []).map((c: any) => ({ key: c.key, visible: c.visible })),
+                });
+            } catch (verifyErr) {
+                console.warn("[PortfolioTableAGGrid] Verification load failed", verifyErr);
+            }
         } catch (err) {
             console.error("Failed to save table config:", err);
         }
