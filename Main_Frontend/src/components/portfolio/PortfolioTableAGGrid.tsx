@@ -132,11 +132,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     // Edit UI: which settings tab is active
-    const [activeEditTab, setActiveEditTab] = useState<"columns" | "orderBy" | "groupBy">("columns");
-    const editTabs: Array<{ k: "columns" | "orderBy" | "groupBy"; t: string }> = [
+    const [activeEditTab, setActiveEditTab] = useState<"columns" | "group">("columns");
+    const editTabs: Array<{ k: "columns" | "group"; t: string }> = [
         { k: "columns", t: "Columns" },
-        { k: "orderBy", t: "Default Order By" },
-        { k: "groupBy", t: "Group By" },
+        { k: "group", t: "Group & Totals" },
     ];
 
     // Scrollbar state and refs
@@ -1158,6 +1157,19 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         }
     }, [gridApi, localConfig]);
 
+    // Toggle PnL total visibility (maps to filters.sumColumns; backend will normalize summary accordingly)
+    const togglePnlTotal = (key: "itd_pnl" | "ytd_pnl" | "mtd_pnl" | "dtd_pnl") => {
+        setLocalConfig((prev) => {
+            if (!prev) return prev;
+            const current = new Set<string>((prev.filters?.sumColumns || []) as string[]);
+            if (current.has(key)) current.delete(key); else current.add(key);
+            return {
+                ...prev,
+                filters: { ...(prev.filters || {}), sumColumns: Array.from(current) },
+            } as TableConfig;
+        });
+    };
+
     // Toggle group-by for a column and update grid
     const toggleGroupBy = useCallback((columnKey: string) => {
         if (!gridApi) return;
@@ -1338,31 +1350,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     </div>
                         )}
 
-                        {activeEditTab === "orderBy" && (
-                            <div className="flex gap-3 items-center">
-                                <span>Sort by</span>
-                                <select
-                                    value={localConfig.sorting?.column || ""}
-                                    onChange={(e) => applyDefaultSort(e.target.value, localConfig.sorting?.direction || "asc")}
-                                    style={{ background: safeTheme.surfaceAlt, border: `1px solid ${safeTheme.border}`, padding: "6px 8px" }}
-                                >
-                                    <option value="" disabled>Select column</option>
-                                    {localConfig.columns.map(c => (
-                                        <option key={c.key} value={c.key}>{c.label}</option>
-                                    ))}
-                                </select>
-                                <select
-                                    value={localConfig.sorting?.direction || "asc"}
-                                    onChange={(e) => applyDefaultSort(localConfig.sorting?.column || localConfig.columns[0]?.key, e.target.value as "asc" | "desc")}
-                                    style={{ background: safeTheme.surfaceAlt, border: `1px solid ${safeTheme.border}`, padding: "6px 8px" }}
-                                >
-                                    <option value="asc">Ascending</option>
-                                    <option value="desc">Descending</option>
-                                </select>
-                </div>
-            )}
-
-                        {activeEditTab === "groupBy" && (
+                        {activeEditTab === "group" && (
                             <div
                                 style={{
                                     display: "grid",
@@ -1370,6 +1358,27 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     gap: 8,
                                 }}
                             >
+                                {/* Quick PnL totals toggles */}
+                                <div
+                                    className="flex items-center gap-2"
+                                    style={{ gridColumn: "1 / -1", padding: "4px 6px", border: `1px solid ${safeTheme.border}`, borderRadius: 6, background: safeTheme.surfaceAlt, fontSize: 12 }}
+                                >
+                                    <span style={{ opacity: 0.9 }}>Totals:</span>
+                                    {(["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"] as const).map((k) => {
+                                        const enabled = (localConfig.filters?.sumColumns || []).includes(k);
+                                        return (
+                                            <label key={k} className="flex items-center gap-1" style={{ cursor: "pointer", userSelect: "none" }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={enabled}
+                                                    onChange={() => togglePnlTotal(k)}
+                                                    style={{ width: 14, height: 14, cursor: "pointer" }}
+                                                />
+                                                <span style={{ textTransform: "uppercase" }}>{k.replace("_pnl","")}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
                                 {localConfig.columns.map((col) => {
                                     const isGrouped = localConfig.grouping.includes(col.key);
                                     const currentAgg = (localConfig.aggregations && localConfig.aggregations[col.key]) || "none";
