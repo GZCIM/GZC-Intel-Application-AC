@@ -26,11 +26,21 @@
 .portfolio-scroll-viewport .ag-center-cols-container,
 .portfolio-scroll-viewport .ag-floating-top,
 .portfolio-scroll-viewport .ag-floating-bottom {
-    background-color: var(--gzc-bg, #111111) !important;
+    background-color: inherit !important;
 }
 
 /* Also match the header container side gutter (right side fade area) */
 .portfolio-scroll-viewport .ag-header-container,
 .portfolio-scroll-viewport .ag-header-row {
-    background-color: transparent !important; /* inherit from parent above */
+    background-color: inherit !important;
+}
+
+/* Right-side gray gutter in header (spacer) and scrollbar corner */
+.portfolio-scroll-viewport .ag-right-spacer,
+.portfolio-scroll-viewport .ag-header-spacer,
+.portfolio-scroll-viewport .ag-scrollbar-corner,
+.portfolio-scroll-viewport .ag-body-horizontal-scroll-viewport,
+.portfolio-scroll-viewport .ag-body-horizontal-scroll,
+.portfolio-scroll-viewport .ag-horizontal-right-spacer {
+    background-color: inherit !important;
 }
