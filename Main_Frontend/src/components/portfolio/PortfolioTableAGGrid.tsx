@@ -131,6 +131,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     // Edit UI: which settings tab is active
     const [activeEditTab, setActiveEditTab] = useState<"columns" | "orderBy" | "groupBy">("columns");
+    const editTabs: Array<{ k: "columns" | "orderBy" | "groupBy"; t: string }> = [
+        { k: "columns", t: "Columns" },
+        { k: "orderBy", t: "Default Order By" },
+        { k: "groupBy", t: "Group By" },
+    ];
 
     // Scrollbar state and refs
     const [scrollbarState, setScrollbarState] = useState({
@@ -1179,20 +1184,19 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             borderBottom: `1px solid ${safeTheme.border}`,
                         }}
                     >
-                        {[{k:"columns",t:"Columns"},{k:"orderBy",t:"Default Order By"},{k:"groupBy",t:"Group By"}] as Array<{k:typeof activeEditTab, t:string}>}
-                            .map(tab => (
+                        {editTabs.map(tab => (
                                 <button
-                                    key={tab.k}
-                                    onClick={() => setActiveEditTab(tab.k)}
-                                    style={{
-                                        padding: "8px 12px",
-                                        background: activeEditTab===tab.k ? safeTheme.surfaceAlt : "transparent",
-                                        color: safeTheme.text,
-                                        borderRight: `1px solid ${safeTheme.border}`,
-                                        cursor: "pointer",
-                                    }}
-                                >{tab.t}</button>
-                            ))
+                                key={tab.k}
+                                onClick={() => setActiveEditTab(tab.k)}
+                                style={{
+                                    padding: "8px 12px",
+                                    background: activeEditTab===tab.k ? safeTheme.surfaceAlt : "transparent",
+                                    color: safeTheme.text,
+                                    borderRight: `1px solid ${safeTheme.border}`,
+                                    cursor: "pointer",
+                                }}
+                            >{tab.t}</button>
+                        ))}
                     </div>
 
                     {/* Tabs body */}
