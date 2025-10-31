@@ -61,3 +61,18 @@
     background-color: inherit;
     pointer-events: none;
 }
+
+/* Also overlay directly on the header viewport so the area under header stays masked */
+.portfolio-scroll-viewport .ag-header-viewport {
+    position: relative;
+}
+.portfolio-scroll-viewport .ag-header-viewport::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 96px;
+    background-color: inherit;
+    pointer-events: none;
+}
