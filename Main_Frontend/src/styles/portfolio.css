@@ -38,6 +38,8 @@
 /* Right-side gray gutter in header (spacer) and scrollbar corner */
 .portfolio-scroll-viewport .ag-right-spacer,
 .portfolio-scroll-viewport .ag-header-spacer,
+.portfolio-scroll-viewport .ag-header-viewport .ag-right-spacer,
+.portfolio-scroll-viewport .ag-header-viewport .ag-horizontal-right-spacer,
 .portfolio-scroll-viewport .ag-scrollbar-corner,
 .portfolio-scroll-viewport .ag-body-horizontal-scroll-viewport,
 .portfolio-scroll-viewport .ag-body-horizontal-scroll,
@@ -55,7 +57,7 @@
     top: 0;
     right: 0;
     height: var(--ag-header-height, 48px);
-    width: 48px; /* covers spacer width variations */
+    width: 96px; /* wider to cover spacer while dragging horizontally */
     background-color: inherit;
     pointer-events: none;
 }
