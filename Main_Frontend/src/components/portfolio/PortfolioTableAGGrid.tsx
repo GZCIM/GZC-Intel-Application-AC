@@ -249,37 +249,55 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     };
 
     const saveTableConfig = async () => {
-        if (!localConfig || !gridApi) return;
+        if (!localConfig) return;
 
         try {
             const token = await getToken();
 
-            // Get current column state from AG Grid
-            const columnState = gridApi.getColumnState();
-            const rowGroupState = gridApi.getColumnState().filter((s) => s.rowGroup);
-            const updatedColumns = localConfig.columns.map((col) => {
-                const colState = columnState.find((cs) => cs.colId === col.key);
-                return {
-                    ...col,
-                    visible: colState ? !colState.hide : col.visible,
-                    width: colState ? colState.width || col.width : col.width,
-                    size: colState ? colState.width || col.width : col.width,
-                };
-            });
+            // Prefer live grid state when API is available and not destroyed
+            let updatedColumns = localConfig.columns;
+            let groupingFromGrid: string[] | undefined;
+            let aggregationsFromGrid: Record<string, any> | undefined;
+
+            if (gridApi && !gridApi.isDestroyed?.()) {
+                try {
+                    const columnState = gridApi.getColumnState();
+                    const rowGroupState = columnState.filter((s) => s.rowGroup);
+                    groupingFromGrid = rowGroupState
+                        .sort((a, b) => (a.rowGroupIndex || 0) - (b.rowGroupIndex || 0))
+                        .map((s) => String(s.colId));
+                    aggregationsFromGrid = columnState.reduce(
+                        (acc: Record<string, any>, s) => {
+                            if (s.aggFunc) acc[String(s.colId)] = s.aggFunc as any;
+                            return acc;
+                        },
+                        {}
+                    );
+
+                    updatedColumns = localConfig.columns.map((col) => {
+                        const colState = columnState.find((cs) => cs.colId === col.key);
+                        return {
+                            ...col,
+                            visible: colState ? !colState.hide : col.visible,
+                            width: colState ? colState.width || col.width : col.width,
+                            size: colState ? colState.width || col.width : col.width,
+                        };
+                    });
+                } catch (e) {
+                    console.warn("[PortfolioTableAGGrid] Falling back to localConfig for save (columnState unavailable)", e);
+                }
+            } else {
+                console.warn("[PortfolioTableAGGrid] Grid API not available (or destroyed); saving using localConfig only");
+            }
 
             const updatedConfig = {
                 ...localConfig,
                 columns: updatedColumns,
                 // Persist latest grouping and aggregations from grid state
-                grouping: rowGroupState
-                    .sort((a, b) => (a.rowGroupIndex || 0) - (b.rowGroupIndex || 0))
-                    .map((s) => String(s.colId)),
+                grouping: groupingFromGrid ?? localConfig.grouping,
                 aggregations: {
                     ...(localConfig.aggregations || {}),
-                    ...columnState.reduce((acc: Record<string, any>, s) => {
-                        if (s.aggFunc) acc[String(s.colId)] = s.aggFunc as any;
-                        return acc;
-                    }, {}),
+                    ...(aggregationsFromGrid || {}),
                 },
             };
 
@@ -892,7 +910,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             resizable: true,
             sortable: true,
             filter: true,
-            enableValue: true,
             cellRenderer: (params: { value: unknown }) =>
                 formatValue(params.value, c.key),
         }));
