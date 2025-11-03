@@ -1852,6 +1852,18 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({ tabId }) => {
           .grid-item button,
           .grid-item input,
           .grid-item .react-resizable-handle,
+          /* Allow AG Grid interactions while editing (resize, scroll, sort) */
+          .grid-item .ag-root,
+          .grid-item .ag-root-wrapper,
+          .grid-item .ag-header,
+          .grid-item .ag-header-viewport,
+          .grid-item .ag-header-container,
+          .grid-item .ag-header-cell,
+          .grid-item .ag-header-cell-resize,
+          .grid-item .ag-body,
+          .grid-item .ag-body-viewport,
+          .grid-item .ag-center-cols-viewport,
+          .grid-item .ag-center-cols-container,
           .grid-item button.remove-component { pointer-events: auto !important; }
 
           /* Make side/bottom resize handles larger and clickable */
