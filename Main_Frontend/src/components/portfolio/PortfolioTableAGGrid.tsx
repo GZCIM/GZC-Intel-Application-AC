@@ -319,11 +319,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 console.warn("[PortfolioTableAGGrid] Grid API not available (or destroyed); saving using localConfig only");
             }
 
+            const effectiveGrouping = (groupingFromGrid && groupingFromGrid.length > 0)
+                ? groupingFromGrid
+                : baseConfig.grouping;
+
             const updatedConfig = {
                 ...baseConfig,
                 columns: updatedColumns,
                 // Persist latest grouping and aggregations from grid state
-                grouping: groupingFromGrid ?? baseConfig.grouping,
+                grouping: effectiveGrouping,
                 aggregations: {
                     ...(baseConfig.aggregations || {}),
                     ...(aggregationsFromGrid || {}),
