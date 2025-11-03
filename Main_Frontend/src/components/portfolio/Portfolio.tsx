@@ -46,6 +46,7 @@ export const Portfolio: React.FC<
     const auth = useAuthContext();
     const [toolsEditing, setToolsEditing] = useState(false);
     const [editToggleNonce, setEditToggleNonce] = useState(0);
+    const [footerTotals, setFooterTotals] = useState<any[]>([]);
     const headerRef = useRef<HTMLDivElement | null>(null);
     const [headerWidth, setHeaderWidth] = useState<number>(0);
     // Anchor element for EOD datepicker portal positioning
@@ -211,6 +212,15 @@ export const Portfolio: React.FC<
             onEditToggle as EventListener
         );
 
+        // Listen for totals from grid to render sticky footer
+        const onTotals = (e: Event) => {
+            const detail = (e as CustomEvent).detail || {};
+            if ((id || (window as any)?.componentId || "default") === detail.componentId) {
+                setFooterTotals(Array.isArray(detail.rows) ? detail.rows : []);
+            }
+        };
+        window.addEventListener("portfolio:totals", onTotals as EventListener);
+
         (async () => {
             try {
                 // Proactively ensure token is available before first calls
@@ -232,6 +242,10 @@ export const Portfolio: React.FC<
             window.removeEventListener(
                 "gzc:edit-mode-toggled",
                 onEditToggle as EventListener
+            );
+            window.removeEventListener(
+                "portfolio:totals",
+                onTotals as EventListener
             );
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1691,6 +1705,31 @@ export const Portfolio: React.FC<
                                         return borderInfo;
                                     })()}
                                 />
+                                </div>
+                                {/* Fixed footer at bottom of card */}
+                                <div
+                                    style={{
+                                        position: "sticky",
+                                        bottom: 0,
+                                        left: 0,
+                                        right: 0,
+                                        background: currentTheme.surface,
+                                        borderTop: `1px solid ${currentTheme.border}`,
+                                        padding: "8px 12px",
+                                        fontSize: 12,
+                                        zIndex: 4,
+                                    }}
+                                >
+                                    {footerTotals.map((row, idx) => (
+                                        <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", padding: "2px 0" }}>
+                                            <strong style={{ opacity: 0.95 }}>{String(row.trade_type)}</strong>
+                                            {["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"].map((k) => (
+                                                <span key={k} style={{ opacity: 0.9 }}>
+                                                    {k.replace("_pnl","" ).toUpperCase()}: {typeof row[k] === "number" ? (row[k] as number).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>

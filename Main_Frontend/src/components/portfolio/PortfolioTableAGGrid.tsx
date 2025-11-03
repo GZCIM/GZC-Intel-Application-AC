@@ -1331,6 +1331,22 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         return rows;
     }, [positions, localConfig?.filters?.sumColumns]);
 
+    // Broadcast totals to parent (Portfolio) so it can render a fixed footer
+    useEffect(() => {
+        try {
+            const detail = {
+                componentId: componentId || "default",
+                rows: pinnedTotals,
+            };
+            window.dispatchEvent(
+                new CustomEvent("portfolio:totals", { detail })
+            );
+            console.info("[PortfolioTableAGGrid] Dispatched totals to parent", detail);
+        } catch (e) {
+            console.warn("[PortfolioTableAGGrid] Failed to dispatch totals", e);
+        }
+    }, [pinnedTotals, componentId]);
+
     // Debug logging
     console.log("[AG Grid Debug] Component render:", {
         positionsCount: positions?.length || 0,
@@ -1353,32 +1369,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 <div className="mb-3 rounded border border-red-400 bg-red-50 text-red-700 px-3 py-2">
                     {error}
                 </div>
-                {/* Static totals footer below the grid, outside scroll area */}
-                <div
-                    style={{
-                        position: "relative",
-                        width: "100%",
-                        // Match AG header styling using theme vars with safe fallbacks
-                        background: `var(--ag-header-background-color, ${safeTheme.surface})`,
-                        borderTop: `1px solid var(--ag-header-border-color, ${safeTheme.border})`,
-                        color: `var(--ag-foreground-color, ${safeTheme.text})`,
-                        padding: "8px 12px",
-                        fontSize: 12,
-                        display: pinnedTotals.length ? "block" : "none",
-                    }}
-                    ref={footerRef}
-                >
-                    {pinnedTotals.map((row, idx) => (
-                        <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", padding: "2px 0" }}>
-                            <strong style={{ opacity: 0.95 }}>{String(row.trade_type)}</strong>
-                            {((localConfig?.filters?.sumColumns || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]) as string[]).map((k) => (
-                                <span key={k} style={{ opacity: 0.9 }}>
-                                    {k.replace("_pnl", "").toUpperCase()}: {typeof row[k] === "number" ? (row[k] as number).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
-                                </span>
-                            ))}
-                        </div>
-                    ))}
-                </div>
+                {/* Footer is rendered by parent; child dispatches totals via window event */}
                 <button
                     onClick={() => retryWithBackoff(3)}
                     className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-60"
