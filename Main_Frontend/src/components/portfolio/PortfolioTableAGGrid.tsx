@@ -1594,6 +1594,32 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             alwaysShowVerticalScroll: false,
                         }}
                     />
+                {/* Sticky totals footer (always visible) */}
+                <div
+                    style={{
+                        position: "sticky",
+                        bottom: 0,
+                        zIndex: 3,
+                        background: safeTheme.surfaceAlt,
+                        borderTop: `1px solid ${safeTheme.border}`,
+                        padding: "6px 8px",
+                        fontSize: 12,
+                        display: pinnedTotals.length ? "flex" : "none",
+                        gap: 16,
+                        justifyContent: "space-between",
+                    }}
+                >
+                    {pinnedTotals.map((row, idx) => (
+                        <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                            <strong style={{ opacity: 0.9 }}>{String(row.trade_type)}</strong>
+                            {((localConfig?.filters?.sumColumns || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]) as string[]).map((k) => (
+                                <span key={k} style={{ opacity: 0.9 }}>
+                                    {k.replace("_pnl", "").toUpperCase()}: {typeof row[k] === "number" ? (row[k] as number).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
+                                </span>
+                            ))}
+                        </div>
+                    ))}
+                </div>
 
                     {/* Invisible sizing ghost ensures the container has real scroll ranges */}
                     {(() => {
