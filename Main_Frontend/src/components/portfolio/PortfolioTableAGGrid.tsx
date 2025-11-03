@@ -947,11 +947,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             resizable: true,
             sortable: true,
             filter: true,
-            // When grouped, aggregate enabled PnL totals on group rows/footers
-            aggFunc: sumKeys.has(c.key) ? "sum" : undefined,
-            // Reflect saved grouping on the column definitions
-            rowGroup: isGrouped,
-            rowGroupIndex: isGrouped ? groupIndex : undefined,
+            // Disable enterprise-only features in community build
+            aggFunc: ENTERPRISE_FEATURES && sumKeys.has(c.key) ? "sum" : undefined,
+            rowGroup: ENTERPRISE_FEATURES ? isGrouped : false,
+            rowGroupIndex: ENTERPRISE_FEATURES && isGrouped ? groupIndex : undefined,
             cellRenderer: (params: { value: unknown }) =>
                 formatValue(params.value, c.key),
             };
@@ -1647,35 +1646,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             alwaysShowVerticalScroll: false,
                         }}
                     />
-                {/* Sticky totals footer (always visible) */}
-                <div
-                    style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        zIndex: 3,
-                        background: safeTheme.surfaceAlt,
-                        borderTop: `1px solid ${safeTheme.border}`,
-                        padding: "6px 8px",
-                        fontSize: 12,
-                        display: pinnedTotals.length ? "flex" : "none",
-                        flexDirection: "column",
-                        gap: 6,
-                        alignItems: "flex-start",
-                    }}
-                >
-                    {pinnedTotals.map((row, idx) => (
-                        <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                            <strong style={{ opacity: 0.9 }}>{String(row.trade_type)}</strong>
-                            {((localConfig?.filters?.sumColumns || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]) as string[]).map((k) => (
-                                <span key={k} style={{ opacity: 0.9 }}>
-                                    {k.replace("_pnl", "").toUpperCase()}: {typeof row[k] === "number" ? (row[k] as number).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
-                                </span>
-                            ))}
-                        </div>
-                    ))}
-                </div>
+                {/* Totals footer is rendered by parent component */}
 
                     {/* Invisible sizing ghost ensures the container has real scroll ranges */}
                     {(() => {
