@@ -1286,13 +1286,12 @@ export const Portfolio: React.FC<
                                     </button>
                                     <button
                                         onClick={() => {
+                                            // Switch to EOD and always snap to previous business date
                                             setDataMode("eod");
-                                            if (!selectedDate) {
-                                                const d = prevBusinessDate()
-                                                    .toISOString()
-                                                    .slice(0, 10);
-                                                setSelectedDate(d);
-                                            }
+                                            const d = prevBusinessDate()
+                                                .toISOString()
+                                                .slice(0, 10);
+                                            setSelectedDate(d);
                                         }}
                                         className={`gzc-chip ${
                                             dataMode === "eod"
