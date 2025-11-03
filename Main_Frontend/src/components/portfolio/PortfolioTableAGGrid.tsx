@@ -1536,6 +1536,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     width: "100%",
                     height: "100%",
                     marginTop: isEditing ? "8vh" : 0,
+                    paddingBottom: 56, // reserve space for sticky totals overlay
                     minHeight: 0,
                     display: "flex",
                     flexDirection: "column",
@@ -1597,7 +1598,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 {/* Sticky totals footer (always visible) */}
                 <div
                     style={{
-                        position: "sticky",
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
                         bottom: 0,
                         zIndex: 3,
                         background: safeTheme.surfaceAlt,
