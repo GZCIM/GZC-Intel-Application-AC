@@ -11,6 +11,9 @@ import {
     ColDef,
     GridReadyEvent,
     GridApi,
+    ColumnResizedEvent,
+    ColumnMovedEvent,
+    ColumnVisibleEvent,
     ModuleRegistry,
     AllCommunityModule,
 } from "ag-grid-community";
@@ -376,6 +379,17 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             console.error("Failed to save table config:", err);
         }
     };
+
+    // Debounced saver for frequent column operations
+    const saveDebounceRef = useRef<number | null>(null);
+    const queueSave = useCallback(() => {
+        if (saveDebounceRef.current) {
+            window.clearTimeout(saveDebounceRef.current);
+        }
+        saveDebounceRef.current = window.setTimeout(() => {
+            saveTableConfig();
+        }, 300);
+    }, [saveTableConfig]);
 
     // Apply current localConfig to AG Grid (used both in edit and locked modes)
     const applyConfigToGrid = useCallback(() => {
@@ -1626,7 +1640,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         sortable: true,
                         filter: true,
                         minWidth: 70,
-                        maxWidth: 180,
+                        // Remove maxWidth cap so user can freely resize
                     }}
                     gridOptions={{
                         rowHeight: 30,
@@ -1645,6 +1659,31 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             alwaysShowHorizontalScroll: false,
                             alwaysShowVerticalScroll: false,
                         }}
+                    onColumnResized={(e: ColumnResizedEvent) => {
+                        // Only persist when resize has finished
+                        if (!e.finished) return;
+                        try {
+                            if (!gridApi || !localConfig) return;
+                            const state = gridApi.getColumnState();
+                            const updated = localConfig.columns.map((c) => {
+                                const s = state.find((cs) => cs.colId === c.key);
+                                return {
+                                    ...c,
+                                    width: s?.width || c.width,
+                                    size: s?.width || c.size || c.width,
+                                };
+                            });
+                            setLocalConfig((prev) => prev ? { ...prev, columns: updated } : prev);
+                        } finally {
+                            queueSave();
+                        }
+                    }}
+                    onColumnMoved={(e: ColumnMovedEvent) => {
+                        queueSave();
+                    }}
+                    onColumnVisible={(e: ColumnVisibleEvent) => {
+                        queueSave();
+                    }}
                     />
                 {/* Totals footer is rendered by parent component */}
 
