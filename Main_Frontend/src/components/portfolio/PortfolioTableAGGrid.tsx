@@ -1317,50 +1317,70 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Community totals: compute per-group (FX Forward, FX Option) and grand total for selected PnL columns
+    // Community totals: compute footer based on selected sum columns and first grouping key
     const pinnedTotals = useMemo(() => {
-        const keys = (localConfig?.filters?.sumColumns || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]) as string[];
-        if (!positions || positions.length === 0) return [] as any[];
+        const keys = (localConfig?.filters?.sumColumns || []) as string[];
+        if (!positions || positions.length === 0) return { rows: [] as any[], keys };
+        // If no aggregation columns selected, do not show footer
+        if (!keys || keys.length === 0) return { rows: [] as any[], keys };
 
-        const groups: Array<"FX Forward" | "FX Option"> = ["FX Forward", "FX Option"];
+        const groupKey = (localConfig?.grouping && localConfig.grouping.length > 0)
+            ? localConfig.grouping[0]
+            : null;
+
         const init = () => {
-            const o: Record<string, any> = {};
+            const o: Record<string, number> = {} as any;
             keys.forEach((k) => (o[k] = 0));
             return o;
         };
+
         const grand = init();
         const rows: any[] = [];
 
-        for (const g of groups) {
-            const acc = init();
+        if (groupKey) {
+            // Aggregate by first grouping key
+            const map = new Map<string, Record<string, number>>();
             positions.forEach((row) => {
-                // per-group
-                if (row.trade_type === g) {
-                    keys.forEach((k) => {
-                        const v = (row as any)[k];
-                        if (typeof v === "number" && !Number.isNaN(v)) acc[k] += v;
-                    });
-                }
-                // grand
+                const groupVal = String((row as any)[groupKey] ?? "");
+                if (!map.has(groupVal)) map.set(groupVal, init());
+                const acc = map.get(groupVal)!;
+                keys.forEach((k) => {
+                    const v = (row as any)[k];
+                    if (typeof v === "number" && !Number.isNaN(v)) acc[k] += v;
+                });
                 keys.forEach((k) => {
                     const v = (row as any)[k];
                     if (typeof v === "number" && !Number.isNaN(v)) grand[k] += v;
                 });
             });
-            rows.push({ trade_type: `Σ ${g}`, ...acc });
+            // Emit rows per group
+            for (const [val, acc] of map.entries()) {
+                rows.push({ trade_type: `Σ ${val}`, ...acc });
+            }
+        } else {
+            // No grouping - accumulate grand only
+            positions.forEach((row) => {
+                keys.forEach((k) => {
+                    const v = (row as any)[k];
+                    if (typeof v === "number" && !Number.isNaN(v)) grand[k] += v;
+                });
+            });
         }
+
+        // Always push grand total
         rows.push({ trade_type: "Σ Total", ...grand });
 
-        console.info("[PortfolioTableAGGrid] Computed footer totals (groups + total)", { keys, rows });
-        return rows;
-    }, [positions, localConfig?.filters?.sumColumns]);
+        console.info("[PortfolioTableAGGrid] Computed footer totals", { groupKey, keys, rowsCount: rows.length });
+        return { rows, keys };
+    }, [positions, localConfig?.filters?.sumColumns, localConfig?.grouping]);
 
     // Broadcast totals to parent (Portfolio) so it can render a fixed footer
     useEffect(() => {
         try {
             const detail = {
                 componentId: componentId || "default",
-                rows: pinnedTotals,
+                rows: pinnedTotals.rows,
+                keys: pinnedTotals.keys,
             };
             window.dispatchEvent(
                 new CustomEvent("portfolio:totals", { detail })

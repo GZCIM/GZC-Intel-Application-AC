@@ -220,6 +220,8 @@ export const Portfolio: React.FC<
             const detail = (e as CustomEvent).detail || {};
             if ((id || (window as any)?.componentId || "default") === detail.componentId) {
                 setFooterTotals(Array.isArray(detail.rows) ? detail.rows : []);
+                // Persist selected keys for rendering
+                (window as any).__portfolioFooterKeys = Array.isArray(detail.keys) ? detail.keys : undefined;
             }
         };
         window.addEventListener("portfolio:totals", onTotals as EventListener);
@@ -1691,7 +1693,7 @@ export const Portfolio: React.FC<
                                     {footerTotals.map((row, idx) => (
                                         <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", padding: "2px 0" }}>
                                             <strong style={{ opacity: 0.95 }}>{String(row.trade_type)}</strong>
-                                            {["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"].map((k) => (
+                                            {(((window as any).__portfolioFooterKeys) || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]).map((k: string) => (
                                                 <span key={k} style={{ opacity: 0.9 }}>
                                                     {k.replace("_pnl","" ).toUpperCase()}: {typeof row[k] === "number" ? (row[k] as number).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
                                                 </span>
