@@ -1316,6 +1316,29 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 <div className="mb-3 rounded border border-red-400 bg-red-50 text-red-700 px-3 py-2">
                     {error}
                 </div>
+                {/* Static totals footer below the grid, outside scroll area */}
+                <div
+                    style={{
+                        position: "relative",
+                        width: "100%",
+                        background: safeTheme.surfaceAlt,
+                        borderTop: `1px solid ${safeTheme.border}`,
+                        padding: "8px 10px",
+                        fontSize: 12,
+                        display: pinnedTotals.length ? "block" : "none",
+                    }}
+                >
+                    {pinnedTotals.map((row, idx) => (
+                        <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", padding: "2px 0" }}>
+                            <strong style={{ opacity: 0.95 }}>{String(row.trade_type)}</strong>
+                            {((localConfig?.filters?.sumColumns || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]) as string[]).map((k) => (
+                                <span key={k} style={{ opacity: 0.9 }}>
+                                    {k.replace("_pnl", "").toUpperCase()}: {typeof row[k] === "number" ? (row[k] as number).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
+                                </span>
+                            ))}
+                        </div>
+                    ))}
+                </div>
                 <button
                     onClick={() => retryWithBackoff(3)}
                     className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-60"
@@ -1567,7 +1590,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             ? { headerName: "Group", minWidth: 180 }
                             : undefined
                     }
-                    pinnedBottomRowData={pinnedTotals}
+                    // hide grid-level totals; we render a custom footer below
                     defaultColDef={{
                         resizable: true,
                         sortable: true,
@@ -1580,9 +1603,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         headerHeight: 40,
                         suppressScrollOnNewData: false,
                         suppressRowTransform: true,
-                        // Group subtotals rows and grand total row
-                        groupIncludeFooter: true,
-                        groupIncludeTotalFooter: true,
+                        // Hide built-in group footers; use custom footer instead
                         // Let grid grow to fit all rows (no vertical scrollbar inside grid)
                         domLayout: "autoHeight",
                         suppressAutoSize: false,
