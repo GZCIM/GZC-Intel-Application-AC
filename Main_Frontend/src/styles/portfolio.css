@@ -51,6 +51,14 @@
 .portfolio-scroll-viewport {
     position: relative;
 }
+.portfolio-scroll-viewport {
+    /* Hide native scrollbars but keep scrolling */
+    scrollbar-width: none; /* Firefox */
+}
+.portfolio-scroll-viewport::-webkit-scrollbar {
+    width: 0px; /* Chrome/Safari/Edge */
+    height: 0px;
+}
 .portfolio-scroll-viewport::after {
     content: "";
     position: absolute;
