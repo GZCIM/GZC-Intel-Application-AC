@@ -955,7 +955,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             headerName: c.label,
             // allow AG Grid to auto-size based on content/header
             minWidth: 70,
-            maxWidth: 180,
             width: c.size || c.width || undefined,
             hide: !c.visible,
             resizable: true,
@@ -1660,8 +1659,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             alwaysShowVerticalScroll: false,
                         }}
                     onColumnResized={(e: ColumnResizedEvent) => {
-                        // Only persist when resize has finished
+                        // Only persist when resize has finished and in edit mode
                         if (!e.finished) return;
+                        if (!isEditing) return;
                         try {
                             if (!gridApi || !localConfig) return;
                             const state = gridApi.getColumnState();
@@ -1673,7 +1673,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     size: s?.width || c.size || c.width,
                                 };
                             });
-                            setLocalConfig((prev) => prev ? { ...prev, columns: updated } : prev);
+                            setLocalConfig((prev) => (prev ? { ...prev, columns: updated } : prev));
                         } finally {
                             queueSave();
                         }
