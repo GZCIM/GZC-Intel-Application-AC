@@ -276,14 +276,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         }
     };
 
-    const saveTableConfig = async () => {
-        if (!localConfig) return;
+    const saveTableConfig = async (forceConfig?: TableConfig) => {
+        if (!localConfig && !forceConfig) return;
 
         try {
             const token = await getToken();
 
             // Prefer live grid state when API is available and not destroyed
-            let updatedColumns = localConfig.columns;
+            const baseConfig = forceConfig || localConfig!;
+            let updatedColumns = baseConfig.columns;
             let groupingFromGrid: string[] | undefined;
             let aggregationsFromGrid: Record<string, any> | undefined;
 
@@ -302,7 +303,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         {}
                     );
 
-                    updatedColumns = localConfig.columns.map((col) => {
+                    updatedColumns = baseConfig.columns.map((col) => {
                 const colState = columnState.find((cs) => cs.colId === col.key);
                 return {
                     ...col,
@@ -319,16 +320,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             }
 
             const updatedConfig = {
-                ...localConfig,
+                ...baseConfig,
                 columns: updatedColumns,
                 // Persist latest grouping and aggregations from grid state
-                grouping: groupingFromGrid ?? localConfig.grouping,
+                grouping: groupingFromGrid ?? baseConfig.grouping,
                 aggregations: {
-                    ...(localConfig.aggregations || {}),
+                    ...(baseConfig.aggregations || {}),
                     ...(aggregationsFromGrid || {}),
                 },
                 // Ensure default sorting persists
-                sorting: localConfig.sorting,
+                sorting: baseConfig.sorting,
             };
 
             console.info("[PortfolioTableAGGrid] Saving table config", {
@@ -1208,16 +1209,20 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             if (!prev) return prev;
             const current = new Set<string>((prev.filters?.sumColumns || []) as string[]);
             if (current.has(key)) current.delete(key); else current.add(key);
-            return {
+            const next: TableConfig = {
                 ...prev,
                 filters: { ...(prev.filters || {}), sumColumns: Array.from(current) },
             } as TableConfig;
+            // Persist using the computed next config to avoid race with async state
+            setTimeout(() => {
+                console.info("[PortfolioTableAGGrid] Totals toggled", {
+                    key,
+                    nextSumColumns: next.filters?.sumColumns,
+                });
+                saveTableConfig(next);
+            }, 0);
+            return next;
         });
-        // Persist immediately so totals survive unlock/refresh
-        setTimeout(() => {
-            console.info("[PortfolioTableAGGrid] Totals toggled", key);
-            saveTableConfig();
-        }, 0);
     };
 
     // Toggle group-by for a column and update grid
@@ -1242,8 +1247,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             const next = { ...prev, grouping: nextGrouping } as TableConfig;
             // Persist right after user toggles grouping
             setTimeout(() => {
-                console.info("[PortfolioTableAGGrid] Grouping toggled", nextGrouping);
-                saveTableConfig();
+                console.info("[PortfolioTableAGGrid] Grouping toggled", {
+                    nextGrouping,
+                    columnKey,
+                });
+                saveTableConfig(next);
             }, 0);
             return next;
         });
