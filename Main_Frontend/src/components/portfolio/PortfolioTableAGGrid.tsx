@@ -920,29 +920,32 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         if (cfgCols.length === 0) {
             console.log("[AG Grid] No config loaded, using fallback columns");
             return [
-                { field: "trade_id", headerName: "Trade ID", minWidth: 80 },
-                { field: "trade_type", headerName: "Type", minWidth: 80 },
-                { field: "quantity", headerName: "Quantity", minWidth: 90 },
+                { field: "trade_id", headerName: "Trade ID", headerTooltip: "Trade ID", minWidth: 80 },
+                { field: "trade_type", headerName: "Type", headerTooltip: "Type", minWidth: 80 },
+                { field: "quantity", headerName: "Quantity", headerTooltip: "Quantity", minWidth: 90 },
                 {
                     field: "trade_price",
                     headerName: "Trade Price",
+                    headerTooltip: "Trade Price",
                     minWidth: 110,
                 },
-                { field: "price", headerName: "Price", minWidth: 90 },
+                { field: "price", headerName: "Price", headerTooltip: "Price", minWidth: 90 },
                 {
                     field: "trade_currency",
                     headerName: "Trade Currency",
+                    headerTooltip: "Trade Currency",
                     minWidth: 90,
                 },
                 {
                     field: "settlement_currency",
                     headerName: "Settlement Currency",
+                    headerTooltip: "Settlement Currency",
                     minWidth: 120,
                 },
-                { field: "itd_pnl", headerName: "ITD PnL", minWidth: 110 },
-                { field: "ytd_pnl", headerName: "YTD PnL", minWidth: 110 },
-                { field: "mtd_pnl", headerName: "MTD PnL", minWidth: 110 },
-                { field: "dtd_pnl", headerName: "DTD PnL", minWidth: 110 },
+                { field: "itd_pnl", headerName: "ITD PnL", headerTooltip: "ITD PnL", minWidth: 110 },
+                { field: "ytd_pnl", headerName: "YTD PnL", headerTooltip: "YTD PnL", minWidth: 110 },
+                { field: "mtd_pnl", headerName: "MTD PnL", headerTooltip: "MTD PnL", minWidth: 110 },
+                { field: "dtd_pnl", headerName: "DTD PnL", headerTooltip: "DTD PnL", minWidth: 110 },
             ];
         }
 
@@ -953,6 +956,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             return {
             field: c.key,
             headerName: c.label,
+            headerTooltip: c.label,
             // allow AG Grid to auto-size based on content/header
             minWidth: 70,
             width: c.size || c.width || undefined,

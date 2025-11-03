@@ -1272,71 +1272,7 @@ export const Portfolio: React.FC<
                                     overflowX: "auto",
                                 }}
                             >
-                                <button
-                                    onClick={() => {
-                                        // Portfolio: Sync DB
-                                    }}
-                                    title="Sync DB"
-                                    style={{
-                                        padding: "4px 12px",
-                                        backgroundColor: "#5da0ea",
-                                        color: "#ffffff",
-                                        border: `1px solid #3b82f6`,
-                                        borderRadius: 4,
-                                        fontSize: 11,
-                                        fontWeight: 600,
-                                        cursor: "pointer",
-                                        boxShadow:
-                                            "inset 0 -1px 0 rgba(0,0,0,0.2)",
-                                    }}
-                                >
-                                    Sync DB
-                                </button>
-                                {/* Temporary data buttons */}
-                                <div style={{ display: "flex", gap: 6 }}>
-                                    <button
-                                        onClick={loadFxTrades}
-                                        title="Load FX Trades"
-                                        style={{
-                                            padding: "4px 8px",
-                                            backgroundColor: "#1e1e1e",
-                                            color: "#eaeaea",
-                                            border: `1px solid ${currentTheme.border}66`,
-                                            borderRadius: 4,
-                                            fontSize: 11,
-                                            cursor: "pointer",
-                                            opacity:
-                                                fxLoading === "trades"
-                                                    ? 0.6
-                                                    : 1,
-                                        }}
-                                    >
-                                        {fxLoading === "trades"
-                                            ? "Trades…"
-                                            : "FX Trades"}
-                                    </button>
-                                    <button
-                                        onClick={loadFxOptions}
-                                        title="Load FX Option Trades"
-                                        style={{
-                                            padding: "4px 8px",
-                                            backgroundColor: "#1e1e1e",
-                                            color: "#eaeaea",
-                                            border: `1px solid ${currentTheme.border}66`,
-                                            borderRadius: 4,
-                                            fontSize: 11,
-                                            cursor: "pointer",
-                                            opacity:
-                                                fxLoading === "options"
-                                                    ? 0.6
-                                                    : 1,
-                                        }}
-                                    >
-                                        {fxLoading === "options"
-                                            ? "Options…"
-                                            : "FX Options"}
-                                    </button>
-                                </div>
+                                {/* Removed: Sync DB, FX Trades, FX Options */}
                                 <div style={{ display: "flex", gap: 6 }}>
                                     <button
                                         onClick={() => setDataMode("live")}
