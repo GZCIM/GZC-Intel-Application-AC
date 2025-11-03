@@ -47,6 +47,9 @@ export const Portfolio: React.FC<
     const [toolsEditing, setToolsEditing] = useState(false);
     const [editToggleNonce, setEditToggleNonce] = useState(0);
     const [footerTotals, setFooterTotals] = useState<any[]>([]);
+    const footerRef = useRef<HTMLDivElement | null>(null);
+    const viewportRef = useRef<HTMLDivElement | null>(null);
+    const [footerReserveRem, setFooterReserveRem] = useState<number>(4); // default reserve
     const headerRef = useRef<HTMLDivElement | null>(null);
     const [headerWidth, setHeaderWidth] = useState<number>(0);
     // Anchor element for EOD datepicker portal positioning
@@ -250,6 +253,30 @@ export const Portfolio: React.FC<
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedFundId, effectiveDate]);
+
+    // Dynamically reserve space equal to the sticky footer height (in rem)
+    useEffect(() => {
+        const recalc = () => {
+            try {
+                const footerEl = footerRef.current;
+                const rootFont = parseFloat(
+                    getComputedStyle(document.documentElement).fontSize || "16"
+                );
+                const footerH = footerEl ? footerEl.offsetHeight : 0;
+                const reservePx = Math.max(footerH, 0);
+                const reserveRem = reservePx / (rootFont || 16);
+                setFooterReserveRem(Math.max(2.5, Math.min(8, reserveRem)));
+            } catch (_) {}
+        };
+        recalc();
+        const ro = new ResizeObserver(() => recalc());
+        if (footerRef.current) ro.observe(footerRef.current);
+        window.addEventListener("resize", recalc);
+        return () => {
+            try { ro.disconnect(); } catch {}
+            window.removeEventListener("resize", recalc);
+        };
+    }, [footerTotals]);
 
     // Load funds once on mount
     useEffect(() => {
@@ -1637,10 +1664,11 @@ export const Portfolio: React.FC<
                                     overflowX: "auto",
                                     overflowY: "auto", // allow vertical scroll so rows never sit under sticky footer
                                     position: "relative",
-                                    paddingBottom: "4rem", // single reserve matching footer height
+                                    paddingBottom: `${footerReserveRem}rem`, // reserve exactly footer height
                                     // Match grid background to remove subtle color seams above/below grid
                                     backgroundColor: currentTheme.background,
                                 }}
+                                ref={viewportRef}
                             >
                                 {/* Grid container grows; no scrollbars inside */}
                                 <div
@@ -1722,6 +1750,7 @@ export const Portfolio: React.FC<
                                         zIndex: 4,
                                         pointerEvents: "none", // footer should not intercept row hovers/clicks near the edge
                                     }}
+                                    ref={footerRef}
                                 >
                                     {footerTotals.map((row, idx) => (
                                         <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", padding: "2px 0" }}>
