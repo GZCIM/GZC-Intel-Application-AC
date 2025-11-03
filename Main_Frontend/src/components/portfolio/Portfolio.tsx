@@ -1637,6 +1637,7 @@ export const Portfolio: React.FC<
                                     overflowX: "auto",
                                     overflowY: "hidden",
                                     position: "relative",
+                                    paddingBottom: 72, // reserve space so last rows are not hidden under sticky footer
                                     // Match grid background to remove subtle color seams above/below grid
                                     backgroundColor: currentTheme.background,
                                 }}
@@ -1706,6 +1707,8 @@ export const Portfolio: React.FC<
                                     })()}
                                 />
                                 </div>
+                                {/* Spacer to ensure content clears the sticky footer */}
+                                <div aria-hidden style={{ height: 72 }} />
                                 {/* Fixed footer at bottom of card */}
                                 <div
                                     style={{
