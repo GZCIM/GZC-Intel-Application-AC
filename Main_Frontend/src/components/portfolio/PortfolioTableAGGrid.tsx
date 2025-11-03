@@ -1253,6 +1253,46 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         return counts;
     }, [positions]);
 
+    // Footer diagnostics
+    const footerRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const logPositions = () => {
+            const footer = footerRef.current;
+            const container = containerRef.current;
+            if (!footer || !container) return;
+            const fRect = footer.getBoundingClientRect();
+            const cRect = container.getBoundingClientRect();
+            // find nearest scrollable parent
+            let node: HTMLElement | null = container;
+            let scrollParent: HTMLElement | null = null;
+            while (node && node.parentElement) {
+                const style = window.getComputedStyle(node.parentElement);
+                if (/(auto|scroll)/.test(style.overflowY) || /(auto|scroll)/.test(style.overflow)) {
+                    scrollParent = node.parentElement as HTMLElement;
+                    break;
+                }
+                node = node.parentElement as HTMLElement;
+            }
+            const spRect = scrollParent ? scrollParent.getBoundingClientRect() : null;
+            console.info("[PortfolioTableAGGrid] Footer diagnostics", {
+                componentId: componentId || "default",
+                footerRect: { top: fRect.top, bottom: fRect.bottom, height: fRect.height },
+                containerRect: { top: cRect.top, bottom: cRect.bottom, height: cRect.height },
+                scrollParentTag: scrollParent?.tagName || null,
+                scrollParentRect: spRect ? { top: spRect.top, bottom: spRect.bottom, height: spRect.height } : null,
+                containerStyles: window.getComputedStyle(container).cssText?.slice(0, 200),
+            });
+        };
+        logPositions();
+        window.addEventListener("resize", logPositions);
+        document.addEventListener("scroll", logPositions, true);
+        return () => {
+            window.removeEventListener("resize", logPositions);
+            document.removeEventListener("scroll", logPositions, true);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // Community totals: compute per-group (FX Forward, FX Option) and grand total for selected PnL columns
     const pinnedTotals = useMemo(() => {
         const keys = (localConfig?.filters?.sumColumns || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]) as string[];
@@ -1326,6 +1366,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         fontSize: 12,
                         display: pinnedTotals.length ? "block" : "none",
                     }}
+                    ref={footerRef}
                 >
                     {pinnedTotals.map((row, idx) => (
                         <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", padding: "2px 0" }}>
