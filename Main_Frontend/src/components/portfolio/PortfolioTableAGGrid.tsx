@@ -1253,22 +1253,45 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         return counts;
     }, [positions]);
 
-    // Community totals: compute a single pinned bottom totals row for selected PnL columns
+    // Community totals: compute per-group (by trade_type) and grand totals as pinned bottom rows
     const pinnedTotals = useMemo(() => {
         const keys = (localConfig?.filters?.sumColumns || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]) as string[];
         if (!positions || positions.length === 0) return [] as any[];
-        const totals: Record<string, any> = {};
-        keys.forEach((k) => (totals[k] = 0));
-        positions.forEach((row) => {
-            keys.forEach((k) => {
-                const v = (row as any)[k];
-                if (typeof v === "number" && !Number.isNaN(v)) totals[k] += v;
+
+        const groups = ["FX Forward", "FX Option"] as const;
+        const rows: any[] = [];
+
+        const makeInit = () => {
+            const o: Record<string, any> = {};
+            keys.forEach((k) => (o[k] = 0));
+            return o;
+        };
+
+        const grand = makeInit();
+        for (const g of groups) {
+            const acc = makeInit();
+            positions.forEach((row) => {
+                if (row.trade_type === g) {
+                    keys.forEach((k) => {
+                        const v = (row as any)[k];
+                        if (typeof v === "number" && !Number.isNaN(v)) acc[k] += v;
+                    });
+                }
+                keys.forEach((k) => {
+                    const v = (row as any)[k];
+                    if (typeof v === "number" && !Number.isNaN(v)) grand[k] += v;
+                });
             });
+            rows.push({ trade_type: `Σ ${g}`, ...acc });
+        }
+        rows.push({ trade_type: "Σ Total", ...grand });
+
+        console.info("[PortfolioTableAGGrid] Computed pinned totals (by group + grand)", {
+            keys,
+            groups,
+            rows,
         });
-        // Optional label cell
-        totals.trade_type = "Σ Totals";
-        console.info("[PortfolioTableAGGrid] Computed pinned totals", { keys, totals });
-        return [totals];
+        return rows;
     }, [positions, localConfig?.filters?.sumColumns]);
 
     // Debug logging
@@ -1538,7 +1561,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     columnDefs={columnDefs}
                     onGridReady={onGridReady}
                     animateRows={true}
-                    autoGroupColumnDef={{ headerName: "Group", minWidth: 180 }}
+                    autoGroupColumnDef={
+                        (localConfig?.grouping && localConfig.grouping.length > 0)
+                            ? { headerName: "Group", minWidth: 180 }
+                            : undefined
+                    }
                     rowSelection={{ mode: "multiRow" }}
                     pinnedBottomRowData={pinnedTotals}
                     defaultColDef={{
