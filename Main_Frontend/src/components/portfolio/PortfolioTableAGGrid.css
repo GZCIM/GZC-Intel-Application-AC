@@ -137,11 +137,26 @@
     right: 0;
     cursor: col-resize;
     z-index: 5; /* ensure above header content */
+    transition: background-color 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
 }
 
 .ag-theme-alpine .ag-header-cell-resize:hover {
     opacity: 1;
     background-color: var(--gzc-success, #6aa84f);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--gzc-success, #6aa84f) 60%, transparent);
+}
+
+/* Stronger cue when hovering the header cell itself */
+.ag-theme-alpine .ag-header-cell:hover .ag-header-cell-resize {
+    opacity: 1;
+    background-color: var(--gzc-success, #7bd35a);
+}
+
+/* Active drag feedback */
+.ag-theme-alpine .ag-header-cell-resize:active {
+    opacity: 1;
+    background-color: var(--gzc-success, #80e063);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gzc-success, #6aa84f) 75%, transparent);
 }
 
 /* Selection styling - Using GZC Color Schema */
