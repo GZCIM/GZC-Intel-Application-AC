@@ -1253,30 +1253,31 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         return counts;
     }, [positions]);
 
-    // Community totals: compute per-group (by trade_type) and grand totals as pinned bottom rows
+    // Community totals: compute per-group (FX Forward, FX Option) and grand total for selected PnL columns
     const pinnedTotals = useMemo(() => {
         const keys = (localConfig?.filters?.sumColumns || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]) as string[];
         if (!positions || positions.length === 0) return [] as any[];
 
-        const groups = ["FX Forward", "FX Option"] as const;
-        const rows: any[] = [];
-
-        const makeInit = () => {
+        const groups: Array<"FX Forward" | "FX Option"> = ["FX Forward", "FX Option"];
+        const init = () => {
             const o: Record<string, any> = {};
             keys.forEach((k) => (o[k] = 0));
             return o;
         };
+        const grand = init();
+        const rows: any[] = [];
 
-        const grand = makeInit();
         for (const g of groups) {
-            const acc = makeInit();
+            const acc = init();
             positions.forEach((row) => {
+                // per-group
                 if (row.trade_type === g) {
                     keys.forEach((k) => {
                         const v = (row as any)[k];
                         if (typeof v === "number" && !Number.isNaN(v)) acc[k] += v;
                     });
                 }
+                // grand
                 keys.forEach((k) => {
                     const v = (row as any)[k];
                     if (typeof v === "number" && !Number.isNaN(v)) grand[k] += v;
@@ -1286,11 +1287,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         }
         rows.push({ trade_type: "Σ Total", ...grand });
 
-        console.info("[PortfolioTableAGGrid] Computed pinned totals (by group + grand)", {
-            keys,
-            groups,
-            rows,
-        });
+        console.info("[PortfolioTableAGGrid] Computed footer totals (groups + total)", { keys, rows });
         return rows;
     }, [positions, localConfig?.filters?.sumColumns]);
 
@@ -1321,9 +1318,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     style={{
                         position: "relative",
                         width: "100%",
-                        background: safeTheme.surfaceAlt,
-                        borderTop: `1px solid ${safeTheme.border}`,
-                        padding: "8px 10px",
+                        // Match AG header styling using theme vars with safe fallbacks
+                        background: `var(--ag-header-background-color, ${safeTheme.surface})`,
+                        borderTop: `1px solid var(--ag-header-border-color, ${safeTheme.border})`,
+                        color: `var(--ag-foreground-color, ${safeTheme.text})`,
+                        padding: "8px 12px",
                         fontSize: 12,
                         display: pinnedTotals.length ? "block" : "none",
                     }}
