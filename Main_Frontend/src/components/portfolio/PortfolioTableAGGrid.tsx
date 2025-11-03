@@ -1073,13 +1073,17 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     rowCount: params.api.getDisplayedRowCount(),
                 });
 
-                // Narrow columns to fit content on first render
+                // Auto-size only when NOT in edit mode (avoid fighting user resizes)
                 try {
-                    if (
-                        params.api &&
-                        typeof params.api.autoSizeAllColumns === "function"
-                    ) {
-                        params.api.autoSizeAllColumns();
+                    if (!isEditing) {
+                        if (
+                            params.api &&
+                            typeof params.api.autoSizeAllColumns === "function"
+                        ) {
+                            params.api.autoSizeAllColumns();
+                        }
+                    } else {
+                        console.info("[AG Grid] Skipping autoSizeAllColumns (edit mode)");
                     }
                 } catch (error) {
                     console.warn("[AG Grid] autoSizeAllColumns failed", error);
