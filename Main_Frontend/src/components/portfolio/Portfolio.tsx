@@ -1635,9 +1635,9 @@ export const Portfolio: React.FC<
                                     width: "100%",
                                     height: "100%",
                                     overflowX: "auto",
-                                    overflowY: "hidden",
+                                    overflowY: "auto", // allow vertical scroll so rows never sit under sticky footer
                                     position: "relative",
-                                    paddingBottom: "6rem", // relative reserve so last rows never sit under the sticky footer
+                                    paddingBottom: "4rem", // single reserve matching footer height
                                     // Match grid background to remove subtle color seams above/below grid
                                     backgroundColor: currentTheme.background,
                                 }}
@@ -1707,8 +1707,7 @@ export const Portfolio: React.FC<
                                     })()}
                                 />
                                 </div>
-                                {/* Spacer to ensure content clears the sticky footer */}
-                                <div aria-hidden style={{ height: "6rem" }} />
+                                {/* Single reserve handled via paddingBottom above */}
                                 {/* Fixed footer at bottom of card */}
                                 <div
                                     style={{

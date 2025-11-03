@@ -1589,7 +1589,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     width: "100%",
                     height: "100%",
                     marginTop: isEditing ? "8vh" : 0,
-                    paddingBottom: "3.5rem", // relative reserve for sticky totals overlay
+                    // reserve removed; parent handles footer spacing
                     minHeight: 0,
                     display: "flex",
                     flexDirection: "column",
