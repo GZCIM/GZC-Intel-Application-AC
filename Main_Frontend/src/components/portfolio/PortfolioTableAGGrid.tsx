@@ -1425,7 +1425,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
                         {activeEditTab === "group" && (
                             <div
-                                style={{
+                                    style={{
                                     display: "grid",
                                     gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
                                     gap: 8,
@@ -1473,7 +1473,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                     style={{ width: 14, height: 14, cursor: "pointer" }}
                                                 />
                                                 <span style={{ textTransform: "uppercase" }}>{k.replace("_pnl","")}</span>
-                                            </label>
+                            </label>
                                         );
                                     })}
                                 </div>
@@ -1566,7 +1566,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             ? { headerName: "Group", minWidth: 180 }
                             : undefined
                     }
-                    rowSelection={{ mode: "multiRow" }}
                     pinnedBottomRowData={pinnedTotals}
                     defaultColDef={{
                         resizable: true,
