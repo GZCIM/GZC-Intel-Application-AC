@@ -1637,7 +1637,7 @@ export const Portfolio: React.FC<
                                     overflowX: "auto",
                                     overflowY: "hidden",
                                     position: "relative",
-                                    paddingBottom: 72, // reserve space so last rows are not hidden under sticky footer
+                                    paddingBottom: "6rem", // relative reserve so last rows never sit under the sticky footer
                                     // Match grid background to remove subtle color seams above/below grid
                                     backgroundColor: currentTheme.background,
                                 }}
@@ -1708,7 +1708,7 @@ export const Portfolio: React.FC<
                                 />
                                 </div>
                                 {/* Spacer to ensure content clears the sticky footer */}
-                                <div aria-hidden style={{ height: 72 }} />
+                                <div aria-hidden style={{ height: "6rem" }} />
                                 {/* Fixed footer at bottom of card */}
                                 <div
                                     style={{
@@ -1721,6 +1721,7 @@ export const Portfolio: React.FC<
                                         padding: "8px 12px",
                                         fontSize: 12,
                                         zIndex: 4,
+                                        pointerEvents: "none", // footer should not intercept row hovers/clicks near the edge
                                     }}
                                 >
                                     {footerTotals.map((row, idx) => (
