@@ -1664,7 +1664,7 @@ export const Portfolio: React.FC<
                                     overflowX: "auto",
                                     overflowY: "auto", // allow vertical scroll so rows never sit under sticky footer
                                     position: "relative",
-                                    paddingBottom: `${footerReserveRem}rem`, // reserve exactly footer height
+                                    paddingBottom: 0, // scrollbar should be flush with sticky footer
                                     // Match grid background to remove subtle color seams above/below grid
                                     backgroundColor: currentTheme.background,
                                 }}
@@ -1679,6 +1679,7 @@ export const Portfolio: React.FC<
                                         minWidth: "100%",
                                         position: "relative",
                                         overflow: "hidden",
+                                        paddingBottom: `${footerReserveRem}rem`, // reserve exactly footer height within content, not viewport
                                         display: "inline-block",
                                     }}
                                     className="portfolio-table-container"
