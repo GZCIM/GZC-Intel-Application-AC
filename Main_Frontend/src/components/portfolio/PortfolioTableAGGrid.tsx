@@ -1605,12 +1605,13 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         padding: "6px 8px",
                         fontSize: 12,
                         display: pinnedTotals.length ? "flex" : "none",
-                        gap: 16,
-                        justifyContent: "space-between",
+                        flexDirection: "column",
+                        gap: 6,
+                        alignItems: "flex-start",
                     }}
                 >
                     {pinnedTotals.map((row, idx) => (
-                        <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                        <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
                             <strong style={{ opacity: 0.9 }}>{String(row.trade_type)}</strong>
                             {((localConfig?.filters?.sumColumns || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]) as string[]).map((k) => (
                                 <span key={k} style={{ opacity: 0.9 }}>

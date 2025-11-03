@@ -667,6 +667,8 @@ export const Portfolio: React.FC<
                     overflowY: "hidden",
                     position: "sticky", // keep header in view
                     top: 0,
+                    left: 0,
+                    width: "100%",
                     zIndex: 5,
                     background: currentTheme.surface,
                     maxWidth: "100%", // Ensure header doesn't exceed container width
