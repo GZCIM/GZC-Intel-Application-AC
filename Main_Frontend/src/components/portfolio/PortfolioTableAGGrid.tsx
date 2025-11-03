@@ -1006,6 +1006,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         // Wait for grid to be fully ready before accessing API
         setTimeout(() => {
             try {
+                console.info("[AG Grid] onGridReady: edit state", {
+                    isEditing,
+                    externalEditing,
+                });
                 // Use a more robust way to get displayed columns
                 let displayedCols: any[] = [];
                 try {
@@ -1660,11 +1664,27 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         }}
                     onColumnResized={(e: ColumnResizedEvent) => {
                         // Only persist when resize has finished and in edit mode
-                        if (!e.finished) return;
-                        if (!isEditing) return;
+                        if (!e.finished) {
+                            console.debug("[AG Grid] resize in-progress", {
+                                colId: (e.column as any)?.getColId?.() || (e as any)?.column?.colId,
+                                isEditing,
+                            });
+                            return;
+                        }
+                        if (!isEditing) {
+                            console.info("[AG Grid] resize finished but edit mode is OFF; not persisting", {
+                                colId: (e.column as any)?.getColId?.() || (e as any)?.column?.colId,
+                            });
+                            return;
+                        }
                         try {
                             if (!gridApi || !localConfig) return;
                             const state = gridApi.getColumnState();
+                            console.info("[AG Grid] resize finished; persisting widths", {
+                                isEditing,
+                                changedColId: (e.column as any)?.getColId?.() || (e as any)?.column?.colId,
+                                sampleState: state.slice(0, 3),
+                            });
                             const updated = localConfig.columns.map((c) => {
                                 const s = state.find((cs) => cs.colId === c.key);
                                 return {
