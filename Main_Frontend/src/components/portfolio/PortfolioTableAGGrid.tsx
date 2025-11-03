@@ -1507,6 +1507,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 <input
                                     type="checkbox"
                                     checked={col.visible}
+                                            onClick={(e) => { e.stopPropagation(); }}
                                             onChange={(e) => { e.stopPropagation(); handleColumnToggle(col.key); }}
                                             style={{ width: 14, height: 14, cursor: "pointer" }}
                                         />
@@ -1567,7 +1568,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                 <input
                                                     type="checkbox"
                                                     checked={enabled}
-                                                    onChange={() => togglePnlTotal(k)}
+                                                    onClick={(e) => { e.stopPropagation(); }}
+                                                    onChange={(e) => { e.stopPropagation(); togglePnlTotal(k); }}
                                                     style={{ width: 14, height: 14, cursor: "pointer" }}
                                                 />
                                                 <span style={{ textTransform: "uppercase" }}>{k.replace("_pnl","")}</span>
@@ -1594,6 +1596,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                             <input
                                                 type="checkbox"
                                                 checked={isGrouped}
+                                                onClick={(e) => { e.stopPropagation(); }}
                                                 onChange={(e) => { e.stopPropagation(); toggleGroupBy(col.key); }}
                                                 style={{ width: 14, height: 14, cursor: "pointer" }}
                                             />
