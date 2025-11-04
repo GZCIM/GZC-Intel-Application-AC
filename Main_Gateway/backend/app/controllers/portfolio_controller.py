@@ -429,44 +429,37 @@ async def get_notional_summary(
             bucket = "FXOptions" if is_option else "FX"
             by_ccy = defaultdict(lambda: {"notional": 0.0, "notional_usd": 0.0})
             for t in rows:
-                # Use SETTLEMENT currency as the exposure currency per requirement
-                ccy = str(
-                    (t.get("settlement_currency") if not is_option else t.get("underlying_settlement_currency"))
-                    or (t.get("trade_currency") if not is_option else t.get("underlying_trade_currency"))
-                    or ""
-                ).upper()
-                if not ccy:
-                    continue
+                def add(ccy: str, amt_native: float):
+                    c = (ccy or "").upper()
+                    if not c:
+                        return
+                    try:
+                        if c == "USD":
+                            r = 1.0
+                        else:
+                            r = _rate_ccy_to_usd(c) if PRICER_BASE_URL else None
+                    except Exception:
+                        r = None
+                    usd_val = amt_native * r if (r is not None) else 0.0
+                    by_ccy[c]["notional"] += amt_native
+                    by_ccy[c]["notional_usd"] += usd_val
+
                 qty = float(t.get("quantity") or 0)
-                # Signed net exposure by side (buy positive, sell negative)
                 side = str(t.get("position") or "").strip().lower()
                 sign = 1.0 if side == "buy" else -1.0
-                # Native notional is quantity multiplied by trade price (FX) or strike (Options)
-                rate_db = None
-                try:
-                    rate_db = float((t.get("price") if not is_option else t.get("strike")) or 0)
-                except Exception:
-                    rate_db = 0.0
-                native = qty * rate_db * sign
 
-                # Conversion to USD
-                # Priority:
-                # 1) If settlement is USD -> rate 1
-                # 2) Prefer PRICER CCY→USD ladder when available
-                # 3) Otherwise 0 (frontend can still display native notional)
-                rate_ccy_usd = None
-                try:
-                    if ccy == "USD":
-                        rate_ccy_usd = 1.0
-                    elif PRICER_BASE_URL:
-                        rate_ccy_usd = _rate_ccy_to_usd(ccy)
-                except Exception:
-                    rate_ccy_usd = None
-
-                usd = native * rate_ccy_usd if (rate_ccy_usd is not None) else 0.0
-
-                by_ccy[ccy]["notional"] += native
-                by_ccy[ccy]["notional_usd"] += usd
+                if not is_option:
+                    trade_ccy = str(t.get("trade_currency") or "")
+                    sett_ccy = str(t.get("settlement_currency") or "")
+                    price = float(t.get("price") or 0)
+                    # Aggregate BOTH sides: +trade_ccy, -settlement for buys
+                    add(trade_ccy, qty * sign)
+                    add(sett_ccy, qty * price * (-sign))
+                else:
+                    # Options: expose in underlying settlement ccy with notional = qty * strike
+                    ccy = str(t.get("underlying_settlement_currency") or t.get("underlying_trade_currency") or "")
+                    strike = float(t.get("strike") or 0)
+                    add(ccy, qty * strike * sign)
             rows_out = [
                 {"bucket": bucket, "ccy": k, "notional": v["notional"], "notional_usd": v["notional_usd"]}
                 for k, v in by_ccy.items()
