@@ -81,7 +81,7 @@ interface TableConfig {
     grouping: string[];
     filters: Record<string, any>;
     aggregations?: Record<string, "sum" | "avg" | "min" | "max" | "count" | "none">;
-    notional?: { placement: "off" | "above" | "below" };
+    notional?: { placement: "off" | "above" | "below"; showFX?: boolean; showFXOptions?: boolean; showTotal?: boolean };
 }
 
 interface ComponentBorderInfo {
@@ -139,10 +139,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     // Edit UI: which settings tab is active
-    const [activeEditTab, setActiveEditTab] = useState<"columns" | "group">("columns");
-    const editTabs: Array<{ k: "columns" | "group"; t: string }> = [
+    const [activeEditTab, setActiveEditTab] = useState<"columns" | "group" | "notional">("columns");
+    const editTabs: Array<{ k: "columns" | "group" | "notional"; t: string }> = [
         { k: "columns", t: "Columns" },
         { k: "group", t: "Group & Totals" },
+        { k: "notional", t: "Notional" },
     ];
 
     // Scrollbar state and refs
@@ -1446,11 +1447,14 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     detail: {
                         componentId: componentId || "default",
                         placement,
+                        showFX: !!localConfig?.notional?.showFX,
+                        showFXOptions: !!localConfig?.notional?.showFXOptions,
+                        showTotal: !!localConfig?.notional?.showTotal,
                     },
                 })
             );
         } catch (_) {}
-    }, [localConfig?.notional?.placement, componentId]);
+    }, [localConfig?.notional?.placement, localConfig?.notional?.showFX, localConfig?.notional?.showFXOptions, localConfig?.notional?.showTotal, componentId]);
 
     // Debug logging
     console.log("[AG Grid Debug] Component render:", {
@@ -1583,6 +1587,80 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     </div>
                         )}
 
+                        {activeEditTab === "notional" && (
+                            <div
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                                    gap: 8,
+                                }}
+                            >
+                                <div style={{ padding: "6px", border: `1px solid ${safeTheme.border}`, borderRadius: 6, background: safeTheme.surfaceAlt, fontSize: 12 }}>
+                                    <div style={{ marginBottom: 6, fontWeight: 600 }}>Placement</div>
+                                    <select
+                                        value={localConfig?.notional?.placement || "off"}
+                                        onChange={(e) => {
+                                            const placement = e.target.value as "off" | "above" | "below";
+                                            setLocalConfig((prev) => {
+                                                if (!prev) return prev as any;
+                                                const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), placement } } as any;
+                                                setTimeout(() => saveTableConfig(next), 0);
+                                                window.dispatchEvent(new CustomEvent("portfolio:notional-placement", { detail: { componentId: componentId || "default", placement } }));
+                                                return next;
+                                            });
+                                        }}
+                                        style={{ background: safeTheme.surface, color: safeTheme.text, border: `1px solid ${safeTheme.border}`, padding: "4px 6px", width: "100%" }}
+                                    >
+                                        <option value="off">Off</option>
+                                        <option value="above">Above</option>
+                                        <option value="below">Below</option>
+                                    </select>
+                                </div>
+
+                                <div style={{ padding: "6px", border: `1px solid ${safeTheme.border}`, borderRadius: 6, background: safeTheme.surfaceAlt, fontSize: 12 }}>
+                                    <div style={{ marginBottom: 6, fontWeight: 600 }}>Sections</div>
+                                    <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                                        <input type="checkbox" checked={!!localConfig?.notional?.showFX}
+                                            onChange={(e) => {
+                                                const v = e.target.checked;
+                                                setLocalConfig((prev) => {
+                                                    if (!prev) return prev as any;
+                                                    const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), showFX: v } } as any;
+                                                    setTimeout(() => saveTableConfig(next), 0);
+                                                    return next;
+                                                });
+                                            }} />
+                                        <span>FX</span>
+                                    </label>
+                                    <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                                        <input type="checkbox" checked={!!localConfig?.notional?.showFXOptions}
+                                            onChange={(e) => {
+                                                const v = e.target.checked;
+                                                setLocalConfig((prev) => {
+                                                    if (!prev) return prev as any;
+                                                    const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), showFXOptions: v } } as any;
+                                                    setTimeout(() => saveTableConfig(next), 0);
+                                                    return next;
+                                                });
+                                            }} />
+                                        <span>FX Options</span>
+                                    </label>
+                                    <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        <input type="checkbox" checked={!!localConfig?.notional?.showTotal}
+                                            onChange={(e) => {
+                                                const v = e.target.checked;
+                                                setLocalConfig((prev) => {
+                                                    if (!prev) return prev as any;
+                                                    const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), showTotal: v } } as any;
+                                                    setTimeout(() => saveTableConfig(next), 0);
+                                                    return next;
+                                                });
+                                            }} />
+                                        <span>Total by CCY</span>
+                                    </label>
+                                </div>
+                            </div>
+                        )}
                         {activeEditTab === "group" && (
                             <div
                                     style={{

@@ -425,6 +425,9 @@ async def get_notional_summary(
                     return None
             return None
 
+        debug_ccy = (request.query_params.get("debugCcy") or "").upper()
+        debug_details: list[dict] = []
+
         def agg_rows(rows, is_option: bool):
             bucket = "FXOptions" if is_option else "FX"
             by_ccy = defaultdict(lambda: {"notional": 0.0, "notional_usd": 0.0})
@@ -443,6 +446,20 @@ async def get_notional_summary(
                     usd_val = amt_native * r if (r is not None) else 0.0
                     by_ccy[c]["notional"] += amt_native
                     by_ccy[c]["notional_usd"] += usd_val
+                    if debug_ccy and c == debug_ccy:
+                        debug_details.append({
+                            "bucket": bucket,
+                            "trade_id": t.get("trade_id"),
+                            "side": t.get("position"),
+                            "qty": t.get("quantity"),
+                            "price": t.get("price"),
+                            "strike": t.get("strike"),
+                            "trade_currency": t.get("trade_currency") or t.get("underlying_trade_currency"),
+                            "settlement_currency": t.get("settlement_currency") or t.get("underlying_settlement_currency"),
+                            "ccy": c,
+                            "amt_native": amt_native,
+                            "amt_usd": usd_val,
+                        })
 
                 qty = float(t.get("quantity") or 0)
                 side = str(t.get("position") or "").strip().lower()
@@ -489,6 +506,7 @@ async def get_notional_summary(
                     "FX": fx_totals,
                     "FXOptions": fxopt_totals,
                 },
+                **({"debug": {"ccy": debug_ccy, "rows": debug_details}} if debug_ccy else {}),
             },
         }
     except HTTPException:
