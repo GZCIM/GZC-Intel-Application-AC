@@ -735,7 +735,7 @@ export const Portfolio: React.FC<
                     alignItems: "center",
                     gap: 12,
                     flexWrap: "wrap",
-                    width: "100%",
+                    // width defined below; avoid duplicate key per Vite warning
                     overflowX: "hidden", // prevent horizontal overflow
                     overflowY: "hidden",
                     position: "sticky", // keep header in view
