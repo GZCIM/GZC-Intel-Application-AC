@@ -1,11 +1,14 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 
 type PositionRow = Record<string, any>;
 
 export type NotionalPlacement = "off" | "above" | "below";
 
 interface PortfolioNotionalTableProps {
-    positions: PositionRow[];
+    // Backend-driven: compute and return per-ccy notionals for FX and FXOptions
+    selectedDate: string; // YYYY-MM-DD
+    fundId: number | null | undefined; // 0 or null => ALL
     theme: {
         background: string;
         surface: string;
@@ -30,47 +33,48 @@ function formatNumber(n: number): string {
     });
 }
 
-export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ positions, theme }) => {
-    const rowsByBucket = useMemo(() => {
-        const buckets = new Map<string, Map<string, { notional: number; notionalUsd: number }>>();
-        const ensure = (bucket: string, ccy: string) => {
-            if (!buckets.has(bucket)) buckets.set(bucket, new Map());
-            const m = buckets.get(bucket)!;
-            if (!m.has(ccy)) m.set(ccy, { notional: 0, notionalUsd: 0 });
-            return m.get(ccy)!;
-        };
+export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ selectedDate, fundId, theme }) => {
+    const [rowsByBucket, setRowsByBucket] = useState<{ FX: NotionalRow[]; FXOptions: NotionalRow[] }>({ FX: [], FXOptions: [] });
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
 
-        positions.forEach((p) => {
-            const tradeType = String(p.trade_type || "");
-            const bucket = tradeType.includes("Option") ? "FXOptions" : "FX";
-            const ccy = String(p.trade_currency || p.trade_ccy || p.tradeCurrency || "").toUpperCase();
-            if (!ccy) return;
-
-            // Heuristics:
-            // - Use quantity as native notional if present, otherwise use position
-            // - Convert to USD using eod_price/price when available, otherwise 0
-            const quantity = Number(p.quantity ?? p.position ?? 0) || 0;
-            const rate = Number(p.eod_price ?? p.price ?? 0) || 0;
-            const native = quantity; // assume quantity is in trade ccy
-            const usd = ccy === "USD" ? native : (rate ? native * rate : 0);
-
-            const acc = ensure(bucket, ccy);
-            acc.notional += native;
-            acc.notionalUsd += usd;
-        });
-
-        // Build rows
-        const makeRows = (bucket: string) => {
-            const map = buckets.get(bucket);
-            if (!map) return [] as NotionalRow[];
-            return Array.from(map.entries()).map(([ccy, v]) => ({ ccy, notional: v.notional, notionalUsd: v.notionalUsd, bucket }));
-        };
-
-        return {
-            FX: makeRows("FX"),
-            FXOptions: makeRows("FXOptions"),
-        };
-    }, [positions]);
+    useEffect(() => {
+        let cancelled = false;
+        async function load() {
+            try {
+                setLoading(true);
+                setError(null);
+                const params = new URLSearchParams();
+                params.set("date", selectedDate);
+                if (fundId !== null && fundId !== undefined) {
+                    params.set("fundId", String(fundId));
+                }
+                const { data } = await axios.get(`/api/portfolio/notional-summary?${params.toString()}`);
+                if (cancelled) return;
+                const fx: NotionalRow[] = (data?.data?.FX || []).map((r: any) => ({
+                    ccy: String(r.ccy || "").toUpperCase(),
+                    notional: Number(r.notional || 0),
+                    notionalUsd: Number(r.notional_usd || 0),
+                    bucket: "FX",
+                }));
+                const fxopt: NotionalRow[] = (data?.data?.FXOptions || []).map((r: any) => ({
+                    ccy: String(r.ccy || "").toUpperCase(),
+                    notional: Number(r.notional || 0),
+                    notionalUsd: Number(r.notional_usd || 0),
+                    bucket: "FXOptions",
+                }));
+                setRowsByBucket({ FX: fx, FXOptions: fxopt });
+            } catch (e: any) {
+                if (cancelled) return;
+                setError(e?.message || "Failed to load notional summary");
+                setRowsByBucket({ FX: [], FXOptions: [] });
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        }
+        if (selectedDate) load();
+        return () => { cancelled = true; };
+    }, [selectedDate, fundId]);
 
     const sectionTotal = (rows: NotionalRow[]) => rows.reduce((a, r) => ({
         notional: a.notional + r.notional,
@@ -133,6 +137,12 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
             overflow: "hidden",
             background: theme.background,
         }}>
+            {loading && (
+                <div style={{ padding: "8px", color: theme.text }}>Loading notional…</div>
+            )}
+            {error && (
+                <div style={{ padding: "8px", color: theme.text }}>Error: {error}</div>
+            )}
             <div style={{
                 display: "grid",
                 gridTemplateColumns: "120px 1fr 1fr",

@@ -1657,7 +1657,7 @@ export const Portfolio: React.FC<
                                 {/* Grid container grows; no scrollbars inside */}
                                 {notionalPlacement === "above" && notionalPositions.length > 0 && (
                                     <div style={{ marginBottom: 8 }}>
-                                        <PortfolioNotionalTable positions={notionalPositions} theme={currentTheme as any} />
+                                        <PortfolioNotionalTable selectedDate={effectiveDate} fundId={selectedFundId ?? 0} theme={currentTheme as any} />
                                     </div>
                                 )}
                                 <div
@@ -1729,7 +1729,7 @@ export const Portfolio: React.FC<
                                 {/* Fixed footer at bottom of card */}
                                 {notionalPlacement === "below" && notionalPositions.length > 0 && (
                                     <div style={{ marginTop: 8 }}>
-                                        <PortfolioNotionalTable positions={notionalPositions} theme={currentTheme as any} />
+                                        <PortfolioNotionalTable selectedDate={effectiveDate} fundId={selectedFundId ?? 0} theme={currentTheme as any} />
                                     </div>
                                 )}
                                 <div
