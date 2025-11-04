@@ -81,6 +81,7 @@ interface TableConfig {
     grouping: string[];
     filters: Record<string, any>;
     aggregations?: Record<string, "sum" | "avg" | "min" | "max" | "count" | "none">;
+    notional?: { placement: "off" | "above" | "below" };
 }
 
 interface ComponentBorderInfo {
@@ -1398,10 +1399,40 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 new CustomEvent("portfolio:totals", { detail })
             );
             console.info("[PortfolioTableAGGrid] Dispatched totals to parent", detail);
+            // Also broadcast raw positions for notional component
+            window.dispatchEvent(
+                new CustomEvent("portfolio:positions", {
+                    detail: {
+                        componentId: componentId || "default",
+                        positions: positions || [],
+                    },
+                })
+            );
         } catch (e) {
             console.warn("[PortfolioTableAGGrid] Failed to dispatch totals", e);
         }
     }, [pinnedTotals, componentId]);
+
+    // Listen for notional placement updates from parent (edit mode control)
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const ce = e as CustomEvent;
+            const detail = (ce.detail || {}) as { componentId?: string; placement?: "off" | "above" | "below" };
+            const cid = componentId || "default";
+            if (detail.componentId && detail.componentId !== cid) return;
+            const placement = detail.placement || "off";
+            setLocalConfig((prev) => {
+                if (!prev) return prev as any;
+                const next: TableConfig = { ...prev, notional: { placement } } as any;
+                // Persist immediately so it survives refresh
+                setTimeout(() => saveTableConfig(next), 0);
+                return next;
+            });
+        };
+        window.addEventListener("portfolio:notional-placement", handler as EventListener);
+        return () => window.removeEventListener("portfolio:notional-placement", handler as EventListener);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [componentId, saveTableConfig]);
 
     // Debug logging
     console.log("[AG Grid Debug] Component render:", {

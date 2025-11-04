@@ -10,6 +10,7 @@ import {
 import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
 import PortfolioTableAGGrid from "./PortfolioTableAGGrid";
+import PortfolioNotionalTable, { NotionalPlacement } from "./PortfolioNotionalTable";
 import "../../styles/portfolio.css";
 
 interface PortfolioProps {
@@ -47,6 +48,8 @@ export const Portfolio: React.FC<
     const [toolsEditing, setToolsEditing] = useState(false);
     const [editToggleNonce, setEditToggleNonce] = useState(0);
     const [footerTotals, setFooterTotals] = useState<any[]>([]);
+    const [notionalPositions, setNotionalPositions] = useState<any[]>([]);
+    const [notionalPlacement, setNotionalPlacement] = useState<NotionalPlacement>("off");
     const footerRef = useRef<HTMLDivElement | null>(null);
     const viewportRef = useRef<HTMLDivElement | null>(null);
     const [footerReserveRem, setFooterReserveRem] = useState<number>(4); // default reserve
@@ -224,7 +227,15 @@ export const Portfolio: React.FC<
                 (window as any).__portfolioFooterKeys = Array.isArray(detail.keys) ? detail.keys : undefined;
             }
         };
+        // Listen for raw positions to power notional summary
+        const onPositions = (e: Event) => {
+            const detail = (e as CustomEvent).detail || {};
+            if ((id || (window as any)?.componentId || "default") === detail.componentId) {
+                setNotionalPositions(Array.isArray(detail.positions) ? detail.positions : []);
+            }
+        };
         window.addEventListener("portfolio:totals", onTotals as EventListener);
+        window.addEventListener("portfolio:positions", onPositions as EventListener);
 
         (async () => {
             try {
@@ -248,10 +259,8 @@ export const Portfolio: React.FC<
                 "gzc:edit-mode-toggled",
                 onEditToggle as EventListener
             );
-            window.removeEventListener(
-                "portfolio:totals",
-                onTotals as EventListener
-            );
+            window.removeEventListener("portfolio:totals", onTotals as EventListener);
+            window.removeEventListener("portfolio:positions", onPositions as EventListener);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedFundId, effectiveDate]);
@@ -1274,6 +1283,33 @@ export const Portfolio: React.FC<
                                     overflowX: "auto",
                                 }}
                             >
+                                {(isEditMode || toolsEditing) && (
+                                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                        <span style={{ opacity: 0.8, fontSize: 12 }}>Notional:</span>
+                                        <select
+                                            value={notionalPlacement}
+                                            onChange={(e) => {
+                                                const placement = e.target.value as NotionalPlacement;
+                                                setNotionalPlacement(placement);
+                                                window.dispatchEvent(new CustomEvent("portfolio:notional-placement", {
+                                                    detail: { componentId: id || (window as any)?.componentId || "default", placement },
+                                                }));
+                                            }}
+                                            style={{
+                                                background: currentTheme.surface,
+                                                color: currentTheme.text,
+                                                border: `1px solid ${currentTheme.border}`,
+                                                padding: "4px 8px",
+                                                borderRadius: 4,
+                                                fontSize: 12,
+                                            }}
+                                        >
+                                            <option value="off">Off</option>
+                                            <option value="above">Above</option>
+                                            <option value="below">Below</option>
+                                        </select>
+                                    </div>
+                                )}
                                 {/* Removed: Sync DB, FX Trades, FX Options */}
                                 <div style={{ display: "flex", gap: 6 }}>
                                     <button
@@ -1608,6 +1644,11 @@ export const Portfolio: React.FC<
                                 ref={viewportRef}
                             >
                                 {/* Grid container grows; no scrollbars inside */}
+                                {notionalPlacement === "above" && notionalPositions.length > 0 && (
+                                    <div style={{ marginBottom: 8 }}>
+                                        <PortfolioNotionalTable positions={notionalPositions} theme={currentTheme as any} />
+                                    </div>
+                                )}
                                 <div
                                     style={{
                                         flex: 1,
@@ -1675,6 +1716,11 @@ export const Portfolio: React.FC<
                                 </div>
                                 {/* Single reserve handled via paddingBottom above */}
                                 {/* Fixed footer at bottom of card */}
+                                {notionalPlacement === "below" && notionalPositions.length > 0 && (
+                                    <div style={{ marginTop: 8 }}>
+                                        <PortfolioNotionalTable positions={notionalPositions} theme={currentTheme as any} />
+                                    </div>
+                                )}
                                 <div
                                     style={{
                                         position: "sticky",

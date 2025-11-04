@@ -308,6 +308,142 @@ async def get_fx_positions(
         )
 
 
+# New: Notional summary (per-CCY) for FX and FX Options
+@router.get("/notional-summary", status_code=200)
+async def get_notional_summary(
+    request: Request, current_user: dict = Depends(validate_token)
+):
+    """
+    Return notional exposure per currency for FX and FX Options, and USD conversions.
+    Query params:
+      - date: ISO date (YYYY-MM-DD)
+      - fundId: integer, 0 = ALL (no fund filter)
+    Notes:
+      - If PRICER is configured, uses today's price as conversion rate to USD (for non-USD CCYs).
+      - If PRICER is not configured, USD conversion for non-USD CCYs will be 0 (frontend can still display native notionals).
+    """
+    try:
+        selected_date = request.query_params.get("date")
+        if not selected_date:
+            raise HTTPException(
+                status_code=400, detail="Missing required 'date' query parameter"
+            )
+
+        fund_id_param = request.query_params.get("fundId")
+        fund_id = None
+        if fund_id_param is not None:
+            try:
+                fund_id = int(fund_id_param)
+            except ValueError:
+                raise HTTPException(
+                    status_code=400, detail="'fundId' must be an integer"
+                )
+
+        dao = PortfolioDAO()
+        fx = dao.get_fx_positions(selected_date=selected_date, fund_id=fund_id)
+        fxopt = dao.get_fx_option_positions(selected_date=selected_date, fund_id=fund_id)
+
+        # Build pricer requests (today only) when available
+        from datetime import datetime
+
+        today = datetime.strptime(selected_date, "%Y-%m-%d").date()
+        need_prices: list[dict] = []
+
+        def add_fx_req(t):
+            symbol = f"{str(t.get('trade_currency')).upper()}/{str(t.get('settlement_currency')).upper()}"
+            need_prices.append({
+                "type": "fx_forward",
+                "id": f"fx-{t.get('trade_id')}",
+                "symbol": symbol,
+                "maturityDate": str(t.get("maturity_date"))[:10] if t.get("maturity_date") else None,
+                "dates": [today.isoformat()],
+            })
+
+        def add_fxopt_req(t):
+            underlying = f"{str(t.get('underlying_trade_currency')).upper()}/{str(t.get('underlying_settlement_currency')).upper()}"
+            need_prices.append({
+                "type": "fx_option",
+                "id": f"fxopt-{t.get('trade_id')}",
+                "underlying": underlying,
+                "maturityDate": str(t.get("maturity_date"))[:10] if t.get("maturity_date") else None,
+                "dates": [today.isoformat()],
+            })
+
+        if PRICER_BASE_URL:
+            for t in fx:
+                add_fx_req(t)
+            for t in fxopt:
+                add_fxopt_req(t)
+
+        fetched = _bulk_price(need_prices) if PRICER_BASE_URL else {}
+
+        # Aggregate notionals
+        from collections import defaultdict
+
+        def agg_rows(rows, is_option: bool):
+            bucket = "FXOptions" if is_option else "FX"
+            by_ccy = defaultdict(lambda: {"notional": 0.0, "notional_usd": 0.0})
+            for t in rows:
+                ccy = str(
+                    t.get("trade_currency")
+                    or t.get("underlying_trade_currency")
+                    or ""
+                ).upper()
+                if not ccy:
+                    continue
+                qty = float(t.get("quantity") or 0)
+                side = str(t.get("position") or "").strip().lower()
+                sign = 1.0 if side == "buy" else -1.0
+                native = qty * sign
+
+                rid = ("fxopt-" if is_option else "fx-") + str(t.get("trade_id"))
+                today_key = today.isoformat()
+                rate = None
+                if fetched.get(rid):
+                    rate = fetched[rid].get(today_key)
+                usd = native if ccy == "USD" else (native * float(rate)) if rate else 0.0
+
+                by_ccy[ccy]["notional"] += native
+                by_ccy[ccy]["notional_usd"] += usd
+            rows_out = [
+                {"bucket": bucket, "ccy": k, "notional": v["notional"], "notional_usd": v["notional_usd"]}
+                for k, v in by_ccy.items()
+            ]
+            rows_out.sort(key=lambda r: r["ccy"])  # stable order
+            totals = {
+                "notional": sum(r["notional"] for r in rows_out),
+                "notional_usd": sum(r["notional_usd"] for r in rows_out),
+            }
+            return rows_out, totals
+
+        fx_rows, fx_totals = agg_rows(fx, is_option=False)
+        fxopt_rows, fxopt_totals = agg_rows(fxopt, is_option=True)
+
+        return {
+            "status": "success",
+            "date": today.isoformat(),
+            "fundId": fund_id,
+            "data": {
+                "FX": fx_rows,
+                "FXOptions": fxopt_rows,
+                "totals": {
+                    "FX": fx_totals,
+                    "FXOptions": fxopt_totals,
+                },
+            },
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("[PortfolioController] Failed to compute notional summary")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": str(e),
+                "type": e.__class__.__name__,
+            },
+        )
+
 @router.get("/fx-option-positions", status_code=200)
 async def get_fx_option_positions(
     request: Request, current_user: dict = Depends(validate_token)
