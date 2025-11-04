@@ -438,11 +438,35 @@ async def get_notional_summary(
                 if not ccy:
                     continue
                 qty = float(t.get("quantity") or 0)
-                # Old system defines exposure as both sides of trades; use gross (absolute) notional
-                native = abs(qty)
+                # Match legacy: signed net exposure by side (buy positive, sell negative)
+                side = str(t.get("position") or "").strip().lower()
+                sign = 1.0 if side == "buy" else -1.0
+                native = qty * sign
 
-                # Prefer direct CCY→USD ladder; if unavailable, try via settlement currency triangle
-                rate_ccy_usd = _rate_ccy_to_usd(ccy) if PRICER_BASE_URL else None
+                # Conversion to USD
+                # Priority:
+                # 1) If settlement is USD -> rate 1
+                # 2) For FX trades use DB trade price as converter when non-USD
+                # 3) For FX Options use DB strike as converter when non-USD
+                # 4) Fallback to pricer CCY→USD ladder when available
+                rate_ccy_usd = None
+                try:
+                    if ccy == "USD":
+                        rate_ccy_usd = 1.0
+                    else:
+                        if not is_option:
+                            rate_val = t.get("price")
+                        else:
+                            rate_val = t.get("strike")
+                        if rate_val is not None:
+                            rv = float(rate_val)
+                            if rv > 0:
+                                rate_ccy_usd = rv
+                        if rate_ccy_usd is None and PRICER_BASE_URL:
+                            rate_ccy_usd = _rate_ccy_to_usd(ccy)
+                except Exception:
+                    rate_ccy_usd = None
+
                 usd = native * rate_ccy_usd if (rate_ccy_usd is not None) else 0.0
 
                 by_ccy[ccy]["notional"] += native
