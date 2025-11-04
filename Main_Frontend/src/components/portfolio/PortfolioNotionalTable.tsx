@@ -126,20 +126,22 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
                             <div>{formatNumber(r.notionalUsd)}</div>
                         </div>
                     ))}
-                    <div style={{
-                        display: "grid",
-                        gridTemplateColumns: "120px 1fr 1fr",
-                        gap: 8,
-                        padding: "6px 8px",
-                        border: `1px solid ${theme.border}`,
-                        background: theme.surfaceAlt,
-                        color: theme.text,
-                        fontWeight: 700,
-                    }}>
-                        <div>Total {title}</div>
-                        <div>{formatNumber(t.notional)}</div>
-                        <div>{formatNumber(t.notionalUsd)}</div>
-                    </div>
+                    {t.notionalUsd !== 0 && (
+                        <div style={{
+                            display: "grid",
+                            gridTemplateColumns: "120px 1fr 1fr",
+                            gap: 8,
+                            padding: "6px 8px",
+                            border: `1px solid ${theme.border}`,
+                            background: theme.surfaceAlt,
+                            color: theme.text,
+                            fontWeight: 700,
+                        }}>
+                            <div>Total {title}</div>
+                            <div />
+                            <div>{formatNumber(t.notionalUsd)}</div>
+                        </div>
+                    )}
                 </div>
             </div>
         );

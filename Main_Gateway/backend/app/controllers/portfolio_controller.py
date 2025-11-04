@@ -456,10 +456,14 @@ async def get_notional_summary(
                     add(trade_ccy, qty * sign)
                     add(sett_ccy, qty * price * (-sign))
                 else:
-                    # Options: expose in underlying settlement ccy with notional = qty * strike
-                    ccy = str(t.get("underlying_settlement_currency") or t.get("underlying_trade_currency") or "")
+                    # FX Options: aggregate BOTH sides using underlying currencies
+                    # + underlying trade currency (quantity * sign)
+                    # - underlying settlement currency (quantity * strike * sign inverted)
+                    u_trade_ccy = str(t.get("underlying_trade_currency") or "")
+                    u_settle_ccy = str(t.get("underlying_settlement_currency") or "")
                     strike = float(t.get("strike") or 0)
-                    add(ccy, qty * strike * sign)
+                    add(u_trade_ccy, qty * sign)
+                    add(u_settle_ccy, qty * strike * (-sign))
             rows_out = [
                 {"bucket": bucket, "ccy": k, "notional": v["notional"], "notional_usd": v["notional_usd"]}
                 for k, v in by_ccy.items()
