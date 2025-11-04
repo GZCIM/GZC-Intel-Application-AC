@@ -81,7 +81,7 @@ interface TableConfig {
     grouping: string[];
     filters: Record<string, any>;
     aggregations?: Record<string, "sum" | "avg" | "min" | "max" | "count" | "none">;
-    notional?: { placement: "off" | "above" | "below"; showFX?: boolean; showFXOptions?: boolean; showTotal?: boolean; showFxTotals?: boolean; showFxOptionsTotals?: boolean };
+    notional?: { placement: "off" | "above" | "below"; align?: "left" | "center" | "right"; showFX?: boolean; showFXOptions?: boolean; showTotal?: boolean; showFxTotals?: boolean; showFxOptionsTotals?: boolean };
 }
 
 interface ComponentBorderInfo {
@@ -1447,6 +1447,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     detail: {
                         componentId: componentId || "default",
                         placement,
+                        align: (localConfig?.notional?.align || "left"),
                         showFX: !!localConfig?.notional?.showFX,
                         showFXOptions: !!localConfig?.notional?.showFXOptions,
                         showTotal: !!localConfig?.notional?.showTotal,
@@ -1456,7 +1457,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 })
             );
         } catch (_) {}
-    }, [localConfig?.notional?.placement, localConfig?.notional?.showFX, localConfig?.notional?.showFXOptions, localConfig?.notional?.showTotal, localConfig?.notional?.showFxTotals, localConfig?.notional?.showFxOptionsTotals, componentId]);
+    }, [localConfig?.notional?.placement, localConfig?.notional?.align, localConfig?.notional?.showFX, localConfig?.notional?.showFXOptions, localConfig?.notional?.showTotal, localConfig?.notional?.showFxTotals, localConfig?.notional?.showFxOptionsTotals, componentId]);
 
     // Debug logging
     console.log("[AG Grid Debug] Component render:", {
@@ -1616,6 +1617,24 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                         <option value="off">Off</option>
                                         <option value="above">Above</option>
                                         <option value="below">Below</option>
+                                    </select>
+                                    <div style={{ marginTop: 8, fontWeight: 600 }}>Align</div>
+                                    <select
+                                        value={localConfig?.notional?.align || "left"}
+                                        onChange={(e) => {
+                                            const align = e.target.value as "left" | "center" | "right";
+                                            setLocalConfig((prev) => {
+                                                if (!prev) return prev as any;
+                                                const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), align } } as any;
+                                                setTimeout(() => saveTableConfig(next), 0);
+                                                return next;
+                                            });
+                                        }}
+                                        style={{ background: safeTheme.surface, color: safeTheme.text, border: `1px solid ${safeTheme.border}`, padding: "4px 6px", width: "100%" }}
+                                    >
+                                        <option value="left">Left</option>
+                                        <option value="center">Center</option>
+                                        <option value="right">Right</option>
                                     </select>
                                 </div>
 

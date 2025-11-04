@@ -55,6 +55,7 @@ export const Portfolio: React.FC<
     const [notionalShowTotal, setNotionalShowTotal] = useState<boolean>(true);
     const [notionalShowFxTotals, setNotionalShowFxTotals] = useState<boolean>(true);
     const [notionalShowFxOptionsTotals, setNotionalShowFxOptionsTotals] = useState<boolean>(true);
+    const [notionalAlign, setNotionalAlign] = useState<"left" | "center" | "right">("left");
     const footerRef = useRef<HTMLDivElement | null>(null);
     const viewportRef = useRef<HTMLDivElement | null>(null);
     const [footerReserveRem, setFooterReserveRem] = useState<number>(4); // default reserve
@@ -253,6 +254,9 @@ export const Portfolio: React.FC<
                 if (typeof detail.showTotal === "boolean") setNotionalShowTotal(!!detail.showTotal);
                 if (typeof detail.showFxTotals === "boolean") setNotionalShowFxTotals(!!detail.showFxTotals);
                 if (typeof detail.showFxOptionsTotals === "boolean") setNotionalShowFxOptionsTotals(!!detail.showFxOptionsTotals);
+                if (detail.align === "left" || detail.align === "center" || detail.align === "right") {
+                    setNotionalAlign(detail.align);
+                }
             }
         };
         window.addEventListener("portfolio:notional-updated", onNotionalUpdated as EventListener);
@@ -1667,7 +1671,9 @@ export const Portfolio: React.FC<
                                 {/* Grid container grows; no scrollbars inside */}
                                 {notionalPlacement === "above" && notionalPositions.length > 0 && (
                                     <div style={{ marginBottom: 8 }}>
-                                        <PortfolioNotionalTable selectedDate={effectiveDate} fundId={selectedFundId ?? 0} showFX={notionalShowFX} showFXOptions={notionalShowFXOptions} showTotal={notionalShowTotal} showFxTotals={notionalShowFxTotals} showFxOptionsTotals={notionalShowFxOptionsTotals} theme={currentTheme as any} />
+                                        <div style={{ display: "flex", justifyContent: notionalAlign === "left" ? "flex-start" : notionalAlign === "center" ? "center" : "flex-end" }}>
+                                            <PortfolioNotionalTable selectedDate={effectiveDate} fundId={selectedFundId ?? 0} showFX={notionalShowFX} showFXOptions={notionalShowFXOptions} showTotal={notionalShowTotal} showFxTotals={notionalShowFxTotals} showFxOptionsTotals={notionalShowFxOptionsTotals} maxWidthRem={36} theme={currentTheme as any} />
+                                        </div>
                                     </div>
                                 )}
                                 <div
@@ -1739,7 +1745,9 @@ export const Portfolio: React.FC<
                                 {/* Fixed footer at bottom of card */}
                                 {notionalPlacement === "below" && notionalPositions.length > 0 && (
                                     <div style={{ marginTop: 8 }}>
-                                        <PortfolioNotionalTable selectedDate={effectiveDate} fundId={selectedFundId ?? 0} showFX={notionalShowFX} showFXOptions={notionalShowFXOptions} showTotal={notionalShowTotal} showFxTotals={notionalShowFxTotals} showFxOptionsTotals={notionalShowFxOptionsTotals} theme={currentTheme as any} />
+                                        <div style={{ display: "flex", justifyContent: notionalAlign === "left" ? "flex-start" : notionalAlign === "center" ? "center" : "flex-end" }}>
+                                            <PortfolioNotionalTable selectedDate={effectiveDate} fundId={selectedFundId ?? 0} showFX={notionalShowFX} showFXOptions={notionalShowFXOptions} showTotal={notionalShowTotal} showFxTotals={notionalShowFxTotals} showFxOptionsTotals={notionalShowFxOptionsTotals} maxWidthRem={36} theme={currentTheme as any} />
+                                        </div>
                                     </div>
                                 )}
                                 <div
