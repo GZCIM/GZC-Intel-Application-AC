@@ -236,6 +236,16 @@ export const Portfolio: React.FC<
         };
         window.addEventListener("portfolio:totals", onTotals as EventListener);
         window.addEventListener("portfolio:positions", onPositions as EventListener);
+        const onNotionalUpdated = (e: Event) => {
+            const detail = (e as CustomEvent).detail || {};
+            if ((id || (window as any)?.componentId || "default") === detail.componentId) {
+                const p = detail.placement as NotionalPlacement | undefined;
+                if (p === "off" || p === "above" || p === "below") {
+                    setNotionalPlacement(p);
+                }
+            }
+        };
+        window.addEventListener("portfolio:notional-updated", onNotionalUpdated as EventListener);
 
         (async () => {
             try {
@@ -261,6 +271,7 @@ export const Portfolio: React.FC<
             );
             window.removeEventListener("portfolio:totals", onTotals as EventListener);
             window.removeEventListener("portfolio:positions", onPositions as EventListener);
+            window.removeEventListener("portfolio:notional-updated", onNotionalUpdated as EventListener);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedFundId, effectiveDate]);

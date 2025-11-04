@@ -348,6 +348,8 @@ async def get_notional_summary(
 
         today = datetime.strptime(selected_date, "%Y-%m-%d").date()
         need_prices: list[dict] = []
+        # Also collect unique currencies to fetch CCY/USD ladders for robust USD conversion
+        unique_ccys: set[str] = set()
 
         def add_fx_req(t):
             symbol = f"{str(t.get('trade_currency')).upper()}/{str(t.get('settlement_currency')).upper()}"
@@ -358,6 +360,8 @@ async def get_notional_summary(
                 "maturityDate": str(t.get("maturity_date"))[:10] if t.get("maturity_date") else None,
                 "dates": [today.isoformat()],
             })
+            unique_ccys.add(str(t.get('trade_currency')).upper())
+            unique_ccys.add(str(t.get('settlement_currency')).upper())
 
         def add_fxopt_req(t):
             underlying = f"{str(t.get('underlying_trade_currency')).upper()}/{str(t.get('underlying_settlement_currency')).upper()}"
@@ -368,6 +372,8 @@ async def get_notional_summary(
                 "maturityDate": str(t.get("maturity_date"))[:10] if t.get("maturity_date") else None,
                 "dates": [today.isoformat()],
             })
+            unique_ccys.add(str(t.get('underlying_trade_currency')).upper())
+            unique_ccys.add(str(t.get('underlying_settlement_currency')).upper())
 
         if PRICER_BASE_URL:
             for t in fx:
@@ -375,10 +381,49 @@ async def get_notional_summary(
             for t in fxopt:
                 add_fxopt_req(t)
 
+        # Add currency ladders to USD for robust conversion
+        if PRICER_BASE_URL and unique_ccys:
+            for ccy in unique_ccys:
+                if not ccy or ccy == "USD":
+                    continue
+                need_prices.append({
+                    "type": "fx_forward",
+                    "id": f"rate-{ccy}-USD",
+                    "symbol": f"{ccy}/USD",
+                    "dates": [today.isoformat()],
+                })
+                need_prices.append({
+                    "type": "fx_forward",
+                    "id": f"rate-USD-{ccy}",
+                    "symbol": f"USD/{ccy}",
+                    "dates": [today.isoformat()],
+                })
+
         fetched = _bulk_price(need_prices) if PRICER_BASE_URL else {}
 
         # Aggregate notionals
         from collections import defaultdict
+
+        def _rate_ccy_to_usd(ccy: str) -> float | None:
+            if ccy == "USD":
+                return 1.0
+            today_key = today.isoformat()
+            # Prefer direct CCY/USD
+            direct = fetched.get(f"rate-{ccy}-USD")
+            if direct and today_key in direct:
+                try:
+                    return float(direct[today_key])
+                except Exception:
+                    pass
+            # Fallback to invert USD/CCY
+            inv = fetched.get(f"rate-USD-{ccy}")
+            if inv and today_key in inv:
+                try:
+                    val = float(inv[today_key])
+                    return 1.0 / val if val else None
+                except Exception:
+                    return None
+            return None
 
         def agg_rows(rows, is_option: bool):
             bucket = "FXOptions" if is_option else "FX"
@@ -396,12 +441,9 @@ async def get_notional_summary(
                 sign = 1.0 if side == "buy" else -1.0
                 native = qty * sign
 
-                rid = ("fxopt-" if is_option else "fx-") + str(t.get("trade_id"))
-                today_key = today.isoformat()
-                rate = None
-                if fetched.get(rid):
-                    rate = fetched[rid].get(today_key)
-                usd = native if ccy == "USD" else (native * float(rate)) if rate else 0.0
+                # Prefer direct CCY→USD ladder; if unavailable, try via settlement currency triangle
+                rate_ccy_usd = _rate_ccy_to_usd(ccy) if PRICER_BASE_URL else None
+                usd = native * rate_ccy_usd if (rate_ccy_usd is not None) else 0.0
 
                 by_ccy[ccy]["notional"] += native
                 by_ccy[ccy]["notional_usd"] += usd

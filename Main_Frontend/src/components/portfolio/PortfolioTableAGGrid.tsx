@@ -1434,6 +1434,24 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [componentId, saveTableConfig]);
 
+    // Broadcast current notional placement whenever localConfig changes so parent can reflect UI state
+    useEffect(() => {
+        try {
+            const placement = (localConfig?.notional?.placement || "off") as
+                | "off"
+                | "above"
+                | "below";
+            window.dispatchEvent(
+                new CustomEvent("portfolio:notional-updated", {
+                    detail: {
+                        componentId: componentId || "default",
+                        placement,
+                    },
+                })
+            );
+        } catch (_) {}
+    }, [localConfig?.notional?.placement, componentId]);
+
     // Debug logging
     console.log("[AG Grid Debug] Component render:", {
         positionsCount: positions?.length || 0,
