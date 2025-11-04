@@ -437,9 +437,8 @@ async def get_notional_summary(
                 if not ccy:
                     continue
                 qty = float(t.get("quantity") or 0)
-                side = str(t.get("position") or "").strip().lower()
-                sign = 1.0 if side == "buy" else -1.0
-                native = qty * sign
+                # Old system defines exposure as both sides of trades; use gross (absolute) notional
+                native = abs(qty)
 
                 # Prefer direct CCY→USD ladder; if unavailable, try via settlement currency triangle
                 rate_ccy_usd = _rate_ccy_to_usd(ccy) if PRICER_BASE_URL else None

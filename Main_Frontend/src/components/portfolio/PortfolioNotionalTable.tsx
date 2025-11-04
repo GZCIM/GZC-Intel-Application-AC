@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import { apiClient } from "../../utils/axios";
 
 type PositionRow = Record<string, any>;
 
@@ -49,7 +49,7 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
                 if (fundId !== null && fundId !== undefined) {
                     params.set("fundId", String(fundId));
                 }
-                const { data } = await axios.get(`/api/portfolio/notional-summary?${params.toString()}`);
+                const { data } = await apiClient.get(`/api/portfolio/notional-summary?${params.toString()}`);
                 if (cancelled) return;
                 const fx: NotionalRow[] = (data?.data?.FX || []).map((r: any) => ({
                     ccy: String(r.ccy || "").toUpperCase(),
@@ -80,6 +80,21 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
         notional: a.notional + r.notional,
         notionalUsd: a.notionalUsd + r.notionalUsd,
     }), { notional: 0, notionalUsd: 0 });
+
+    // Combine FX and FXOptions into total exposure per CCY (both sides of trades)
+    const combinedRows: NotionalRow[] = useMemo(() => {
+        const map = new Map<string, { notional: number; notionalUsd: number }>();
+        const add = (rows: NotionalRow[]) => {
+            rows.forEach((r) => {
+                const key = r.ccy.toUpperCase();
+                const prev = map.get(key) || { notional: 0, notionalUsd: 0 };
+                map.set(key, { notional: prev.notional + r.notional, notionalUsd: prev.notionalUsd + r.notionalUsd });
+            });
+        };
+        add(rowsByBucket.FX);
+        add(rowsByBucket.FXOptions);
+        return Array.from(map.entries()).map(([ccy, v]) => ({ ccy, notional: v.notional, notionalUsd: v.notionalUsd, bucket: "ALL" }));
+    }, [rowsByBucket]);
 
     const TableSection: React.FC<{ title: string; rows: NotionalRow[] }> = ({ title, rows }) => {
         if (!rows.length) return null;
@@ -156,6 +171,8 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
                 <div>Notional</div>
                 <div>Notional USD</div>
             </div>
+            {/* Combined view across FX and FXOptions */}
+            <TableSection title="Total by CCY" rows={combinedRows} />
             <TableSection title="FX" rows={rowsByBucket.FX} />
             <TableSection title="FXOptions" rows={rowsByBucket.FXOptions} />
         </div>
