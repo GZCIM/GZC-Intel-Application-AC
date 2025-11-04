@@ -14,6 +14,7 @@ interface PortfolioNotionalTableProps {
     showTotal?: boolean;
     showFxTotals?: boolean;
     showFxOptionsTotals?: boolean;
+    maxWidthRem?: number;
     theme: {
         background: string;
         surface: string;
@@ -38,10 +39,11 @@ function formatNumber(n: number): string {
     });
 }
 
-export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ selectedDate, fundId, showFX = true, showFXOptions = true, showTotal = true, showFxTotals = true, showFxOptionsTotals = true, theme }) => {
+export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ selectedDate, fundId, showFX = true, showFXOptions = true, showTotal = true, showFxTotals = true, showFxOptionsTotals = true, maxWidthRem = 48, theme }) => {
     const [rowsByBucket, setRowsByBucket] = useState<{ FX: NotionalRow[]; FXOptions: NotionalRow[] }>({ FX: [], FXOptions: [] });
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [collapsed, setCollapsed] = useState<{ [k: string]: boolean }>({});
 
     useEffect(() => {
         let cancelled = false;
@@ -104,16 +106,22 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
     const TableSection: React.FC<{ title: string; rows: NotionalRow[]; showTotals?: boolean }> = ({ title, rows, showTotals = true }) => {
         if (!rows.length) return null;
         const t = sectionTotal(rows);
+        const isCollapsed = !!collapsed[title];
         return (
             <div style={{ marginBottom: 8 }}>
-                <div style={{
-                    fontWeight: 700,
-                    padding: "6px 8px",
-                    background: theme.surfaceAlt,
-                    border: `1px solid ${theme.border}`,
-                    color: theme.text,
-                }}>{title}</div>
-                <div>
+                <div
+                    onClick={() => setCollapsed((c) => ({ ...c, [title]: !c[title] }))}
+                    style={{
+                        fontWeight: 700,
+                        padding: "6px 8px",
+                        background: theme.surfaceAlt,
+                        border: `1px solid ${theme.border}`,
+                        color: theme.text,
+                        cursor: "pointer",
+                        userSelect: "none",
+                    }}
+                >{title}</div>
+                {!isCollapsed && <div>
                     {rows.map((r, idx) => (
                         <div key={`${title}-${r.ccy}-${idx}`} style={{
                             display: "grid",
@@ -147,7 +155,7 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
                             <div>{formatNumber(t.notionalUsd)}</div>
                         </div>
                     )}
-                </div>
+                </div>}
             </div>
         );
     };
@@ -158,6 +166,8 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
             borderRadius: 6,
             overflow: "hidden",
             background: theme.background,
+            width: "100%",
+            maxWidth: `${maxWidthRem}rem`,
         }}>
             {loading && (
                 <div style={{ padding: "8px", color: theme.text }}>Loading notional…</div>
