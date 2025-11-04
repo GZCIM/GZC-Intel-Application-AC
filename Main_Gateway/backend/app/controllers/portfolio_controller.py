@@ -429,9 +429,10 @@ async def get_notional_summary(
             bucket = "FXOptions" if is_option else "FX"
             by_ccy = defaultdict(lambda: {"notional": 0.0, "notional_usd": 0.0})
             for t in rows:
+                # Use SETTLEMENT currency as the exposure currency per requirement
                 ccy = str(
-                    t.get("trade_currency")
-                    or t.get("underlying_trade_currency")
+                    (t.get("settlement_currency") if not is_option else t.get("underlying_settlement_currency"))
+                    or (t.get("trade_currency") if not is_option else t.get("underlying_trade_currency"))
                     or ""
                 ).upper()
                 if not ccy:
