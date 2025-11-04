@@ -12,6 +12,8 @@ interface PortfolioNotionalTableProps {
     showFX?: boolean;
     showFXOptions?: boolean;
     showTotal?: boolean;
+    showFxTotals?: boolean;
+    showFxOptionsTotals?: boolean;
     theme: {
         background: string;
         surface: string;
@@ -36,7 +38,7 @@ function formatNumber(n: number): string {
     });
 }
 
-export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ selectedDate, fundId, showFX = true, showFXOptions = true, showTotal = true, theme }) => {
+export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ selectedDate, fundId, showFX = true, showFXOptions = true, showTotal = true, showFxTotals = true, showFxOptionsTotals = true, theme }) => {
     const [rowsByBucket, setRowsByBucket] = useState<{ FX: NotionalRow[]; FXOptions: NotionalRow[] }>({ FX: [], FXOptions: [] });
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -99,7 +101,7 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
         return Array.from(map.entries()).map(([ccy, v]) => ({ ccy, notional: v.notional, notionalUsd: v.notionalUsd, bucket: "ALL" }));
     }, [rowsByBucket]);
 
-    const TableSection: React.FC<{ title: string; rows: NotionalRow[] }> = ({ title, rows }) => {
+    const TableSection: React.FC<{ title: string; rows: NotionalRow[]; showTotals?: boolean }> = ({ title, rows, showTotals = true }) => {
         if (!rows.length) return null;
         const t = sectionTotal(rows);
         return (
@@ -116,7 +118,7 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
                         <div key={`${title}-${r.ccy}-${idx}`} style={{
                             display: "grid",
                             gridTemplateColumns: "120px 1fr 1fr",
-                            gap: 4,
+                            gap: 2,
                             padding: "6px 8px",
                             borderLeft: `1px solid ${theme.border}`,
                             borderRight: `1px solid ${theme.border}`,
@@ -129,11 +131,11 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
                             <div>{formatNumber(r.notionalUsd)}</div>
                         </div>
                     ))}
-                    {t.notionalUsd !== 0 && (
+                    {showTotals && t.notionalUsd !== 0 && (
                         <div style={{
                             display: "grid",
                             gridTemplateColumns: "120px 1fr 1fr",
-                            gap: 4,
+                            gap: 2,
                             padding: "6px 8px",
                             border: `1px solid ${theme.border}`,
                             background: theme.surfaceAlt,
@@ -166,7 +168,7 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
             <div style={{
                 display: "grid",
                 gridTemplateColumns: "120px 1fr 1fr",
-                gap: 4,
+                gap: 2,
                 padding: "8px",
                 background: theme.surface,
                 color: theme.text,
@@ -177,9 +179,9 @@ export const PortfolioNotionalTable: React.FC<PortfolioNotionalTableProps> = ({ 
                 <div>Notional USD</div>
             </div>
             {/* Combined view across FX and FXOptions */}
-            {showTotal && <TableSection title="Total by CCY" rows={combinedRows} />}
-            {showFX && <TableSection title="FX" rows={rowsByBucket.FX} />}
-            {showFXOptions && <TableSection title="FXOptions" rows={rowsByBucket.FXOptions} />}
+            {showTotal && <TableSection title="Total by CCY" rows={combinedRows} showTotals={true} />}
+            {showFX && <TableSection title="FX" rows={rowsByBucket.FX} showTotals={showFxTotals} />}
+            {showFXOptions && <TableSection title="FXOptions" rows={rowsByBucket.FXOptions} showTotals={showFxOptionsTotals} />}
         </div>
     );
 };

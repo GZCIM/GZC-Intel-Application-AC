@@ -81,7 +81,7 @@ interface TableConfig {
     grouping: string[];
     filters: Record<string, any>;
     aggregations?: Record<string, "sum" | "avg" | "min" | "max" | "count" | "none">;
-    notional?: { placement: "off" | "above" | "below"; showFX?: boolean; showFXOptions?: boolean; showTotal?: boolean };
+    notional?: { placement: "off" | "above" | "below"; showFX?: boolean; showFXOptions?: boolean; showTotal?: boolean; showFxTotals?: boolean; showFxOptionsTotals?: boolean };
 }
 
 interface ComponentBorderInfo {
@@ -1450,11 +1450,13 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         showFX: !!localConfig?.notional?.showFX,
                         showFXOptions: !!localConfig?.notional?.showFXOptions,
                         showTotal: !!localConfig?.notional?.showTotal,
+                        showFxTotals: !!localConfig?.notional?.showFxTotals,
+                        showFxOptionsTotals: !!localConfig?.notional?.showFxOptionsTotals,
                     },
                 })
             );
         } catch (_) {}
-    }, [localConfig?.notional?.placement, localConfig?.notional?.showFX, localConfig?.notional?.showFXOptions, localConfig?.notional?.showTotal, componentId]);
+    }, [localConfig?.notional?.placement, localConfig?.notional?.showFX, localConfig?.notional?.showFXOptions, localConfig?.notional?.showTotal, localConfig?.notional?.showFxTotals, localConfig?.notional?.showFxOptionsTotals, componentId]);
 
     // Debug logging
     console.log("[AG Grid Debug] Component render:", {
@@ -1633,6 +1635,19 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                         <span>FX</span>
                                     </label>
                                     <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                                        <input type="checkbox" checked={!!localConfig?.notional?.showFxTotals}
+                                            onChange={(e) => {
+                                                const v = e.target.checked;
+                                                setLocalConfig((prev) => {
+                                                    if (!prev) return prev as any;
+                                                    const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), showFxTotals: v } } as any;
+                                                    setTimeout(() => saveTableConfig(next), 0);
+                                                    return next;
+                                                });
+                                            }} />
+                                        <span>Show FX total (USD)</span>
+                                    </label>
+                                    <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                                         <input type="checkbox" checked={!!localConfig?.notional?.showFXOptions}
                                             onChange={(e) => {
                                                 const v = e.target.checked;
@@ -1644,6 +1659,19 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                 });
                                             }} />
                                         <span>FX Options</span>
+                                    </label>
+                                    <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                                        <input type="checkbox" checked={!!localConfig?.notional?.showFxOptionsTotals}
+                                            onChange={(e) => {
+                                                const v = e.target.checked;
+                                                setLocalConfig((prev) => {
+                                                    if (!prev) return prev as any;
+                                                    const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), showFxOptionsTotals: v } } as any;
+                                                    setTimeout(() => saveTableConfig(next), 0);
+                                                    return next;
+                                                });
+                                            }} />
+                                        <span>Show FX Options total (USD)</span>
                                     </label>
                                     <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                         <input type="checkbox" checked={!!localConfig?.notional?.showTotal}
