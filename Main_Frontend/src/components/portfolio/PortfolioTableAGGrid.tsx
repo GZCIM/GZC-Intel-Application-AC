@@ -145,24 +145,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         { k: "group", t: "Group & Totals" },
     ];
 
-    // Listen for parent-set notional config and persist it
-    useEffect(() => {
-        const handler = (e: Event) => {
-            const ce = e as CustomEvent;
-            const detail = (ce.detail || {}) as { componentId?: string; notional?: Partial<TableConfig["notional"]> };
-            const cid = componentId || "default";
-            if (detail.componentId && detail.componentId !== cid) return;
-            if (!detail.notional) return;
-            setLocalConfig((prev) => {
-                if (!prev) return prev as any;
-                const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), ...detail.notional } } as any;
-                setTimeout(() => saveTableConfig(next), 0);
-                return next;
-            });
-        };
-        window.addEventListener("portfolio:notional-set", handler as EventListener);
-        return () => window.removeEventListener("portfolio:notional-set", handler as EventListener);
-    }, [componentId, saveTableConfig]);
+    // Parent-set notional config listener removed; grid remains single source of persistence
 
     // Scrollbar state and refs
     const [scrollbarState, setScrollbarState] = useState({

@@ -1744,7 +1744,6 @@ export const Portfolio: React.FC<
                                                     <input type="checkbox" checked={notionalEnabled} onChange={(e) => {
                                                         const enabled = e.target.checked;
                                                         setNotionalEnabled(enabled);
-                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { enabled } } }));
                                                         if (!enabled && activeViewTab === "notional") setActiveViewTab("portfolio");
                                                     }} />
                                                     <span>Show Notional</span>
@@ -1754,7 +1753,6 @@ export const Portfolio: React.FC<
                                                     <select value={notionalAlign} onChange={(e) => {
                                                         const align = e.target.value as "left" | "center" | "right";
                                                         setNotionalAlign(align);
-                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { align } } }));
                                                     }} style={{ background: currentTheme.surface, color: currentTheme.text, border: `1px solid ${currentTheme.border}`, padding: "2px 6px", borderRadius: 4 }}>
                                                         <option value="left">Left</option>
                                                         <option value="center">Center</option>
@@ -1765,7 +1763,6 @@ export const Portfolio: React.FC<
                                                     <input type="checkbox" checked={notionalShowFX} onChange={(e) => {
                                                         const showFX = e.target.checked;
                                                         setNotionalShowFX(showFX);
-                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { showFX } } }));
                                                     }} />
                                                     <span>FX</span>
                                                 </label>
@@ -1773,7 +1770,6 @@ export const Portfolio: React.FC<
                                                     <input type="checkbox" checked={notionalShowFxTotals} onChange={(e) => {
                                                         const showFxTotals = e.target.checked;
                                                         setNotionalShowFxTotals(showFxTotals);
-                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { showFxTotals } } }));
                                                     }} />
                                                     <span>FX Totals (USD)</span>
                                                 </label>
@@ -1781,7 +1777,6 @@ export const Portfolio: React.FC<
                                                     <input type="checkbox" checked={notionalShowFXOptions} onChange={(e) => {
                                                         const showFXOptions = e.target.checked;
                                                         setNotionalShowFXOptions(showFXOptions);
-                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { showFXOptions } } }));
                                                     }} />
                                                     <span>FX Options</span>
                                                 </label>
@@ -1789,7 +1784,6 @@ export const Portfolio: React.FC<
                                                     <input type="checkbox" checked={notionalShowFxOptionsTotals} onChange={(e) => {
                                                         const showFxOptionsTotals = e.target.checked;
                                                         setNotionalShowFxOptionsTotals(showFxOptionsTotals);
-                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { showFxOptionsTotals } } }));
                                                     }} />
                                                     <span>FX Options Totals (USD)</span>
                                                 </label>
@@ -1797,7 +1791,6 @@ export const Portfolio: React.FC<
                                                     <input type="checkbox" checked={notionalShowTotal} onChange={(e) => {
                                                         const showTotal = e.target.checked;
                                                         setNotionalShowTotal(showTotal);
-                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { showTotal } } }));
                                                     }} />
                                                     <span>Total by CCY</span>
                                                 </label>
