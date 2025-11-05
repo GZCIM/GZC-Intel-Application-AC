@@ -1657,7 +1657,7 @@ export const Portfolio: React.FC<
                                     return tabs.length > 1 ? (
                                         <div style={{ position: "sticky", top: 0, zIndex: 3, background: currentTheme.surface, borderBottom: `1px solid ${currentTheme.border}`, display: "flex" }}>
                                             <button onClick={() => setActiveViewTab("portfolio")} style={{ padding: "8px 12px", borderRight: `1px solid ${currentTheme.border}`, background: activeViewTab === "portfolio" ? currentTheme.surfaceAlt : "transparent", color: currentTheme.text, cursor: "pointer" }}>Portfolio</button>
-                                            {((isEditMode || toolsEditing) || notionalEnabled) && (
+                                            {tabs.includes("notional") && (
                                                 <button onClick={() => setActiveViewTab("notional")} style={{ padding: "8px 12px", borderRight: `1px solid ${currentTheme.border}`, background: activeViewTab === "notional" ? currentTheme.surfaceAlt : "transparent", color: currentTheme.text, cursor: "pointer" }}>Notional</button>
                                             )}
                                         </div>
@@ -1735,7 +1735,7 @@ export const Portfolio: React.FC<
                                         </div>
                                     </>
 
-                                {activeViewTab === "notional" && ((isEditMode || toolsEditing) || notionalEnabled) && (
+                                {activeViewTab === "notional" && (isEditMode || toolsEditing || notionalEnabled) && (
                                     <div style={{ padding: 12 }}>
                                         {(isEditMode || toolsEditing) && (
                                             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
