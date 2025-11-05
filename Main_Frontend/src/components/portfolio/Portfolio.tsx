@@ -1650,11 +1650,13 @@ export const Portfolio: React.FC<
                                 ref={viewportRef}
                             >
                                 {(() => {
-                                    const tabs = ["portfolio", ...(notionalEnabled ? ["notional"] : [])] as Array<"portfolio" | "notional">;
+                                    const tabs = (isEditMode || toolsEditing)
+                                        ? (["portfolio", "notional"] as Array<"portfolio" | "notional">)
+                                        : (["portfolio", ...(notionalEnabled ? ["notional"] : [])] as Array<"portfolio" | "notional">);
                                     return tabs.length > 1 ? (
                                         <div style={{ position: "sticky", top: 0, zIndex: 3, background: currentTheme.surface, borderBottom: `1px solid ${currentTheme.border}`, display: "flex" }}>
                                             <button onClick={() => setActiveViewTab("portfolio")} style={{ padding: "8px 12px", borderRight: `1px solid ${currentTheme.border}`, background: activeViewTab === "portfolio" ? currentTheme.surfaceAlt : "transparent", color: currentTheme.text, cursor: "pointer" }}>Portfolio</button>
-                                            {notionalEnabled && (
+                                            {((isEditMode || toolsEditing) || notionalEnabled) && (
                                                 <button onClick={() => setActiveViewTab("notional")} style={{ padding: "8px 12px", borderRight: `1px solid ${currentTheme.border}`, background: activeViewTab === "notional" ? currentTheme.surfaceAlt : "transparent", color: currentTheme.text, cursor: "pointer" }}>Notional</button>
                                             )}
                                         </div>
@@ -1734,8 +1736,73 @@ export const Portfolio: React.FC<
                                     </>
                                 )}
 
-                                {activeViewTab === "notional" && notionalEnabled && (
+                                {activeViewTab === "notional" && ((isEditMode || toolsEditing) || notionalEnabled) && (
                                     <div style={{ padding: 12 }}>
+                                        {(isEditMode || toolsEditing) && (
+                                            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
+                                                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                                    <input type="checkbox" checked={notionalEnabled} onChange={(e) => {
+                                                        const enabled = e.target.checked;
+                                                        setNotionalEnabled(enabled);
+                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { enabled } } }));
+                                                        if (!enabled && activeViewTab === "notional") setActiveViewTab("portfolio");
+                                                    }} />
+                                                    <span>Show Notional</span>
+                                                </label>
+                                                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                                    <span>Align</span>
+                                                    <select value={notionalAlign} onChange={(e) => {
+                                                        const align = e.target.value as "left" | "center" | "right";
+                                                        setNotionalAlign(align);
+                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { align } } }));
+                                                    }} style={{ background: currentTheme.surface, color: currentTheme.text, border: `1px solid ${currentTheme.border}`, padding: "2px 6px", borderRadius: 4 }}>
+                                                        <option value="left">Left</option>
+                                                        <option value="center">Center</option>
+                                                        <option value="right">Right</option>
+                                                    </select>
+                                                </label>
+                                                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                                    <input type="checkbox" checked={notionalShowFX} onChange={(e) => {
+                                                        const showFX = e.target.checked;
+                                                        setNotionalShowFX(showFX);
+                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { showFX } } }));
+                                                    }} />
+                                                    <span>FX</span>
+                                                </label>
+                                                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                                    <input type="checkbox" checked={notionalShowFxTotals} onChange={(e) => {
+                                                        const showFxTotals = e.target.checked;
+                                                        setNotionalShowFxTotals(showFxTotals);
+                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { showFxTotals } } }));
+                                                    }} />
+                                                    <span>FX Totals (USD)</span>
+                                                </label>
+                                                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                                    <input type="checkbox" checked={notionalShowFXOptions} onChange={(e) => {
+                                                        const showFXOptions = e.target.checked;
+                                                        setNotionalShowFXOptions(showFXOptions);
+                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { showFXOptions } } }));
+                                                    }} />
+                                                    <span>FX Options</span>
+                                                </label>
+                                                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                                    <input type="checkbox" checked={notionalShowFxOptionsTotals} onChange={(e) => {
+                                                        const showFxOptionsTotals = e.target.checked;
+                                                        setNotionalShowFxOptionsTotals(showFxOptionsTotals);
+                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { showFxOptionsTotals } } }));
+                                                    }} />
+                                                    <span>FX Options Totals (USD)</span>
+                                                </label>
+                                                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                                    <input type="checkbox" checked={notionalShowTotal} onChange={(e) => {
+                                                        const showTotal = e.target.checked;
+                                                        setNotionalShowTotal(showTotal);
+                                                        window.dispatchEvent(new CustomEvent("portfolio:notional-set", { detail: { componentId: id || (window as any)?.componentId || "default", notional: { showTotal } } }));
+                                                    }} />
+                                                    <span>Total by CCY</span>
+                                                </label>
+                                            </div>
+                                        )}
                                         <div style={{ display: "flex", justifyContent: notionalAlign === "left" ? "flex-start" : notionalAlign === "center" ? "center" : "flex-end" }}>
                                             <PortfolioNotionalTable selectedDate={effectiveDate} fundId={selectedFundId ?? 0} showFX={notionalShowFX} showFXOptions={notionalShowFXOptions} showTotal={notionalShowTotal} showFxTotals={notionalShowFxTotals} showFxOptionsTotals={notionalShowFxOptionsTotals} maxWidthRem={36} theme={currentTheme as any} />
                                         </div>

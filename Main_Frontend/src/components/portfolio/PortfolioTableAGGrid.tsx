@@ -139,12 +139,30 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     // Edit UI: which settings tab is active
-    const [activeEditTab, setActiveEditTab] = useState<"columns" | "group" | "notional">("columns");
-    const editTabs: Array<{ k: "columns" | "group" | "notional"; t: string }> = [
+    const [activeEditTab, setActiveEditTab] = useState<"columns" | "group">("columns");
+    const editTabs: Array<{ k: "columns" | "group"; t: string }> = [
         { k: "columns", t: "Columns" },
         { k: "group", t: "Group & Totals" },
-        { k: "notional", t: "Notional" },
     ];
+
+    // Listen for parent-set notional config and persist it
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const ce = e as CustomEvent;
+            const detail = (ce.detail || {}) as { componentId?: string; notional?: Partial<TableConfig["notional"]> };
+            const cid = componentId || "default";
+            if (detail.componentId && detail.componentId !== cid) return;
+            if (!detail.notional) return;
+            setLocalConfig((prev) => {
+                if (!prev) return prev as any;
+                const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), ...detail.notional } } as any;
+                setTimeout(() => saveTableConfig(next), 0);
+                return next;
+            });
+        };
+        window.addEventListener("portfolio:notional-set", handler as EventListener);
+        return () => window.removeEventListener("portfolio:notional-set", handler as EventListener);
+    }, [componentId, saveTableConfig]);
 
     // Scrollbar state and refs
     const [scrollbarState, setScrollbarState] = useState({
@@ -1568,121 +1586,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     </div>
                         )}
 
-                        {activeEditTab === "notional" && (
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                                    gap: 8,
-                                }}
-                            >
-                                <div style={{ padding: "6px", border: `1px solid ${safeTheme.border}`, borderRadius: 6, background: safeTheme.surfaceAlt, fontSize: 12 }}>
-                                    <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={!!(localConfig?.notional?.enabled ?? (localConfig?.notional?.placement !== "off"))}
-                                            onChange={(e) => {
-                                                const enabled = e.target.checked;
-                                                setLocalConfig((prev) => {
-                                                    if (!prev) return prev as any;
-                                                    const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), enabled } } as any;
-                                                    setTimeout(() => saveTableConfig(next), 0);
-                                                    return next;
-                                                });
-                                            }}
-                                        />
-                                        <span style={{ fontWeight: 600 }}>Show Notional</span>
-                                    </label>
-                                    <div style={{ marginTop: 8, fontWeight: 600 }}>Align</div>
-                                    <select
-                                        value={localConfig?.notional?.align || "left"}
-                                        onChange={(e) => {
-                                            const align = e.target.value as "left" | "center" | "right";
-                                            setLocalConfig((prev) => {
-                                                if (!prev) return prev as any;
-                                                const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), align } } as any;
-                                                setTimeout(() => saveTableConfig(next), 0);
-                                                return next;
-                                            });
-                                        }}
-                                        style={{ background: safeTheme.surface, color: safeTheme.text, border: `1px solid ${safeTheme.border}`, padding: "4px 6px", width: "100%" }}
-                                    >
-                                        <option value="left">Left</option>
-                                        <option value="center">Center</option>
-                                        <option value="right">Right</option>
-                                    </select>
-                                </div>
-
-                                <div style={{ padding: "6px", border: `1px solid ${safeTheme.border}`, borderRadius: 6, background: safeTheme.surfaceAlt, fontSize: 12 }}>
-                                    <div style={{ marginBottom: 6, fontWeight: 600 }}>Sections</div>
-                                    <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                                        <input type="checkbox" checked={!!localConfig?.notional?.showFX}
-                                            onChange={(e) => {
-                                                const v = e.target.checked;
-                                                setLocalConfig((prev) => {
-                                                    if (!prev) return prev as any;
-                                                    const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), showFX: v } } as any;
-                                                    setTimeout(() => saveTableConfig(next), 0);
-                                                    return next;
-                                                });
-                                            }} />
-                                        <span>FX</span>
-                                    </label>
-                                    <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                                        <input type="checkbox" checked={!!localConfig?.notional?.showFxTotals}
-                                            onChange={(e) => {
-                                                const v = e.target.checked;
-                                                setLocalConfig((prev) => {
-                                                    if (!prev) return prev as any;
-                                                    const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), showFxTotals: v } } as any;
-                                                    setTimeout(() => saveTableConfig(next), 0);
-                                                    return next;
-                                                });
-                                            }} />
-                                        <span>Show FX total (USD)</span>
-                                    </label>
-                                    <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                                        <input type="checkbox" checked={!!localConfig?.notional?.showFXOptions}
-                                            onChange={(e) => {
-                                                const v = e.target.checked;
-                                                setLocalConfig((prev) => {
-                                                    if (!prev) return prev as any;
-                                                    const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), showFXOptions: v } } as any;
-                                                    setTimeout(() => saveTableConfig(next), 0);
-                                                    return next;
-                                                });
-                                            }} />
-                                        <span>FX Options</span>
-                                    </label>
-                                    <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                                        <input type="checkbox" checked={!!localConfig?.notional?.showFxOptionsTotals}
-                                            onChange={(e) => {
-                                                const v = e.target.checked;
-                                                setLocalConfig((prev) => {
-                                                    if (!prev) return prev as any;
-                                                    const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), showFxOptionsTotals: v } } as any;
-                                                    setTimeout(() => saveTableConfig(next), 0);
-                                                    return next;
-                                                });
-                                            }} />
-                                        <span>Show FX Options total (USD)</span>
-                                    </label>
-                                    <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                        <input type="checkbox" checked={!!localConfig?.notional?.showTotal}
-                                            onChange={(e) => {
-                                                const v = e.target.checked;
-                                                setLocalConfig((prev) => {
-                                                    if (!prev) return prev as any;
-                                                    const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), showTotal: v } } as any;
-                                                    setTimeout(() => saveTableConfig(next), 0);
-                                                    return next;
-                                                });
-                                            }} />
-                                        <span>Total by CCY</span>
-                                    </label>
-                                </div>
-                            </div>
-                        )}
                         {activeEditTab === "group" && (
                             <div
                                     style={{
