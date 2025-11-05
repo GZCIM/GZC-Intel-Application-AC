@@ -260,9 +260,6 @@ export const Portfolio: React.FC<
                 }
                 if (typeof detail.enabled === "boolean") {
                     setNotionalEnabled(detail.enabled);
-                    if (!detail.enabled && activeViewTab === "notional") {
-                        setActiveViewTab("portfolio");
-                    }
                 }
             }
         };
@@ -1744,7 +1741,6 @@ export const Portfolio: React.FC<
                                                     <input type="checkbox" checked={notionalEnabled} onChange={(e) => {
                                                         const enabled = e.target.checked;
                                                         setNotionalEnabled(enabled);
-                                                        if (!enabled && activeViewTab === "notional") setActiveViewTab("portfolio");
                                                     }} />
                                                     <span>Show Notional</span>
                                                 </label>
