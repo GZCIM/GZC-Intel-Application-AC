@@ -1415,6 +1415,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         }
     }, [pinnedTotals, componentId]);
 
+    // Buffer for early notional changes before config loads
+    const pendingNotionalRef = useRef<Partial<TableConfig["notional"]> | null>(null);
+
     // Listen for parent Notional control updates and persist into tableConfig
     useEffect(() => {
         const onNotionalControl = (e: Event) => {
@@ -1422,7 +1425,14 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 const detail = (e as CustomEvent).detail || {};
                 if ((componentId || "default") !== detail.componentId) return;
                 const incoming = (detail.notional || {}) as Partial<TableConfig["notional"]>;
-                if (!localConfig) return;
+                if (!localConfig) {
+                    // Config not ready yet; buffer and apply once loaded
+                    pendingNotionalRef.current = {
+                        ...(pendingNotionalRef.current || {}),
+                        ...incoming,
+                    };
+                    return;
+                }
                 const next: TableConfig = {
                     ...localConfig,
                     notional: {
@@ -1440,6 +1450,23 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [localConfig, componentId]);
+
+    // When config becomes available, apply any buffered notional changes and persist
+    useEffect(() => {
+        if (!localConfig || !pendingNotionalRef.current) return;
+        const buffered = pendingNotionalRef.current;
+        pendingNotionalRef.current = null;
+        const next: TableConfig = {
+            ...localConfig,
+            notional: {
+                ...(localConfig.notional || {}),
+                ...buffered,
+            },
+        } as any;
+        setLocalConfig(next);
+        saveTableConfig(next);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [localConfig]);
 
     // Broadcast current notional settings whenever localConfig changes so parent can reflect UI state
     useEffect(() => {

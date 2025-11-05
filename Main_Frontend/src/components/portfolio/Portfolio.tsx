@@ -1674,7 +1674,7 @@ export const Portfolio: React.FC<
                                                 paddingBottom: `${footerReserveRem}rem`,
                                                 display: "inline-block",
                                             }}
-                                            className="portfolio-table-container"
+                                            className="portfolio-table-container no-drag"
                                             id={`portfolio-container-${id || "default"}`}
                                         >
                                             <PortfolioTableAGGrid
