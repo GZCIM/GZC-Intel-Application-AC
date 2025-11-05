@@ -1665,22 +1665,21 @@ export const Portfolio: React.FC<
                                 })()}
 
                                 {/* Tab content */}
-                                {(activeViewTab === "portfolio" || !notionalEnabled) && (
-                                    <>
-                                        <div
-                                            style={{
-                                                flex: 1,
-                                                height: "100%",
-                                                width: "max-content",
-                                                minWidth: "100%",
-                                                position: "relative",
-                                                overflow: "hidden",
-                                                paddingBottom: `${footerReserveRem}rem`,
-                                                display: "inline-block",
-                                            }}
-                                            className="portfolio-table-container no-drag"
-                                            id={`portfolio-container-${id || "default"}`}
-                                        >
+                                <>
+                                    <div
+                                        style={{
+                                            flex: 1,
+                                            height: "100%",
+                                            width: "max-content",
+                                            minWidth: "100%",
+                                            position: "relative",
+                                            overflow: "hidden",
+                                            paddingBottom: `${footerReserveRem}rem`,
+                                            display: (activeViewTab === "portfolio" || !notionalEnabled) ? "inline-block" : "none",
+                                        }}
+                                        className="portfolio-table-container no-drag"
+                                        id={`portfolio-container-${id || "default"}`}
+                                    >
                                             <PortfolioTableAGGrid
                                                 selectedDate={effectiveDate}
                                                 fundId={Number(selectedFundId) || 0}
@@ -1706,9 +1705,9 @@ export const Portfolio: React.FC<
                                                     return borderInfo;
                                                 })()}
                                             />
-                                        </div>
-                                        {/* Sticky footer */}
-                                        <div
+                                    </div>
+                                    {/* Sticky footer */}
+                                    <div
                                             style={{
                                                 position: "sticky",
                                                 bottom: 0,
@@ -1735,7 +1734,6 @@ export const Portfolio: React.FC<
                                             ))}
                                         </div>
                                     </>
-                                )}
 
                                 {activeViewTab === "notional" && ((isEditMode || toolsEditing) || notionalEnabled) && (
                                     <div style={{ padding: 12 }}>
