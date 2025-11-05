@@ -1415,7 +1415,31 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         }
     }, [pinnedTotals, componentId]);
 
-    // (removed) placement listener; Notional now controlled by enabled flag and shown in a separate tab
+    // Listen for parent Notional control updates and persist into tableConfig
+    useEffect(() => {
+        const onNotionalControl = (e: Event) => {
+            try {
+                const detail = (e as CustomEvent).detail || {};
+                if ((componentId || "default") !== detail.componentId) return;
+                const incoming = (detail.notional || {}) as Partial<TableConfig["notional"]>;
+                if (!localConfig) return;
+                const next: TableConfig = {
+                    ...localConfig,
+                    notional: {
+                        ...(localConfig.notional || {}),
+                        ...incoming,
+                    },
+                } as any;
+                setLocalConfig(next);
+                saveTableConfig(next);
+            } catch (_) {}
+        };
+        window.addEventListener("portfolio:notional-control", onNotionalControl as EventListener);
+        return () => {
+            window.removeEventListener("portfolio:notional-control", onNotionalControl as EventListener);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [localConfig, componentId]);
 
     // Broadcast current notional settings whenever localConfig changes so parent can reflect UI state
     useEffect(() => {

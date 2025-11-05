@@ -1738,56 +1738,166 @@ export const Portfolio: React.FC<
                                         {(isEditMode || toolsEditing) && (
                                             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
                                                 <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-                                                    <input type="checkbox" checked={notionalEnabled} onChange={(e) => {
-                                                        const enabled = e.target.checked;
-                                                        setNotionalEnabled(enabled);
-                                                    }} />
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={notionalEnabled}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        onChange={(e) => {
+                                                            e.stopPropagation();
+                                                            const enabled = e.target.checked;
+                                                            setNotionalEnabled(enabled);
+                                                            try {
+                                                                window.dispatchEvent(
+                                                                    new CustomEvent("portfolio:notional-control", {
+                                                                        detail: {
+                                                                            componentId: id || (window as any)?.componentId || "default",
+                                                                            notional: { enabled },
+                                                                        },
+                                                                    })
+                                                                );
+                                                            } catch (_) {}
+                                                        }}
+                                                    />
                                                     <span>Show Notional</span>
                                                 </label>
                                                 <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
                                                     <span>Align</span>
-                                                    <select value={notionalAlign} onChange={(e) => {
-                                                        const align = e.target.value as "left" | "center" | "right";
-                                                        setNotionalAlign(align);
-                                                    }} style={{ background: currentTheme.surface, color: currentTheme.text, border: `1px solid ${currentTheme.border}`, padding: "2px 6px", borderRadius: 4 }}>
+                                                    <select
+                                                        value={notionalAlign}
+                                                        onChange={(e) => {
+                                                            const align = e.target.value as "left" | "center" | "right";
+                                                            setNotionalAlign(align);
+                                                            try {
+                                                                window.dispatchEvent(
+                                                                    new CustomEvent("portfolio:notional-control", {
+                                                                        detail: {
+                                                                            componentId: id || (window as any)?.componentId || "default",
+                                                                            notional: { align },
+                                                                        },
+                                                                    })
+                                                                );
+                                                            } catch (_) {}
+                                                        }}
+                                                        style={{ background: currentTheme.surface, color: currentTheme.text, border: `1px solid ${currentTheme.border}`, padding: "2px 6px", borderRadius: 4 }}
+                                                    >
                                                         <option value="left">Left</option>
                                                         <option value="center">Center</option>
                                                         <option value="right">Right</option>
                                                     </select>
                                                 </label>
                                                 <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-                                                    <input type="checkbox" checked={notionalShowFX} onChange={(e) => {
-                                                        const showFX = e.target.checked;
-                                                        setNotionalShowFX(showFX);
-                                                    }} />
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={notionalShowFX}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        onChange={(e) => {
+                                                            e.stopPropagation();
+                                                            const showFX = e.target.checked;
+                                                            setNotionalShowFX(showFX);
+                                                            try {
+                                                                window.dispatchEvent(
+                                                                    new CustomEvent("portfolio:notional-control", {
+                                                                        detail: {
+                                                                            componentId: id || (window as any)?.componentId || "default",
+                                                                            notional: { showFX },
+                                                                        },
+                                                                    })
+                                                                );
+                                                            } catch (_) {}
+                                                        }}
+                                                    />
                                                     <span>FX</span>
                                                 </label>
                                                 <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-                                                    <input type="checkbox" checked={notionalShowFxTotals} onChange={(e) => {
-                                                        const showFxTotals = e.target.checked;
-                                                        setNotionalShowFxTotals(showFxTotals);
-                                                    }} />
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={notionalShowFxTotals}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        onChange={(e) => {
+                                                            e.stopPropagation();
+                                                            const showFxTotals = e.target.checked;
+                                                            setNotionalShowFxTotals(showFxTotals);
+                                                            try {
+                                                                window.dispatchEvent(
+                                                                    new CustomEvent("portfolio:notional-control", {
+                                                                        detail: {
+                                                                            componentId: id || (window as any)?.componentId || "default",
+                                                                            notional: { showFxTotals },
+                                                                        },
+                                                                    })
+                                                                );
+                                                            } catch (_) {}
+                                                        }}
+                                                    />
                                                     <span>FX Totals (USD)</span>
                                                 </label>
                                                 <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-                                                    <input type="checkbox" checked={notionalShowFXOptions} onChange={(e) => {
-                                                        const showFXOptions = e.target.checked;
-                                                        setNotionalShowFXOptions(showFXOptions);
-                                                    }} />
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={notionalShowFXOptions}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        onChange={(e) => {
+                                                            e.stopPropagation();
+                                                            const showFXOptions = e.target.checked;
+                                                            setNotionalShowFXOptions(showFXOptions);
+                                                            try {
+                                                                window.dispatchEvent(
+                                                                    new CustomEvent("portfolio:notional-control", {
+                                                                        detail: {
+                                                                            componentId: id || (window as any)?.componentId || "default",
+                                                                            notional: { showFXOptions },
+                                                                        },
+                                                                    })
+                                                                );
+                                                            } catch (_) {}
+                                                        }}
+                                                    />
                                                     <span>FX Options</span>
                                                 </label>
                                                 <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-                                                    <input type="checkbox" checked={notionalShowFxOptionsTotals} onChange={(e) => {
-                                                        const showFxOptionsTotals = e.target.checked;
-                                                        setNotionalShowFxOptionsTotals(showFxOptionsTotals);
-                                                    }} />
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={notionalShowFxOptionsTotals}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        onChange={(e) => {
+                                                            e.stopPropagation();
+                                                            const showFxOptionsTotals = e.target.checked;
+                                                            setNotionalShowFxOptionsTotals(showFxOptionsTotals);
+                                                            try {
+                                                                window.dispatchEvent(
+                                                                    new CustomEvent("portfolio:notional-control", {
+                                                                        detail: {
+                                                                            componentId: id || (window as any)?.componentId || "default",
+                                                                            notional: { showFxOptionsTotals },
+                                                                        },
+                                                                    })
+                                                                );
+                                                            } catch (_) {}
+                                                        }}
+                                                    />
                                                     <span>FX Options Totals (USD)</span>
                                                 </label>
                                                 <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-                                                    <input type="checkbox" checked={notionalShowTotal} onChange={(e) => {
-                                                        const showTotal = e.target.checked;
-                                                        setNotionalShowTotal(showTotal);
-                                                    }} />
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={notionalShowTotal}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        onChange={(e) => {
+                                                            e.stopPropagation();
+                                                            const showTotal = e.target.checked;
+                                                            setNotionalShowTotal(showTotal);
+                                                            try {
+                                                                window.dispatchEvent(
+                                                                    new CustomEvent("portfolio:notional-control", {
+                                                                        detail: {
+                                                                            componentId: id || (window as any)?.componentId || "default",
+                                                                            notional: { showTotal },
+                                                                        },
+                                                                    })
+                                                                );
+                                                            } catch (_) {}
+                                                        }}
+                                                    />
                                                     <span>Total by CCY</span>
                                                 </label>
                                             </div>
