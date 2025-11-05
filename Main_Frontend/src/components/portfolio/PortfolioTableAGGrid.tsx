@@ -81,7 +81,7 @@ interface TableConfig {
     grouping: string[];
     filters: Record<string, any>;
     aggregations?: Record<string, "sum" | "avg" | "min" | "max" | "count" | "none">;
-    notional?: { placement: "off" | "above" | "below"; align?: "left" | "center" | "right"; showFX?: boolean; showFXOptions?: boolean; showTotal?: boolean; showFxTotals?: boolean; showFxOptionsTotals?: boolean };
+    notional?: { enabled?: boolean; placement?: "off" | "above" | "below"; align?: "left" | "center" | "right"; showFX?: boolean; showFXOptions?: boolean; showTotal?: boolean; showFxTotals?: boolean; showFxOptionsTotals?: boolean };
 }
 
 interface ComponentBorderInfo {
@@ -1414,39 +1414,17 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         }
     }, [pinnedTotals, componentId]);
 
-    // Listen for notional placement updates from parent (edit mode control)
-    useEffect(() => {
-        const handler = (e: Event) => {
-            const ce = e as CustomEvent;
-            const detail = (ce.detail || {}) as { componentId?: string; placement?: "off" | "above" | "below" };
-            const cid = componentId || "default";
-            if (detail.componentId && detail.componentId !== cid) return;
-            const placement = detail.placement || "off";
-            setLocalConfig((prev) => {
-                if (!prev) return prev as any;
-                const next: TableConfig = { ...prev, notional: { placement } } as any;
-                // Persist immediately so it survives refresh
-                setTimeout(() => saveTableConfig(next), 0);
-                return next;
-            });
-        };
-        window.addEventListener("portfolio:notional-placement", handler as EventListener);
-        return () => window.removeEventListener("portfolio:notional-placement", handler as EventListener);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [componentId, saveTableConfig]);
+    // (removed) placement listener; Notional now controlled by enabled flag and shown in a separate tab
 
-    // Broadcast current notional placement whenever localConfig changes so parent can reflect UI state
+    // Broadcast current notional settings whenever localConfig changes so parent can reflect UI state
     useEffect(() => {
         try {
-            const placement = (localConfig?.notional?.placement || "off") as
-                | "off"
-                | "above"
-                | "below";
+            const enabled = !!(localConfig?.notional?.enabled ?? (localConfig?.notional?.placement !== "off"));
             window.dispatchEvent(
                 new CustomEvent("portfolio:notional-updated", {
                     detail: {
                         componentId: componentId || "default",
-                        placement,
+                        enabled,
                         align: (localConfig?.notional?.align || "left"),
                         showFX: !!localConfig?.notional?.showFX,
                         showFXOptions: !!localConfig?.notional?.showFXOptions,
@@ -1457,7 +1435,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 })
             );
         } catch (_) {}
-    }, [localConfig?.notional?.placement, localConfig?.notional?.align, localConfig?.notional?.showFX, localConfig?.notional?.showFXOptions, localConfig?.notional?.showTotal, localConfig?.notional?.showFxTotals, localConfig?.notional?.showFxOptionsTotals, componentId]);
+    }, [localConfig?.notional?.enabled, localConfig?.notional?.placement, localConfig?.notional?.align, localConfig?.notional?.showFX, localConfig?.notional?.showFXOptions, localConfig?.notional?.showTotal, localConfig?.notional?.showFxTotals, localConfig?.notional?.showFxOptionsTotals, componentId]);
 
     // Debug logging
     console.log("[AG Grid Debug] Component render:", {
@@ -1599,25 +1577,22 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 }}
                             >
                                 <div style={{ padding: "6px", border: `1px solid ${safeTheme.border}`, borderRadius: 6, background: safeTheme.surfaceAlt, fontSize: 12 }}>
-                                    <div style={{ marginBottom: 6, fontWeight: 600 }}>Placement</div>
-                                    <select
-                                        value={localConfig?.notional?.placement || "off"}
-                                        onChange={(e) => {
-                                            const placement = e.target.value as "off" | "above" | "below";
-                                            setLocalConfig((prev) => {
-                                                if (!prev) return prev as any;
-                                                const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), placement } } as any;
-                                                setTimeout(() => saveTableConfig(next), 0);
-                                                window.dispatchEvent(new CustomEvent("portfolio:notional-placement", { detail: { componentId: componentId || "default", placement } }));
-                                                return next;
-                                            });
-                                        }}
-                                        style={{ background: safeTheme.surface, color: safeTheme.text, border: `1px solid ${safeTheme.border}`, padding: "4px 6px", width: "100%" }}
-                                    >
-                                        <option value="off">Off</option>
-                                        <option value="above">Above</option>
-                                        <option value="below">Below</option>
-                                    </select>
+                                    <label className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={!!(localConfig?.notional?.enabled ?? (localConfig?.notional?.placement !== "off"))}
+                                            onChange={(e) => {
+                                                const enabled = e.target.checked;
+                                                setLocalConfig((prev) => {
+                                                    if (!prev) return prev as any;
+                                                    const next: TableConfig = { ...prev, notional: { ...(prev.notional || {}), enabled } } as any;
+                                                    setTimeout(() => saveTableConfig(next), 0);
+                                                    return next;
+                                                });
+                                            }}
+                                        />
+                                        <span style={{ fontWeight: 600 }}>Show Notional</span>
+                                    </label>
                                     <div style={{ marginTop: 8, fontWeight: 600 }}>Align</div>
                                     <select
                                         value={localConfig?.notional?.align || "left"}

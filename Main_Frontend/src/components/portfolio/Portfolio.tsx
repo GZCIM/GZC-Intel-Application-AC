@@ -49,7 +49,8 @@ export const Portfolio: React.FC<
     const [editToggleNonce, setEditToggleNonce] = useState(0);
     const [footerTotals, setFooterTotals] = useState<any[]>([]);
     const [notionalPositions, setNotionalPositions] = useState<any[]>([]);
-    const [notionalPlacement, setNotionalPlacement] = useState<NotionalPlacement>("off");
+    const [activeViewTab, setActiveViewTab] = useState<"portfolio" | "notional">("portfolio");
+    const [notionalEnabled, setNotionalEnabled] = useState<boolean>(false);
     const [notionalShowFX, setNotionalShowFX] = useState<boolean>(true);
     const [notionalShowFXOptions, setNotionalShowFXOptions] = useState<boolean>(true);
     const [notionalShowTotal, setNotionalShowTotal] = useState<boolean>(true);
@@ -256,6 +257,12 @@ export const Portfolio: React.FC<
                 if (typeof detail.showFxOptionsTotals === "boolean") setNotionalShowFxOptionsTotals(!!detail.showFxOptionsTotals);
                 if (detail.align === "left" || detail.align === "center" || detail.align === "right") {
                     setNotionalAlign(detail.align);
+                }
+                if (typeof detail.enabled === "boolean") {
+                    setNotionalEnabled(detail.enabled);
+                    if (!detail.enabled && activeViewTab === "notional") {
+                        setActiveViewTab("portfolio");
+                    }
                 }
             }
         };
@@ -1308,33 +1315,7 @@ export const Portfolio: React.FC<
                                     overflowX: "auto",
                                 }}
                             >
-                                {(isEditMode || toolsEditing) && (
-                                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                                        <span style={{ opacity: 0.8, fontSize: 12 }}>Notional:</span>
-                                        <select
-                                            value={notionalPlacement}
-                                            onChange={(e) => {
-                                                const placement = e.target.value as NotionalPlacement;
-                                                setNotionalPlacement(placement);
-                                                window.dispatchEvent(new CustomEvent("portfolio:notional-placement", {
-                                                    detail: { componentId: id || (window as any)?.componentId || "default", placement },
-                                                }));
-                                            }}
-                                            style={{
-                                                background: currentTheme.surface,
-                                                color: currentTheme.text,
-                                                border: `1px solid ${currentTheme.border}`,
-                                                padding: "4px 8px",
-                                                borderRadius: 4,
-                                                fontSize: 12,
-                                            }}
-                                        >
-                                            <option value="off">Off</option>
-                                            <option value="above">Above</option>
-                                            <option value="below">Below</option>
-                                        </select>
-                                    </div>
-                                )}
+                                {/* Notional placement control removed; now controlled by an On/Off in edit tab */}
                                 {/* Removed: Sync DB, FX Trades, FX Options */}
                                 <div style={{ display: "flex", gap: 6 }}>
                                     <button
@@ -1668,114 +1649,98 @@ export const Portfolio: React.FC<
                                 }}
                                 ref={viewportRef}
                             >
-                                {/* Grid container grows; no scrollbars inside */}
-                                {notionalPlacement === "above" && notionalPositions.length > 0 && (
-                                    <div style={{ marginBottom: 8 }}>
-                                        <div style={{ display: "flex", justifyContent: notionalAlign === "left" ? "flex-start" : notionalAlign === "center" ? "center" : "flex-end" }}>
-                                            <PortfolioNotionalTable selectedDate={effectiveDate} fundId={selectedFundId ?? 0} showFX={notionalShowFX} showFXOptions={notionalShowFXOptions} showTotal={notionalShowTotal} showFxTotals={notionalShowFxTotals} showFxOptionsTotals={notionalShowFxOptionsTotals} maxWidthRem={36} theme={currentTheme as any} />
+                                {(() => {
+                                    const tabs = ["portfolio", ...(notionalEnabled ? ["notional"] : [])] as Array<"portfolio" | "notional">;
+                                    return tabs.length > 1 ? (
+                                        <div style={{ position: "sticky", top: 0, zIndex: 3, background: currentTheme.surface, borderBottom: `1px solid ${currentTheme.border}`, display: "flex" }}>
+                                            <button onClick={() => setActiveViewTab("portfolio")} style={{ padding: "8px 12px", borderRight: `1px solid ${currentTheme.border}`, background: activeViewTab === "portfolio" ? currentTheme.surfaceAlt : "transparent", color: currentTheme.text, cursor: "pointer" }}>Portfolio</button>
+                                            {notionalEnabled && (
+                                                <button onClick={() => setActiveViewTab("notional")} style={{ padding: "8px 12px", borderRight: `1px solid ${currentTheme.border}`, background: activeViewTab === "notional" ? currentTheme.surfaceAlt : "transparent", color: currentTheme.text, cursor: "pointer" }}>Notional</button>
+                                            )}
                                         </div>
-                                    </div>
-                                )}
-                                <div
-                                    style={{
-                                        flex: 1,
-                                        height: "100%",
-                                        width: "max-content",
-                                        minWidth: "100%",
-                                        position: "relative",
-                                        overflow: "hidden",
-                                        paddingBottom: `${footerReserveRem}rem`, // reserve exactly footer height within content, not viewport
-                                        display: "inline-block",
-                                    }}
-                                    className="portfolio-table-container"
-                                    id={`portfolio-container-${id || "default"}`}
-                                >
-                                <PortfolioTableAGGrid
-                                    selectedDate={effectiveDate}
-                                    fundId={Number(selectedFundId) || 0}
-                                    isLive={dataMode === "live"}
-                                    externalEditing={isEditMode || toolsEditing}
-                                    editToggleNonce={editToggleNonce}
-                                    componentId={
-                                        id ||
-                                        (window as any)?.componentId ||
-                                        undefined
-                                    }
-                                    gridWidth={gridWidth}
-                                    gridHeight={gridHeight}
-                                    componentBorderInfo={(() => {
-                                        const borderInfo = {
-                                            rightBorder:
-                                                currentTheme.border ||
-                                                "#333333",
-                                            surfaceColor:
-                                                currentTheme.surface ||
-                                                "#1e1e1e",
-                                            successColor:
-                                                currentTheme.success ||
-                                                "#6aa84f",
-                                        };
+                                    ) : null;
+                                })()}
 
-                                        // New concise debug hook (visible in window for quick inspection)
-                                        (window as any)._gzcPortfolioDebug = {
-                                            componentId:
-                                                id ||
-                                                (window as any)
-                                                    ?.componentId ||
-                                                "default",
-                                            containerId: `portfolio-container-${
-                                                id || "default"
-                                            }`,
-                                            theme: currentTheme,
-                                            borderInfo,
-                                            containerRect: document
-                                                .getElementById(
-                                                    `portfolio-container-${
-                                                        id || "default"
-                                                    }`
-                                                )
-                                                ?.getBoundingClientRect(),
-                                        };
-
-                                        return borderInfo;
-                                    })()}
-                                />
-                                </div>
-                                {/* Single reserve handled via paddingBottom above */}
-                                {/* Fixed footer at bottom of card */}
-                                {notionalPlacement === "below" && notionalPositions.length > 0 && (
-                                    <div style={{ marginTop: 8 }}>
-                                        <div style={{ display: "flex", justifyContent: notionalAlign === "left" ? "flex-start" : notionalAlign === "center" ? "center" : "flex-end" }}>
-                                            <PortfolioNotionalTable selectedDate={effectiveDate} fundId={selectedFundId ?? 0} showFX={notionalShowFX} showFXOptions={notionalShowFXOptions} showTotal={notionalShowTotal} showFxTotals={notionalShowFxTotals} showFxOptionsTotals={notionalShowFxOptionsTotals} maxWidthRem={36} theme={currentTheme as any} />
+                                {/* Tab content */}
+                                {(activeViewTab === "portfolio" || !notionalEnabled) && (
+                                    <>
+                                        <div
+                                            style={{
+                                                flex: 1,
+                                                height: "100%",
+                                                width: "max-content",
+                                                minWidth: "100%",
+                                                position: "relative",
+                                                overflow: "hidden",
+                                                paddingBottom: `${footerReserveRem}rem`,
+                                                display: "inline-block",
+                                            }}
+                                            className="portfolio-table-container"
+                                            id={`portfolio-container-${id || "default"}`}
+                                        >
+                                            <PortfolioTableAGGrid
+                                                selectedDate={effectiveDate}
+                                                fundId={Number(selectedFundId) || 0}
+                                                isLive={dataMode === "live"}
+                                                externalEditing={isEditMode || toolsEditing}
+                                                editToggleNonce={editToggleNonce}
+                                                componentId={id || (window as any)?.componentId || undefined}
+                                                gridWidth={gridWidth}
+                                                gridHeight={gridHeight}
+                                                componentBorderInfo={(() => {
+                                                    const borderInfo = {
+                                                        rightBorder: currentTheme.border || "#333333",
+                                                        surfaceColor: currentTheme.surface || "#1e1e1e",
+                                                        successColor: currentTheme.success || "#6aa84f",
+                                                    };
+                                                    (window as any)._gzcPortfolioDebug = {
+                                                        componentId: id || (window as any)?.componentId || "default",
+                                                        containerId: `portfolio-container-${id || "default"}`,
+                                                        theme: currentTheme,
+                                                        borderInfo,
+                                                        containerRect: document.getElementById(`portfolio-container-${id || "default"}`)?.getBoundingClientRect(),
+                                                    };
+                                                    return borderInfo;
+                                                })()}
+                                            />
                                         </div>
-                                    </div>
-                                )}
-                                <div
-                                    style={{
-                                        position: "sticky",
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        background: currentTheme.surface,
-                                        borderTop: `1px solid ${currentTheme.border}`,
-                                        padding: "8px 12px",
-                                        fontSize: 12,
-                                        zIndex: 4,
-                                        pointerEvents: "none", // footer should not intercept row hovers/clicks near the edge
-                                    }}
-                                    ref={footerRef}
-                                >
-                                    {footerTotals.map((row, idx) => (
-                                        <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", padding: "2px 0" }}>
-                                            <strong style={{ opacity: 0.95 }}>{String(row.trade_type)}</strong>
-                                            {(((window as any).__portfolioFooterKeys) || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]).map((k: string) => (
-                                                <span key={k} style={{ opacity: 0.9 }}>
-                                                    {k.replace("_pnl","" ).toUpperCase()}: {typeof row[k] === "number" ? (row[k] as number).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
-                                                </span>
+                                        {/* Sticky footer */}
+                                        <div
+                                            style={{
+                                                position: "sticky",
+                                                bottom: 0,
+                                                left: 0,
+                                                right: 0,
+                                                background: currentTheme.surface,
+                                                borderTop: `1px solid ${currentTheme.border}`,
+                                                padding: "8px 12px",
+                                                fontSize: 12,
+                                                zIndex: 4,
+                                                pointerEvents: "none",
+                                            }}
+                                            ref={footerRef}
+                                        >
+                                            {footerTotals.map((row, idx) => (
+                                                <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", padding: "2px 0" }}>
+                                                    <strong style={{ opacity: 0.95 }}>{String(row.trade_type)}</strong>
+                                                    {(((window as any).__portfolioFooterKeys) || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]).map((k: string) => (
+                                                        <span key={k} style={{ opacity: 0.9 }}>
+                                                            {k.replace("_pnl","").toUpperCase()}: {typeof row[k] === "number" ? (row[k] as number).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    </>
+                                )}
+
+                                {activeViewTab === "notional" && notionalEnabled && (
+                                    <div style={{ padding: 12 }}>
+                                        <div style={{ display: "flex", justifyContent: notionalAlign === "left" ? "flex-start" : notionalAlign === "center" ? "center" : "flex-end" }}>
+                                            <PortfolioNotionalTable selectedDate={effectiveDate} fundId={selectedFundId ?? 0} showFX={notionalShowFX} showFXOptions={notionalShowFXOptions} showTotal={notionalShowTotal} showFxTotals={notionalShowFxTotals} showFxOptionsTotals={notionalShowFxOptionsTotals} maxWidthRem={36} theme={currentTheme as any} />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
