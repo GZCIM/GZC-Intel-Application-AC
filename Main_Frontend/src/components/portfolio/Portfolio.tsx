@@ -132,6 +132,18 @@ export const Portfolio: React.FC<
         return () => ro.disconnect();
     }, []);
 
+    // Debug: Log tab changes
+    useEffect(() => {
+        console.log("[Portfolio] activeViewTab changed", {
+            activeViewTab,
+            notionalEnabled,
+            isEditMode,
+            toolsEditing,
+            shouldShowPortfolio: activeViewTab === "portfolio" || (activeViewTab === "notional" && !(isEditMode || toolsEditing) && !notionalEnabled),
+            shouldShowNotional: activeViewTab === "notional" && (isEditMode || toolsEditing || notionalEnabled)
+        });
+    }, [activeViewTab, notionalEnabled, isEditMode, toolsEditing]);
+
     const loadFxTrades = async () => {
         try {
             setFxLoading("trades");
@@ -1656,9 +1668,26 @@ export const Portfolio: React.FC<
                                         : (["portfolio", ...(notionalEnabled ? ["notional"] : [])] as Array<"portfolio" | "notional">);
                                     return tabs.length > 1 ? (
                                         <div style={{ position: "sticky", top: 0, zIndex: 3, background: currentTheme.surface, borderBottom: `1px solid ${currentTheme.border}`, display: "flex" }}>
-                                            <button onClick={() => setActiveViewTab("portfolio")} style={{ padding: "8px 12px", borderRight: `1px solid ${currentTheme.border}`, background: activeViewTab === "portfolio" ? currentTheme.surfaceAlt : "transparent", color: currentTheme.text, cursor: "pointer" }}>Portfolio</button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setActiveViewTab("portfolio");
+                                                }}
+                                                style={{ padding: "8px 12px", borderRight: `1px solid ${currentTheme.border}`, background: activeViewTab === "portfolio" ? currentTheme.surfaceAlt : "transparent", color: currentTheme.text, cursor: "pointer" }}
+                                            >
+                                                Portfolio
+                                            </button>
                                             {tabs.includes("notional") && (
-                                                <button onClick={() => setActiveViewTab("notional")} style={{ padding: "8px 12px", borderRight: `1px solid ${currentTheme.border}`, background: activeViewTab === "notional" ? currentTheme.surfaceAlt : "transparent", color: currentTheme.text, cursor: "pointer" }}>Notional</button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        console.log("[Portfolio] Notional tab clicked", { activeViewTab, notionalEnabled, isEditMode, toolsEditing });
+                                                        setActiveViewTab("notional");
+                                                    }}
+                                                    style={{ padding: "8px 12px", borderRight: `1px solid ${currentTheme.border}`, background: activeViewTab === "notional" ? currentTheme.surfaceAlt : "transparent", color: currentTheme.text, cursor: "pointer" }}
+                                                >
+                                                    Notional
+                                                </button>
                                             )}
                                         </div>
                                     ) : null;
@@ -1675,7 +1704,7 @@ export const Portfolio: React.FC<
                                             position: "relative",
                                             overflow: "hidden",
                                             paddingBottom: `${footerReserveRem}rem`,
-                                            display: (activeViewTab === "portfolio" || !notionalEnabled) ? "inline-block" : "none",
+                                            display: (activeViewTab === "portfolio" || (activeViewTab === "notional" && !(isEditMode || toolsEditing) && !notionalEnabled)) ? "inline-block" : "none",
                                         }}
                                         className="portfolio-table-container no-drag"
                                         id={`portfolio-container-${id || "default"}`}
