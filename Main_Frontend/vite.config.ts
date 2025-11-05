@@ -54,8 +54,8 @@ export default defineConfig({
   // Optimize dependencies for faster builds
   optimizeDeps: {
     include: [
-      'react', 
-      'react-dom', 
+      'react',
+      'react-dom',
       'react-router-dom',
       'react-grid-layout',
       'framer-motion',
@@ -67,6 +67,8 @@ export default defineConfig({
       'axios',
       'react-datepicker'
     ],
+    // Plotly has large CJS bundles that confuse vite import analysis; skip prebundle
+    exclude: ['plotly.js', 'plotly.js-dist', 'plotly.js-dist-min', 'react-plotly.js'],
     force: false, // Don't force pre-bundling on every build
     esbuildOptions: {
       target: 'esnext',
@@ -85,6 +87,10 @@ export default defineConfig({
     chunkSizeWarningLimit: 3000, // Increase chunk size warning limit
     target: 'esnext', // Use modern target for faster builds
     cssCodeSplit: false, // Disable CSS code splitting for faster builds
+    // Allow CJS + ESM mixing (needed for plotly/react-plotly)
+    commonjsOptions: {
+      transformMixedEsModules: true
+    },
     rollupOptions: {
       output: {
         manualChunks: {
