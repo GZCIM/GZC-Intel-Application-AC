@@ -346,6 +346,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 columns: updatedConfig.columns.map((c) => ({ key: c.key, visible: c.visible, width: c.width || c.size })),
                 grouping: updatedConfig.grouping,
                 aggregations: updatedConfig.aggregations,
+                notional: (updatedConfig as any).notional,
             });
 
             await axios.post(
@@ -1425,12 +1426,14 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 const detail = (e as CustomEvent).detail || {};
                 if ((componentId || "default") !== detail.componentId) return;
                 const incoming = (detail.notional || {}) as Partial<TableConfig["notional"]>;
+                console.info("[AG Grid Notional] control received", { incoming, componentId });
                 if (!localConfig) {
                     // Config not ready yet; buffer and apply once loaded
                     pendingNotionalRef.current = {
                         ...(pendingNotionalRef.current || {}),
                         ...incoming,
                     };
+                    console.info("[AG Grid Notional] buffered change (config not ready)", pendingNotionalRef.current);
                     return;
                 }
                 const next: TableConfig = {
@@ -1441,6 +1444,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     },
                 } as any;
                 setLocalConfig(next);
+                console.info("[AG Grid Notional] saving merged notional", next.notional);
                 saveTableConfig(next);
             } catch (_) {}
         };
@@ -1456,6 +1460,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         if (!localConfig || !pendingNotionalRef.current) return;
         const buffered = pendingNotionalRef.current;
         pendingNotionalRef.current = null;
+        console.info("[AG Grid Notional] applying buffered changes", buffered);
         const next: TableConfig = {
             ...localConfig,
             notional: {
@@ -1464,6 +1469,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             },
         } as any;
         setLocalConfig(next);
+        console.info("[AG Grid Notional] saving after buffer apply", next.notional);
         saveTableConfig(next);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [localConfig]);

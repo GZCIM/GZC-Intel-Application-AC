@@ -1745,6 +1745,7 @@ export const Portfolio: React.FC<
                                                         onChange={(e) => {
                                                             e.stopPropagation();
                                                             const enabled = e.target.checked;
+                                                            console.log("[Notional UI] Show Notional ->", enabled);
                                                             setNotionalEnabled(enabled);
                                                             try {
                                                                 window.dispatchEvent(
@@ -1755,6 +1756,7 @@ export const Portfolio: React.FC<
                                                                         },
                                                                     })
                                                                 );
+                                                                console.log("[Notional UI] Dispatched portfolio:notional-control", { enabled, componentId: id || (window as any)?.componentId || "default" });
                                                             } catch (_) {}
                                                         }}
                                                     />
