@@ -1645,6 +1645,10 @@ export const Portfolio: React.FC<
                                     backgroundColor: currentTheme.background,
                                 }}
                                 ref={viewportRef}
+                                onMouseDown={(e) => {
+                                    // Prevent react-grid-layout drag from initiating inside content
+                                    e.stopPropagation();
+                                }}
                             >
                                 {(() => {
                                     const tabs = (isEditMode || toolsEditing)
@@ -1757,6 +1761,20 @@ export const Portfolio: React.FC<
                                                                     })
                                                                 );
                                                                 console.log("[Notional UI] Dispatched portfolio:notional-control", { enabled, componentId: id || (window as any)?.componentId || "default" });
+                                                                // Re-dispatch after grid mounts/config loads, in case first event arrived too early
+                                                                setTimeout(() => {
+                                                                    try {
+                                                                        window.dispatchEvent(
+                                                                            new CustomEvent("portfolio:notional-control", {
+                                                                                detail: {
+                                                                                    componentId: id || (window as any)?.componentId || "default",
+                                                                                    notional: { enabled },
+                                                                                },
+                                                                            })
+                                                                        );
+                                                                        console.log("[Notional UI] Re-dispatch portfolio:notional-control (delayed)", { enabled });
+                                                                    } catch (_) {}
+                                                                }, 1000);
                                                             } catch (_) {}
                                                         }}
                                                     />
