@@ -939,6 +939,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     minWidth: 110,
                 },
                 { field: "price", headerName: "Price", headerTooltip: "Price", minWidth: 90 },
+                { field: "underlying", headerName: "Underlying", headerTooltip: "Underlying", minWidth: 120 },
+                { field: "ticker", headerName: "Ticker", headerTooltip: "Ticker", minWidth: 160 },
                 {
                     field: "trade_currency",
                     headerName: "Trade Currency",
@@ -974,7 +976,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             sortable: true,
             filter: true,
             // Disable enterprise-only features in community build
-            aggFunc: ENTERPRISE_FEATURES && sumKeys.has(c.key) ? "sum" : undefined,
+            aggFunc:
+                ENTERPRISE_FEATURES
+                    ? (sumKeys.has(c.key)
+                        ? "sum"
+                        : (c.key === "trade_id" ? "concatIds" : undefined))
+                    : undefined,
             rowGroup: ENTERPRISE_FEATURES ? isGrouped : false,
             rowGroupIndex: ENTERPRISE_FEATURES && isGrouped ? groupIndex : undefined,
             cellRenderer: (params: { value: unknown }) =>
@@ -1792,6 +1799,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         suppressColumnVirtualisation: false,
                         suppressRowVirtualisation: false,
                         getRowHeight: () => 30,
+                        // Custom aggregation for trade IDs: comma concatenation
+                        aggFuncs: ENTERPRISE_FEATURES
+                            ? {
+                                  concatIds: (params: { values: any[] }) =>
+                                      (params?.values || [])
+                                          .filter((v) => v !== null && v !== undefined && v !== "")
+                                          .map((v) => String(v))
+                                          .join(","),
+                              }
+                            : undefined,
                         // Force AG Grid to not render its own scrollbars
                             suppressHorizontalScroll: true,
                             alwaysShowHorizontalScroll: false,

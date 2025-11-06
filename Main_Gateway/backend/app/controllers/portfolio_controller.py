@@ -275,6 +275,14 @@ async def get_fx_positions(
 
             # Avoid duplicating DB price field; expose it as trade_price instead
             base = {k: v for k, v in t.items() if k != "price"}
+            # Construct identifier columns for frontend grouping
+            trade_ccy = str(base.get("trade_currency") or "").upper()
+            settle_ccy = str(base.get("settlement_currency") or "").upper()
+            maturity = str(base.get("maturity_date") or "")[:10]
+            underlying = f"{trade_ccy}-{settle_ccy}" if trade_ccy and settle_ccy else None
+            ticker = (
+                f"{underlying}-{maturity}" if underlying and maturity else underlying
+            )
             out.append(
                 {
                     **base,
@@ -283,6 +291,9 @@ async def get_fx_positions(
                     "eom_price": eom_price,
                     "eod_price": eod_price,
                     "price": price,
+                    # New columns for portfolio table
+                    "underlying": underlying,
+                    "ticker": ticker,
                     "eoy_date": t["eoy_date"],
                     "eom_date": t["eom_date"],
                     "eod_date": t["eod_date"],
@@ -678,6 +689,28 @@ async def get_fx_option_positions(
 
             # Avoid duplicating DB premium field; expose it as trade_price instead
             base = {k: v for k, v in t.items() if k != "premium"}
+            # Construct identifier columns for frontend grouping (use underlying CCYs)
+            u_trade_ccy = str(base.get("underlying_trade_currency") or "").upper()
+            u_settle_ccy = str(base.get("underlying_settlement_currency") or "").upper()
+            maturity = str(base.get("maturity_date") or "")[:10]
+            underlying = f"{u_trade_ccy}-{u_settle_ccy}" if u_trade_ccy and u_settle_ccy else None
+            # FX Option ticker format: TRADE-SETTLE-<P|C>-<strike:8dp>-YYYY-MM-DD
+            opt_type_raw = str(base.get("option_type") or base.get("optionType") or "").strip().upper()
+            opt_code = ("P" if opt_type_raw.startswith("P") else ("C" if opt_type_raw.startswith("C") else (opt_type_raw[:1] if opt_type_raw else None)))
+            strike_val = base.get("strike")
+            strike_fmt = None
+            try:
+                if strike_val is not None and strike_val != "":
+                    strike_fmt = f"{float(strike_val):.8f}"
+            except Exception:
+                strike_fmt = None
+            ticker = None
+            if underlying and opt_code and strike_fmt and maturity:
+                ticker = f"{underlying}-{opt_code}-{strike_fmt}-{maturity}"
+            elif underlying and maturity:
+                ticker = f"{underlying}-{maturity}"
+            else:
+                ticker = underlying
             out.append(
                 {
                     **base,
@@ -686,6 +719,9 @@ async def get_fx_option_positions(
                     "eom_price": eom_price,
                     "eod_price": eod_price,
                     "price": price,
+                    # New columns for portfolio table
+                    "underlying": underlying,
+                    "ticker": ticker,
                     "itd_pnl": pnl_since(trade_price),
                     "ytd_pnl": pnl_since(eoy_price),
                     "mtd_pnl": pnl_since(eom_price),
