@@ -1300,6 +1300,89 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         return counts;
     }, [positions]);
 
+    // Client-side aggregation by ticker (with comma-concatenated trade_ids)
+    const aggregatedPositions = useMemo(() => {
+        const aggregateByTicker = !!(localConfig?.filters && (localConfig.filters as any).aggregateByTicker);
+        if (!aggregateByTicker) return positions;
+        if (!positions || positions.length === 0) return positions;
+        const byTicker = new Map<string, any>();
+        const priceKeys = ["price", "trade_price", "eoy_price", "eom_price", "eod_price"] as const;
+        for (const row of positions as any[]) {
+            const t = row.ticker || null;
+            if (!t) {
+                // Skip rows without ticker for aggregation; include as-is under a pass-through bucket
+                const key = `__no_ticker__${row.trade_id ?? Math.random()}`;
+                byTicker.set(key, { ...row });
+                continue;
+            }
+            if (!byTicker.has(t)) {
+                byTicker.set(t, {
+                    ...row,
+                    trade_id: row.trade_id != null && row.trade_id !== "" ? String(row.trade_id) : "",
+                    quantity: Number(row.quantity || 0),
+                    itd_pnl: Number(row.itd_pnl || 0),
+                    ytd_pnl: Number(row.ytd_pnl || 0),
+                    mtd_pnl: Number(row.mtd_pnl || 0),
+                    dtd_pnl: Number(row.dtd_pnl || 0),
+                    _priceWsum: Object.fromEntries(priceKeys.map(k => [k, 0])) as Record<string, number>,
+                    _priceW: Object.fromEntries(priceKeys.map(k => [k, 0])) as Record<string, number>,
+                });
+                // Initialize sums for first row
+                const acc = byTicker.get(t);
+                const w0 = Number(row.quantity || 0);
+                for (const k of priceKeys) {
+                    const v = row[k];
+                    if (typeof v === "number" && !Number.isNaN(v)) {
+                        acc._priceWsum[k] += v * w0;
+                        acc._priceW[k] += w0;
+                        acc[k] = v; // seed with first numeric value
+                    }
+                }
+                continue;
+            }
+            const acc = byTicker.get(t);
+            // Concatenate trade ids
+            const addId = row.trade_id != null && row.trade_id !== "" ? String(row.trade_id) : "";
+            if (addId) {
+                if (!acc.trade_id) acc.trade_id = addId;
+                else if (!String(acc.trade_id).split(",").includes(addId)) acc.trade_id = `${acc.trade_id},${addId}`;
+            }
+            // Sum selected numeric fields
+            acc.quantity = Number(acc.quantity || 0) + Number(row.quantity || 0);
+            acc.itd_pnl = Number(acc.itd_pnl || 0) + Number(row.itd_pnl || 0);
+            acc.ytd_pnl = Number(acc.ytd_pnl || 0) + Number(row.ytd_pnl || 0);
+            acc.mtd_pnl = Number(acc.mtd_pnl || 0) + Number(row.mtd_pnl || 0);
+            acc.dtd_pnl = Number(acc.dtd_pnl || 0) + Number(row.dtd_pnl || 0);
+            // Weighted-average price-like fields by quantity
+            const w = Number(row.quantity || 0);
+            for (const k of priceKeys) {
+                const v = row[k];
+                if (typeof v === "number" && !Number.isNaN(v)) {
+                    acc._priceWsum[k] += v * w;
+                    acc._priceW[k] += w;
+                }
+            }
+            // Preserve underlying/ticker from key
+            acc.underlying = acc.underlying || row.underlying;
+            acc.ticker = t;
+            byTicker.set(t, acc);
+        }
+        // Finalize weighted averages into public fields
+        const result = Array.from(byTicker.values()).map((acc) => {
+            if (acc && acc._priceWsum && acc._priceW) {
+                for (const k of Object.keys(acc._priceWsum)) {
+                    const wsum = acc._priceWsum[k];
+                    const wtot = acc._priceW[k];
+                    if (wtot > 0) acc[k] = wsum / wtot;
+                }
+                delete acc._priceWsum;
+                delete acc._priceW;
+            }
+            return acc;
+        });
+        return result;
+    }, [positions, localConfig?.filters]);
+
     // Footer diagnostics
     const footerRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
@@ -1688,6 +1771,32 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                         );
                                     })}
                                 </div>
+                                {/* Aggregate by Ticker (client-side) */}
+                                <div
+                                    className="flex items-center gap-2"
+                                    style={{ gridColumn: "1 / -1", padding: "4px 6px", border: `1px solid ${safeTheme.border}`, borderRadius: 6, background: safeTheme.surfaceAlt, fontSize: 12 }}
+                                >
+                                    <label className="flex items-center gap-2" style={{ cursor: "pointer", userSelect: "none" }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={!!(localConfig.filters && (localConfig.filters as any).aggregateByTicker)}
+                                            onClick={(e) => { e.stopPropagation(); }}
+                                            onChange={(e) => {
+                                                e.stopPropagation();
+                                                setLocalConfig((prev) => {
+                                                    if (!prev) return prev;
+                                                    const nextFilters = { ...(prev.filters || {}) } as any;
+                                                    nextFilters.aggregateByTicker = !nextFilters.aggregateByTicker;
+                                                    const next = { ...prev, filters: nextFilters } as TableConfig;
+                                                    setTimeout(() => saveTableConfig(next), 0);
+                                                    return next;
+                                                });
+                                            }}
+                                            style={{ width: 14, height: 14, cursor: "pointer" }}
+                                        />
+                                        <span>Aggregate by Ticker (sum position, weighted avg prices)</span>
+                                    </label>
+                                </div>
                                 {localConfig.columns.map((col) => {
                                     const isGrouped = localConfig.grouping.includes(col.key);
                                     const currentAgg = (localConfig.aggregations && localConfig.aggregations[col.key]) || "none";
@@ -1770,7 +1879,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 }}
             >
                 <AgGridReact
-                    rowData={positions}
+                    rowData={aggregatedPositions}
                     columnDefs={columnDefs}
                     onGridReady={onGridReady}
                     animateRows={true}
