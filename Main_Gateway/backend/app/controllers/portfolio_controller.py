@@ -714,6 +714,9 @@ async def get_fx_option_positions(
             out.append(
                 {
                     **base,
+                    # Ensure FX Option uses underlying CCYs as trade/settlement currencies
+                    "trade_currency": u_trade_ccy,
+                    "settlement_currency": u_settle_ccy,
                     "trade_price": trade_price,
                     "eoy_price": eoy_price,
                     "eom_price": eom_price,
