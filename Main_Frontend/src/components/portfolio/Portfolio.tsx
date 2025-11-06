@@ -1736,32 +1736,34 @@ export const Portfolio: React.FC<
                                             />
                                     </div>
                                     {/* Sticky footer */}
-                                    <div
-                                            style={{
-                                                position: "sticky",
-                                                bottom: 0,
-                                                left: 0,
-                                                right: 0,
-                                                background: currentTheme.surface,
-                                                borderTop: `1px solid ${currentTheme.border}`,
-                                                padding: "8px 12px",
-                                                fontSize: 12,
-                                                zIndex: 4,
-                                                pointerEvents: "none",
-                                            }}
-                                            ref={footerRef}
-                                        >
-                                            {footerTotals.map((row, idx) => (
-                                                <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", padding: "2px 0" }}>
-                                                    <strong style={{ opacity: 0.95 }}>{String(row.trade_type)}</strong>
-                                                    {(((window as any).__portfolioFooterKeys) || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]).map((k: string) => (
-                                                        <span key={k} style={{ opacity: 0.9 }}>
-                                                            {k.replace("_pnl","").toUpperCase()}: {typeof row[k] === "number" ? (row[k] as number).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            ))}
-                                        </div>
+                                    {(activeViewTab === "portfolio" || (activeViewTab === "notional" && !(isEditMode || toolsEditing) && !notionalEnabled)) && (
+                                        <div
+                                                style={{
+                                                    position: "sticky",
+                                                    bottom: 0,
+                                                    left: 0,
+                                                    right: 0,
+                                                    background: currentTheme.surface,
+                                                    borderTop: `1px solid ${currentTheme.border}`,
+                                                    padding: "8px 12px",
+                                                    fontSize: 12,
+                                                    zIndex: 4,
+                                                    pointerEvents: "none",
+                                                }}
+                                                ref={footerRef}
+                                            >
+                                                {footerTotals.map((row, idx) => (
+                                                    <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", padding: "2px 0" }}>
+                                                        <strong style={{ opacity: 0.95 }}>{String(row.trade_type)}</strong>
+                                                        {(((window as any).__portfolioFooterKeys) || ["itd_pnl","ytd_pnl","mtd_pnl","dtd_pnl"]).map((k: string) => (
+                                                            <span key={k} style={{ opacity: 0.9 }}>
+                                                                {k.replace("_pnl","").toUpperCase()}: {typeof row[k] === "number" ? (row[k] as number).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                    )}
                                     </>
 
                                 {activeViewTab === "notional" && (isEditMode || toolsEditing || notionalEnabled) && (
