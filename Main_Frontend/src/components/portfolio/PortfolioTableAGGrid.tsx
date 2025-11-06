@@ -1387,7 +1387,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         const byTicker = new Map<string, any>();
         const priceKeys = ["price", "trade_price", "eoy_price", "eom_price", "eod_price"] as const;
         for (const row of positions as any[]) {
-            const t = row.ticker || null;
+            const t = row.ticker ? String(row.ticker).trim() : null;
             if (!t) {
                 // Skip rows without ticker for aggregation; include as-is under a pass-through bucket
                 const key = `__no_ticker__${row.trade_id ?? Math.random()}`;
