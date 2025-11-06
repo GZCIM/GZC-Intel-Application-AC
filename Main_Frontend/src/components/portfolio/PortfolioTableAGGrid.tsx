@@ -20,6 +20,7 @@ import {
 import "./PortfolioTableAGGrid.css";
 import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
+import { ContextMenu, ContextMenuItem } from "../ContextMenu";
 import axios from "axios";
 
 // Register AG Grid modules (community only)
@@ -160,6 +161,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         { k: "columns", t: "Columns" },
         { k: "group", t: "Group & Totals" },
     ];
+
+    // Context menu state
+    const [contextMenu, setContextMenu] = useState<{
+        isOpen: boolean;
+        position: { x: number; y: number };
+    }>({
+        isOpen: false,
+        position: { x: 0, y: 0 },
+    });
 
     // Parent-set notional config listener removed; grid remains single source of persistence
 
@@ -2036,6 +2046,13 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 }}
                 className="portfolio-table-wrapper"
                 ref={containerRef}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    setContextMenu({
+                        isOpen: true,
+                        position: { x: e.clientX, y: e.clientY },
+                    });
+                }}
             >
                 {/* AG Grid with hidden scrollbar */}
             <div
@@ -2943,6 +2960,54 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     </button>
                 </div>
             )}
+
+            {/* Context Menu */}
+            <ContextMenu
+                items={[
+                    {
+                        label: "History",
+                        action: () => {
+                            console.log("[PortfolioTable] Context menu: History");
+                            // TODO: Implement history functionality
+                            alert("History feature - coming soon");
+                        },
+                    },
+                    {
+                        label: "View/Edit",
+                        action: () => {
+                            console.log("[PortfolioTable] Context menu: View/Edit");
+                            setIsEditing(!isEditing);
+                        },
+                    },
+                    {
+                        label: "New",
+                        action: () => {
+                            console.log("[PortfolioTable] Context menu: New");
+                            // TODO: Implement new row/trade functionality
+                            alert("New feature - coming soon");
+                        },
+                    },
+                    {
+                        label: "+/-",
+                        action: () => {
+                            console.log("[PortfolioTable] Context menu: +/-");
+                            // TODO: Implement add/remove functionality
+                            alert("+/- feature - coming soon");
+                        },
+                    },
+                    {
+                        label: "Roll",
+                        action: () => {
+                            console.log("[PortfolioTable] Context menu: Roll");
+                            // TODO: Implement roll functionality
+                            alert("Roll feature - coming soon");
+                        },
+                    },
+                ] as ContextMenuItem[]}
+                position={contextMenu.position}
+                isOpen={contextMenu.isOpen}
+                onClose={() => setContextMenu({ ...contextMenu, isOpen: false })}
+            />
         </div>
     );
 };
