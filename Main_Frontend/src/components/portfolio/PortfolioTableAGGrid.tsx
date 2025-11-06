@@ -65,6 +65,9 @@ interface PortfolioPosition {
     premium?: number;
     underlying_trade_currency?: string;
     underlying_settlement_currency?: string;
+    // Derived identifier columns
+    underlying?: string;
+    ticker?: string;
 }
 
 interface ColumnConfig {
@@ -271,8 +274,29 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     fundId,
                     columns: (response.data.data?.columns || []).map((c: any) => ({ key: c.key, visible: c.visible })),
                 });
-                setTableConfig(response.data.data);
-                setLocalConfig(response.data.data);
+                // Migration: ensure new identifier columns exist in saved configs
+                const incoming = response.data.data as TableConfig;
+                const existingKeys = new Set((incoming.columns || []).map((c) => c.key));
+                const toEnsure: Array<ColumnConfig> = [];
+                if (!existingKeys.has("underlying")) {
+                    toEnsure.push({ key: "underlying", label: "Underlying", visible: true, width: 120 });
+                }
+                if (!existingKeys.has("ticker")) {
+                    toEnsure.push({ key: "ticker", label: "Ticker", visible: true, width: 160 });
+                }
+                let migrated = incoming;
+                if (toEnsure.length > 0) {
+                    migrated = {
+                        ...incoming,
+                        columns: [...(incoming.columns || []), ...toEnsure],
+                    } as TableConfig;
+                    // Persist migration immediately so future loads include the new columns
+                    try {
+                        await saveTableConfig(migrated);
+                    } catch (_) {}
+                }
+                setTableConfig(migrated);
+                setLocalConfig(migrated);
             }
         } catch (err) {
             console.error("Failed to load table config:", err);
