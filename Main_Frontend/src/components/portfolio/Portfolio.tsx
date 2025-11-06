@@ -132,17 +132,7 @@ export const Portfolio: React.FC<
         return () => ro.disconnect();
     }, []);
 
-    // Debug: Log tab changes
-    useEffect(() => {
-        console.log("[Portfolio] activeViewTab changed", {
-            activeViewTab,
-            notionalEnabled,
-            isEditMode,
-            toolsEditing,
-            shouldShowPortfolio: activeViewTab === "portfolio" || (activeViewTab === "notional" && !(isEditMode || toolsEditing) && !notionalEnabled),
-            shouldShowNotional: activeViewTab === "notional" && (isEditMode || toolsEditing || notionalEnabled)
-        });
-    }, [activeViewTab, notionalEnabled, isEditMode, toolsEditing]);
+    
 
     const loadFxTrades = async () => {
         try {
@@ -1681,7 +1671,6 @@ export const Portfolio: React.FC<
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        console.log("[Portfolio] Notional tab clicked", { activeViewTab, notionalEnabled, isEditMode, toolsEditing });
                                                         setActiveViewTab("notional");
                                                     }}
                                                     style={{ padding: "8px 12px", borderRight: `1px solid ${currentTheme.border}`, background: activeViewTab === "notional" ? currentTheme.surfaceAlt : "transparent", color: currentTheme.text, cursor: "pointer" }}
@@ -1778,7 +1767,7 @@ export const Portfolio: React.FC<
                                                         onChange={(e) => {
                                                             e.stopPropagation();
                                                             const enabled = e.target.checked;
-                                                            console.log("[Notional UI] Show Notional ->", enabled);
+                                                            
                                                             setNotionalEnabled(enabled);
                                                             try {
                                                                 window.dispatchEvent(
@@ -1789,7 +1778,6 @@ export const Portfolio: React.FC<
                                                                         },
                                                                     })
                                                                 );
-                                                                console.log("[Notional UI] Dispatched portfolio:notional-control", { enabled, componentId: id || (window as any)?.componentId || "default" });
                                                                 // Re-dispatch after grid mounts/config loads, in case first event arrived too early
                                                                 setTimeout(() => {
                                                                     try {
@@ -1801,7 +1789,6 @@ export const Portfolio: React.FC<
                                                                                 },
                                                                             })
                                                                         );
-                                                                        console.log("[Notional UI] Re-dispatch portfolio:notional-control (delayed)", { enabled });
                                                                     } catch (_) {}
                                                                 }, 1000);
                                                             } catch (_) {}
