@@ -117,6 +117,13 @@ export const Portfolio: React.FC<
         "none"
     );
 
+    // Instance-scoped storage key helper to avoid cross-instance coupling
+    const instanceId = useMemo(
+        () => id || (window as any)?.componentId || "portfolio-default",
+        [id]
+    );
+    const storageKey = (key: string) => `portfolio.${instanceId}.${key}`;
+
     // Track header width for responsive controls behavior
     useEffect(() => {
         if (!headerRef.current) return;
@@ -132,7 +139,7 @@ export const Portfolio: React.FC<
         return () => ro.disconnect();
     }, []);
 
-    
+
 
     const loadFxTrades = async () => {
         try {
@@ -338,49 +345,67 @@ export const Portfolio: React.FC<
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Load persisted mode/date from localStorage (force default Active on first render)
+    // Load persisted mode/date from localStorage scoped per instance (force default Active on first render)
     useEffect(() => {
         try {
-            const savedMode = localStorage.getItem("portfolio.dataMode");
+            const savedMode =
+                localStorage.getItem(storageKey("dataMode")) ||
+                localStorage.getItem("portfolio.dataMode"); // migrate from legacy key
             if (savedMode === "live" || savedMode === "eod") {
                 setDataMode(savedMode);
             }
-            const savedDate = localStorage.getItem("portfolio.selectedDate");
+            const savedDate =
+                localStorage.getItem(storageKey("selectedDate")) ||
+                localStorage.getItem("portfolio.selectedDate"); // migrate
             if (savedDate) {
                 setSelectedDate(savedDate);
             }
             // Always default to Active when component loads
             setPortfolioMode("active");
-            localStorage.setItem("portfolio.mode", "active");
+            localStorage.setItem(storageKey("mode"), "active");
 
-            const savedFund = localStorage.getItem("portfolio.fundId");
+            const savedFund =
+                localStorage.getItem(storageKey("fundId")) ||
+                localStorage.getItem("portfolio.fundId"); // migrate
             if (savedFund === "0" || savedFund === "1" || savedFund === "6") {
                 setSelectedFundId(savedFund);
             } else {
                 setSelectedFundId("1");
-                localStorage.setItem("portfolio.fundId", "1");
+                localStorage.setItem(storageKey("fundId"), "1");
             }
+            // Migration: write back instance-scoped values if legacy keys were used
+            try {
+                if (localStorage.getItem("portfolio.dataMode") && !localStorage.getItem(storageKey("dataMode"))) {
+                    localStorage.setItem(storageKey("dataMode"), localStorage.getItem("portfolio.dataMode") as string);
+                }
+                if (localStorage.getItem("portfolio.selectedDate") && !localStorage.getItem(storageKey("selectedDate"))) {
+                    localStorage.setItem(storageKey("selectedDate"), localStorage.getItem("portfolio.selectedDate") as string);
+                }
+                if (localStorage.getItem("portfolio.fundId") && !localStorage.getItem(storageKey("fundId"))) {
+                    localStorage.setItem(storageKey("fundId"), localStorage.getItem("portfolio.fundId") as string);
+                }
+            } catch {}
         } catch (_) {}
     }, []);
 
     // Persist mode/date on change
     useEffect(() => {
         try {
-            localStorage.setItem("portfolio.dataMode", dataMode);
+            localStorage.setItem(storageKey("dataMode"), dataMode);
         } catch (_) {}
     }, [dataMode]);
 
     useEffect(() => {
         try {
             if (selectedDate) {
-                localStorage.setItem("portfolio.selectedDate", selectedDate);
+                localStorage.setItem(storageKey("selectedDate"), selectedDate);
             }
         } catch (_) {}
     }, [selectedDate]);
 
     useEffect(() => {
         try {
-            localStorage.setItem("portfolio.mode", portfolioMode);
+            localStorage.setItem(storageKey("mode"), portfolioMode);
         } catch (_) {}
     }, [portfolioMode]);
 
@@ -396,7 +421,7 @@ export const Portfolio: React.FC<
 
     useEffect(() => {
         try {
-            localStorage.setItem("portfolio.fundId", selectedFundId);
+            localStorage.setItem(storageKey("fundId"), selectedFundId);
         } catch (_) {}
     }, [selectedFundId]);
 
@@ -1767,7 +1792,7 @@ export const Portfolio: React.FC<
                                                         onChange={(e) => {
                                                             e.stopPropagation();
                                                             const enabled = e.target.checked;
-                                                            
+
                                                             setNotionalEnabled(enabled);
                                                             try {
                                                                 window.dispatchEvent(
