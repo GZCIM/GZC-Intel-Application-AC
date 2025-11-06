@@ -1754,17 +1754,18 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     </div>
 
                     {/* Tabs body */}
-                    <div className="p-3" style={{ overflowX: "auto" }}>
+                    <div className="p-3" style={{ overflowX: "visible" }}>
                         {activeEditTab === "columns" && (
                     <div onMouseDown={(e) => { e.stopPropagation(); clog("[ColumnsDrag] panel mousedown swallowed"); }} ref={columnsPanelRef}>
                         {/* Columns tag list */}
                         <div
-                                style={{
-                                    display: "grid",
-                                gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-                                gap: 8,
-                                paddingRight: 4,
-                                    cursor: isDraggingColumnTag ? "grabbing" : undefined,
+                            style={{
+                                display: "grid",
+                                gridTemplateColumns: "repeat(auto-fill, minmax(140px, max-content))",
+                                gap: 6,
+                                cursor: isDraggingColumnTag ? "grabbing" : undefined,
+                                alignItems: "stretch",
+                                justifyItems: "stretch",
                             }}
                             onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
                             onDrop={(e) => {
@@ -1778,7 +1779,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         {localConfig.columns.map((col, idx) => (
                             <label
                                 key={col.key}
-                                        className="flex items-center gap-2 text-sm"
+                                className="flex items-center gap-2 text-sm"
                                 style={{
                                     cursor: isDraggingColumnTag ? "grabbing" : "grab",
                                     userSelect: "none",
@@ -1844,6 +1845,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                             style={{ width: 14, height: 14, cursor: "pointer" }}
                                         />
                                 <span
+                                    title={col.label}
                                     draggable
                                     onDragStart={(e) => {
                                         e.stopPropagation();
@@ -1888,15 +1890,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     }}
                                     onDragEnd={() => { clog("[ColumnsDrag] dragEnd(span)"); dragColIndexRef.current = null; setIsDraggingColumnTag(false); try { (document.body as any).style.cursor = ""; } catch (_) {} }}
                                     style={{
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                        maxWidth: "100%",
-                                        width: "100%",
-                                        boxSizing: "border-box",
+                                        whiteSpace: "nowrap",
                                         paddingRight: 6,
                                         cursor: isDraggingColumnTag ? "grabbing" : "grab",
-                                }}
+                                    }}
                                 >{col.label}</span>
                             </label>
                         ))}
