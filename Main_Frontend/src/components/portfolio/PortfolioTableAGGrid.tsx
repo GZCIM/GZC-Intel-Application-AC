@@ -141,6 +141,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const [isEditing, setIsEditing] = useState(false);
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
+    // Drag state for reordering column tags in edit mode (Columns tab)
+    const dragColIndexRef = useRef<number | null>(null);
     // Edit UI: which settings tab is active
     const [activeEditTab, setActiveEditTab] = useState<"columns" | "group">("columns");
     const editTabs: Array<{ k: "columns" | "group"; t: string }> = [
@@ -1708,18 +1710,55 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     gap: 8,
                         }}
                     >
-                        {localConfig.columns.map((col) => (
+                        {localConfig.columns.map((col, idx) => (
                             <label
                                 key={col.key}
                                         className="flex items-center gap-2 text-sm"
                                 style={{
-                                    cursor: "pointer",
+                                    cursor: "grab",
                                     userSelect: "none",
                                             padding: "4px 6px",
                         fontSize: 12,
                                     borderRadius: 6,
                                     border: `1px solid ${safeTheme.border}`,
                                     background: safeTheme.surfaceAlt,
+                                    // subtle hint while dragging
+                                    opacity: dragColIndexRef.current === idx ? 0.8 : 1,
+                                }}
+                                draggable
+                                onDragStart={(e) => {
+                                    e.stopPropagation();
+                                    dragColIndexRef.current = idx;
+                                    try { e.dataTransfer?.setData("text/plain", String(idx)); } catch (_) {}
+                                }}
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const fromIndex = dragColIndexRef.current;
+                                    dragColIndexRef.current = null;
+                                    const toIndex = idx;
+                                    if (fromIndex === null || fromIndex === toIndex) return;
+                                    setLocalConfig((prev) => {
+                                        if (!prev) return prev;
+                                        const nextColumns = prev.columns.slice();
+                                        const [moved] = nextColumns.splice(fromIndex, 1);
+                                        nextColumns.splice(toIndex, 0, moved);
+                                        const next: TableConfig = { ...prev, columns: nextColumns } as TableConfig;
+                                        // Apply order to AG Grid immediately, if available
+                                        try {
+                                            if (gridApi && !(gridApi as any).isDestroyed?.()) {
+                                                const state = nextColumns.map((c, order) => ({ colId: c.key, order } as any));
+                                                (gridApi as any).applyColumnState({ state, applyOrder: true });
+                                            }
+                                        } catch (_) {}
+                                        // Persist new order
+                                        setTimeout(() => saveTableConfig(next), 0);
+                                        return next;
+                                    });
                                 }}
                             >
                                 <input
