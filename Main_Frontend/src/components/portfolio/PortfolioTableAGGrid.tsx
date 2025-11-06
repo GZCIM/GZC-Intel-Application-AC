@@ -150,6 +150,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     // Drag state for reordering column tags in edit mode (Columns tab)
     const dragColIndexRef = useRef<number | null>(null);
+    const [isDraggingColumnTag, setIsDraggingColumnTag] = useState(false);
+    // Dynamic height of Columns panel to push grid down in edit mode
+    const columnsPanelRef = useRef<HTMLDivElement | null>(null);
+    const [columnsPanelHeight, setColumnsPanelHeight] = useState<number>(0);
     // Edit UI: which settings tab is active
     const [activeEditTab, setActiveEditTab] = useState<"columns" | "group">("columns");
     const editTabs: Array<{ k: "columns" | "group"; t: string }> = [
@@ -432,6 +436,46 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             saveTableConfig();
         }, 300);
     }, [saveTableConfig]);
+
+    // Ensure all data-driven columns appear in the selector (visible=false by default)
+    useEffect(() => {
+        if (!localConfig || positions.length === 0) return;
+        const currentKeys = new Set(localConfig.columns.map((c) => c.key));
+        const sample = positions[0] as Record<string, unknown>;
+        const exclude = new Set([
+            "__aggregate__",
+        ]);
+        const additions: ColumnConfig[] = [];
+        Object.keys(sample || {}).forEach((k) => {
+            if (exclude.has(k)) return;
+            if (!currentKeys.has(k)) {
+                additions.push({ key: k, label: k.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()), visible: false, width: 120 });
+            }
+        });
+        if (additions.length > 0) {
+            const next: TableConfig = { ...localConfig, columns: [...localConfig.columns, ...additions] } as TableConfig;
+            setLocalConfig(next);
+            setTimeout(() => saveTableConfig(next), 0);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [positions]);
+
+    // Track Columns panel height and push grid down accordingly
+    useEffect(() => {
+        if (!isEditing) {
+            setColumnsPanelHeight(0);
+            return;
+        }
+        const el = columnsPanelRef.current;
+        if (!el) return;
+        const update = () => setColumnsPanelHeight(el.getBoundingClientRect().height + 8);
+        update();
+        const ro = new ResizeObserver(() => {
+            update();
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [isEditing, localConfig?.columns.length]);
 
     // Apply current localConfig to AG Grid (used both in edit and locked modes)
     const applyConfigToGrid = useCallback(() => {
@@ -1712,22 +1756,23 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     {/* Tabs body */}
                     <div className="p-3" style={{ overflowX: "auto" }}>
                         {activeEditTab === "columns" && (
-                    <div onMouseDown={(e) => { e.stopPropagation(); clog("[ColumnsDrag] panel mousedown swallowed"); }}>
+                    <div onMouseDown={(e) => { e.stopPropagation(); clog("[ColumnsDrag] panel mousedown swallowed"); }} ref={columnsPanelRef}>
                         {/* Columns tag list */}
                         <div
-                        style={{
-                            display: "grid",
+                                style={{
+                                    display: "grid",
                                 gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
                                 gap: 8,
-                                maxHeight: "32vh",
-                                overflowY: "auto",
                                 paddingRight: 4,
+                                    cursor: isDraggingColumnTag ? "grabbing" : undefined,
                             }}
                             onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
                             onDrop={(e) => {
                                 // If dropped on the empty area of the container, clear drag state
                                 clog("[ColumnsDrag] drop on container (no target)");
                                 dragColIndexRef.current = null;
+                                setIsDraggingColumnTag(false);
+                                try { (document.body as any).style.cursor = ""; } catch (_) {}
                             }}
                         >
                         {localConfig.columns.map((col, idx) => (
@@ -1735,7 +1780,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 key={col.key}
                                         className="flex items-center gap-2 text-sm"
                                 style={{
-                                    cursor: "grab",
+                                    cursor: isDraggingColumnTag ? "grabbing" : "grab",
                                     userSelect: "none",
                                             padding: "4px 6px",
                         fontSize: 12,
@@ -1752,6 +1797,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     clog("[ColumnsDrag] dragStart", { fromIndex: idx, key: col.key });
                                     try { e.dataTransfer?.setData("text/plain", String(idx)); } catch (_) {}
                                     try { e.dataTransfer!.effectAllowed = "move"; } catch (_) {}
+                                    setIsDraggingColumnTag(true);
+                                    try { (document.body as any).style.cursor = "grabbing"; } catch (_) {}
                                 }}
                                 onDragOver={(e) => {
                                     e.preventDefault();
@@ -1784,8 +1831,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                         setTimeout(() => { clog("[ColumnsDrag] saving new order"); saveTableConfig(next); }, 0);
                                         return next;
                                     });
+                                    setIsDraggingColumnTag(false);
+                                    try { (document.body as any).style.cursor = ""; } catch (_) {}
                                 }}
-                                onDragEnd={() => { clog("[ColumnsDrag] dragEnd"); dragColIndexRef.current = null; }}
+                                onDragEnd={() => { clog("[ColumnsDrag] dragEnd"); dragColIndexRef.current = null; setIsDraggingColumnTag(false); try { (document.body as any).style.cursor = ""; } catch (_) {} }}
                             >
                                 <input
                                     type="checkbox"
@@ -1946,7 +1995,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     flex: 1,
                     width: "100%",
                     height: "100%",
-                    marginTop: isEditing ? "8vh" : 0,
+                    marginTop: isEditing ? `${Math.ceil(columnsPanelHeight)}px` : 0,
                     // reserve removed; parent handles footer spacing
                     minHeight: 0,
                     display: "flex",
