@@ -737,7 +737,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         const thumbHeight =
             actualScrollHeight > actualClientHeight
                 ? Math.max(
-                      20,
+            20,
                       (actualClientHeight / actualScrollHeight) *
                           actualClientHeight
                   )
@@ -752,7 +752,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         const thumbWidth =
             actualScrollWidth > actualClientWidth
                 ? Math.max(
-                      20,
+            20,
                       (actualClientWidth / actualScrollWidth) *
                           actualClientWidth
                   )
@@ -1187,10 +1187,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 // Auto-size only when NOT in edit mode (avoid fighting user resizes)
                 try {
                     if (!isEditing) {
-                        if (
+                    if (
                             params.api &&
                             typeof params.api.autoSizeAllColumns === "function"
-                        ) {
+                    ) {
                             params.api.autoSizeAllColumns();
                         }
                     } else {
@@ -1772,16 +1772,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         {activeEditTab === "columns" && (
                     <div onMouseDown={(e) => { e.stopPropagation(); clog("[ColumnsDrag] panel mousedown swallowed"); }} ref={columnsPanelRef}>
                         {/* Columns tag list */}
-                        <div
-                            style={{
-                                display: "grid",
+                    <div
+                        style={{
+                            display: "grid",
                                 gridTemplateColumns: "repeat(auto-fill, minmax(120px, max-content))",
                                 gap: 6,
                                 cursor: isDraggingColumnTag ? "grabbing" : undefined,
                                 alignItems: "stretch",
                                 justifyItems: "stretch",
                                 gridAutoRows: "minmax(28px, auto)",
-                            }}
+                        }}
                             onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
                             onDrop={(e) => {
                                 // If dropped on the empty area of the container, clear drag state
@@ -1807,6 +1807,28 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     opacity: dragColIndexRef.current === idx ? 0.8 : 1,
                                 }}
                                 draggable
+                                onMouseEnter={(e) => {
+                                    try {
+                                        const labelEl = e.currentTarget as HTMLLabelElement;
+                                        const spanEl = labelEl.querySelector('span');
+                                        const inputEl = labelEl.querySelector('input');
+                                        const isTruncated = !!(spanEl && (spanEl as HTMLElement).scrollWidth > (spanEl as HTMLElement).clientWidth);
+                                        const titleText = isTruncated ? col.label : "";
+                                        if (spanEl) (spanEl as HTMLElement).title = titleText;
+                                        if (inputEl) (inputEl as HTMLInputElement).title = titleText;
+                                        labelEl.title = titleText;
+                                    } catch (_) {}
+                                }}
+                                onMouseLeave={(e) => {
+                                    try {
+                                        const labelEl = e.currentTarget as HTMLLabelElement;
+                                        const spanEl = labelEl.querySelector('span');
+                                        const inputEl = labelEl.querySelector('input');
+                                        if (spanEl) (spanEl as HTMLElement).title = "";
+                                        if (inputEl) (inputEl as HTMLInputElement).title = "";
+                                        labelEl.title = "";
+                                    } catch (_) {}
+                                }}
                                 onDragStart={(e) => {
                                     e.stopPropagation();
                                     dragColIndexRef.current = idx;
@@ -1878,9 +1900,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 >{col.label}</span>
                             </label>
                         ))}
-                        </div>
                     </div>
-                        )}
+                </div>
+            )}
 
                         {activeEditTab === "group" && (
                             <div
