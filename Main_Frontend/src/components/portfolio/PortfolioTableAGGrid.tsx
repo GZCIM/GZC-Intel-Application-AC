@@ -1891,8 +1891,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     whiteSpace: "nowrap",
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
-                                    maxWidth: 140,
-                                    cursor: isDraggingColumnTag ? "grabbing" : "grab",
+                                        maxWidth: "100%",
+                                        width: "100%",
+                                        boxSizing: "border-box",
+                                        paddingRight: 6,
+                                        cursor: isDraggingColumnTag ? "grabbing" : "grab",
                                 }}
                                 >{col.label}</span>
                             </label>
