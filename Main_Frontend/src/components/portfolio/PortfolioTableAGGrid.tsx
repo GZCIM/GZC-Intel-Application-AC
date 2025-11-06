@@ -441,19 +441,33 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     useEffect(() => {
         if (!localConfig || positions.length === 0) return;
         const currentKeys = new Set(localConfig.columns.map((c) => c.key));
-        const sample = positions[0] as Record<string, unknown>;
         const exclude = new Set([
             "__aggregate__",
+            "_priceWsum",
+            "_priceW",
         ]);
+        const discovered = new Set<string>();
+        for (const row of positions as any[]) {
+            Object.keys(row || {}).forEach((k) => {
+                if (exclude.has(k)) return;
+                discovered.add(k);
+            });
+        }
         const additions: ColumnConfig[] = [];
-        Object.keys(sample || {}).forEach((k) => {
-            if (exclude.has(k)) return;
+        for (const k of discovered) {
             if (!currentKeys.has(k)) {
-                additions.push({ key: k, label: k.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()), visible: false, width: 120 });
+                additions.push({
+                    key: k,
+                    label: String(k).replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()),
+                    visible: false,
+                    width: 120,
+                });
             }
-        });
+        }
         if (additions.length > 0) {
-            const next: TableConfig = { ...localConfig, columns: [...localConfig.columns, ...additions] } as TableConfig;
+            // Append new columns at the end, sorted by label for predictable placement
+            const nextColumns = [...localConfig.columns, ...additions.sort((a,b) => a.label.localeCompare(b.label))];
+            const next: TableConfig = { ...localConfig, columns: nextColumns } as TableConfig;
             setLocalConfig(next);
             setTimeout(() => saveTableConfig(next), 0);
         }
@@ -1891,6 +1905,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     onDragEnd={() => { clog("[ColumnsDrag] dragEnd(span)"); dragColIndexRef.current = null; setIsDraggingColumnTag(false); try { (document.body as any).style.cursor = ""; } catch (_) {} }}
                                     style={{
                                         whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        width: "100%",
+                                        boxSizing: "border-box",
                                         paddingRight: 6,
                                         cursor: isDraggingColumnTag ? "grabbing" : "grab",
                                     }}
