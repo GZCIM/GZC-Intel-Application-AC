@@ -1775,11 +1775,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         <div
                             style={{
                                 display: "grid",
-                                gridTemplateColumns: "repeat(auto-fill, minmax(140px, max-content))",
+                                gridTemplateColumns: "repeat(auto-fill, minmax(120px, max-content))",
                                 gap: 6,
                                 cursor: isDraggingColumnTag ? "grabbing" : undefined,
                                 alignItems: "stretch",
                                 justifyItems: "stretch",
+                                gridAutoRows: "minmax(28px, auto)",
                             }}
                             onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
                             onDrop={(e) => {
@@ -1805,6 +1806,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     // subtle hint while dragging
                                     opacity: dragColIndexRef.current === idx ? 0.8 : 1,
                                 }}
+                                title={col.label}
                                 draggable
                                 onDragStart={(e) => {
                                     e.stopPropagation();
