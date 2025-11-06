@@ -1856,6 +1856,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 <input
                                     type="checkbox"
                                     checked={col.visible}
+                                    title={col.label}
                                     onClick={(e) => { e.stopPropagation(); clog("[ColumnsDrag] checkbox click", { key: col.key }); }}
                                     onChange={(e) => { e.stopPropagation(); clog("[ColumnsDrag] checkbox change", { key: col.key, next: !col.visible }); handleColumnToggle(col.key); }}
                                             style={{ width: 14, height: 14, cursor: "pointer" }}
