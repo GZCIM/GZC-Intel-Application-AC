@@ -1806,7 +1806,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     // subtle hint while dragging
                                     opacity: dragColIndexRef.current === idx ? 0.8 : 1,
                                 }}
-                                title={col.label}
                                 draggable
                                 onDragStart={(e) => {
                                     e.stopPropagation();
@@ -1856,56 +1855,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 <input
                                     type="checkbox"
                                     checked={col.visible}
-                                    title={col.label}
                                     onClick={(e) => { e.stopPropagation(); clog("[ColumnsDrag] checkbox click", { key: col.key }); }}
                                     onChange={(e) => { e.stopPropagation(); clog("[ColumnsDrag] checkbox change", { key: col.key, next: !col.visible }); handleColumnToggle(col.key); }}
                                             style={{ width: 14, height: 14, cursor: "pointer" }}
                                         />
                                 <span
-                                    title={col.label}
-                                    draggable
-                                    onDragStart={(e) => {
-                                        e.stopPropagation();
-                                        dragColIndexRef.current = idx;
-                                        clog("[ColumnsDrag] dragStart(span)", { fromIndex: idx, key: col.key });
-                                        try { e.dataTransfer?.setData("text/plain", String(idx)); } catch (_) {}
-                                        try { e.dataTransfer!.effectAllowed = "move"; } catch (_) {}
-                                        setIsDraggingColumnTag(true);
-                                        try { (document.body as any).style.cursor = "grabbing"; } catch (_) {}
-                                    }}
-                                    onDragOver={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        try { e.dataTransfer!.dropEffect = "move"; } catch (_) {}
-                                    }}
-                                    onDrop={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        const fromIndex = dragColIndexRef.current;
-                                        dragColIndexRef.current = null;
-                                        const toIndex = idx;
-                                        clog("[ColumnsDrag] drop(span)", { fromIndex, toIndex, key: col.key });
-                                        if (fromIndex === null || fromIndex === toIndex) return;
-                                        setLocalConfig((prev) => {
-                                            if (!prev) return prev;
-                                            const nextColumns = prev.columns.slice();
-                                            const [moved] = nextColumns.splice(fromIndex, 1);
-                                            nextColumns.splice(toIndex, 0, moved);
-                                            const next: TableConfig = { ...prev, columns: nextColumns } as TableConfig;
-                                            try {
-                                                if (gridApi && !(gridApi as any).isDestroyed?.()) {
-                                                    const state = nextColumns.map((c, order) => ({ colId: c.key, order } as any));
-                                                    (gridApi as any).applyColumnState({ state, applyOrder: true });
-                                                    clog("[ColumnsDrag] applied column order to grid(span)", state);
-                                                }
-                                            } catch (_) {}
-                                            setTimeout(() => { clog("[ColumnsDrag] saving new order(span)"); saveTableConfig(next); }, 0);
-                                            return next;
-                                        });
-                                        setIsDraggingColumnTag(false);
-                                        try { (document.body as any).style.cursor = ""; } catch (_) {}
-                                    }}
-                                    onDragEnd={() => { clog("[ColumnsDrag] dragEnd(span)"); dragColIndexRef.current = null; setIsDraggingColumnTag(false); try { (document.body as any).style.cursor = ""; } catch (_) {} }}
                                     style={{
                                         whiteSpace: "nowrap",
                                         overflow: "hidden",
@@ -1914,6 +1868,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                         boxSizing: "border-box",
                                         paddingRight: 6,
                                         cursor: isDraggingColumnTag ? "grabbing" : "grab",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        try {
+                                            const el = e.currentTarget as HTMLSpanElement;
+                                            el.title = el.scrollWidth > el.clientWidth ? col.label : "";
+                                        } catch (_) {}
                                     }}
                                 >{col.label}</span>
                             </label>
