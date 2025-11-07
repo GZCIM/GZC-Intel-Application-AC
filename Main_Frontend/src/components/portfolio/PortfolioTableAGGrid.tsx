@@ -200,19 +200,25 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         const handleDocumentContextMenu = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
             const isInGrid = containerRef.current?.contains(target);
+
             // Check if target is a row OR inside a row (cells, etc.)
+            // Try multiple selectors to be sure
             const gridRow = target.closest('.ag-row') as HTMLElement | null;
             const isOnRow = !!gridRow;
 
-            // Only suppress browser menu if clicking in grid but NOT on/in a row
-            // If clicking on a row, let the direct DOM listener in onGridReady handle it
-            if (isInGrid && !isOnRow) {
-                // Clicked in grid but not on a row - suppress browser menu
+            // Also check if we're in the grid body viewport (where rows are)
+            const gridBody = target.closest('.ag-body-viewport') as HTMLElement | null;
+            const isInGridBody = !!gridBody;
+
+            // Only suppress browser menu if clicking in grid container but NOT in grid body (where rows are)
+            // This is more reliable than checking for .ag-row which might not be found in all cases
+            if (isInGrid && !isInGridBody) {
+                // Clicked in grid container but not in the body where rows are - suppress browser menu
                 e.preventDefault();
                 e.stopPropagation();
-                console.error("[PortfolioTable] Suppressed browser menu on empty grid space");
+                console.error("[PortfolioTable] Suppressed browser menu on empty grid space (not in grid body)");
             }
-            // If clicking on a row, don't prevent default - let direct DOM listener handle it
+            // If clicking in grid body (where rows are), let the direct DOM listener handle it
         };
 
         document.addEventListener("contextmenu", handleDocumentContextMenu, true);
