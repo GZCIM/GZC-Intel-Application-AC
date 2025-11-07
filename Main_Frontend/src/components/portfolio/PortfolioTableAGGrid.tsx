@@ -227,6 +227,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         if (rowData) {
                             console.log("[PortfolioTable] Document handler: opening menu", {
                                 tradeId: rowData.trade_id,
+                                position: { x: e.clientX, y: e.clientY },
                             });
                             setContextMenuRow(rowData);
                             contextMenuRowRef.current = rowData;
@@ -234,6 +235,13 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 isOpen: true,
                                 position: { x: e.clientX, y: e.clientY },
                             });
+                            // Force a re-render to ensure menu appears
+                            setTimeout(() => {
+                                console.log("[PortfolioTable] Menu state after timeout", {
+                                    isOpen: contextMenu.isOpen,
+                                    hasRow: !!contextMenuRow,
+                                });
+                            }, 100);
                         } else {
                             console.warn("[PortfolioTable] Document handler: no row data", rowIndex);
                         }
@@ -242,6 +250,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     }
                 } else if (!gridApi) {
                     console.warn("[PortfolioTable] Document handler: gridApi not ready yet");
+                } else {
+                    console.warn("[PortfolioTable] Document handler: invalid rowIndex", rowIndex);
                 }
             } else if (isInGrid && !gridRow) {
                 // Clicked in grid but not on a row - suppress browser menu
@@ -3263,16 +3273,17 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 </div>
             )}
 
-            {/* Context Menu */}
+            {/* Context Menu - Always render for debugging, but only show when conditions are met */}
             {(() => {
+                const shouldRender = contextMenu.isOpen && contextMenuRow;
                 console.log("[PortfolioTable] Rendering check", {
                     isOpen: contextMenu.isOpen,
                     hasRow: !!contextMenuRow,
-                    willRender: contextMenu.isOpen && !!contextMenuRow,
+                    willRender: shouldRender,
+                    position: contextMenu.position,
                 });
-                return null;
-            })()}
-            {contextMenu.isOpen && contextMenuRow && (
+                return shouldRender;
+            })() && (
                 <ContextMenu
                     items={[
                         {
