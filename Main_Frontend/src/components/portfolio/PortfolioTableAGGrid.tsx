@@ -200,16 +200,37 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             const target = e.target as HTMLElement;
             const isInGrid = containerRef.current?.contains(target);
 
-            // Check if target is a row OR inside a row
-            const gridRow = target.closest('.ag-row') as HTMLElement | null;
+            // Try multiple ways to find the row
+            let gridRow = target.closest('.ag-row') as HTMLElement | null;
+            if (!gridRow) {
+                // Try finding parent with row-index attribute
+                let current: HTMLElement | null = target;
+                while (current && current !== containerRef.current) {
+                    if (current.hasAttribute('row-index')) {
+                        gridRow = current;
+                        break;
+                    }
+                    current = current.parentElement;
+                }
+            }
+
             const isOnRow = !!gridRow;
+
+            console.error("[PortfolioTable] Context menu event", {
+                isInGrid,
+                isOnRow,
+                hasGridApi: !!gridApi,
+                targetTag: target?.tagName,
+                targetClasses: target?.className?.substring(0, 100),
+                rowIndex: gridRow?.getAttribute('row-index'),
+            });
 
             if (isInGrid && isOnRow && gridApi) {
                 // Clicked on a row - handle it directly here
                 e.preventDefault();
                 e.stopPropagation();
 
-                const rowIndex = parseInt(gridRow.getAttribute('row-index') || '-1');
+                const rowIndex = parseInt(gridRow!.getAttribute('row-index') || '-1');
                 if (rowIndex >= 0) {
                     try {
                         const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
@@ -232,6 +253,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     } catch (err) {
                         console.error("[PortfolioTable] Error getting row data", err);
                     }
+                } else {
+                    console.error("[PortfolioTable] Invalid row index", rowIndex);
                 }
             } else if (isInGrid && !isOnRow) {
                 // Clicked in grid but not on a row - suppress browser menu
