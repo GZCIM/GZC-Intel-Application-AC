@@ -207,38 +207,47 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             // Use AG Grid API to find the row at mouse position
             // This is more reliable than DOM traversal
             let rowData: PortfolioPosition | null = null;
-            let rowIndex = -1;
 
             try {
                 // Get the element at the mouse position
                 const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement;
-                if (elementAtPoint) {
-                    // Try to find row index from the element or its parents
-                    let current: HTMLElement | null = elementAtPoint;
-                    while (current && current !== containerRef.current) {
-                        const rowIndexAttr = current.getAttribute('row-index');
-                        if (rowIndexAttr !== null) {
-                            rowIndex = parseInt(rowIndexAttr);
-                            if (rowIndex >= 0) {
-                                const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
-                                rowData = rowNode?.data as PortfolioPosition | null;
-                                break;
-                            }
+                if (elementAtPoint && gridApi) {
+                    // Use AG Grid's getRowNodeForElement method if available
+                    // This is the most reliable way to get row data from an element
+                    try {
+                        const rowNode = (gridApi as any).getRowNodeForElement?.(elementAtPoint);
+                        if (rowNode && rowNode.data) {
+                            rowData = rowNode.data as PortfolioPosition;
                         }
-                        current = current.parentElement;
+                    } catch (apiErr) {
+                        // Fallback: walk up the DOM tree looking for row-index
+                        let current: HTMLElement | null = elementAtPoint;
+                        while (current && current !== containerRef.current) {
+                            const rowIndexAttr = current.getAttribute('row-index');
+                            if (rowIndexAttr !== null) {
+                                const rowIndex = parseInt(rowIndexAttr);
+                                if (rowIndex >= 0) {
+                                    const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
+                                    if (rowNode?.data) {
+                                        rowData = rowNode.data as PortfolioPosition;
+                                        break;
+                                    }
+                                }
+                            }
+                            current = current.parentElement;
+                        }
                     }
                 }
             } catch (err) {
                 console.error("[PortfolioTable] Error finding row at mouse position", err);
             }
 
-            if (rowData && rowIndex >= 0) {
+            if (rowData) {
                 // Clicked on a row - handle it
                 e.preventDefault();
                 e.stopPropagation();
 
                 console.error("[PortfolioTable] Document handler: opening menu for row", {
-                    rowIndex,
                     tradeId: rowData.trade_id,
                     position: { x: e.clientX, y: e.clientY },
                 });
