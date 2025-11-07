@@ -223,9 +223,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     if (e.clientX >= rect.left && e.clientX <= rect.right &&
                         e.clientY >= rect.top && e.clientY <= rect.bottom) {
                         elementToCheck = row as HTMLElement;
-                        console.error("[PortfolioTable] Found row under ag-full-width-container", {
-                            rowIndex: (row as HTMLElement).getAttribute('row-index'),
-                        });
+                        // Only log in development to reduce console noise
+                        if (import.meta.env.DEV) {
+                            console.error("[PortfolioTable] Found row under ag-full-width-container", {
+                                rowIndex: (row as HTMLElement).getAttribute('row-index'),
+                            });
+                        }
                         break;
                     }
                 }
@@ -245,11 +248,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
                             if (rowNode?.data) {
                                 rowData = rowNode.data as PortfolioPosition;
-                                console.error("[PortfolioTable] Found row via row-index attribute", {
-                                    rowIndex,
-                                    tradeId: rowData.trade_id,
-                                    elementTag: current.tagName,
-                                });
+                                // Only log in development to reduce console noise
+                                if (import.meta.env.DEV) {
+                                    console.error("[PortfolioTable] Found row via row-index attribute", {
+                                        rowIndex,
+                                        tradeId: rowData.trade_id,
+                                        ticker: rowData.ticker,
+                                        elementTag: current.tagName,
+                                    });
+                                }
                                 break;
                             }
                         } catch (err) {
@@ -320,8 +327,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 e.preventDefault();
                 e.stopPropagation();
 
+                // Log confirmation that we have full row data including ticker
                 console.error("[PortfolioTable] Document handler: opening menu for row", {
                     tradeId: rowData.trade_id,
+                    ticker: rowData.ticker,
+                    underlying: rowData.underlying,
                     position: { x: e.clientX, y: e.clientY },
                 });
 
@@ -335,12 +345,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 // Clicked in grid but not on a row - suppress browser menu
                 e.preventDefault();
                 e.stopPropagation();
-                console.error("[PortfolioTable] Suppressed browser menu on empty grid space", {
-                    isInGrid,
-                    hasGridApi: !!gridApi,
-                    targetTag: target?.tagName,
-                    targetClasses: target?.className?.substring(0, 100),
-                });
+                // Only log suppression in development to reduce noise
+                if (import.meta.env.DEV) {
+                    console.error("[PortfolioTable] Suppressed browser menu on empty grid space", {
+                        isInGrid,
+                        hasGridApi: !!gridApi,
+                        targetTag: target?.tagName,
+                        targetClasses: target?.className?.substring(0, 100),
+                    });
+                }
             }
         };
 
@@ -3356,66 +3369,88 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
             {/* Context Menu */}
             {contextMenu.isOpen && contextMenuRow && (
-                <ContextMenu
-                    items={[
-                        {
-                            label: "History",
-                            action: () => {
-                                console.log("[PortfolioTable] Context menu: History", {
-                                    tradeId: contextMenuRow.trade_id,
-                                });
-                                alert(`History for trade ${contextMenuRow.trade_id ?? "N/A"}`);
+                <>
+                    {/* Log row data confirmation when menu opens */}
+                    {(() => {
+                        console.error("[PortfolioTable] Context menu opened with row data", {
+                            tradeId: contextMenuRow.trade_id,
+                            ticker: contextMenuRow.ticker,
+                            underlying: contextMenuRow.underlying,
+                            tradeType: contextMenuRow.trade_type,
+                            quantity: contextMenuRow.quantity,
+                            price: contextMenuRow.price,
+                            maturityDate: contextMenuRow.maturity_date,
+                            tradeCurrency: contextMenuRow.trade_currency,
+                            settlementCurrency: contextMenuRow.settlement_currency,
+                        });
+                        return null;
+                    })()}
+                    <ContextMenu
+                        items={[
+                            {
+                                label: "History",
+                                action: () => {
+                                    console.error("[PortfolioTable] Context menu: History", {
+                                        tradeId: contextMenuRow.trade_id,
+                                        ticker: contextMenuRow.ticker,
+                                    });
+                                    alert(`History for trade ${contextMenuRow.trade_id ?? "N/A"}${contextMenuRow.ticker ? ` (${contextMenuRow.ticker})` : ""}`);
+                                },
                             },
-                        },
-                        {
-                            label: "View/Edit",
-                            action: () => {
-                                console.log("[PortfolioTable] Context menu: View/Edit", {
-                                    tradeId: contextMenuRow.trade_id,
-                                });
-                                setIsEditing((prev) => !prev);
+                            {
+                                label: "View/Edit",
+                                action: () => {
+                                    console.error("[PortfolioTable] Context menu: View/Edit", {
+                                        tradeId: contextMenuRow.trade_id,
+                                        ticker: contextMenuRow.ticker,
+                                    });
+                                    setIsEditing((prev) => !prev);
+                                },
                             },
-                        },
-                        {
-                            label: "New",
-                            action: () => {
-                                console.log("[PortfolioTable] Context menu: New", {
-                                    tradeId: contextMenuRow.trade_id,
-                                    ticker: contextMenuRow.ticker,
-                                });
-                                alert(`Create new trade based on ${contextMenuRow.ticker ?? "position"}`);
+                            {
+                                label: "New",
+                                action: () => {
+                                    console.error("[PortfolioTable] Context menu: New", {
+                                        tradeId: contextMenuRow.trade_id,
+                                        ticker: contextMenuRow.ticker,
+                                        underlying: contextMenuRow.underlying,
+                                    });
+                                    alert(`Create new trade based on ${contextMenuRow.ticker ?? contextMenuRow.underlying ?? "position"}`);
+                                },
                             },
-                        },
-                        {
-                            label: "+/-",
-                            action: () => {
-                                console.log("[PortfolioTable] Context menu: +/-", {
-                                    tradeId: contextMenuRow.trade_id,
-                                    quantity: contextMenuRow.quantity,
-                                });
-                                alert(`Adjust quantity for trade ${contextMenuRow.trade_id ?? "N/A"}`);
+                            {
+                                label: "+/-",
+                                action: () => {
+                                    console.error("[PortfolioTable] Context menu: +/-", {
+                                        tradeId: contextMenuRow.trade_id,
+                                        ticker: contextMenuRow.ticker,
+                                        quantity: contextMenuRow.quantity,
+                                    });
+                                    alert(`Adjust quantity for trade ${contextMenuRow.trade_id ?? "N/A"}${contextMenuRow.ticker ? ` (${contextMenuRow.ticker})` : ""}\nCurrent quantity: ${contextMenuRow.quantity ?? "N/A"}`);
+                                },
                             },
-                        },
-                        {
-                            label: "Roll",
-                            action: () => {
-                                console.log("[PortfolioTable] Context menu: Roll", {
-                                    tradeId: contextMenuRow.trade_id,
-                                    maturity: contextMenuRow.maturity_date,
-                                });
-                                alert(`Roll trade ${contextMenuRow.trade_id ?? "N/A"}`);
+                            {
+                                label: "Roll",
+                                action: () => {
+                                    console.error("[PortfolioTable] Context menu: Roll", {
+                                        tradeId: contextMenuRow.trade_id,
+                                        ticker: contextMenuRow.ticker,
+                                        maturity: contextMenuRow.maturity_date,
+                                    });
+                                    alert(`Roll trade ${contextMenuRow.trade_id ?? "N/A"}${contextMenuRow.ticker ? ` (${contextMenuRow.ticker})` : ""}\nCurrent maturity: ${contextMenuRow.maturity_date ?? "N/A"}`);
+                                },
                             },
-                        },
-                    ] as ContextMenuItem[]}
-                    position={contextMenu.position}
-                    isOpen={contextMenu.isOpen}
-                    onClose={() => {
-                        setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                        setContextMenuRow(null);
-                        contextMenuRowRef.current = null;
-                        lastContextPositionRef.current = null;
-                    }}
-                />
+                        ] as ContextMenuItem[]}
+                        position={contextMenu.position}
+                        isOpen={contextMenu.isOpen}
+                        onClose={() => {
+                            setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                            setContextMenuRow(null);
+                            contextMenuRowRef.current = null;
+                            lastContextPositionRef.current = null;
+                        }}
+                    />
+                </>
             )}
         </div>
     );
