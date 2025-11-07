@@ -198,10 +198,14 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             }
         };
         host.addEventListener("contextmenu", handleContextMenu, true);
-        return () => host.removeEventListener("contextmenu", handleContextMenu, true);
-        // host is stable via ref; effect runs once after mount
+        return () => {
+            if (host) {
+                host.removeEventListener("contextmenu", handleContextMenu, true);
+            }
+        };
+        // Run once after mount when containerRef is set
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [containerRef.current]);
+    }, []);
 
     // Parent-set notional config listener removed; grid remains single source of persistence
 
