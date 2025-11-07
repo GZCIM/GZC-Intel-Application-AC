@@ -2046,13 +2046,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 }}
                 className="portfolio-table-wrapper"
                 ref={containerRef}
-                onContextMenu={(e) => {
-                    e.preventDefault();
-                    setContextMenu({
-                        isOpen: true,
-                        position: { x: e.clientX, y: e.clientY },
-                    });
-                }}
             >
                 {/* AG Grid with hidden scrollbar */}
             <div
@@ -2081,6 +2074,18 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             bodyH: body.clientHeight,
                         });
                     }
+                }}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log("[PortfolioTable] Context menu triggered", {
+                        x: e.clientX,
+                        y: e.clientY,
+                    });
+                    setContextMenu({
+                        isOpen: true,
+                        position: { x: e.clientX, y: e.clientY },
+                    });
                 }}
             >
                 <AgGridReact
@@ -2127,6 +2132,20 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             suppressHorizontalScroll: true,
                             alwaysShowHorizontalScroll: false,
                             alwaysShowVerticalScroll: false,
+                        // Suppress AG Grid's default context menu and handle it ourselves
+                        suppressContextMenu: true,
+                        onContextMenu: (event: any) => {
+                            event.event.preventDefault();
+                            event.event.stopPropagation();
+                            console.log("[PortfolioTable] AG Grid context menu triggered", {
+                                x: event.event.clientX,
+                                y: event.event.clientY,
+                            });
+                            setContextMenu({
+                                isOpen: true,
+                                position: { x: event.event.clientX, y: event.event.clientY },
+                            });
+                        },
                         }}
                     onColumnResized={(e: ColumnResizedEvent) => {
                         // Only persist when resize has finished and in edit mode
@@ -2962,52 +2981,63 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             )}
 
             {/* Context Menu */}
-            <ContextMenu
-                items={[
-                    {
-                        label: "History",
-                        action: () => {
-                            console.log("[PortfolioTable] Context menu: History");
-                            // TODO: Implement history functionality
-                            alert("History feature - coming soon");
-                        },
-                    },
-                    {
-                        label: "View/Edit",
-                        action: () => {
-                            console.log("[PortfolioTable] Context menu: View/Edit");
-                            setIsEditing(!isEditing);
-                        },
-                    },
-                    {
-                        label: "New",
-                        action: () => {
-                            console.log("[PortfolioTable] Context menu: New");
-                            // TODO: Implement new row/trade functionality
-                            alert("New feature - coming soon");
-                        },
-                    },
-                    {
-                        label: "+/-",
-                        action: () => {
-                            console.log("[PortfolioTable] Context menu: +/-");
-                            // TODO: Implement add/remove functionality
-                            alert("+/- feature - coming soon");
-                        },
-                    },
-                    {
-                        label: "Roll",
-                        action: () => {
-                            console.log("[PortfolioTable] Context menu: Roll");
-                            // TODO: Implement roll functionality
-                            alert("Roll feature - coming soon");
-                        },
-                    },
-                ] as ContextMenuItem[]}
-                position={contextMenu.position}
-                isOpen={contextMenu.isOpen}
-                onClose={() => setContextMenu({ ...contextMenu, isOpen: false })}
-            />
+            {(() => {
+                console.log("[PortfolioTable] Rendering ContextMenu", {
+                    isOpen: contextMenu.isOpen,
+                    position: contextMenu.position,
+                });
+                return (
+                    <ContextMenu
+                        items={[
+                            {
+                                label: "History",
+                                action: () => {
+                                    console.log("[PortfolioTable] Context menu: History");
+                                    // TODO: Implement history functionality
+                                    alert("History feature - coming soon");
+                                },
+                            },
+                            {
+                                label: "View/Edit",
+                                action: () => {
+                                    console.log("[PortfolioTable] Context menu: View/Edit");
+                                    setIsEditing(!isEditing);
+                                },
+                            },
+                            {
+                                label: "New",
+                                action: () => {
+                                    console.log("[PortfolioTable] Context menu: New");
+                                    // TODO: Implement new row/trade functionality
+                                    alert("New feature - coming soon");
+                                },
+                            },
+                            {
+                                label: "+/-",
+                                action: () => {
+                                    console.log("[PortfolioTable] Context menu: +/-");
+                                    // TODO: Implement add/remove functionality
+                                    alert("+/- feature - coming soon");
+                                },
+                            },
+                            {
+                                label: "Roll",
+                                action: () => {
+                                    console.log("[PortfolioTable] Context menu: Roll");
+                                    // TODO: Implement roll functionality
+                                    alert("Roll feature - coming soon");
+                                },
+                            },
+                        ] as ContextMenuItem[]}
+                        position={contextMenu.position}
+                        isOpen={contextMenu.isOpen}
+                        onClose={() => {
+                            console.log("[PortfolioTable] Context menu closing");
+                            setContextMenu({ ...contextMenu, isOpen: false });
+                        }}
+                    />
+                );
+            })()}
         </div>
     );
 };
