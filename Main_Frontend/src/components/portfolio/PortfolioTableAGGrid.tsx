@@ -195,22 +195,24 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     }, [contextMenu.isOpen]);
 
     // Document-level handler only for suppressing browser menu on empty grid space
-    // AG Grid handlers (onCellContextMenu/onRowContextMenu) handle actual row clicks
+    // Direct DOM listener in onGridReady handles row clicks
     useEffect(() => {
         const handleDocumentContextMenu = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
             const isInGrid = containerRef.current?.contains(target);
+            // Check if target is a row OR inside a row (cells, etc.)
             const gridRow = target.closest('.ag-row') as HTMLElement | null;
+            const isOnRow = !!gridRow;
 
-            // Only suppress browser menu if clicking in grid but NOT on a row
-            // If clicking on a row, let AG Grid handlers take over
-            if (isInGrid && !gridRow) {
+            // Only suppress browser menu if clicking in grid but NOT on/in a row
+            // If clicking on a row, let the direct DOM listener in onGridReady handle it
+            if (isInGrid && !isOnRow) {
                 // Clicked in grid but not on a row - suppress browser menu
                 e.preventDefault();
                 e.stopPropagation();
                 console.error("[PortfolioTable] Suppressed browser menu on empty grid space");
             }
-            // If clicking on a row, don't prevent default here - let AG Grid handle it
+            // If clicking on a row, don't prevent default - let direct DOM listener handle it
         };
 
         document.addEventListener("contextmenu", handleDocumentContextMenu, true);
@@ -218,7 +220,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         return () => {
             document.removeEventListener("contextmenu", handleDocumentContextMenu, true);
         };
-    }, []); // Re-attach when gridApi becomes available
+    }, []);
 
     // Parent-set notional config listener removed; grid remains single source of persistence
 
@@ -1243,74 +1245,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     rowCount: params.api.getDisplayedRowCount(),
                 });
 
-                // Add direct DOM event listener to detect contextmenu events
-                // Use containerRef or find grid element via DOM query
+                // Add direct DOM event listener to detect contextmenu events on rows
+                // This works with AG Grid Community Edition (free version)
                 const gridElement = containerRef.current?.querySelector('.ag-theme-alpine') as HTMLElement;
                 const gridBody = gridElement?.querySelector('.ag-body-viewport') as HTMLElement;
-
-                // Debug: Check all parent elements
-                console.log("[PortfolioTable] Checking DOM hierarchy", {
-                    containerRef: !!containerRef.current,
-                    containerRefClasses: containerRef.current?.className,
-                    gridElement: !!gridElement,
-                    gridBody: !!gridBody,
-                    gridBodyClasses: gridBody?.className,
-                    parentChain: (() => {
-                        const chain: Array<{ tag: string; classes: string; id: string; hasContextMenuHandler: boolean }> = [];
-                        let current: HTMLElement | null = gridBody;
-                        while (current && chain.length < 10) {
-                            const hasHandler = current.oncontextmenu !== null ||
-                                current.getAttribute('oncontextmenu') !== null;
-                            chain.push({
-                                tag: current.tagName,
-                                classes: current.className || '',
-                                id: current.id || '',
-                                hasContextMenuHandler: hasHandler,
-                            });
-                            current = current.parentElement;
-                        }
-                        return chain;
-                    })(),
-                });
 
                 if (gridBody) {
                     const handleDirectContextMenu = (e: MouseEvent) => {
                         const target = e.target as HTMLElement;
-                        const rowElement = target?.closest('.ag-row');
-
-                        // Check all parents for blocking
-                        const parentChain: Array<{ element: HTMLElement; tag: string; classes: string; id: string }> = [];
-                        let current: HTMLElement | null = target;
-                        while (current && parentChain.length < 15) {
-                            parentChain.push({
-                                element: current,
-                                tag: current.tagName,
-                                classes: current.className || '',
-                                id: current.id || '',
-                            });
-                            current = current.parentElement;
-                        }
-
-                        console.log("[PortfolioTable] Direct DOM contextmenu event detected", {
-                            target: {
-                                tag: target?.tagName,
-                                classes: target?.className,
-                                id: target?.id,
-                            },
-                            currentTarget: {
-                                tag: (e.currentTarget as HTMLElement)?.tagName,
-                                classes: (e.currentTarget as HTMLElement)?.className,
-                            },
-                            clientX: e.clientX,
-                            clientY: e.clientY,
-                            isRow: !!rowElement,
-                            rowElement: rowElement ? {
-                                tag: rowElement.tagName,
-                                classes: rowElement.className,
-                                rowIndex: rowElement.getAttribute('row-index'),
-                            } : null,
-                            parentChain: parentChain.slice(0, 5), // First 5 parents
-                        });
+                        const rowElement = target?.closest('.ag-row') as HTMLElement | null;
 
                         if (rowElement) {
                             const rowIndex = parseInt(rowElement.getAttribute('row-index') || '-1');
@@ -1321,9 +1264,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     if (rowData) {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        console.log("[PortfolioTable] Direct handler: opening menu for row", {
+                                        console.error("[PortfolioTable] Direct handler: opening menu for row", {
                                             rowIndex,
                                             tradeId: rowData.trade_id,
+                                            position: { x: e.clientX, y: e.clientY },
                                         });
                                         setContextMenuRow(rowData);
                                         contextMenuRowRef.current = rowData;
@@ -1332,32 +1276,27 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                             position: { x: e.clientX, y: e.clientY },
                                         });
                                     } else {
-                                        console.warn("[PortfolioTable] No row data found for index", rowIndex);
+                                        console.error("[PortfolioTable] No row data found for index", rowIndex);
                                     }
                                 } catch (err) {
-                                    console.warn("[PortfolioTable] Error getting row data", err);
+                                    console.error("[PortfolioTable] Error getting row data", err);
                                 }
                             } else {
-                                console.warn("[PortfolioTable] Invalid row index", rowIndex);
+                                console.error("[PortfolioTable] Invalid row index", rowIndex);
                             }
-                        } else {
-                            console.log("[PortfolioTable] Click not on a row element");
                         }
+                        // If not on a row, let document handler suppress browser menu
                     };
+                    // Use capture phase to catch events before they bubble
                     gridBody.addEventListener('contextmenu', handleDirectContextMenu, true);
-                    console.log("[PortfolioTable] Direct DOM contextmenu listener attached to grid body", {
+                    console.error("[PortfolioTable] Direct DOM contextmenu listener attached to grid body", {
                         gridBodyClasses: gridBody.className,
                         gridBodyId: gridBody.id,
                     });
                 } else {
-                    console.warn("[PortfolioTable] Could not find grid body element for context menu listener", {
+                    console.error("[PortfolioTable] Could not find grid body element for context menu listener", {
                         containerRef: !!containerRef.current,
                         gridElement: !!gridElement,
-                        availableElements: containerRef.current ? Array.from(containerRef.current.querySelectorAll('*')).map(el => ({
-                            tag: el.tagName,
-                            classes: el.className,
-                            id: el.id,
-                        })).slice(0, 10) : [],
                     });
                 }
 
@@ -1436,7 +1375,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             } catch (error) {
                 console.error("[AG Grid] Error in onGridReady:", error);
             }
-        }, 1000); // Increased delay to ensure grid is fully ready
+        }, 100); // Short delay to ensure grid DOM is ready
 
         // No automatic size-to-fit; user controls widths and order while editing
     };
