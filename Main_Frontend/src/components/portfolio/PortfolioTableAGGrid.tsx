@@ -171,6 +171,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         position: { x: 0, y: 0 },
     });
     const [contextMenuRow, setContextMenuRow] = useState<PortfolioPosition | null>(null);
+    const contextMenuRowRef = useRef<PortfolioPosition | null>(null);
 
     // Close context menu on any left click anywhere
     useEffect(() => {
@@ -2087,6 +2088,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         });
                     }
                 }}
+                onContextMenuCapture={(e) => {
+                    // Always suppress browser default menu inside grid area
+                    e.preventDefault();
+                    e.stopPropagation();
+                }}
             >
                 <AgGridReact
                     rowData={aggregatedPositions}
@@ -2203,9 +2209,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         if (!rowData) {
                             setContextMenu((prev) => ({ ...prev, isOpen: false }));
                             setContextMenuRow(null);
+                            contextMenuRowRef.current = null;
                             return;
                         }
                         setContextMenuRow(rowData);
+                        contextMenuRowRef.current = rowData;
                         setContextMenu({
                             isOpen: true,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
@@ -2215,6 +2223,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         if (contextMenu.isOpen) {
                             setContextMenu((prev) => ({ ...prev, isOpen: false }));
                             setContextMenuRow(null);
+                            contextMenuRowRef.current = null;
                         }
                     }}
                     />
@@ -3066,6 +3075,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     onClose={() => {
                         setContextMenu((prev) => ({ ...prev, isOpen: false }));
                         setContextMenuRow(null);
+                        contextMenuRowRef.current = null;
                     }}
                 />
             )}
