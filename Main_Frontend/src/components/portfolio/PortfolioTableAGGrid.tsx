@@ -205,17 +205,22 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             }
 
             // Use AG Grid API to find the row at mouse position
-            // This is more reliable than DOM traversal
+            // Try both the event target and elementFromPoint
             let rowData: PortfolioPosition | null = null;
 
             try {
-                // Get the element at the mouse position
-                const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement;
-                if (elementAtPoint && gridApi) {
+                // Try the event target first (more reliable)
+                let elementToCheck: HTMLElement | null = target;
+
+                // Also try elementFromPoint as fallback
+                if (!elementToCheck || elementToCheck === document.body) {
+                    elementToCheck = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement;
+                }
+
+                if (elementToCheck && gridApi) {
                     // Use AG Grid's getRowNodeForElement method if available
-                    // This is the most reliable way to get row data from an element
                     try {
-                        const rowNode = (gridApi as any).getRowNodeForElement?.(elementAtPoint);
+                        const rowNode = (gridApi as any).getRowNodeForElement?.(elementToCheck);
                         if (rowNode && rowNode.data) {
                             rowData = rowNode.data as PortfolioPosition;
                             console.error("[PortfolioTable] Found row via getRowNodeForElement", {
@@ -223,27 +228,26 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             });
                         }
                     } catch (apiErr) {
-                        console.error("[PortfolioTable] getRowNodeForElement failed, trying DOM traversal", apiErr);
+                        // Method not available or failed
                     }
 
                     // Fallback: walk up the DOM tree looking for row-index
                     if (!rowData) {
-                        let current: HTMLElement | null = elementAtPoint;
-                        const traversalPath: Array<{ tag: string; classes: string; rowIndex: string | null }> = [];
-                        let foundRowIndex = false;
+                        let current: HTMLElement | null = elementToCheck;
+                        const traversalPath: Array<{ tag: string; classes: string; rowIndex: string | null; id: string }> = [];
 
-                        while (current && current !== containerRef.current && traversalPath.length < 20) {
+                        while (current && current !== containerRef.current && traversalPath.length < 30) {
                             const rowIndexAttr = current.getAttribute('row-index');
                             traversalPath.push({
                                 tag: current.tagName,
-                                classes: current.className?.substring(0, 50) || '',
+                                classes: (current.className || '').substring(0, 50),
                                 rowIndex: rowIndexAttr,
+                                id: current.id || '',
                             });
 
-                            if (rowIndexAttr !== null && !foundRowIndex) {
-                                foundRowIndex = true;
+                            if (rowIndexAttr !== null) {
                                 const rowIndex = parseInt(rowIndexAttr);
-                                if (rowIndex >= 0) {
+                                if (!isNaN(rowIndex) && rowIndex >= 0) {
                                     try {
                                         const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
                                         if (rowNode?.data) {
@@ -251,7 +255,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                             console.error("[PortfolioTable] Found row via DOM traversal", {
                                                 rowIndex,
                                                 tradeId: rowData.trade_id,
-                                                traversalPath: traversalPath.slice(0, 5),
+                                                foundAt: traversalPath.length,
                                             });
                                             break;
                                         }
@@ -263,11 +267,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             current = current.parentElement;
                         }
 
-                        if (!rowData) {
+                        if (!rowData && traversalPath.length > 0) {
                             console.error("[PortfolioTable] Could not find row - traversal path", {
-                                traversalPath: traversalPath.slice(0, 10),
-                                elementAtPointTag: elementAtPoint.tagName,
-                                elementAtPointClasses: elementAtPoint.className?.substring(0, 100),
+                                traversalPath: traversalPath,
+                                elementTag: elementToCheck.tagName,
+                                elementClasses: elementToCheck.className?.substring(0, 100),
                             });
                         }
                     }
