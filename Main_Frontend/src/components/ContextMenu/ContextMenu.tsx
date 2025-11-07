@@ -54,7 +54,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
     if (isOpen && menuRef.current) {
       const rect = menuRef.current.getBoundingClientRect()
       const { innerWidth, innerHeight } = window
-      
+
       let x = position.x
       let y = position.y
 
@@ -74,7 +74,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 
   const handleItemClick = (item: ContextMenuItem) => {
     if (item.disabled || item.submenu) return
-    
+
     if (item.action) {
       item.action()
     }
@@ -107,10 +107,10 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         style={{
           padding: '8px 16px',
           fontSize: '13px',
-          color: item.disabled 
-            ? theme.textSecondary 
-            : item.danger 
-              ? theme.danger 
+          color: item.disabled
+            ? theme.textSecondary
+            : item.danger
+              ? theme.danger
               : theme.text,
           cursor: item.disabled ? 'not-allowed' : 'pointer',
           display: 'flex',
@@ -130,7 +130,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
           )}
           <span>{item.label}</span>
         </div>
-        
+
         {hasSubmenu && (
           <>
             <span style={{ fontSize: '10px', opacity: 0.6 }}>▶</span>
@@ -155,7 +155,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                     zIndex: 1001
                   }}
                 >
-                  {item.submenu!.map((subItem, subIndex) => 
+                  {item.submenu!.map((subItem, subIndex) =>
                     renderMenuItem(subItem, `${index}-${subIndex}` as any)
                   )}
                 </motion.div>
@@ -186,7 +186,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
             borderRadius: '6px',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
             padding: '4px 0',
-            zIndex: 1000
+            zIndex: 10050
           }}
         >
           {items.map((item, index) => renderMenuItem(item, index))}
