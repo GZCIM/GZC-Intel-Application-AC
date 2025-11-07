@@ -172,6 +172,17 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     });
     const [contextMenuRow, setContextMenuRow] = useState<PortfolioPosition | null>(null);
 
+    // Close context menu on any left click anywhere
+    useEffect(() => {
+        if (!contextMenu.isOpen) return;
+        const handleDocClick = (e: MouseEvent) => {
+            setContextMenu((prev) => ({ ...prev, isOpen: false }));
+            setContextMenuRow(null);
+        };
+        document.addEventListener("mousedown", handleDocClick, true);
+        return () => document.removeEventListener("mousedown", handleDocClick, true);
+    }, [contextMenu.isOpen]);
+
     // Parent-set notional config listener removed; grid remains single source of persistence
 
     // Scrollbar state and refs
@@ -2182,6 +2193,23 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     }}
                     onColumnVisible={(e: ColumnVisibleEvent) => {
                         queueSave();
+                    }}
+                    onRowContextMenu={(event: any) => {
+                        const nativeEvent: MouseEvent | undefined = event?.event;
+                        if (!nativeEvent) return;
+                        nativeEvent.preventDefault();
+                        nativeEvent.stopPropagation();
+                        const rowData = (event?.data || null) as PortfolioPosition | null;
+                        if (!rowData) {
+                            setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                            setContextMenuRow(null);
+                            return;
+                        }
+                        setContextMenuRow(rowData);
+                        setContextMenu({
+                            isOpen: true,
+                            position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
+                        });
                     }}
                     onCellClicked={() => {
                         if (contextMenu.isOpen) {
