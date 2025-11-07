@@ -174,6 +174,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const contextMenuRowRef = useRef<PortfolioPosition | null>(null);
     const lastContextPositionRef = useRef<{ x: number; y: number } | null>(null);
 
+    // Debug: Log context menu state changes
+    useEffect(() => {
+        console.log("[PortfolioTable] Context menu state changed", {
+            isOpen: contextMenu.isOpen,
+            hasRow: !!contextMenuRow,
+            position: contextMenu.position,
+        });
+    }, [contextMenu.isOpen, contextMenu.position, contextMenuRow]);
+
     // Close context menu on any left click anywhere
     useEffect(() => {
         if (!contextMenu.isOpen) return;
@@ -186,21 +195,24 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     }, [contextMenu.isOpen]);
 
     // Suppress browser context menu within the portfolio table area to ensure custom menu control
+    // Note: We use capture phase but allow AG Grid's handlers to run first
     useEffect(() => {
         const host = containerRef.current;
         if (!host) return;
         const handleContextMenu = (e: MouseEvent) => {
-            if (!host.contains(e.target as Node)) return;
-            e.preventDefault();
-            e.stopPropagation();
+            // Only suppress if we don't have a row selected (i.e., clicked on empty space)
+            // AG Grid's onCellContextMenu/onRowContextMenu will handle row clicks
             if (!contextMenuRowRef.current) {
+                e.preventDefault();
+                e.stopPropagation();
                 setContextMenu((prev) => ({ ...prev, isOpen: false }));
             }
         };
-        host.addEventListener("contextmenu", handleContextMenu, true);
+        // Use capture phase but let AG Grid handle row clicks first
+        host.addEventListener("contextmenu", handleContextMenu, false);
         return () => {
             if (host) {
-                host.removeEventListener("contextmenu", handleContextMenu, true);
+                host.removeEventListener("contextmenu", handleContextMenu, false);
             }
         };
         // Run once after mount when containerRef is set
@@ -2166,10 +2178,18 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         }}
                     onCellContextMenu={(event) => {
                         const nativeEvent = event.event;
-                        if (!nativeEvent) return;
+                        if (!nativeEvent) {
+                            console.log("[PortfolioTable] onCellContextMenu: no nativeEvent");
+                            return;
+                        }
                         nativeEvent.preventDefault();
                         nativeEvent.stopPropagation();
                         const rowData = (event.data || null) as PortfolioPosition | null;
+                        console.log("[PortfolioTable] onCellContextMenu triggered", {
+                            hasRowData: !!rowData,
+                            tradeId: rowData?.trade_id,
+                            position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
+                        });
                         if (!rowData) {
                             setContextMenu((prev) => ({ ...prev, isOpen: false }));
                             setContextMenuRow(null);
@@ -2184,6 +2204,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             y: nativeEvent.clientY,
                         };
                         setContextMenu({
+                            isOpen: true,
+                            position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
+                        });
+                        console.log("[PortfolioTable] Context menu state set", {
                             isOpen: true,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
                         });
@@ -2232,10 +2256,18 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     }}
                     onRowContextMenu={(event: any) => {
                         const nativeEvent: MouseEvent | undefined = event?.event;
-                        if (!nativeEvent) return;
+                        if (!nativeEvent) {
+                            console.log("[PortfolioTable] onRowContextMenu: no nativeEvent");
+                            return;
+                        }
                         nativeEvent.preventDefault();
                         nativeEvent.stopPropagation();
                         const rowData = (event?.data || null) as PortfolioPosition | null;
+                        console.log("[PortfolioTable] onRowContextMenu triggered", {
+                            hasRowData: !!rowData,
+                            tradeId: rowData?.trade_id,
+                            position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
+                        });
                         if (!rowData) {
                             setContextMenu((prev) => ({ ...prev, isOpen: false }));
                             setContextMenuRow(null);
@@ -2249,6 +2281,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             y: nativeEvent.clientY,
                         };
                         setContextMenu({
+                            isOpen: true,
+                            position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
+                        });
+                        console.log("[PortfolioTable] Context menu state set from onRowContextMenu", {
                             isOpen: true,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
                         });
@@ -3053,6 +3089,14 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             )}
 
             {/* Context Menu */}
+            {(() => {
+                console.log("[PortfolioTable] Rendering check", {
+                    isOpen: contextMenu.isOpen,
+                    hasRow: !!contextMenuRow,
+                    willRender: contextMenu.isOpen && !!contextMenuRow,
+                });
+                return null;
+            })()}
             {contextMenu.isOpen && contextMenuRow && (
                 <ContextMenu
                     items={[
