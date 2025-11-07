@@ -218,23 +218,57 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         const rowNode = (gridApi as any).getRowNodeForElement?.(elementAtPoint);
                         if (rowNode && rowNode.data) {
                             rowData = rowNode.data as PortfolioPosition;
+                            console.error("[PortfolioTable] Found row via getRowNodeForElement", {
+                                tradeId: rowData.trade_id,
+                            });
                         }
                     } catch (apiErr) {
-                        // Fallback: walk up the DOM tree looking for row-index
+                        console.error("[PortfolioTable] getRowNodeForElement failed, trying DOM traversal", apiErr);
+                    }
+
+                    // Fallback: walk up the DOM tree looking for row-index
+                    if (!rowData) {
                         let current: HTMLElement | null = elementAtPoint;
-                        while (current && current !== containerRef.current) {
+                        const traversalPath: Array<{ tag: string; classes: string; rowIndex: string | null }> = [];
+                        let foundRowIndex = false;
+
+                        while (current && current !== containerRef.current && traversalPath.length < 20) {
                             const rowIndexAttr = current.getAttribute('row-index');
-                            if (rowIndexAttr !== null) {
+                            traversalPath.push({
+                                tag: current.tagName,
+                                classes: current.className?.substring(0, 50) || '',
+                                rowIndex: rowIndexAttr,
+                            });
+
+                            if (rowIndexAttr !== null && !foundRowIndex) {
+                                foundRowIndex = true;
                                 const rowIndex = parseInt(rowIndexAttr);
                                 if (rowIndex >= 0) {
-                                    const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
-                                    if (rowNode?.data) {
-                                        rowData = rowNode.data as PortfolioPosition;
-                                        break;
+                                    try {
+                                        const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
+                                        if (rowNode?.data) {
+                                            rowData = rowNode.data as PortfolioPosition;
+                                            console.error("[PortfolioTable] Found row via DOM traversal", {
+                                                rowIndex,
+                                                tradeId: rowData.trade_id,
+                                                traversalPath: traversalPath.slice(0, 5),
+                                            });
+                                            break;
+                                        }
+                                    } catch (err) {
+                                        console.error("[PortfolioTable] Error getting row at index", rowIndex, err);
                                     }
                                 }
                             }
                             current = current.parentElement;
+                        }
+
+                        if (!rowData) {
+                            console.error("[PortfolioTable] Could not find row - traversal path", {
+                                traversalPath: traversalPath.slice(0, 10),
+                                elementAtPointTag: elementAtPoint.tagName,
+                                elementAtPointClasses: elementAtPoint.className?.substring(0, 100),
+                            });
                         }
                     }
                 }
