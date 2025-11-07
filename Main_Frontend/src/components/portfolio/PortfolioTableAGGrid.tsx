@@ -201,30 +201,38 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             const target = e.target as HTMLElement;
             const isInGrid = containerRef.current?.contains(target);
 
-            // Check if target is a row OR inside a row (cells, etc.)
-            // Try multiple selectors to be sure
-            const gridRow = target.closest('.ag-row') as HTMLElement | null;
-            const isOnRow = !!gridRow;
-
-            // Also check if we're in the grid body viewport (where rows are)
+            // Check if we're in the grid body viewport (where rows are)
             const gridBody = target.closest('.ag-body-viewport') as HTMLElement | null;
             const isInGridBody = !!gridBody;
 
+            // Also check if target is a row OR inside a row
+            const gridRow = target.closest('.ag-row') as HTMLElement | null;
+            const isOnRow = !!gridRow;
+
             // Only suppress browser menu if clicking in grid container but NOT in grid body (where rows are)
-            // This is more reliable than checking for .ag-row which might not be found in all cases
-            if (isInGrid && !isInGridBody) {
+            // If clicking in grid body, let the direct DOM listener handle it
+            if (isInGrid && !isInGridBody && !isOnRow) {
                 // Clicked in grid container but not in the body where rows are - suppress browser menu
                 e.preventDefault();
                 e.stopPropagation();
-                console.error("[PortfolioTable] Suppressed browser menu on empty grid space (not in grid body)");
+                console.error("[PortfolioTable] Suppressed browser menu on empty grid space", {
+                    isInGrid,
+                    isInGridBody,
+                    isOnRow,
+                    targetTag: target?.tagName,
+                    targetClasses: target?.className,
+                });
+            } else if (isInGrid && (isInGridBody || isOnRow)) {
+                // Clicking in grid body or on a row - don't suppress, let direct listener handle it
+                // Don't call preventDefault or stopPropagation here
             }
-            // If clicking in grid body (where rows are), let the direct DOM listener handle it
         };
 
-        document.addEventListener("contextmenu", handleDocumentContextMenu, true);
-        console.error("[PortfolioTable] Document-level contextmenu listener attached (suppression only)");
+        // Use bubble phase instead of capture to let grid body listener run first
+        document.addEventListener("contextmenu", handleDocumentContextMenu, false);
+        console.error("[PortfolioTable] Document-level contextmenu listener attached (suppression only, bubble phase)");
         return () => {
-            document.removeEventListener("contextmenu", handleDocumentContextMenu, true);
+            document.removeEventListener("contextmenu", handleDocumentContextMenu, false);
         };
     }, []);
 
