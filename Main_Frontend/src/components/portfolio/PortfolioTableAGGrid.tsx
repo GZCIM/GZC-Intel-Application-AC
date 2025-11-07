@@ -200,18 +200,26 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             const target = e.target as HTMLElement;
             const isInGrid = containerRef.current?.contains(target);
 
-            // Try multiple ways to find the row
-            let gridRow = target.closest('.ag-row') as HTMLElement | null;
-            if (!gridRow) {
-                // Try finding parent with row-index attribute
-                let current: HTMLElement | null = target;
-                while (current && current !== containerRef.current) {
-                    if (current.hasAttribute('row-index')) {
-                        gridRow = current;
+            // Try multiple ways to find the row - walk up the entire parent chain
+            let gridRow: HTMLElement | null = null;
+            let current: HTMLElement | null = target;
+
+            // Walk up the parent chain until we find a row or reach the container
+            while (current && current !== containerRef.current) {
+                // Check if this element is a row (has .ag-row class or row-index attribute)
+                if (current.classList?.contains('ag-row') || current.hasAttribute('row-index')) {
+                    gridRow = current;
+                    break;
+                }
+                // Also check if parent is a row
+                if (current.parentElement) {
+                    const parent = current.parentElement;
+                    if (parent.classList?.contains('ag-row') || parent.hasAttribute('row-index')) {
+                        gridRow = parent as HTMLElement;
                         break;
                     }
-                    current = current.parentElement;
                 }
+                current = current.parentElement;
             }
 
             const isOnRow = !!gridRow;
