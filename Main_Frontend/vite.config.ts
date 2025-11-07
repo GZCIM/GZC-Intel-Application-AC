@@ -105,7 +105,7 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash].[ext]'
       },
       // Optimize for faster builds
-      maxParallelFileOps: 4, // Reduce parallel operations to lower memory pressure
+      maxParallelFileOps: 2, // Further reduce parallel operations to lower memory pressure
       cache: true, // Enable caching for faster subsequent builds
       treeshake: {
         moduleSideEffects: false // Enable aggressive tree shaking

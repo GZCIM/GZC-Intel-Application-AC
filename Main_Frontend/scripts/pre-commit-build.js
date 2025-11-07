@@ -23,7 +23,7 @@ try {
     console.log(`📁 Working directory: ${absolutePath}`);
 
     // Prefer fast build but bump Node memory to avoid OOM during bundling
-    const env = { ...process.env, NODE_OPTIONS: "--max-old-space-size=12288" };
+    const env = { ...process.env, NODE_OPTIONS: "--max-old-space-size=16384" };
     try {
         execSync("npm run build:fast", {
             cwd: absolutePath,

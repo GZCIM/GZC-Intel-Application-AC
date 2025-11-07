@@ -194,28 +194,69 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         return () => document.removeEventListener("mousedown", handleDocClick, true);
     }, [contextMenu.isOpen]);
 
-    // Suppress browser context menu only on empty space (not on rows)
-    // AG Grid's onCellContextMenu/onRowContextMenu will handle row clicks and prevent default
+    // Document-level context menu handler as primary method (works even if grid isn't ready)
     useEffect(() => {
         const handleDocumentContextMenu = (e: MouseEvent) => {
-            // Only suppress if clicking outside the grid or on empty space
             const target = e.target as HTMLElement;
             const isInGrid = containerRef.current?.contains(target);
-            const isGridRow = target.closest('.ag-row');
+            const gridRow = target.closest('.ag-row') as HTMLElement | null;
 
-            // If clicking in grid but not on a row, suppress browser menu
-            if (isInGrid && !isGridRow) {
+            console.log("[PortfolioTable] Document contextmenu handler", {
+                targetTag: target?.tagName,
+                targetClasses: target?.className,
+                isInGrid,
+                hasGridRow: !!gridRow,
+                gridRowIndex: gridRow?.getAttribute('row-index'),
+            });
+
+            if (isInGrid && gridRow) {
+                // Clicked on a grid row - handle it
+                e.preventDefault();
+                e.stopPropagation();
+
+                const rowIndex = parseInt(gridRow.getAttribute('row-index') || '-1');
+                console.log("[PortfolioTable] Document handler: row clicked", {
+                    rowIndex,
+                    gridApiReady: !!gridApi,
+                });
+
+                if (rowIndex >= 0 && gridApi) {
+                    try {
+                        const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
+                        const rowData = rowNode?.data as PortfolioPosition | null;
+                        if (rowData) {
+                            console.log("[PortfolioTable] Document handler: opening menu", {
+                                tradeId: rowData.trade_id,
+                            });
+                            setContextMenuRow(rowData);
+                            contextMenuRowRef.current = rowData;
+                            setContextMenu({
+                                isOpen: true,
+                                position: { x: e.clientX, y: e.clientY },
+                            });
+                        } else {
+                            console.warn("[PortfolioTable] Document handler: no row data", rowIndex);
+                        }
+                    } catch (err) {
+                        console.warn("[PortfolioTable] Document handler: error getting row", err);
+                    }
+                } else if (!gridApi) {
+                    console.warn("[PortfolioTable] Document handler: gridApi not ready yet");
+                }
+            } else if (isInGrid && !gridRow) {
+                // Clicked in grid but not on a row - suppress browser menu
                 e.preventDefault();
                 e.stopPropagation();
             }
         };
 
-        // Use capture phase to catch before AG Grid
+        // Use capture phase to catch early
         document.addEventListener("contextmenu", handleDocumentContextMenu, true);
+        console.log("[PortfolioTable] Document-level contextmenu listener attached");
         return () => {
             document.removeEventListener("contextmenu", handleDocumentContextMenu, true);
         };
-    }, []);
+    }, [gridApi]); // Re-attach when gridApi becomes available
 
     // Parent-set notional config listener removed; grid remains single source of persistence
 
