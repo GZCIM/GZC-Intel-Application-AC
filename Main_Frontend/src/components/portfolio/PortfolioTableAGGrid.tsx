@@ -170,6 +170,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         isOpen: false,
         position: { x: 0, y: 0 },
     });
+    const [contextMenuRow, setContextMenuRow] = useState<PortfolioPosition | null>(null);
 
     // Parent-set notional config listener removed; grid remains single source of persistence
 
@@ -2075,18 +2076,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         });
                     }
                 }}
-                onContextMenu={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log("[PortfolioTable] Context menu triggered", {
-                        x: e.clientX,
-                        y: e.clientY,
-                    });
-                    setContextMenu({
-                        isOpen: true,
-                        position: { x: e.clientX, y: e.clientY },
-                    });
-                }}
             >
                 <AgGridReact
                     rowData={aggregatedPositions}
@@ -2132,21 +2121,26 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             suppressHorizontalScroll: true,
                             alwaysShowHorizontalScroll: false,
                             alwaysShowVerticalScroll: false,
-                        // Suppress AG Grid's default context menu and handle it ourselves
+                        // Suppress AG Grid's default context menu; we handle row context manually
                         suppressContextMenu: true,
-                        onContextMenu: (event: any) => {
-                            event.event.preventDefault();
-                            event.event.stopPropagation();
-                            console.log("[PortfolioTable] AG Grid context menu triggered", {
-                                x: event.event.clientX,
-                                y: event.event.clientY,
-                            });
-                            setContextMenu({
-                                isOpen: true,
-                                position: { x: event.event.clientX, y: event.event.clientY },
-                            });
-                        },
                         }}
+                    onCellContextMenu={(event) => {
+                        const nativeEvent = event.event;
+                        if (!nativeEvent) return;
+                        nativeEvent.preventDefault();
+                        nativeEvent.stopPropagation();
+                        const rowData = (event.data || null) as PortfolioPosition | null;
+                        if (!rowData) {
+                            setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                            setContextMenuRow(null);
+                            return;
+                        }
+                        setContextMenuRow(rowData);
+                        setContextMenu({
+                            isOpen: true,
+                            position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
+                        });
+                    }}
                     onColumnResized={(e: ColumnResizedEvent) => {
                         // Only persist when resize has finished and in edit mode
                         if (!e.finished) {
@@ -2188,6 +2182,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     }}
                     onColumnVisible={(e: ColumnVisibleEvent) => {
                         queueSave();
+                    }}
+                    onCellClicked={() => {
+                        if (contextMenu.isOpen) {
+                            setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                            setContextMenuRow(null);
+                        }
                     }}
                     />
                 {/* Totals footer is rendered by parent component */}
@@ -2981,63 +2981,66 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             )}
 
             {/* Context Menu */}
-            {(() => {
-                console.log("[PortfolioTable] Rendering ContextMenu", {
-                    isOpen: contextMenu.isOpen,
-                    position: contextMenu.position,
-                });
-                return (
-                    <ContextMenu
-                        items={[
-                            {
-                                label: "History",
-                                action: () => {
-                                    console.log("[PortfolioTable] Context menu: History");
-                                    // TODO: Implement history functionality
-                                    alert("History feature - coming soon");
-                                },
+            {contextMenu.isOpen && contextMenuRow && (
+                <ContextMenu
+                    items={[
+                        {
+                            label: "History",
+                            action: () => {
+                                console.log("[PortfolioTable] Context menu: History", {
+                                    tradeId: contextMenuRow.trade_id,
+                                });
+                                alert(`History for trade ${contextMenuRow.trade_id ?? "N/A"}`);
                             },
-                            {
-                                label: "View/Edit",
-                                action: () => {
-                                    console.log("[PortfolioTable] Context menu: View/Edit");
-                                    setIsEditing(!isEditing);
-                                },
+                        },
+                        {
+                            label: "View/Edit",
+                            action: () => {
+                                console.log("[PortfolioTable] Context menu: View/Edit", {
+                                    tradeId: contextMenuRow.trade_id,
+                                });
+                                setIsEditing((prev) => !prev);
                             },
-                            {
-                                label: "New",
-                                action: () => {
-                                    console.log("[PortfolioTable] Context menu: New");
-                                    // TODO: Implement new row/trade functionality
-                                    alert("New feature - coming soon");
-                                },
+                        },
+                        {
+                            label: "New",
+                            action: () => {
+                                console.log("[PortfolioTable] Context menu: New", {
+                                    tradeId: contextMenuRow.trade_id,
+                                    ticker: contextMenuRow.ticker,
+                                });
+                                alert(`Create new trade based on ${contextMenuRow.ticker ?? "position"}`);
                             },
-                            {
-                                label: "+/-",
-                                action: () => {
-                                    console.log("[PortfolioTable] Context menu: +/-");
-                                    // TODO: Implement add/remove functionality
-                                    alert("+/- feature - coming soon");
-                                },
+                        },
+                        {
+                            label: "+/-",
+                            action: () => {
+                                console.log("[PortfolioTable] Context menu: +/-", {
+                                    tradeId: contextMenuRow.trade_id,
+                                    quantity: contextMenuRow.quantity,
+                                });
+                                alert(`Adjust quantity for trade ${contextMenuRow.trade_id ?? "N/A"}`);
                             },
-                            {
-                                label: "Roll",
-                                action: () => {
-                                    console.log("[PortfolioTable] Context menu: Roll");
-                                    // TODO: Implement roll functionality
-                                    alert("Roll feature - coming soon");
-                                },
+                        },
+                        {
+                            label: "Roll",
+                            action: () => {
+                                console.log("[PortfolioTable] Context menu: Roll", {
+                                    tradeId: contextMenuRow.trade_id,
+                                    maturity: contextMenuRow.maturity_date,
+                                });
+                                alert(`Roll trade ${contextMenuRow.trade_id ?? "N/A"}`);
                             },
-                        ] as ContextMenuItem[]}
-                        position={contextMenu.position}
-                        isOpen={contextMenu.isOpen}
-                        onClose={() => {
-                            console.log("[PortfolioTable] Context menu closing");
-                            setContextMenu({ ...contextMenu, isOpen: false });
-                        }}
-                    />
-                );
-            })()}
+                        },
+                    ] as ContextMenuItem[]}
+                    position={contextMenu.position}
+                    isOpen={contextMenu.isOpen}
+                    onClose={() => {
+                        setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                        setContextMenuRow(null);
+                    }}
+                />
+            )}
         </div>
     );
 };
