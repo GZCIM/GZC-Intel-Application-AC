@@ -172,6 +172,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     });
     const [contextMenuRow, setContextMenuRow] = useState<PortfolioPosition | null>(null);
     const contextMenuRowRef = useRef<PortfolioPosition | null>(null);
+    const lastContextPositionRef = useRef<{ x: number; y: number } | null>(null);
 
     // Close context menu on any left click anywhere
     useEffect(() => {
@@ -183,6 +184,24 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         document.addEventListener("mousedown", handleDocClick, true);
         return () => document.removeEventListener("mousedown", handleDocClick, true);
     }, [contextMenu.isOpen]);
+
+    // Suppress browser context menu within the portfolio table area to ensure custom menu control
+    useEffect(() => {
+        const host = containerRef.current;
+        if (!host) return;
+        const handleContextMenu = (e: MouseEvent) => {
+            if (!host.contains(e.target as Node)) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (!contextMenuRowRef.current) {
+                setContextMenu((prev) => ({ ...prev, isOpen: false }));
+            }
+        };
+        host.addEventListener("contextmenu", handleContextMenu, true);
+        return () => host.removeEventListener("contextmenu", handleContextMenu, true);
+        // host is stable via ref; effect runs once after mount
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [containerRef.current]);
 
     // Parent-set notional config listener removed; grid remains single source of persistence
 
@@ -2150,9 +2169,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         if (!rowData) {
                             setContextMenu((prev) => ({ ...prev, isOpen: false }));
                             setContextMenuRow(null);
+                            contextMenuRowRef.current = null;
+                            lastContextPositionRef.current = null;
                             return;
                         }
                         setContextMenuRow(rowData);
+                        contextMenuRowRef.current = rowData;
+                        lastContextPositionRef.current = {
+                            x: nativeEvent.clientX,
+                            y: nativeEvent.clientY,
+                        };
                         setContextMenu({
                             isOpen: true,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
@@ -2214,6 +2240,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         }
                         setContextMenuRow(rowData);
                         contextMenuRowRef.current = rowData;
+                        lastContextPositionRef.current = {
+                            x: nativeEvent.clientX,
+                            y: nativeEvent.clientY,
+                        };
                         setContextMenu({
                             isOpen: true,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
@@ -2224,6 +2254,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             setContextMenu((prev) => ({ ...prev, isOpen: false }));
                             setContextMenuRow(null);
                             contextMenuRowRef.current = null;
+                            lastContextPositionRef.current = null;
                         }
                     }}
                     />
@@ -3076,6 +3107,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         setContextMenu((prev) => ({ ...prev, isOpen: false }));
                         setContextMenuRow(null);
                         contextMenuRowRef.current = null;
+                        lastContextPositionRef.current = null;
                     }}
                 />
             )}
