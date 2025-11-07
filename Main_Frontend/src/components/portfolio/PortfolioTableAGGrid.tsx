@@ -200,75 +200,65 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             const target = e.target as HTMLElement;
             const isInGrid = containerRef.current?.contains(target);
 
-            // Try multiple ways to find the row - walk up the entire parent chain
-            let gridRow: HTMLElement | null = null;
-            let current: HTMLElement | null = target;
-
-            // Walk up the parent chain until we find a row or reach the container
-            while (current && current !== containerRef.current) {
-                // Check if this element is a row (has .ag-row class or row-index attribute)
-                if (current.classList?.contains('ag-row') || current.hasAttribute('row-index')) {
-                    gridRow = current;
-                    break;
-                }
-                // Also check if parent is a row
-                if (current.parentElement) {
-                    const parent = current.parentElement;
-                    if (parent.classList?.contains('ag-row') || parent.hasAttribute('row-index')) {
-                        gridRow = parent as HTMLElement;
-                        break;
-                    }
-                }
-                current = current.parentElement;
+            if (!isInGrid || !gridApi) {
+                return; // Not in grid or grid not ready
             }
 
-            const isOnRow = !!gridRow;
+            // Use AG Grid API to find the row at mouse position
+            // This is more reliable than DOM traversal
+            let rowData: PortfolioPosition | null = null;
+            let rowIndex = -1;
 
-            console.error("[PortfolioTable] Context menu event", {
-                isInGrid,
-                isOnRow,
-                hasGridApi: !!gridApi,
-                targetTag: target?.tagName,
-                targetClasses: target?.className?.substring(0, 100),
-                rowIndex: gridRow?.getAttribute('row-index'),
-            });
+            try {
+                // Get the element at the mouse position
+                const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement;
+                if (elementAtPoint) {
+                    // Try to find row index from the element or its parents
+                    let current: HTMLElement | null = elementAtPoint;
+                    while (current && current !== containerRef.current) {
+                        const rowIndexAttr = current.getAttribute('row-index');
+                        if (rowIndexAttr !== null) {
+                            rowIndex = parseInt(rowIndexAttr);
+                            if (rowIndex >= 0) {
+                                const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
+                                rowData = rowNode?.data as PortfolioPosition | null;
+                                break;
+                            }
+                        }
+                        current = current.parentElement;
+                    }
+                }
+            } catch (err) {
+                console.error("[PortfolioTable] Error finding row at mouse position", err);
+            }
 
-            if (isInGrid && isOnRow && gridApi) {
-                // Clicked on a row - handle it directly here
+            if (rowData && rowIndex >= 0) {
+                // Clicked on a row - handle it
                 e.preventDefault();
                 e.stopPropagation();
 
-                const rowIndex = parseInt(gridRow!.getAttribute('row-index') || '-1');
-                if (rowIndex >= 0) {
-                    try {
-                        const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
-                        const rowData = rowNode?.data as PortfolioPosition | null;
-                        if (rowData) {
-                            console.error("[PortfolioTable] Document handler: opening menu for row", {
-                                rowIndex,
-                                tradeId: rowData.trade_id,
-                                position: { x: e.clientX, y: e.clientY },
-                            });
-                            setContextMenuRow(rowData);
-                            contextMenuRowRef.current = rowData;
-                            setContextMenu({
-                                isOpen: true,
-                                position: { x: e.clientX, y: e.clientY },
-                            });
-                        } else {
-                            console.error("[PortfolioTable] No row data found for index", rowIndex);
-                        }
-                    } catch (err) {
-                        console.error("[PortfolioTable] Error getting row data", err);
-                    }
-                } else {
-                    console.error("[PortfolioTable] Invalid row index", rowIndex);
-                }
-            } else if (isInGrid && !isOnRow) {
+                console.error("[PortfolioTable] Document handler: opening menu for row", {
+                    rowIndex,
+                    tradeId: rowData.trade_id,
+                    position: { x: e.clientX, y: e.clientY },
+                });
+
+                setContextMenuRow(rowData);
+                contextMenuRowRef.current = rowData;
+                setContextMenu({
+                    isOpen: true,
+                    position: { x: e.clientX, y: e.clientY },
+                });
+            } else {
                 // Clicked in grid but not on a row - suppress browser menu
                 e.preventDefault();
                 e.stopPropagation();
-                console.error("[PortfolioTable] Suppressed browser menu on empty grid space");
+                console.error("[PortfolioTable] Suppressed browser menu on empty grid space", {
+                    isInGrid,
+                    hasGridApi: !!gridApi,
+                    targetTag: target?.tagName,
+                    targetClasses: target?.className?.substring(0, 100),
+                });
             }
         };
 
