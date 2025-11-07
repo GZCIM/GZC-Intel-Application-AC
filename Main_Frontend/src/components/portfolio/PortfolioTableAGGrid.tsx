@@ -204,80 +204,98 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 return; // Not in grid or grid not ready
             }
 
-            // Use AG Grid API to find the row at mouse position
-            // Try both the event target and elementFromPoint
+            // Get the element at the mouse position (most accurate)
+            let elementToCheck: HTMLElement | null = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement;
+            if (!elementToCheck || elementToCheck === document.body) {
+                elementToCheck = target;
+            }
+
+            if (!elementToCheck) {
+                return;
+            }
+
             let rowData: PortfolioPosition | null = null;
+            let rowIndex: number | null = null;
 
-            try {
-                // Try the event target first (more reliable)
-                let elementToCheck: HTMLElement | null = target;
-
-                // Also try elementFromPoint as fallback
-                if (!elementToCheck || elementToCheck === document.body) {
-                    elementToCheck = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement;
-                }
-
-                if (elementToCheck && gridApi) {
-                    // Use AG Grid's getRowNodeForElement method if available
-                    try {
-                        const rowNode = (gridApi as any).getRowNodeForElement?.(elementToCheck);
-                        if (rowNode && rowNode.data) {
-                            rowData = rowNode.data as PortfolioPosition;
-                            console.error("[PortfolioTable] Found row via getRowNodeForElement", {
-                                tradeId: rowData.trade_id,
-                            });
-                        }
-                    } catch (apiErr) {
-                        // Method not available or failed
-                    }
-
-                    // Fallback: walk up the DOM tree looking for row-index
-                    if (!rowData) {
-                        let current: HTMLElement | null = elementToCheck;
-                        const traversalPath: Array<{ tag: string; classes: string; rowIndex: string | null; id: string }> = [];
-
-                        while (current && current !== containerRef.current && traversalPath.length < 30) {
-                            const rowIndexAttr = current.getAttribute('row-index');
-                            traversalPath.push({
-                                tag: current.tagName,
-                                classes: (current.className || '').substring(0, 50),
-                                rowIndex: rowIndexAttr,
-                                id: current.id || '',
-                            });
-
-                            if (rowIndexAttr !== null) {
-                                const rowIndex = parseInt(rowIndexAttr);
-                                if (!isNaN(rowIndex) && rowIndex >= 0) {
-                                    try {
-                                        const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
-                                        if (rowNode?.data) {
-                                            rowData = rowNode.data as PortfolioPosition;
-                                            console.error("[PortfolioTable] Found row via DOM traversal", {
-                                                rowIndex,
-                                                tradeId: rowData.trade_id,
-                                                foundAt: traversalPath.length,
-                                            });
-                                            break;
-                                        }
-                                    } catch (err) {
-                                        console.error("[PortfolioTable] Error getting row at index", rowIndex, err);
-                                    }
-                                }
+            // PRIORITY 1: Look for row-index attribute (we set this ourselves, most reliable)
+            let current: HTMLElement | null = elementToCheck;
+            for (let i = 0; i < 30 && current; i++) {
+                const rowIndexAttr = current.getAttribute('row-index');
+                if (rowIndexAttr !== null) {
+                    rowIndex = parseInt(rowIndexAttr, 10);
+                    if (!isNaN(rowIndex) && rowIndex >= 0 && gridApi) {
+                        try {
+                            const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
+                            if (rowNode?.data) {
+                                rowData = rowNode.data as PortfolioPosition;
+                                console.error("[PortfolioTable] Found row via row-index attribute", {
+                                    rowIndex,
+                                    tradeId: rowData.trade_id,
+                                    elementTag: current.tagName,
+                                });
+                                break;
                             }
-                            current = current.parentElement;
+                        } catch (err) {
+                            console.error("[PortfolioTable] Error getting row at index", rowIndex, err);
                         }
+                    }
+                    break;
+                }
+                current = current.parentElement;
+            }
 
-                        if (!rowData && traversalPath.length > 0) {
-                            console.error("[PortfolioTable] Could not find row - traversal path", {
-                                traversalPath: traversalPath,
-                                elementTag: elementToCheck.tagName,
-                                elementClasses: elementToCheck.className?.substring(0, 100),
-                            });
+            // PRIORITY 2: Try AG Grid's getRowNodeForElement (if row-index didn't work)
+            if (!rowData && gridApi) {
+                try {
+                    const rowNode = (gridApi as any).getRowNodeForElement?.(elementToCheck);
+                    if (rowNode && rowNode.data) {
+                        rowData = rowNode.data as PortfolioPosition;
+                        rowIndex = rowNode.rowIndex ?? null;
+                        console.error("[PortfolioTable] Found row via getRowNodeForElement (fallback)", {
+                            rowIndex,
+                            tradeId: rowData.trade_id,
+                        });
+                    }
+                } catch (apiErr) {
+                    // Method not available or failed
+                }
+            }
+
+            // PRIORITY 3: Try closest('.ag-row') and check for row-index
+            if (!rowData) {
+                const rowElement = elementToCheck.closest('.ag-row') as HTMLElement | null;
+                if (rowElement) {
+                    const rowIndexAttr = rowElement.getAttribute('row-index');
+                    if (rowIndexAttr !== null && gridApi) {
+                        rowIndex = parseInt(rowIndexAttr, 10);
+                        if (!isNaN(rowIndex) && rowIndex >= 0) {
+                            try {
+                                const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
+                                if (rowNode?.data) {
+                                    rowData = rowNode.data as PortfolioPosition;
+                                    console.error("[PortfolioTable] Found row via closest('.ag-row') with row-index", {
+                                        rowIndex,
+                                        tradeId: rowData.trade_id,
+                                    });
+                                }
+                            } catch (err) {
+                                console.error("[PortfolioTable] Error getting row at index", rowIndex, err);
+                            }
                         }
                     }
                 }
-            } catch (err) {
-                console.error("[PortfolioTable] Error finding row at mouse position", err);
+            }
+
+            // If we still couldn't find a row, log debug info
+            if (!rowData) {
+                console.error("[PortfolioTable] Could not find row - debug info", {
+                    elementTag: elementToCheck.tagName,
+                    elementClasses: elementToCheck.className?.substring(0, 100),
+                    hasAgRowClass: elementToCheck.classList?.contains('ag-row') ||
+                        Array.from(document.querySelectorAll('.ag-row')).some(row => row.contains(elementToCheck)),
+                    hasRowIndexAttr: elementToCheck.hasAttribute('row-index'),
+                    closestAgRow: elementToCheck.closest('.ag-row') !== null,
+                });
             }
 
             if (rowData) {
@@ -2329,6 +2347,42 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             return {
                                 cursor: 'context-menu',
                             };
+                        },
+                        // Add row-index attribute to rows for context menu detection
+                        onFirstDataRendered: (params) => {
+                            // Add row-index to all rendered rows
+                            setTimeout(() => {
+                                if (gridApi) {
+                                    const rowCount = gridApi.getDisplayedRowCount();
+                                    for (let i = 0; i < rowCount; i++) {
+                                        const rowNode = gridApi.getDisplayedRowAtIndex(i);
+                                        if (rowNode) {
+                                            const rowElement = gridApi.getRowElement(i);
+                                            if (rowElement) {
+                                                rowElement.setAttribute('row-index', i.toString());
+                                            }
+                                        }
+                                    }
+                                    console.error("[PortfolioTable] Added row-index attributes to", rowCount, "rows");
+                                }
+                            }, 100);
+                        },
+                        onRowDataUpdated: (params) => {
+                            // Update row-index attributes when data changes
+                            setTimeout(() => {
+                                if (gridApi) {
+                                    const rowCount = gridApi.getDisplayedRowCount();
+                                    for (let i = 0; i < rowCount; i++) {
+                                        const rowNode = gridApi.getDisplayedRowAtIndex(i);
+                                        if (rowNode) {
+                                            const rowElement = gridApi.getRowElement(i);
+                                            if (rowElement) {
+                                                rowElement.setAttribute('row-index', i.toString());
+                                            }
+                                        }
+                                    }
+                                }
+                            }, 100);
                         },
                         }}
                     onCellContextMenu={(event) => {
