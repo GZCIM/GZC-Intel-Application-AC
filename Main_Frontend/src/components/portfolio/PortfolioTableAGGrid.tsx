@@ -1240,6 +1240,43 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     rowCount: params.api.getDisplayedRowCount(),
                 });
 
+                // Add direct DOM event listener to detect contextmenu events
+                const gridBody = params.api.getGridElement()?.querySelector('.ag-body-viewport') as HTMLElement;
+                if (gridBody) {
+                    const handleDirectContextMenu = (e: MouseEvent) => {
+                        console.log("[PortfolioTable] Direct DOM contextmenu event detected", {
+                            target: e.target,
+                            currentTarget: e.currentTarget,
+                            clientX: e.clientX,
+                            clientY: e.clientY,
+                            isRow: (e.target as HTMLElement)?.closest('.ag-row'),
+                        });
+                        const rowElement = (e.target as HTMLElement)?.closest('.ag-row');
+                        if (rowElement) {
+                            const rowIndex = parseInt(rowElement.getAttribute('row-index') || '-1');
+                            if (rowIndex >= 0) {
+                                const rowData = params.api.getDisplayedRowAtIndex(rowIndex)?.data as PortfolioPosition | null;
+                                if (rowData) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log("[PortfolioTable] Direct handler: opening menu for row", {
+                                        rowIndex,
+                                        tradeId: rowData.trade_id,
+                                    });
+                                    setContextMenuRow(rowData);
+                                    contextMenuRowRef.current = rowData;
+                                    setContextMenu({
+                                        isOpen: true,
+                                        position: { x: e.clientX, y: e.clientY },
+                                    });
+                                }
+                            }
+                        }
+                    };
+                    gridBody.addEventListener('contextmenu', handleDirectContextMenu, true);
+                    console.log("[PortfolioTable] Direct DOM contextmenu listener attached to grid body");
+                }
+
                 // Auto-size only when NOT in edit mode (avoid fighting user resizes)
                 try {
                     if (!isEditing) {

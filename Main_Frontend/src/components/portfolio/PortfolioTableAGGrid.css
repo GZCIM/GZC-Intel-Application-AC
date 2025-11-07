@@ -215,6 +215,12 @@
 /* Ensure rows fill available space */
 .ag-theme-alpine .ag-row {
     height: 30px !important;
+    cursor: context-menu !important; /* Show context menu cursor on rows */
+}
+
+/* Force context-menu cursor on all cells */
+.ag-theme-alpine .ag-cell {
+    cursor: context-menu !important;
 }
 
 /* Remove any bottom padding/margin from the grid */
