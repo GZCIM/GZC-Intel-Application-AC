@@ -2173,6 +2173,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             alwaysShowVerticalScroll: false,
                         // Suppress AG Grid's default context menu; we handle row context manually
                         suppressContextMenu: true,
+                        // Add cursor styling to rows to show they're interactive
+                        getRowStyle: (params) => {
+                            return {
+                                cursor: 'context-menu',
+                            };
+                        },
                         }}
                     onCellContextMenu={(event) => {
                         const nativeEvent = event.event;
@@ -2180,6 +2186,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             console.log("[PortfolioTable] onCellContextMenu: no nativeEvent");
                             return;
                         }
+                        // Change cursor briefly to show handler fired
+                        document.body.style.cursor = 'wait';
+                        setTimeout(() => {
+                            document.body.style.cursor = '';
+                        }, 100);
+
                         nativeEvent.preventDefault();
                         nativeEvent.stopPropagation();
                         const rowData = (event.data || null) as PortfolioPosition | null;
@@ -2209,6 +2221,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             isOpen: true,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
                         });
+                    }}
+                    onCellMouseEnter={(event) => {
+                        // Change cursor to context-menu on hover to show we can detect mouse events
+                        if (event.event?.target) {
+                            (event.event.target as HTMLElement).style.cursor = 'context-menu';
+                        }
                     }}
                     onColumnResized={(e: ColumnResizedEvent) => {
                         // Only persist when resize has finished and in edit mode
