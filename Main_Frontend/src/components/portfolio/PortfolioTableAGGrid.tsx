@@ -194,79 +194,31 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         return () => document.removeEventListener("mousedown", handleDocClick, true);
     }, [contextMenu.isOpen]);
 
-    // Document-level context menu handler as primary method (works even if grid isn't ready)
+    // Document-level handler only for suppressing browser menu on empty grid space
+    // AG Grid handlers (onCellContextMenu/onRowContextMenu) handle actual row clicks
     useEffect(() => {
         const handleDocumentContextMenu = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
             const isInGrid = containerRef.current?.contains(target);
             const gridRow = target.closest('.ag-row') as HTMLElement | null;
 
-            console.log("[PortfolioTable] Document contextmenu handler", {
-                targetTag: target?.tagName,
-                targetClasses: target?.className,
-                isInGrid,
-                hasGridRow: !!gridRow,
-                gridRowIndex: gridRow?.getAttribute('row-index'),
-            });
-
-            if (isInGrid && gridRow) {
-                // Clicked on a grid row - handle it
-                e.preventDefault();
-                e.stopPropagation();
-
-                const rowIndex = parseInt(gridRow.getAttribute('row-index') || '-1');
-                console.log("[PortfolioTable] Document handler: row clicked", {
-                    rowIndex,
-                    gridApiReady: !!gridApi,
-                });
-
-                if (rowIndex >= 0 && gridApi) {
-                    try {
-                        const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
-                        const rowData = rowNode?.data as PortfolioPosition | null;
-                        if (rowData) {
-                            console.log("[PortfolioTable] Document handler: opening menu", {
-                                tradeId: rowData.trade_id,
-                                position: { x: e.clientX, y: e.clientY },
-                            });
-                            setContextMenuRow(rowData);
-                            contextMenuRowRef.current = rowData;
-                            setContextMenu({
-                                isOpen: true,
-                                position: { x: e.clientX, y: e.clientY },
-                            });
-                            // Force a re-render to ensure menu appears
-                            setTimeout(() => {
-                                console.log("[PortfolioTable] Menu state after timeout", {
-                                    isOpen: contextMenu.isOpen,
-                                    hasRow: !!contextMenuRow,
-                                });
-                            }, 100);
-                        } else {
-                            console.warn("[PortfolioTable] Document handler: no row data", rowIndex);
-                        }
-                    } catch (err) {
-                        console.warn("[PortfolioTable] Document handler: error getting row", err);
-                    }
-                } else if (!gridApi) {
-                    console.warn("[PortfolioTable] Document handler: gridApi not ready yet");
-                } else {
-                    console.warn("[PortfolioTable] Document handler: invalid rowIndex", rowIndex);
-                }
-            } else if (isInGrid && !gridRow) {
+            // Only suppress browser menu if clicking in grid but NOT on a row
+            // If clicking on a row, let AG Grid handlers take over
+            if (isInGrid && !gridRow) {
                 // Clicked in grid but not on a row - suppress browser menu
                 e.preventDefault();
                 e.stopPropagation();
+                console.error("[PortfolioTable] Suppressed browser menu on empty grid space");
             }
+            // If clicking on a row, don't prevent default here - let AG Grid handle it
         };
 
-        // Use capture phase to catch early
         document.addEventListener("contextmenu", handleDocumentContextMenu, true);
-        console.log("[PortfolioTable] Document-level contextmenu listener attached");
+        console.error("[PortfolioTable] Document-level contextmenu listener attached (suppression only)");
         return () => {
             document.removeEventListener("contextmenu", handleDocumentContextMenu, true);
         };
-    }, [gridApi]); // Re-attach when gridApi becomes available
+    }, []); // Re-attach when gridApi becomes available
 
     // Parent-set notional config listener removed; grid remains single source of persistence
 
@@ -2290,11 +2242,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         });
                     }
                 }}
-                onContextMenuCapture={(e) => {
-                    // Always suppress browser default menu inside grid area
-                    e.preventDefault();
-                    e.stopPropagation();
-                }}
+                // Removed onContextMenuCapture - let AG Grid handlers manage context menu
             >
                 <AgGridReact
                     rowData={aggregatedPositions}
@@ -2352,30 +2300,27 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     onCellContextMenu={(event) => {
                         const nativeEvent = event.event;
                         if (!nativeEvent) {
-                            console.log("[PortfolioTable] onCellContextMenu: no nativeEvent");
+                            console.error("[PortfolioTable] onCellContextMenu: no nativeEvent");
                             return;
                         }
-                        // Change cursor briefly to show handler fired
-                        document.body.style.cursor = 'wait';
-                        setTimeout(() => {
-                            document.body.style.cursor = '';
-                        }, 100);
 
                         nativeEvent.preventDefault();
                         nativeEvent.stopPropagation();
                         const rowData = (event.data || null) as PortfolioPosition | null;
-                        console.log("[PortfolioTable] onCellContextMenu triggered", {
+                        console.error("[PortfolioTable] onCellContextMenu triggered", {
                             hasRowData: !!rowData,
                             tradeId: rowData?.trade_id,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
                         });
                         if (!rowData) {
+                            console.error("[PortfolioTable] onCellContextMenu: no row data");
                             setContextMenu((prev) => ({ ...prev, isOpen: false }));
                             setContextMenuRow(null);
                             contextMenuRowRef.current = null;
                             lastContextPositionRef.current = null;
                             return;
                         }
+                        // Use functional update to ensure we get latest state
                         setContextMenuRow(rowData);
                         contextMenuRowRef.current = rowData;
                         lastContextPositionRef.current = {
@@ -2386,9 +2331,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             isOpen: true,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
                         });
-                        console.log("[PortfolioTable] Context menu state set", {
+                        console.error("[PortfolioTable] Context menu state set from onCellContextMenu", {
                             isOpen: true,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
+                            tradeId: rowData.trade_id,
                         });
                     }}
                     onCellMouseEnter={(event) => {
@@ -2442,21 +2388,23 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     onRowContextMenu={(event: any) => {
                         const nativeEvent: MouseEvent | undefined = event?.event;
                         if (!nativeEvent) {
-                            console.log("[PortfolioTable] onRowContextMenu: no nativeEvent");
+                            console.error("[PortfolioTable] onRowContextMenu: no nativeEvent");
                             return;
                         }
                         nativeEvent.preventDefault();
                         nativeEvent.stopPropagation();
                         const rowData = (event?.data || null) as PortfolioPosition | null;
-                        console.log("[PortfolioTable] onRowContextMenu triggered", {
+                        console.error("[PortfolioTable] onRowContextMenu triggered", {
                             hasRowData: !!rowData,
                             tradeId: rowData?.trade_id,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
                         });
                         if (!rowData) {
+                            console.error("[PortfolioTable] onRowContextMenu: no row data");
                             setContextMenu((prev) => ({ ...prev, isOpen: false }));
                             setContextMenuRow(null);
                             contextMenuRowRef.current = null;
+                            lastContextPositionRef.current = null;
                             return;
                         }
                         setContextMenuRow(rowData);
@@ -2469,9 +2417,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             isOpen: true,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
                         });
-                        console.log("[PortfolioTable] Context menu state set from onRowContextMenu", {
+                        console.error("[PortfolioTable] Context menu state set from onRowContextMenu", {
                             isOpen: true,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
+                            tradeId: rowData.trade_id,
                         });
                     }}
                     onCellClicked={() => {
@@ -3273,17 +3222,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 </div>
             )}
 
-            {/* Context Menu - Always render for debugging, but only show when conditions are met */}
-            {(() => {
-                const shouldRender = contextMenu.isOpen && contextMenuRow;
-                console.log("[PortfolioTable] Rendering check", {
-                    isOpen: contextMenu.isOpen,
-                    hasRow: !!contextMenuRow,
-                    willRender: shouldRender,
-                    position: contextMenu.position,
-                });
-                return shouldRender;
-            })() && (
+            {/* Context Menu */}
+            {contextMenu.isOpen && contextMenuRow && (
                 <ContextMenu
                     items={[
                         {
