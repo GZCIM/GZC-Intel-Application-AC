@@ -214,6 +214,23 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 return;
             }
 
+            // If we hit ag-full-width-container (overlay), try to find the actual row underneath
+            if (elementToCheck.classList?.contains('ag-full-width-container')) {
+                // Query all rows and find which one contains the mouse coordinates
+                const allRows = containerRef.current?.querySelectorAll('.ag-row') || [];
+                for (const row of Array.from(allRows)) {
+                    const rect = row.getBoundingClientRect();
+                    if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                        e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                        elementToCheck = row as HTMLElement;
+                        console.error("[PortfolioTable] Found row under ag-full-width-container", {
+                            rowIndex: (row as HTMLElement).getAttribute('row-index'),
+                        });
+                        break;
+                    }
+                }
+            }
+
             let rowData: PortfolioPosition | null = null;
             let rowIndex: number | null = null;
 
@@ -2350,39 +2367,66 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         },
                         // Add row-index attribute to rows for context menu detection
                         onFirstDataRendered: (params) => {
-                            // Add row-index to all rendered rows
+                            // Add row-index to all rendered rows using DOM query (more reliable)
                             setTimeout(() => {
-                                if (gridApi) {
-                                    const rowCount = gridApi.getDisplayedRowCount();
-                                    for (let i = 0; i < rowCount; i++) {
-                                        const rowNode = gridApi.getDisplayedRowAtIndex(i);
-                                        if (rowNode) {
-                                            const rowElement = gridApi.getRowElement(i);
-                                            if (rowElement) {
-                                                rowElement.setAttribute('row-index', i.toString());
+                                if (gridApi && containerRef.current) {
+                                    const allRows = containerRef.current.querySelectorAll('.ag-row');
+                                    console.error("[PortfolioTable] onFirstDataRendered: setting row-index on", allRows.length, "rows");
+
+                                    // Use DOM query as primary method (more reliable)
+                                    allRows.forEach((row, idx) => {
+                                        (row as HTMLElement).setAttribute('row-index', idx.toString());
+                                    });
+
+                                    // Also try AG Grid API as fallback
+                                    try {
+                                        const rowCount = gridApi.getDisplayedRowCount();
+                                        for (let i = 0; i < rowCount; i++) {
+                                            try {
+                                                const rowElement = gridApi.getRowElement(i);
+                                                if (rowElement) {
+                                                    rowElement.setAttribute('row-index', i.toString());
+                                                }
+                                            } catch (err) {
+                                                // API method might not be available
                                             }
                                         }
+                                    } catch (err) {
+                                        // API might not be available
                                     }
-                                    console.error("[PortfolioTable] Added row-index attributes to", rowCount, "rows");
+                                    console.error("[PortfolioTable] Added row-index attributes to", allRows.length, "rows");
                                 }
-                            }, 100);
+                            }, 200);
                         },
                         onRowDataUpdated: (params) => {
                             // Update row-index attributes when data changes
                             setTimeout(() => {
-                                if (gridApi) {
-                                    const rowCount = gridApi.getDisplayedRowCount();
-                                    for (let i = 0; i < rowCount; i++) {
-                                        const rowNode = gridApi.getDisplayedRowAtIndex(i);
-                                        if (rowNode) {
-                                            const rowElement = gridApi.getRowElement(i);
-                                            if (rowElement) {
-                                                rowElement.setAttribute('row-index', i.toString());
+                                if (gridApi && containerRef.current) {
+                                    const allRows = containerRef.current.querySelectorAll('.ag-row');
+
+                                    // Use DOM query as primary method
+                                    allRows.forEach((row, idx) => {
+                                        (row as HTMLElement).setAttribute('row-index', idx.toString());
+                                    });
+
+                                    // Also try AG Grid API as fallback
+                                    try {
+                                        const rowCount = gridApi.getDisplayedRowCount();
+                                        for (let i = 0; i < rowCount; i++) {
+                                            try {
+                                                const rowElement = gridApi.getRowElement(i);
+                                                if (rowElement) {
+                                                    rowElement.setAttribute('row-index', i.toString());
+                                                }
+                                            } catch (err) {
+                                                // API method might not be available
                                             }
                                         }
+                                    } catch (err) {
+                                        // API might not be available
                                     }
                                 }
-                            }, 100);
+                            }, 200);
                         },
                         }}
                     onCellContextMenu={(event) => {
