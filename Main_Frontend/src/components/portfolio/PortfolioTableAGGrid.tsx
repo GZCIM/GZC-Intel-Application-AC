@@ -194,29 +194,27 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         return () => document.removeEventListener("mousedown", handleDocClick, true);
     }, [contextMenu.isOpen]);
 
-    // Suppress browser context menu within the portfolio table area to ensure custom menu control
-    // Note: We use capture phase but allow AG Grid's handlers to run first
+    // Suppress browser context menu only on empty space (not on rows)
+    // AG Grid's onCellContextMenu/onRowContextMenu will handle row clicks and prevent default
     useEffect(() => {
-        const host = containerRef.current;
-        if (!host) return;
-        const handleContextMenu = (e: MouseEvent) => {
-            // Only suppress if we don't have a row selected (i.e., clicked on empty space)
-            // AG Grid's onCellContextMenu/onRowContextMenu will handle row clicks
-            if (!contextMenuRowRef.current) {
+        const handleDocumentContextMenu = (e: MouseEvent) => {
+            // Only suppress if clicking outside the grid or on empty space
+            const target = e.target as HTMLElement;
+            const isInGrid = containerRef.current?.contains(target);
+            const isGridRow = target.closest('.ag-row');
+
+            // If clicking in grid but not on a row, suppress browser menu
+            if (isInGrid && !isGridRow) {
                 e.preventDefault();
                 e.stopPropagation();
-                setContextMenu((prev) => ({ ...prev, isOpen: false }));
             }
         };
-        // Use capture phase but let AG Grid handle row clicks first
-        host.addEventListener("contextmenu", handleContextMenu, false);
+
+        // Use capture phase to catch before AG Grid
+        document.addEventListener("contextmenu", handleDocumentContextMenu, true);
         return () => {
-            if (host) {
-                host.removeEventListener("contextmenu", handleContextMenu, false);
-            }
+            document.removeEventListener("contextmenu", handleDocumentContextMenu, true);
         };
-        // Run once after mount when containerRef is set
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Parent-set notional config listener removed; grid remains single source of persistence
