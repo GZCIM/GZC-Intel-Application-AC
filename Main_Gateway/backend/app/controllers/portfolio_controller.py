@@ -744,3 +744,45 @@ async def get_fx_option_positions(
                 "type": e.__class__.__name__,
             },
         )
+
+
+@router.get("/trade-lineage", status_code=200)
+async def get_trade_lineage(
+    request: Request, current_user: dict = Depends(validate_token)
+):
+    """
+    Return all trade lineage records for a given original_trade_id.
+    Results are sorted chronologically with latest on top.
+    Query params:
+      - original_trade_id: integer (required)
+    """
+    try:
+        original_trade_id_param = request.query_params.get("original_trade_id")
+        if not original_trade_id_param:
+            raise HTTPException(
+                status_code=400,
+                detail="Missing required 'original_trade_id' query parameter",
+            )
+
+        try:
+            original_trade_id = int(original_trade_id_param)
+        except ValueError:
+            raise HTTPException(
+                status_code=400, detail="'original_trade_id' must be an integer"
+            )
+
+        dao = PortfolioDAO()
+        lineage_data = dao.get_trade_lineage(original_trade_id=original_trade_id)
+
+        return {"status": "success", "count": len(lineage_data), "data": lineage_data}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("[PortfolioController] Failed to fetch trade lineage")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": str(e),
+                "type": e.__class__.__name__,
+            },
+        )

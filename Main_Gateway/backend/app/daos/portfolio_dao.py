@@ -248,3 +248,30 @@ class PortfolioDAO:
             return [dict(r) for r in rows]
 
     # Removed ref price extraction per request. Calculation engine will supply DTD/MTD/YTD; DB returns trade-side fields only.
+
+    def get_trade_lineage(self, original_trade_id: int):
+        """
+        Return all trade lineage records for a given original_trade_id.
+        Results are sorted by operation_timestamp DESC (latest first).
+        """
+        query = text("""
+            SELECT
+                id,
+                current_trade_id,
+                parent_lineage_id,
+                original_trade_id,
+                operation,
+                operation_timestamp,
+                quantity_delta,
+                notes,
+                fund_id,
+                mod_user,
+                mod_timestamp
+            FROM public.gzc_fx_trade_lineage
+            WHERE original_trade_id = :original_trade_id
+            ORDER BY operation_timestamp DESC, id DESC
+        """)
+        params = {"original_trade_id": original_trade_id}
+        with self.engine.connect() as conn:
+            rows = conn.execute(query, params).mappings().all()
+            return [dict(r) for r in rows]

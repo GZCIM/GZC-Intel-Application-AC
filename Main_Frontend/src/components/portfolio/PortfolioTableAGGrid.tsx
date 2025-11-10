@@ -76,6 +76,19 @@ interface PortfolioPosition {
     // Derived identifier columns
     underlying?: string;
     ticker?: string;
+    // Lineage fields
+    original_trade_id?: number | null;
+}
+
+interface TradeLineageItem {
+    id: number;
+    current_trade_id: number | null;
+    parent_lineage_id: number | null;
+    original_trade_id: number;
+    operation: string;
+    operation_timestamp: string;
+    quantity_delta?: number | null;
+    notes?: string | null;
 }
 
 interface ColumnConfig {
@@ -171,8 +184,29 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         position: { x: 0, y: 0 },
     });
     const [contextMenuRow, setContextMenuRow] = useState<PortfolioPosition | null>(null);
+    const [lineageData, setLineageData] = useState<TradeLineageItem[]>([]);
+    const [isLoadingLineage, setIsLoadingLineage] = useState(false);
     const contextMenuRowRef = useRef<PortfolioPosition | null>(null);
     const lastContextPositionRef = useRef<{ x: number; y: number } | null>(null);
+
+    // Fetch lineage data when context menu opens with a row that has original_trade_id
+    useEffect(() => {
+        if (
+            contextMenuRow &&
+            contextMenuRow.original_trade_id &&
+            contextMenuRow.original_trade_id !== null &&
+            String(contextMenuRow.original_trade_id) !== "-"
+        ) {
+            fetchTradeLineage(contextMenuRow.original_trade_id).then(
+                (lineage) => {
+                    setLineageData(lineage);
+                }
+            );
+        } else {
+            setLineageData([]);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [contextMenuRow]);
 
     // Debug: Log context menu state changes
     useEffect(() => {
@@ -817,6 +851,34 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             }
         } finally {
             setIsRetrying(false);
+        }
+    };
+
+    // Fetch trade lineage data for History submenu
+    const fetchTradeLineage = async (originalTradeId: number): Promise<TradeLineageItem[]> => {
+        try {
+            setIsLoadingLineage(true);
+            const token = await getToken();
+            const response = await axios.get("/api/portfolio/trade-lineage", {
+                params: { original_trade_id: originalTradeId },
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (response.data.status === "success" && response.data.data) {
+                // Sort by operation_timestamp DESC (latest on top)
+                const sorted = (response.data.data as TradeLineageItem[]).sort(
+                    (a, b) =>
+                        new Date(b.operation_timestamp).getTime() -
+                        new Date(a.operation_timestamp).getTime()
+                );
+                return sorted;
+            }
+            return [];
+        } catch (err) {
+            console.error("[PortfolioTable] Error fetching trade lineage:", err);
+            return [];
+        } finally {
+            setIsLoadingLineage(false);
         }
     };
 
@@ -3393,14 +3455,84 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     <ContextMenu
                         items={[
                             {
-                                label: "History",
-                                action: () => {
-                                    console.error("[PortfolioTable] Context menu: History", {
-                                        tradeId: contextMenuRow.trade_id,
-                                        ticker: contextMenuRow.ticker,
-                                    });
-                                    alert(`History for trade ${contextMenuRow.trade_id ?? "N/A"}${contextMenuRow.ticker ? ` (${contextMenuRow.ticker})` : ""}`);
-                                },
+                                label: isLoadingLineage
+                                    ? "History (Loading...)"
+                                    : "History",
+                                // Show submenu if original_trade_id exists and lineage data is available
+                                submenu:
+                                    contextMenuRow.original_trade_id &&
+                                    contextMenuRow.original_trade_id !== null &&
+                                    String(contextMenuRow.original_trade_id) !== "-"
+                                        ? isLoadingLineage
+                                            ? [
+                                                  {
+                                                      label: "Loading history...",
+                                                      disabled: true,
+                                                  },
+                                              ]
+                                            : lineageData.length === 0
+                                            ? [
+                                                  {
+                                                      label: "No history found",
+                                                      disabled: true,
+                                                  },
+                                              ]
+                                            : lineageData.map((item) => ({
+                                                  label: `${item.operation} - Trade ${item.current_trade_id ?? "N/A"}`,
+                                                  action: () => {
+                                                      console.error(
+                                                          "[PortfolioTable] History submenu: View trade",
+                                                          {
+                                                              lineageId: item.id,
+                                                              currentTradeId:
+                                                                  item.current_trade_id,
+                                                              parentLineageId:
+                                                                  item.parent_lineage_id,
+                                                              originalTradeId:
+                                                                  item.original_trade_id,
+                                                              operation:
+                                                                  item.operation,
+                                                              operationTimestamp:
+                                                                  item.operation_timestamp,
+                                                              quantityDelta:
+                                                                  item.quantity_delta,
+                                                              notes: item.notes,
+                                                          }
+                                                      );
+                                                      // Show trade details - you can customize this
+                                                      alert(
+                                                          `Trade Lineage Details:\n\n` +
+                                                              `Operation: ${item.operation}\n` +
+                                                              `Current Trade ID: ${item.current_trade_id ?? "N/A"}\n` +
+                                                              `Original Trade ID: ${item.original_trade_id}\n` +
+                                                              `Parent Lineage ID: ${item.parent_lineage_id ?? "N/A"}\n` +
+                                                              `Operation Time: ${new Date(
+                                                                  item.operation_timestamp
+                                                              ).toLocaleString()}\n` +
+                                                              `Quantity Delta: ${item.quantity_delta ?? "N/A"}\n` +
+                                                              `Notes: ${item.notes ?? "N/A"}`
+                                                      );
+                                                  },
+                                              }))
+                                        : undefined,
+                                // Fallback action if no original_trade_id
+                                action:
+                                    !contextMenuRow.original_trade_id ||
+                                    contextMenuRow.original_trade_id === null ||
+                                    String(contextMenuRow.original_trade_id) === "-"
+                                        ? () => {
+                                              console.error(
+                                                  "[PortfolioTable] Context menu: History (no original_trade_id)",
+                                                  {
+                                                      tradeId:
+                                                          contextMenuRow.trade_id,
+                                                      }
+                                              );
+                                              alert(
+                                                  `No history available for trade ${contextMenuRow.trade_id ?? "N/A"}. This trade has no original_trade_id.`
+                                              );
+                                          }
+                                        : undefined,
                             },
                             {
                                 label: "View/Edit",
