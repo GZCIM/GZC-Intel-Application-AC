@@ -374,6 +374,16 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     underlying: rowData.underlying,
                 });
 
+                // Debug: Log rowData before setting context menu
+                console.error("[PortfolioTable] Setting context menu row data", {
+                    trade_id: rowData.trade_id,
+                    ticker: rowData.ticker,
+                    original_trade_id: rowData.original_trade_id,
+                    original_trade_id_type: typeof rowData.original_trade_id,
+                    has_original_trade_id: "original_trade_id" in rowData,
+                    all_keys: Object.keys(rowData),
+                });
+
                 setContextMenuRow(rowData);
                 contextMenuRowRef.current = rowData;
                 setContextMenu({
@@ -798,10 +808,24 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             ]);
 
             const fxPositions: PortfolioPosition[] = fxResponse.data.data.map(
-                (pos: Record<string, unknown>) => ({
-                    ...pos,
-                    trade_type: "FX Forward" as const,
-                })
+                (pos: Record<string, unknown>) => {
+                    // Debug: Log original_trade_id for USD-MXN trades
+                    if (
+                        (pos.trade_currency === "USD" && pos.settlement_currency === "MXN") ||
+                        (pos.trade_currency === "MXN" && pos.settlement_currency === "USD")
+                    ) {
+                        console.error("[PortfolioTable] USD-MXN position loaded:", {
+                            trade_id: pos.trade_id,
+                            ticker: pos.ticker,
+                            original_trade_id: pos.original_trade_id,
+                            all_keys: Object.keys(pos),
+                        });
+                    }
+                    return {
+                        ...pos,
+                        trade_type: "FX Forward" as const,
+                    };
+                }
             );
 
             const fxOptionPositions: PortfolioPosition[] =
@@ -3449,6 +3473,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             maturityDate: contextMenuRow.maturity_date,
                             tradeCurrency: contextMenuRow.trade_currency,
                             settlementCurrency: contextMenuRow.settlement_currency,
+                            original_trade_id: contextMenuRow.original_trade_id,
+                            original_trade_id_type: typeof contextMenuRow.original_trade_id,
+                            has_original_trade_id: "original_trade_id" in contextMenuRow,
                         });
                         return null;
                     })()}

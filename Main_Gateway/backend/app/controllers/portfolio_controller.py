@@ -283,6 +283,21 @@ async def get_fx_positions(
             ticker = (
                 f"{underlying}-{maturity}" if underlying and maturity else underlying
             )
+            # Ensure original_trade_id is explicitly preserved from base
+            original_trade_id = base.get("original_trade_id")
+
+            # Debug: Log original_trade_id for USD-MXN trades
+            trade_ccy_check = str(base.get("trade_currency") or "").upper()
+            settle_ccy_check = str(base.get("settlement_currency") or "").upper()
+            if (trade_ccy_check == "USD" and settle_ccy_check == "MXN") or (
+                trade_ccy_check == "MXN" and settle_ccy_check == "USD"
+            ):
+                logger.info(
+                    f"[PortfolioController] USD-MXN trade: trade_id={base.get('trade_id')}, "
+                    f"original_trade_id={original_trade_id}, "
+                    f"has_original_trade_id_in_base={'original_trade_id' in base}"
+                )
+
             out.append(
                 {
                     **base,
@@ -301,6 +316,8 @@ async def get_fx_positions(
                     "ytd_pnl": pnl_since(eoy_price),
                     "mtd_pnl": pnl_since(eom_price),
                     "dtd_pnl": pnl_since(eod_price),
+                    # Explicitly ensure original_trade_id is included
+                    "original_trade_id": original_trade_id,
                 }
             )
 
