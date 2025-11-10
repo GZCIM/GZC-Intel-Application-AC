@@ -739,23 +739,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
 
             const fxPositions: PortfolioPosition[] = fxResponse.data.data.map(
                 (pos: Record<string, unknown>) => {
-                    // Debug: Log original_trade_id for USD-MXN trades
-                    if (
-                        (pos.trade_currency === "USD" && pos.settlement_currency === "MXN") ||
-                        (pos.trade_currency === "MXN" && pos.settlement_currency === "USD")
-                    ) {
-                        // Debug: USD-MXN position loaded
-                        if (false) {
-                            console.log("[PortfolioTable] USD-MXN position loaded:", {
-                            trade_id: pos.trade_id,
-                            ticker: pos.ticker,
-                            original_trade_id: pos.original_trade_id,
-                            all_keys: Object.keys(pos),
-                        });
-                    }
                     return {
-                    ...pos,
-                    trade_type: "FX Forward" as const,
+                        ...pos,
+                        trade_type: "FX Forward" as const,
                     };
                 }
             );
