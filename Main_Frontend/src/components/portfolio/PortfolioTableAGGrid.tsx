@@ -3543,17 +3543,18 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                       );
                                                       // Show trade details - you can customize this
                                                       alert(
-                                                          `Trade Lineage Details:\n\n` +
-                                                              `Operation: ${item.operation}\n` +
-                                                              `Current Trade ID: ${item.current_trade_id ?? "N/A"}\n` +
-                                                              `Original Trade ID: ${item.original_trade_id}\n` +
-                                                              `Parent Lineage ID: ${item.parent_lineage_id ?? "N/A"}\n` +
-                                                              `Operation Time: ${new Date(
-                                                                  item.operation_timestamp
-                                                              ).toLocaleString()}\n` +
-                                                              `Quantity Delta: ${item.quantity_delta ?? "N/A"}\n` +
-                                                              `Notes: ${item.notes ?? "N/A"}` +
-                                                              (item.fund_short_name ? `\nFund: ${item.fund_short_name}` : "")
+                                                          [
+                                                              `Operation: ${item.operation}`,
+                                                              `Trade: ${item.current_trade_id ?? "N/A"}`,
+                                                              `Original: ${item.original_trade_id}`,
+                                                              `Parent: ${item.parent_lineage_id ?? "N/A"}`,
+                                                              `Time: ${new Date(item.operation_timestamp).toLocaleString()}`,
+                                                              `QtyΔ: ${item.quantity_delta ?? "N/A"}`,
+                                                              `Notes: ${item.notes ?? "N/A"}`,
+                                                              item.fund_short_name ? `Fund: ${item.fund_short_name}` : ""
+                                                          ]
+                                                              .filter(Boolean)
+                                                              .join(" | ")
                                                       );
                                                   },
                                               };
