@@ -238,43 +238,44 @@ async def get_fx_positions(
         # Fetch prices in bulk and populate
         fetched_map = _bulk_price(req_items) if PRICER_BASE_URL else {}
 
-        # If fund_id is 0 (all funds), group by ticker and concatenate original_trade_ids
-        if fund_id == 0:
-            from collections import defaultdict
-            grouped_by_ticker: dict[str, list[dict]] = defaultdict(list)
-            for t in enriched:
-                trade_ccy = str(t.get("trade_currency") or "").upper()
-                settle_ccy = str(t.get("settlement_currency") or "").upper()
-                maturity = str(t.get("maturity_date") or "")[:10]
-                underlying = f"{trade_ccy}-{settle_ccy}" if trade_ccy and settle_ccy else None
-                ticker = (
-                    f"{underlying}-{maturity}" if underlying and maturity else underlying
-                )
-                grouped_by_ticker[ticker].append(t)
+        # Group by ticker and concatenate trade_ids (works for both "all funds" and specific funds)
+        # This allows View/Edit submenu to work when multiple trades share the same ticker
+        from collections import defaultdict
+        grouped_by_ticker: dict[str, list[dict]] = defaultdict(list)
+        for t in enriched:
+            trade_ccy = str(t.get("trade_currency") or "").upper()
+            settle_ccy = str(t.get("settlement_currency") or "").upper()
+            maturity = str(t.get("maturity_date") or "")[:10]
+            underlying = f"{trade_ccy}-{settle_ccy}" if trade_ccy and settle_ccy else None
+            ticker = (
+                f"{underlying}-{maturity}" if underlying and maturity else underlying
+            )
+            grouped_by_ticker[ticker].append(t)
 
-            # Process grouped trades: aggregate quantities, concatenate original_trade_ids
-            enriched_grouped = []
-            for ticker, trades in grouped_by_ticker.items():
-                if len(trades) == 1:
-                    # Single trade, no grouping needed
-                    enriched_grouped.append(trades[0])
-                else:
-                    # Multiple trades with same ticker - aggregate
-                    base_trade = trades[0].copy()
-                    # Aggregate quantities
-                    total_qty = sum(float(t.get("quantity") or 0) for t in trades)
-                    base_trade["quantity"] = total_qty
-                    # Concatenate trade_ids (comma-separated, sorted)
-                    trade_ids = [
-                        str(t.get("trade_id"))
-                        for t in trades
-                        if t.get("trade_id") is not None
-                    ]
-                    if trade_ids:
-                        # Remove duplicates and sort
-                        unique_trade_ids = sorted(set(trade_ids), key=lambda x: int(x) if x.isdigit() else 0)
-                        base_trade["trade_id"] = ",".join(unique_trade_ids)
-                    # Concatenate original_trade_ids (comma-separated, sorted)
+        # Process grouped trades: aggregate quantities, concatenate trade_ids and original_trade_ids
+        enriched_grouped = []
+        for ticker, trades in grouped_by_ticker.items():
+            if len(trades) == 1:
+                # Single trade, no grouping needed
+                enriched_grouped.append(trades[0])
+            else:
+                # Multiple trades with same ticker - aggregate
+                base_trade = trades[0].copy()
+                # Aggregate quantities
+                total_qty = sum(float(t.get("quantity") or 0) for t in trades)
+                base_trade["quantity"] = total_qty
+                # Concatenate trade_ids (comma-separated, sorted)
+                trade_ids = [
+                    str(t.get("trade_id"))
+                    for t in trades
+                    if t.get("trade_id") is not None
+                ]
+                if trade_ids:
+                    # Remove duplicates and sort
+                    unique_trade_ids = sorted(set(trade_ids), key=lambda x: int(x) if x.isdigit() else 0)
+                    base_trade["trade_id"] = ",".join(unique_trade_ids)
+                # Concatenate original_trade_ids (comma-separated, sorted) - only when all funds
+                if fund_id == 0:
                     original_ids = [
                         str(t.get("original_trade_id"))
                         for t in trades
@@ -286,22 +287,22 @@ async def get_fx_positions(
                         base_trade["original_trade_id"] = ",".join(unique_ids)
                     else:
                         base_trade["original_trade_id"] = None
-                    # Store grouped trade details for hover tooltip
-                    grouped_trades_info = []
-                    for t in trades:
-                        trade_id = t.get("trade_id")
-                        qty = t.get("quantity")
-                        fund_id = t.get("fund_id")
-                        grouped_trades_info.append({
-                            "trade_id": trade_id,
-                            "quantity": qty,
-                            "fund_id": fund_id,
-                        })
-                    base_trade["grouped_trades"] = grouped_trades_info
-                    base_trade["trade_count"] = len(trades)
-                    # Use first trade's price (or could average, but keeping first for now)
-                    enriched_grouped.append(base_trade)
-            enriched = enriched_grouped
+                # Store grouped trade details for View/Edit submenu
+                grouped_trades_info = []
+                for t in trades:
+                    trade_id = t.get("trade_id")
+                    qty = t.get("quantity")
+                    fund_id_val = t.get("fund_id")
+                    grouped_trades_info.append({
+                        "trade_id": trade_id,
+                        "quantity": qty,
+                        "fund_id": fund_id_val,
+                    })
+                base_trade["grouped_trades"] = grouped_trades_info
+                base_trade["trade_count"] = len(trades)
+                # Use first trade's price (or could average, but keeping first for now)
+                enriched_grouped.append(base_trade)
+        enriched = enriched_grouped
 
         out = []
         for t in enriched:
@@ -741,70 +742,70 @@ async def get_fx_option_positions(
 
         fetched_map = _bulk_price(req_items) if PRICER_BASE_URL else {}
 
-        # If fund_id is 0 (all funds), group by ticker and concatenate trade_ids
-        if fund_id == 0:
-            from collections import defaultdict
-            grouped_by_ticker: dict[str, list[dict]] = defaultdict(list)
-            for t in enriched:
-                u_trade_ccy = str(t.get("underlying_trade_currency") or "").upper()
-                u_settle_ccy = str(t.get("underlying_settlement_currency") or "").upper()
-                maturity = str(t.get("maturity_date") or "")[:10]
-                underlying = f"{u_trade_ccy}-{u_settle_ccy}" if u_trade_ccy and u_settle_ccy else None
-                opt_type_raw = str(t.get("option_type") or t.get("optionType") or "").strip().upper()
-                opt_code = ("P" if opt_type_raw.startswith("P") else ("C" if opt_type_raw.startswith("C") else (opt_type_raw[:1] if opt_type_raw else None)))
-                strike_val = t.get("strike")
+        # Group by ticker and concatenate trade_ids (works for both "all funds" and specific funds)
+        # This allows View/Edit submenu to work when multiple trades share the same ticker
+        from collections import defaultdict
+        grouped_by_ticker: dict[str, list[dict]] = defaultdict(list)
+        for t in enriched:
+            u_trade_ccy = str(t.get("underlying_trade_currency") or "").upper()
+            u_settle_ccy = str(t.get("underlying_settlement_currency") or "").upper()
+            maturity = str(t.get("maturity_date") or "")[:10]
+            underlying = f"{u_trade_ccy}-{u_settle_ccy}" if u_trade_ccy and u_settle_ccy else None
+            opt_type_raw = str(t.get("option_type") or t.get("optionType") or "").strip().upper()
+            opt_code = ("P" if opt_type_raw.startswith("P") else ("C" if opt_type_raw.startswith("C") else (opt_type_raw[:1] if opt_type_raw else None)))
+            strike_val = t.get("strike")
+            strike_fmt = None
+            try:
+                if strike_val is not None and strike_val != "":
+                    strike_fmt = f"{float(strike_val):.8f}"
+            except Exception:
                 strike_fmt = None
-                try:
-                    if strike_val is not None and strike_val != "":
-                        strike_fmt = f"{float(strike_val):.8f}"
-                except Exception:
-                    strike_fmt = None
-                ticker = None
-                if underlying and opt_code and strike_fmt and maturity:
-                    ticker = f"{underlying}-{opt_code}-{strike_fmt}-{maturity}"
-                elif underlying and maturity:
-                    ticker = f"{underlying}-{maturity}"
-                else:
-                    ticker = underlying
-                grouped_by_ticker[ticker].append(t)
+            ticker = None
+            if underlying and opt_code and strike_fmt and maturity:
+                ticker = f"{underlying}-{opt_code}-{strike_fmt}-{maturity}"
+            elif underlying and maturity:
+                ticker = f"{underlying}-{maturity}"
+            else:
+                ticker = underlying
+            grouped_by_ticker[ticker].append(t)
 
-            # Process grouped trades: aggregate quantities, concatenate trade_ids
-            enriched_grouped = []
-            for ticker, trades in grouped_by_ticker.items():
-                if len(trades) == 1:
-                    # Single trade, no grouping needed
-                    enriched_grouped.append(trades[0])
-                else:
-                    # Multiple trades with same ticker - aggregate
-                    base_trade = trades[0].copy()
-                    # Aggregate quantities
-                    total_qty = sum(float(t.get("quantity") or 0) for t in trades)
-                    base_trade["quantity"] = total_qty
-                    # Concatenate trade_ids (comma-separated, sorted)
-                    trade_ids = [
-                        str(t.get("trade_id"))
-                        for t in trades
-                        if t.get("trade_id") is not None
-                    ]
-                    if trade_ids:
-                        # Remove duplicates and sort
-                        unique_trade_ids = sorted(set(trade_ids), key=lambda x: int(x) if x.isdigit() else 0)
-                        base_trade["trade_id"] = ",".join(unique_trade_ids)
-                    # Store grouped trade details
-                    grouped_trades_info = []
-                    for t in trades:
-                        trade_id = t.get("trade_id")
-                        qty = t.get("quantity")
-                        fund_id = t.get("fund_id")
-                        grouped_trades_info.append({
-                            "trade_id": trade_id,
-                            "quantity": qty,
-                            "fund_id": fund_id,
-                        })
-                    base_trade["grouped_trades"] = grouped_trades_info
-                    base_trade["trade_count"] = len(trades)
-                    enriched_grouped.append(base_trade)
-            enriched = enriched_grouped
+        # Process grouped trades: aggregate quantities, concatenate trade_ids
+        enriched_grouped = []
+        for ticker, trades in grouped_by_ticker.items():
+            if len(trades) == 1:
+                # Single trade, no grouping needed
+                enriched_grouped.append(trades[0])
+            else:
+                # Multiple trades with same ticker - aggregate
+                base_trade = trades[0].copy()
+                # Aggregate quantities
+                total_qty = sum(float(t.get("quantity") or 0) for t in trades)
+                base_trade["quantity"] = total_qty
+                # Concatenate trade_ids (comma-separated, sorted)
+                trade_ids = [
+                    str(t.get("trade_id"))
+                    for t in trades
+                    if t.get("trade_id") is not None
+                ]
+                if trade_ids:
+                    # Remove duplicates and sort
+                    unique_trade_ids = sorted(set(trade_ids), key=lambda x: int(x) if x.isdigit() else 0)
+                    base_trade["trade_id"] = ",".join(unique_trade_ids)
+                # Store grouped trade details for View/Edit submenu
+                grouped_trades_info = []
+                for t in trades:
+                    trade_id = t.get("trade_id")
+                    qty = t.get("quantity")
+                    fund_id_val = t.get("fund_id")
+                    grouped_trades_info.append({
+                        "trade_id": trade_id,
+                        "quantity": qty,
+                        "fund_id": fund_id_val,
+                    })
+                base_trade["grouped_trades"] = grouped_trades_info
+                base_trade["trade_count"] = len(trades)
+                enriched_grouped.append(base_trade)
+        enriched = enriched_grouped
 
         out = []
         for t in enriched:
