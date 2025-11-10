@@ -89,6 +89,7 @@ interface TradeLineageItem {
     operation_timestamp: string;
     quantity_delta?: number | null;
     notes?: string | null;
+    fund_short_name?: string | null;
 }
 
 interface ColumnConfig {
@@ -3513,8 +3514,13 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                       disabled: true,
                                                   },
                                               ]
-                                            : lineageData.map((item) => ({
-                                                  label: `${item.operation} - Trade ${item.current_trade_id ?? "N/A"}`,
+                                            : lineageData.map((item) => {
+                                                  // Show fund short name when fund is "all" (fundId === 0)
+                                                  const fundLabel = fundId === 0 && item.fund_short_name
+                                                      ? ` [${item.fund_short_name}]`
+                                                      : "";
+                                                  return {
+                                                  label: `${item.operation} - Trade ${item.current_trade_id ?? "N/A"}${fundLabel}`,
                                                   action: () => {
                                                       console.error(
                                                           "[PortfolioTable] History submenu: View trade",
@@ -3546,10 +3552,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                                   item.operation_timestamp
                                                               ).toLocaleString()}\n` +
                                                               `Quantity Delta: ${item.quantity_delta ?? "N/A"}\n` +
-                                                              `Notes: ${item.notes ?? "N/A"}`
+                                                              `Notes: ${item.notes ?? "N/A"}` +
+                                                              (item.fund_short_name ? `\nFund: ${item.fund_short_name}` : "")
                                                       );
                                                   },
-                                              }))
+                                              };
+                                              })
                                         : undefined,
                                 // Fallback action if no original_trade_id
                                 action:

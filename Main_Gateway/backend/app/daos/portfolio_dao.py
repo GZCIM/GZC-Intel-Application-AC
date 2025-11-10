@@ -261,40 +261,44 @@ class PortfolioDAO:
         if fund_id is not None and fund_id != 0:
             query = text("""
                 SELECT
-                    id,
-                    current_trade_id,
-                    parent_lineage_id,
-                    original_trade_id,
-                    operation,
-                    operation_timestamp,
-                    quantity_delta,
-                    notes,
-                    fund_id,
-                    mod_user,
-                    mod_timestamp
-                FROM public.gzc_fx_trade_lineage
-                WHERE original_trade_id = :original_trade_id
-                  AND fund_id = :fund_id
-                ORDER BY current_trade_id DESC, id DESC
+                    l.id,
+                    l.current_trade_id,
+                    l.parent_lineage_id,
+                    l.original_trade_id,
+                    l.operation,
+                    l.operation_timestamp,
+                    l.quantity_delta,
+                    l.notes,
+                    l.fund_id,
+                    l.mod_user,
+                    l.mod_timestamp,
+                    f."FundNameShort" AS fund_short_name
+                FROM public.gzc_fx_trade_lineage l
+                LEFT JOIN public.gzc_fund f ON f."Id" = l.fund_id
+                WHERE l.original_trade_id = :original_trade_id
+                  AND l.fund_id = :fund_id
+                ORDER BY l.current_trade_id DESC, l.id DESC
             """)
             params["fund_id"] = fund_id
         else:
             query = text("""
                 SELECT
-                    id,
-                    current_trade_id,
-                    parent_lineage_id,
-                    original_trade_id,
-                    operation,
-                    operation_timestamp,
-                    quantity_delta,
-                    notes,
-                    fund_id,
-                    mod_user,
-                    mod_timestamp
-                FROM public.gzc_fx_trade_lineage
-                WHERE original_trade_id = :original_trade_id
-                ORDER BY current_trade_id DESC, id DESC
+                    l.id,
+                    l.current_trade_id,
+                    l.parent_lineage_id,
+                    l.original_trade_id,
+                    l.operation,
+                    l.operation_timestamp,
+                    l.quantity_delta,
+                    l.notes,
+                    l.fund_id,
+                    l.mod_user,
+                    l.mod_timestamp,
+                    f."FundNameShort" AS fund_short_name
+                FROM public.gzc_fx_trade_lineage l
+                LEFT JOIN public.gzc_fund f ON f."Id" = l.fund_id
+                WHERE l.original_trade_id = :original_trade_id
+                ORDER BY l.current_trade_id DESC, l.id DESC
             """)
 
         with self.engine.connect() as conn:
