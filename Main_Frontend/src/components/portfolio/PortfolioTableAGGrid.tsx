@@ -3413,7 +3413,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     contextMenuRow.trade_count && contextMenuRow.trade_count > 1 && contextMenuRow.grouped_trades
                                         ? contextMenuRow.grouped_trades.map((trade) => {
                                               // Only show fund info when fund is "all" (fundId === 0)
-                                              const showFundInfo = fundId === 0;
                                               // Fund ID to name mapping
                                               const fundMap: Record<number, string> = {
                                                   1: "GMF",
@@ -3422,7 +3421,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                               const qty = typeof trade.quantity === "number"
                                                   ? trade.quantity.toLocaleString()
                                                   : String(trade.quantity || "N/A");
-                                              const fundLabel = showFundInfo
+                                              // Show fund name only when fundId is 0 (all funds selected)
+                                              const fundLabel = fundId === 0
                                                   ? ` [${fundMap[trade.fund_id] || `Fund ${trade.fund_id}`}]`
                                                   : "";
                                               return {

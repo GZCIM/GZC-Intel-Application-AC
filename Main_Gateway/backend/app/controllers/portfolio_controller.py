@@ -374,6 +374,9 @@ async def get_fx_positions(
                     "dtd_pnl": pnl_since(eod_price),
                     # Explicitly ensure original_trade_id is included
                     "original_trade_id": original_trade_id,
+                    # Explicitly preserve grouped_trades and trade_count if they exist
+                    "grouped_trades": base.get("grouped_trades"),
+                    "trade_count": base.get("trade_count"),
                 }
             )
 
