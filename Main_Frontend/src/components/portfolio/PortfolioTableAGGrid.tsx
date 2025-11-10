@@ -147,11 +147,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     deviceType,
     componentBorderInfo
 }) => {
-    console.log("[PortfolioTableAGGrid] Component initialized", {
-        componentId,
-        gridWidth,
-        gridHeight,
-    });
     const { getToken } = useAuthContext();
     const { currentTheme: theme } = useTheme();
     const safeTheme = (theme as unknown as Record<string, string>) || {
@@ -217,14 +212,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [contextMenuRow]);
 
-    // Debug: Log context menu state changes
-    useEffect(() => {
-        console.log("[PortfolioTable] Context menu state changed", {
-            isOpen: contextMenu.isOpen,
-            hasRow: !!contextMenuRow,
-            position: contextMenu.position,
-        });
-    }, [contextMenu.isOpen, contextMenu.position, contextMenuRow]);
 
     // Close context menu on any left click anywhere
     useEffect(() => {
@@ -267,11 +254,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         e.clientY >= rect.top && e.clientY <= rect.bottom) {
                         elementToCheck = row as HTMLElement;
                         // Only log in development to reduce console noise
-                        if (import.meta.env.DEV) {
-                            console.error("[PortfolioTable] Found row under ag-full-width-container", {
-                                rowIndex: (row as HTMLElement).getAttribute('row-index'),
-                            });
-                        }
                         break;
                     }
                 }
@@ -291,19 +273,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
                             if (rowNode?.data) {
                                 rowData = rowNode.data as PortfolioPosition;
-                                // Only log in development to reduce console noise
-                                if (import.meta.env.DEV) {
-                                    console.error("[PortfolioTable] Found row via row-index attribute", {
-                                        rowIndex,
-                                        tradeId: rowData.trade_id,
-                                        ticker: rowData.ticker,
-                                        elementTag: current.tagName,
-                                    });
-                                }
                                 break;
                             }
                         } catch (err) {
-                            console.error("[PortfolioTable] Error getting row at index", rowIndex, err);
+                            // Silently handle error
                         }
                     }
                     break;
@@ -318,10 +291,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     if (rowNode && rowNode.data) {
                         rowData = rowNode.data as PortfolioPosition;
                         rowIndex = rowNode.rowIndex ?? null;
-                        console.error("[PortfolioTable] Found row via getRowNodeForElement (fallback)", {
-                            rowIndex,
-                            tradeId: rowData.trade_id,
-                        });
                     }
                 } catch (apiErr) {
                     // Method not available or failed
@@ -340,58 +309,20 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
                                 if (rowNode?.data) {
                                     rowData = rowNode.data as PortfolioPosition;
-                                    console.error("[PortfolioTable] Found row via closest('.ag-row') with row-index", {
-                                        rowIndex,
-                                        tradeId: rowData.trade_id,
-                                    });
                                 }
                             } catch (err) {
-                                console.error("[PortfolioTable] Error getting row at index", rowIndex, err);
+                                // Silently handle error
                             }
                         }
                     }
                 }
             }
 
-            // If we still couldn't find a row, log debug info
-            if (!rowData) {
-                console.error("[PortfolioTable] Could not find row - debug info", {
-                    elementTag: elementToCheck.tagName,
-                    elementClasses: elementToCheck.className?.substring(0, 100),
-                    hasAgRowClass: elementToCheck.classList?.contains('ag-row') ||
-                        Array.from(document.querySelectorAll('.ag-row')).some(row => row.contains(elementToCheck)),
-                    hasRowIndexAttr: elementToCheck.hasAttribute('row-index'),
-                    closestAgRow: elementToCheck.closest('.ag-row') !== null,
-                });
-            }
 
             if (rowData) {
                 // Clicked on a row - handle it
                 e.preventDefault();
                 e.stopPropagation();
-
-                // Log right-click coordinates for debugging
-                console.error("[PortfolioTable] RIGHT-CLICK COORDINATES:", {
-                    clientX: e.clientX,
-                    clientY: e.clientY,
-                    pageX: e.pageX,
-                    pageY: e.pageY,
-                    screenX: e.screenX,
-                    screenY: e.screenY,
-                    tradeId: rowData.trade_id,
-                    ticker: rowData.ticker,
-                    underlying: rowData.underlying,
-                });
-
-                // Debug: Log rowData before setting context menu
-                console.error("[PortfolioTable] Setting context menu row data", {
-                    trade_id: rowData.trade_id,
-                    ticker: rowData.ticker,
-                    original_trade_id: rowData.original_trade_id,
-                    original_trade_id_type: typeof rowData.original_trade_id,
-                    has_original_trade_id: "original_trade_id" in rowData,
-                    all_keys: Object.keys(rowData),
-                });
 
                 setContextMenuRow(rowData);
                 contextMenuRowRef.current = rowData;
@@ -403,21 +334,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 // Clicked in grid but not on a row - suppress browser menu
                 e.preventDefault();
                 e.stopPropagation();
-                // Only log suppression in development to reduce noise
-                if (import.meta.env.DEV) {
-                    console.error("[PortfolioTable] Suppressed browser menu on empty grid space", {
-                        isInGrid,
-                        hasGridApi: !!gridApi,
-                        targetTag: target?.tagName,
-                        targetClasses: target?.className?.substring(0, 100),
-                    });
-                }
             }
         };
 
         // Use capture phase to catch events early
         document.addEventListener("contextmenu", handleDocumentContextMenu, true);
-        console.error("[PortfolioTable] Document-level contextmenu listener attached (handles rows + suppression)");
         return () => {
             document.removeEventListener("contextmenu", handleDocumentContextMenu, true);
         };
@@ -823,7 +744,9 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         (pos.trade_currency === "USD" && pos.settlement_currency === "MXN") ||
                         (pos.trade_currency === "MXN" && pos.settlement_currency === "USD")
                     ) {
-                        console.error("[PortfolioTable] USD-MXN position loaded:", {
+                        // Debug: USD-MXN position loaded
+                        if (false) {
+                            console.log("[PortfolioTable] USD-MXN position loaded:", {
                             trade_id: pos.trade_id,
                             ticker: pos.ticker,
                             original_trade_id: pos.original_trade_id,
@@ -831,8 +754,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         });
                     }
                     return {
-                        ...pos,
-                        trade_type: "FX Forward" as const,
+                    ...pos,
+                    trade_type: "FX Forward" as const,
                     };
                 }
             );
@@ -1515,40 +1438,22 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     if (rowData) {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        console.error("[PortfolioTable] Direct handler: opening menu for row", {
-                                            rowIndex,
-                                            tradeId: rowData.trade_id,
-                                            position: { x: e.clientX, y: e.clientY },
-                                        });
                                         setContextMenuRow(rowData);
                                         contextMenuRowRef.current = rowData;
                                         setContextMenu({
                                             isOpen: true,
                                             position: { x: e.clientX, y: e.clientY },
                                         });
-                                    } else {
-                                        console.error("[PortfolioTable] No row data found for index", rowIndex);
                                     }
                                 } catch (err) {
-                                    console.error("[PortfolioTable] Error getting row data", err);
+                                    // Silently handle error
                                 }
-                            } else {
-                                console.error("[PortfolioTable] Invalid row index", rowIndex);
                             }
                         }
                         // If not on a row, let document handler suppress browser menu
                     };
                     // Use capture phase to catch events before they bubble
                     gridBody.addEventListener('contextmenu', handleDirectContextMenu, true);
-                    console.error("[PortfolioTable] Direct DOM contextmenu listener attached to grid body", {
-                        gridBodyClasses: gridBody.className,
-                        gridBodyId: gridBody.id,
-                    });
-                } else {
-                    console.error("[PortfolioTable] Could not find grid body element for context menu listener", {
-                        containerRef: !!containerRef.current,
-                        gridElement: !!gridElement,
-                    });
                 }
 
                 // Auto-size only when NOT in edit mode (avoid fighting user resizes)
@@ -2492,7 +2397,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             setTimeout(() => {
                                 if (gridApi && containerRef.current) {
                                     const allRows = containerRef.current.querySelectorAll('.ag-row');
-                                    console.error("[PortfolioTable] onFirstDataRendered: setting row-index on", allRows.length, "rows");
 
                                     // Use DOM query as primary method (more reliable)
                                     allRows.forEach((row, idx) => {
@@ -2515,7 +2419,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     } catch (err) {
                                         // API might not be available
                                     }
-                                    console.error("[PortfolioTable] Added row-index attributes to", allRows.length, "rows");
                                 }
                             }, 200);
                         },
@@ -2553,20 +2456,13 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     onCellContextMenu={(event) => {
                         const nativeEvent = event.event;
                         if (!nativeEvent) {
-                            console.error("[PortfolioTable] onCellContextMenu: no nativeEvent");
                             return;
                         }
 
                         nativeEvent.preventDefault();
                         nativeEvent.stopPropagation();
                         const rowData = (event.data || null) as PortfolioPosition | null;
-                        console.error("[PortfolioTable] onCellContextMenu triggered", {
-                            hasRowData: !!rowData,
-                            tradeId: rowData?.trade_id,
-                            position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
-                        });
                         if (!rowData) {
-                            console.error("[PortfolioTable] onCellContextMenu: no row data");
                             setContextMenu((prev) => ({ ...prev, isOpen: false }));
                             setContextMenuRow(null);
                             contextMenuRowRef.current = null;
@@ -2583,11 +2479,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         setContextMenu({
                             isOpen: true,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
-                        });
-                        console.error("[PortfolioTable] Context menu state set from onCellContextMenu", {
-                            isOpen: true,
-                            position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
-                            tradeId: rowData.trade_id,
                         });
                     }}
                     onCellMouseEnter={(event) => {
@@ -2641,19 +2532,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                     onRowContextMenu={(event: any) => {
                         const nativeEvent: MouseEvent | undefined = event?.event;
                         if (!nativeEvent) {
-                            console.error("[PortfolioTable] onRowContextMenu: no nativeEvent");
                             return;
                         }
                         nativeEvent.preventDefault();
                         nativeEvent.stopPropagation();
                         const rowData = (event?.data || null) as PortfolioPosition | null;
-                        console.error("[PortfolioTable] onRowContextMenu triggered", {
-                            hasRowData: !!rowData,
-                            tradeId: rowData?.trade_id,
-                            position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
-                        });
                         if (!rowData) {
-                            console.error("[PortfolioTable] onRowContextMenu: no row data");
                             setContextMenu((prev) => ({ ...prev, isOpen: false }));
                             setContextMenuRow(null);
                             contextMenuRowRef.current = null;
@@ -2669,11 +2553,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         setContextMenu({
                             isOpen: true,
                             position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
-                        });
-                        console.error("[PortfolioTable] Context menu state set from onRowContextMenu", {
-                            isOpen: true,
-                            position: { x: nativeEvent.clientX, y: nativeEvent.clientY },
-                            tradeId: rowData.trade_id,
                         });
                     }}
                     onCellClicked={() => {
@@ -3478,24 +3357,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             {/* Context Menu */}
             {contextMenu.isOpen && contextMenuRow && (
                 <>
-                    {/* Log row data confirmation when menu opens */}
-                    {(() => {
-                        console.error("[PortfolioTable] Context menu opened with row data", {
-                            tradeId: contextMenuRow.trade_id,
-                            ticker: contextMenuRow.ticker,
-                            underlying: contextMenuRow.underlying,
-                            tradeType: contextMenuRow.trade_type,
-                            quantity: contextMenuRow.quantity,
-                            price: contextMenuRow.price,
-                            maturityDate: contextMenuRow.maturity_date,
-                            tradeCurrency: contextMenuRow.trade_currency,
-                            settlementCurrency: contextMenuRow.settlement_currency,
-                            original_trade_id: contextMenuRow.original_trade_id,
-                            original_trade_id_type: typeof contextMenuRow.original_trade_id,
-                            has_original_trade_id: "original_trade_id" in contextMenuRow,
-                        });
-                        return null;
-                    })()}
                     <ContextMenu
                         items={[
                             {
@@ -3529,25 +3390,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                   return {
                                                   label: `${item.operation} - Trade ${item.current_trade_id ?? "N/A"}${fundLabel}`,
                                                   action: () => {
-                                                      console.error(
-                                                          "[PortfolioTable] History submenu: View trade",
-                                                          {
-                                                              lineageId: item.id,
-                                                              currentTradeId:
-                                                                  item.current_trade_id,
-                                                              parentLineageId:
-                                                                  item.parent_lineage_id,
-                                                              originalTradeId:
-                                                                  item.original_trade_id,
-                                                              operation:
-                                                                  item.operation,
-                                                              operationTimestamp:
-                                                                  item.operation_timestamp,
-                                                              quantityDelta:
-                                                                  item.quantity_delta,
-                                                              notes: item.notes,
-                                                          }
-                                                      );
                                                       // Show trade details - you can customize this
                                                       alert(
                                                           [
@@ -3573,13 +3415,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     contextMenuRow.original_trade_id === null ||
                                     String(contextMenuRow.original_trade_id) === "-"
                                         ? () => {
-                                              console.error(
-                                                  "[PortfolioTable] Context menu: History (no original_trade_id)",
-                                                  {
-                                                      tradeId:
-                                                          contextMenuRow.trade_id,
-                                                      }
-                                              );
                                               alert(
                                                   `No history available for trade ${contextMenuRow.trade_id ?? "N/A"}. This trade has no original_trade_id.`
                                               );
@@ -3589,10 +3424,6 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             {
                                 label: "View/Edit",
                                 action: () => {
-                                    console.error("[PortfolioTable] Context menu: View/Edit", {
-                                        tradeId: contextMenuRow.trade_id,
-                                        ticker: contextMenuRow.ticker,
-                                    });
                                     setIsEditing((prev) => !prev);
                                 },
                                 tooltip: contextMenuRow.trade_count && contextMenuRow.trade_count > 1 && contextMenuRow.grouped_trades
@@ -3623,33 +3454,18 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             {
                                 label: "New",
                                 action: () => {
-                                    console.error("[PortfolioTable] Context menu: New", {
-                                        tradeId: contextMenuRow.trade_id,
-                                        ticker: contextMenuRow.ticker,
-                                        underlying: contextMenuRow.underlying,
-                                    });
                                     alert(`Create new trade based on ${contextMenuRow.ticker ?? contextMenuRow.underlying ?? "position"}`);
                                 },
                             },
                             {
                                 label: "+/-",
                                 action: () => {
-                                    console.error("[PortfolioTable] Context menu: +/-", {
-                                        tradeId: contextMenuRow.trade_id,
-                                        ticker: contextMenuRow.ticker,
-                                        quantity: contextMenuRow.quantity,
-                                    });
                                     alert(`Adjust quantity for trade ${contextMenuRow.trade_id ?? "N/A"}${contextMenuRow.ticker ? ` (${contextMenuRow.ticker})` : ""}\nCurrent quantity: ${contextMenuRow.quantity ?? "N/A"}`);
                                 },
                             },
                             {
                                 label: "Roll",
                                 action: () => {
-                                    console.error("[PortfolioTable] Context menu: Roll", {
-                                        tradeId: contextMenuRow.trade_id,
-                                        ticker: contextMenuRow.ticker,
-                                        maturity: contextMenuRow.maturity_date,
-                                    });
                                     alert(`Roll trade ${contextMenuRow.trade_id ?? "N/A"}${contextMenuRow.ticker ? ` (${contextMenuRow.ticker})` : ""}\nCurrent maturity: ${contextMenuRow.maturity_date ?? "N/A"}`);
                                 },
                             },

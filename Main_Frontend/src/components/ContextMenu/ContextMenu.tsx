@@ -65,12 +65,6 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
     // Adjust position to keep menu in viewport, with cursor at top-left for maximum ergonomics
     useEffect(() => {
         if (isOpen && menuRef.current) {
-            // Log received position from props
-            console.error("[ContextMenu] RECEIVED POSITION:", {
-                x: position.x,
-                y: position.y,
-            });
-
             // Use double requestAnimationFrame to ensure menu is fully rendered and measured accurately
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
@@ -133,46 +127,6 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                     }
 
                     setAdjustedPosition({ x, y });
-
-                    // Log final position and actual menu coordinates
-                    setTimeout(() => {
-                        if (menuRef.current) {
-                            const finalRect =
-                                menuRef.current.getBoundingClientRect();
-                            console.error(
-                                "[ContextMenu] MENU POSITION COMPARISON:",
-                                {
-                                    clickPosition: {
-                                        x: position.x,
-                                        y: position.y,
-                                    },
-                                    initialPosition: {
-                                        x: position.x,
-                                        y: position.y,
-                                    },
-                                    adjustedPosition: { x, y },
-                                    actualMenuRect: {
-                                        left: finalRect.left,
-                                        top: finalRect.top,
-                                        right: finalRect.right,
-                                        bottom: finalRect.bottom,
-                                        width: finalRect.width,
-                                        height: finalRect.height,
-                                    },
-                                    offset: {
-                                        x: finalRect.left - position.x,
-                                        y: finalRect.top - position.y,
-                                    },
-                                    wasAdjusted: adjusted,
-                                    adjustmentReason: adjustmentReason,
-                                    viewport: {
-                                        width: innerWidth,
-                                        height: innerHeight,
-                                    },
-                                }
-                            );
-                        }
-                    }, 50); // Small delay to ensure position is applied
                 });
             });
         }
