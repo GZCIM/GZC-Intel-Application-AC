@@ -3409,33 +3409,37 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             },
                             {
                                 label: "View/Edit",
-                                action: () => {
-                                    setIsEditing((prev) => !prev);
-                                },
-                                tooltip: contextMenuRow.trade_count && contextMenuRow.trade_count > 1 && contextMenuRow.grouped_trades
-                                    ? (() => {
-                                          // Only show fund info when fund is "all" (fundId === 0)
-                                          const showFundInfo = fundId === 0;
-                                          // Fund ID to name mapping
-                                          const fundMap: Record<number, string> = {
-                                              1: "GMF",
-                                              6: "GCF",
-                                          };
-                                          return contextMenuRow.grouped_trades
-                                              .map((trade) => {
-                                                  const qty = typeof trade.quantity === "number"
-                                                      ? trade.quantity.toLocaleString()
-                                                      : String(trade.quantity || "N/A");
-                                                  if (showFundInfo) {
-                                                      const fundName = fundMap[trade.fund_id] || `Fund ${trade.fund_id}`;
-                                                      return `Trade ${trade.trade_id}: ${qty} [${fundName}]`;
-                                                  } else {
-                                                      return `Trade ${trade.trade_id}: ${qty}`;
-                                                  }
-                                              })
-                                              .join("\n");
-                                      })()
-                                    : undefined,
+                                submenu:
+                                    contextMenuRow.trade_count && contextMenuRow.trade_count > 1 && contextMenuRow.grouped_trades
+                                        ? contextMenuRow.grouped_trades.map((trade) => {
+                                              // Only show fund info when fund is "all" (fundId === 0)
+                                              const showFundInfo = fundId === 0;
+                                              // Fund ID to name mapping
+                                              const fundMap: Record<number, string> = {
+                                                  1: "GMF",
+                                                  6: "GCF",
+                                              };
+                                              const qty = typeof trade.quantity === "number"
+                                                  ? trade.quantity.toLocaleString()
+                                                  : String(trade.quantity || "N/A");
+                                              const fundLabel = showFundInfo
+                                                  ? ` [${fundMap[trade.fund_id] || `Fund ${trade.fund_id}`}]`
+                                                  : "";
+                                              return {
+                                                  label: `Trade ${trade.trade_id}: ${qty}${fundLabel}`,
+                                                  action: () => {
+                                                      setIsEditing((prev) => !prev);
+                                                      // You could also show trade details here if needed
+                                                  },
+                                              };
+                                          })
+                                        : undefined,
+                                action:
+                                    !contextMenuRow.trade_count || contextMenuRow.trade_count <= 1 || !contextMenuRow.grouped_trades
+                                        ? () => {
+                                              setIsEditing((prev) => !prev);
+                                          }
+                                        : undefined,
                             },
                             {
                                 label: "New",
