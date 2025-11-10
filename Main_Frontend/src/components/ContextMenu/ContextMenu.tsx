@@ -49,21 +49,21 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
     }
   }, [isOpen, onClose])
 
-  // Adjust position to keep menu in viewport, with cursor near top-left for ergonomics
+  // Adjust position to keep menu in viewport, with cursor at top-left for maximum ergonomics
   useEffect(() => {
     if (isOpen && menuRef.current) {
       const rect = menuRef.current.getBoundingClientRect()
       const { innerWidth, innerHeight } = window
 
-      // Position menu with small offset from cursor (2px) so cursor is near top-left
-      // This makes it more ergonomic - user doesn't need to move mouse far to reach items
-      let x = position.x + 2
-      let y = position.y + 2
+      // Position menu directly at cursor (0px offset) - cursor at top-left corner
+      // This makes it most ergonomic - first menu item is right under the cursor
+      let x = position.x
+      let y = position.y
 
       // Adjust horizontal position if menu would go off-screen
       if (x + rect.width > innerWidth) {
         // If menu would overflow right, position it to the left of cursor instead
-        x = position.x - rect.width - 2
+        x = position.x - rect.width
         // If that would go off-screen left, just align to right edge
         if (x < 10) {
           x = innerWidth - rect.width - 10
@@ -77,7 +77,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       // Adjust vertical position if menu would go off-screen
       if (y + rect.height > innerHeight) {
         // If menu would overflow bottom, position it above cursor instead
-        y = position.y - rect.height - 2
+        y = position.y - rect.height
         // If that would go off-screen top, just align to bottom edge
         if (y < 10) {
           y = innerHeight - rect.height - 10
