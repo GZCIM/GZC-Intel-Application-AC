@@ -3443,9 +3443,20 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             },
                             {
                                 label: "New",
-                                action: () => {
-                                    alert(`Create new trade based on ${contextMenuRow.ticker ?? contextMenuRow.underlying ?? "position"}`);
-                                },
+                                submenu: [
+                                    {
+                                        label: "FX Forward",
+                                        action: () => {
+                                            alert(`Create new FX Forward based on ${contextMenuRow.ticker ?? contextMenuRow.underlying ?? "position"}`);
+                                        },
+                                    },
+                                    {
+                                        label: "FX Option",
+                                        action: () => {
+                                            alert(`Create new FX Option based on ${contextMenuRow.ticker ?? contextMenuRow.underlying ?? "position"}`);
+                                        },
+                                    },
+                                ],
                             },
                             {
                                 label: "+/-",
