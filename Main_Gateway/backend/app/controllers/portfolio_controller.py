@@ -276,6 +276,19 @@ async def get_fx_positions(
                         base_trade["original_trade_id"] = ",".join(unique_ids)
                     else:
                         base_trade["original_trade_id"] = None
+                    # Store grouped trade details for hover tooltip
+                    grouped_trades_info = []
+                    for t in trades:
+                        trade_id = t.get("trade_id")
+                        qty = t.get("quantity")
+                        fund_id = t.get("fund_id")
+                        grouped_trades_info.append({
+                            "trade_id": trade_id,
+                            "quantity": qty,
+                            "fund_id": fund_id,
+                        })
+                    base_trade["grouped_trades"] = grouped_trades_info
+                    base_trade["trade_count"] = len(trades)
                     # Use first trade's price (or could average, but keeping first for now)
                     enriched_grouped.append(base_trade)
             enriched = enriched_grouped

@@ -78,6 +78,13 @@ interface PortfolioPosition {
     ticker?: string;
     // Lineage fields
     original_trade_id?: number | string | null; // Can be number, comma-separated string (when fund is "all"), or null
+    // Grouped trades info (when fund is "all" and multiple trades share same ticker)
+    grouped_trades?: Array<{
+        trade_id: number;
+        quantity: number;
+        fund_id: number;
+    }>;
+    trade_count?: number; // Number of trades in this position (when grouped)
 }
 
 interface TradeLineageItem {
@@ -3588,6 +3595,30 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                     });
                                     setIsEditing((prev) => !prev);
                                 },
+                                tooltip: contextMenuRow.trade_count && contextMenuRow.trade_count > 1 && contextMenuRow.grouped_trades
+                                    ? (() => {
+                                          // Only show fund info when fund is "all" (fundId === 0)
+                                          const showFundInfo = fundId === 0;
+                                          // Fund ID to name mapping
+                                          const fundMap: Record<number, string> = {
+                                              1: "GMF",
+                                              6: "GCF",
+                                          };
+                                          return contextMenuRow.grouped_trades
+                                              .map((trade) => {
+                                                  const qty = typeof trade.quantity === "number"
+                                                      ? trade.quantity.toLocaleString()
+                                                      : String(trade.quantity || "N/A");
+                                                  if (showFundInfo) {
+                                                      const fundName = fundMap[trade.fund_id] || `Fund ${trade.fund_id}`;
+                                                      return `Trade ${trade.trade_id}: ${qty} [${fundName}]`;
+                                                  } else {
+                                                      return `Trade ${trade.trade_id}: ${qty}`;
+                                                  }
+                                              })
+                                              .join("\n");
+                                      })()
+                                    : undefined,
                             },
                             {
                                 label: "New",

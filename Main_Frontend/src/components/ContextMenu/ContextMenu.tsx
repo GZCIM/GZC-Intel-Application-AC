@@ -11,6 +11,7 @@ export interface ContextMenuItem {
     disabled?: boolean;
     submenu?: ContextMenuItem[];
     danger?: boolean;
+    tooltip?: string | React.ReactNode; // Tooltip content to show on hover
 }
 
 export interface ContextMenuProps {
@@ -29,6 +30,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
     const { currentTheme: theme } = useTheme();
     const menuRef = useRef<HTMLDivElement>(null);
     const [activeSubmenu, setActiveSubmenu] = useState<number | null>(null);
+    const [hoveredItemIndex, setHoveredItemIndex] = useState<number | null>(null);
+    const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
     // Initialize with exact cursor position - will adjust if needed after render
     const [adjustedPosition, setAdjustedPosition] = useState(position);
 
@@ -209,8 +212,28 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                         : `${theme.primary}10`,
                 }}
                 onClick={() => handleItemClick(item)}
-                onMouseEnter={() => hasSubmenu && setActiveSubmenu(index)}
-                onMouseLeave={() => hasSubmenu && setActiveSubmenu(null)}
+                onMouseEnter={(e) => {
+                    if (hasSubmenu) {
+                        setActiveSubmenu(index);
+                    }
+                    if (item.tooltip) {
+                        setHoveredItemIndex(index);
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setTooltipPosition({
+                            x: rect.right + 8,
+                            y: rect.top,
+                        });
+                    }
+                }}
+                onMouseLeave={() => {
+                    if (hasSubmenu) {
+                        setActiveSubmenu(null);
+                    }
+                    if (item.tooltip) {
+                        setHoveredItemIndex(null);
+                        setTooltipPosition(null);
+                    }
+                }}
                 style={{
                     padding: "8px 16px",
                     fontSize: "13px",
@@ -342,10 +365,52 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         </AnimatePresence>
     );
 
+    // Tooltip for menu items
+    const tooltipContent = hoveredItemIndex !== null && items[hoveredItemIndex]?.tooltip ? (
+        <AnimatePresence>
+            {tooltipPosition && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    style={{
+                        position: "fixed",
+                        left: tooltipPosition.x,
+                        top: tooltipPosition.y,
+                        backgroundColor: theme.surface,
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: "6px",
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                        padding: "8px 12px",
+                        zIndex: 10060,
+                        maxWidth: "300px",
+                        fontSize: "12px",
+                        color: theme.text,
+                        whiteSpace: "pre-wrap",
+                        lineHeight: "1.5",
+                    }}
+                >
+                    {typeof items[hoveredItemIndex].tooltip === "string"
+                        ? items[hoveredItemIndex].tooltip
+                        : items[hoveredItemIndex].tooltip}
+                </motion.div>
+            )}
+        </AnimatePresence>
+    ) : null;
+
     // Portal to document.body to escape parent transforms/overflow
-    return typeof document !== "undefined"
-        ? createPortal(menuContent, document.body)
-        : menuContent;
+    return typeof document !== "undefined" ? (
+        <>
+            {createPortal(menuContent, document.body)}
+            {tooltipContent && createPortal(tooltipContent, document.body)}
+        </>
+    ) : (
+        <>
+            {menuContent}
+            {tooltipContent}
+        </>
+    );
 };
 
 // Helper component for easier usage
