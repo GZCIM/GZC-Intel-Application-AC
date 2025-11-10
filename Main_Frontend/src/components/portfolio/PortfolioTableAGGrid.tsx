@@ -327,12 +327,17 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                 e.preventDefault();
                 e.stopPropagation();
 
-                // Log confirmation that we have full row data including ticker
-                console.error("[PortfolioTable] Document handler: opening menu for row", {
+                // Log right-click coordinates for debugging
+                console.error("[PortfolioTable] RIGHT-CLICK COORDINATES:", {
+                    clientX: e.clientX,
+                    clientY: e.clientY,
+                    pageX: e.pageX,
+                    pageY: e.pageY,
+                    screenX: e.screenX,
+                    screenY: e.screenY,
                     tradeId: rowData.trade_id,
                     ticker: rowData.ticker,
                     underlying: rowData.underlying,
-                    position: { x: e.clientX, y: e.clientY },
                 });
 
                 setContextMenuRow(rowData);
