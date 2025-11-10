@@ -237,6 +237,49 @@ async def get_fx_positions(
 
         # Fetch prices in bulk and populate
         fetched_map = _bulk_price(req_items) if PRICER_BASE_URL else {}
+
+        # If fund_id is 0 (all funds), group by ticker and concatenate original_trade_ids
+        if fund_id == 0:
+            from collections import defaultdict
+            grouped_by_ticker: dict[str, list[dict]] = defaultdict(list)
+            for t in enriched:
+                trade_ccy = str(t.get("trade_currency") or "").upper()
+                settle_ccy = str(t.get("settlement_currency") or "").upper()
+                maturity = str(t.get("maturity_date") or "")[:10]
+                underlying = f"{trade_ccy}-{settle_ccy}" if trade_ccy and settle_ccy else None
+                ticker = (
+                    f"{underlying}-{maturity}" if underlying and maturity else underlying
+                )
+                grouped_by_ticker[ticker].append(t)
+
+            # Process grouped trades: aggregate quantities, concatenate original_trade_ids
+            enriched_grouped = []
+            for ticker, trades in grouped_by_ticker.items():
+                if len(trades) == 1:
+                    # Single trade, no grouping needed
+                    enriched_grouped.append(trades[0])
+                else:
+                    # Multiple trades with same ticker - aggregate
+                    base_trade = trades[0].copy()
+                    # Aggregate quantities
+                    total_qty = sum(float(t.get("quantity") or 0) for t in trades)
+                    base_trade["quantity"] = total_qty
+                    # Concatenate original_trade_ids (comma-separated, sorted)
+                    original_ids = [
+                        str(t.get("original_trade_id"))
+                        for t in trades
+                        if t.get("original_trade_id") is not None
+                    ]
+                    if original_ids:
+                        # Remove duplicates and sort
+                        unique_ids = sorted(set(original_ids), key=lambda x: int(x) if x.isdigit() else 0)
+                        base_trade["original_trade_id"] = ",".join(unique_ids)
+                    else:
+                        base_trade["original_trade_id"] = None
+                    # Use first trade's price (or could average, but keeping first for now)
+                    enriched_grouped.append(base_trade)
+            enriched = enriched_grouped
+
         out = []
         for t in enriched:
             rid = f"fx-{t.get('trade_id')}"
@@ -768,10 +811,10 @@ async def get_trade_lineage(
     request: Request, current_user: dict = Depends(validate_token)
 ):
     """
-    Return all trade lineage records for a given original_trade_id.
+    Return all trade lineage records for given original_trade_id(s).
     Results are sorted chronologically with latest on top.
     Query params:
-      - original_trade_id: integer (required)
+      - original_trade_id: integer or comma-separated integers (required)
       - fundId: integer (optional) - if provided and not 0, filter by fund_id
     """
     try:
@@ -782,11 +825,28 @@ async def get_trade_lineage(
                 detail="Missing required 'original_trade_id' query parameter",
             )
 
+        # Parse original_trade_id(s) - can be single integer or comma-separated
+        original_trade_ids: list[int] = []
         try:
-            original_trade_id = int(original_trade_id_param)
+            if "," in original_trade_id_param:
+                # Multiple IDs (comma-separated)
+                original_trade_ids = [
+                    int(id_str.strip())
+                    for id_str in original_trade_id_param.split(",")
+                    if id_str.strip()
+                ]
+            else:
+                # Single ID
+                original_trade_ids = [int(original_trade_id_param)]
         except ValueError:
             raise HTTPException(
-                status_code=400, detail="'original_trade_id' must be an integer"
+                status_code=400,
+                detail="'original_trade_id' must be an integer or comma-separated integers",
+            )
+
+        if not original_trade_ids:
+            raise HTTPException(
+                status_code=400, detail="At least one 'original_trade_id' is required"
             )
 
         # Get optional fundId parameter
@@ -801,11 +861,25 @@ async def get_trade_lineage(
                 )
 
         dao = PortfolioDAO()
-        lineage_data = dao.get_trade_lineage(
-            original_trade_id=original_trade_id, fund_id=fund_id
+        # Fetch lineage for all original_trade_ids and combine
+        all_lineage_data: list[dict] = []
+        for orig_id in original_trade_ids:
+            lineage_data = dao.get_trade_lineage(
+                original_trade_id=orig_id, fund_id=fund_id
+            )
+            all_lineage_data.extend(lineage_data)
+
+        # Sort combined results by current_trade_id DESC (newest first, eldest at bottom)
+        all_lineage_data.sort(
+            key=lambda x: (x.get("current_trade_id") or 0, x.get("id") or 0),
+            reverse=True,
         )
 
-        return {"status": "success", "count": len(lineage_data), "data": lineage_data}
+        return {
+            "status": "success",
+            "count": len(all_lineage_data),
+            "data": all_lineage_data,
+        }
     except HTTPException:
         raise
     except Exception as e:

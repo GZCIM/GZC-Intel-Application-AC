@@ -77,7 +77,7 @@ interface PortfolioPosition {
     underlying?: string;
     ticker?: string;
     // Lineage fields
-    original_trade_id?: number | null;
+    original_trade_id?: number | string | null; // Can be number, comma-separated string (when fund is "all"), or null
 }
 
 interface TradeLineageItem {
@@ -197,6 +197,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             contextMenuRow.original_trade_id !== null &&
             String(contextMenuRow.original_trade_id) !== "-"
         ) {
+            // original_trade_id can be a number or comma-separated string (when fund is "all")
             fetchTradeLineage(contextMenuRow.original_trade_id).then(
                 (lineage) => {
                     setLineageData(lineage);
@@ -879,11 +880,12 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     };
 
     // Fetch trade lineage data for History submenu
-    const fetchTradeLineage = async (originalTradeId: number): Promise<TradeLineageItem[]> => {
+    const fetchTradeLineage = async (originalTradeId: number | string): Promise<TradeLineageItem[]> => {
         try {
             setIsLoadingLineage(true);
             const token = await getToken();
-            const params: Record<string, unknown> = { original_trade_id: originalTradeId };
+            // originalTradeId can be a number or comma-separated string
+            const params: Record<string, unknown> = { original_trade_id: String(originalTradeId) };
             // Include fundId if it's set and not 0 (0 means "all funds")
             if (fundId !== undefined && fundId !== 0) {
                 params.fundId = fundId;
