@@ -772,6 +772,7 @@ async def get_trade_lineage(
     Results are sorted chronologically with latest on top.
     Query params:
       - original_trade_id: integer (required)
+      - fundId: integer (optional) - if provided and not 0, filter by fund_id
     """
     try:
         original_trade_id_param = request.query_params.get("original_trade_id")
@@ -788,8 +789,21 @@ async def get_trade_lineage(
                 status_code=400, detail="'original_trade_id' must be an integer"
             )
 
+        # Get optional fundId parameter
+        fund_id_param = request.query_params.get("fundId")
+        fund_id = None
+        if fund_id_param is not None:
+            try:
+                fund_id = int(fund_id_param)
+            except ValueError:
+                raise HTTPException(
+                    status_code=400, detail="'fundId' must be an integer"
+                )
+
         dao = PortfolioDAO()
-        lineage_data = dao.get_trade_lineage(original_trade_id=original_trade_id)
+        lineage_data = dao.get_trade_lineage(
+            original_trade_id=original_trade_id, fund_id=fund_id
+        )
 
         return {"status": "success", "count": len(lineage_data), "data": lineage_data}
     except HTTPException:

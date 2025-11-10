@@ -883,17 +883,24 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
         try {
             setIsLoadingLineage(true);
             const token = await getToken();
+            const params: Record<string, unknown> = { original_trade_id: originalTradeId };
+            // Include fundId if it's set and not 0 (0 means "all funds")
+            if (fundId !== undefined && fundId !== 0) {
+                params.fundId = fundId;
+            }
             const response = await axios.get("/api/portfolio/trade-lineage", {
-                params: { original_trade_id: originalTradeId },
+                params,
                 headers: { Authorization: `Bearer ${token}` },
             });
 
             if (response.data.status === "success" && response.data.data) {
-                // Sort by operation_timestamp DESC (latest on top)
+                // Sort by trade_id DESC (newest on top; eldest at bottom)
                 const sorted = (response.data.data as TradeLineageItem[]).sort(
-                    (a, b) =>
-                        new Date(b.operation_timestamp).getTime() -
-                        new Date(a.operation_timestamp).getTime()
+                    (a, b) => {
+                        const aid = (a.current_trade_id ?? 0);
+                        const bid = (b.current_trade_id ?? 0);
+                        return bid - aid;
+                    }
                 );
                 return sorted;
             }

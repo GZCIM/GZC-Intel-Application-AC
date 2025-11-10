@@ -249,29 +249,54 @@ class PortfolioDAO:
 
     # Removed ref price extraction per request. Calculation engine will supply DTD/MTD/YTD; DB returns trade-side fields only.
 
-    def get_trade_lineage(self, original_trade_id: int):
+    def get_trade_lineage(self, original_trade_id: int, fund_id: int | None = None):
         """
         Return all trade lineage records for a given original_trade_id.
+        If fund_id is provided and not 0, filter by fund_id.
         Results are sorted by operation_timestamp DESC (latest first).
         """
-        query = text("""
-            SELECT
-                id,
-                current_trade_id,
-                parent_lineage_id,
-                original_trade_id,
-                operation,
-                operation_timestamp,
-                quantity_delta,
-                notes,
-                fund_id,
-                mod_user,
-                mod_timestamp
-            FROM public.gzc_fx_trade_lineage
-            WHERE original_trade_id = :original_trade_id
-            ORDER BY operation_timestamp DESC, id DESC
-        """)
-        params = {"original_trade_id": original_trade_id}
+        params: dict[str, object] = {"original_trade_id": original_trade_id}
+
+        # Filter by fund_id if provided and not 0 (0 means "all funds")
+        if fund_id is not None and fund_id != 0:
+            query = text("""
+                SELECT
+                    id,
+                    current_trade_id,
+                    parent_lineage_id,
+                    original_trade_id,
+                    operation,
+                    operation_timestamp,
+                    quantity_delta,
+                    notes,
+                    fund_id,
+                    mod_user,
+                    mod_timestamp
+                FROM public.gzc_fx_trade_lineage
+                WHERE original_trade_id = :original_trade_id
+                  AND fund_id = :fund_id
+                ORDER BY current_trade_id DESC, id DESC
+            """)
+            params["fund_id"] = fund_id
+        else:
+            query = text("""
+                SELECT
+                    id,
+                    current_trade_id,
+                    parent_lineage_id,
+                    original_trade_id,
+                    operation,
+                    operation_timestamp,
+                    quantity_delta,
+                    notes,
+                    fund_id,
+                    mod_user,
+                    mod_timestamp
+                FROM public.gzc_fx_trade_lineage
+                WHERE original_trade_id = :original_trade_id
+                ORDER BY current_trade_id DESC, id DESC
+            """)
+
         with self.engine.connect() as conn:
             rows = conn.execute(query, params).mappings().all()
             return [dict(r) for r in rows]
