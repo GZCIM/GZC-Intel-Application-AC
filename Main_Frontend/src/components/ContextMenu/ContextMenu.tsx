@@ -227,6 +227,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                     opacity: item.disabled ? 0.5 : 1,
                     position: "relative",
                     userSelect: "none",
+                    minWidth: 0, // Allow flex item to shrink
+                    width: "100%", // Take full width of parent
                 }}
             >
                 <div
@@ -234,6 +236,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
+                        flex: 1,
+                        minWidth: 0, // Allow flex item to shrink if needed
                     }}
                 >
                     {item.icon && (
@@ -242,12 +246,21 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                                 fontSize: "14px",
                                 display: "flex",
                                 alignItems: "center",
+                                flexShrink: 0, // Prevent icon from shrinking
                             }}
                         >
                             {item.icon}
                         </span>
                     )}
-                    <span>{item.label}</span>
+                    <span
+                        style={{
+                            whiteSpace: "nowrap",
+                            overflow: "visible", // Ensure text is visible
+                            textOverflow: "clip", // Don't clip text
+                        }}
+                    >
+                        {item.label}
+                    </span>
                 </div>
 
                 {hasSubmenu && (
@@ -267,7 +280,9 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                                         left: "100%",
                                         top: -8,
                                         marginLeft: "4px",
-                                        minWidth: "180px",
+                                        minWidth: "280px", // Increased from 250px to accommodate longer text
+                                        width: "max-content", // Allow menu to grow to fit content
+                                        maxWidth: "400px", // Prevent it from getting too wide
                                         backgroundColor: theme.surface,
                                         border: `1px solid ${theme.border}`,
                                         borderRadius: "6px",
@@ -275,6 +290,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                                             "0 4px 12px rgba(0, 0, 0, 0.15)",
                                         padding: "4px 0",
                                         zIndex: 1001,
+                                        overflow: "visible", // Ensure content is visible
                                     }}
                                 >
                                     {item.submenu!.map((subItem, subIndex) =>
@@ -307,6 +323,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                         left: adjustedPosition.x,
                         top: adjustedPosition.y,
                         minWidth: "200px",
+                        width: "max-content", // Allow menu to grow to fit content
                         backgroundColor: theme.surface,
                         border: `1px solid ${theme.border}`,
                         borderRadius: "6px",
@@ -315,6 +332,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                         zIndex: 10050,
                         // Ensure menu escapes any parent stacking contexts
                         isolation: "isolate",
+                        overflow: "visible", // Ensure submenus are visible
                     }}
                 >
                     {items.map((item, index) => renderMenuItem(item, index))}
