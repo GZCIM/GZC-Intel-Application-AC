@@ -280,9 +280,9 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                                         left: "100%",
                                         top: -8,
                                         marginLeft: "4px",
-                                        minWidth: "280px", // Increased from 250px to accommodate longer text
+                                        minWidth: "230px", // Narrower but still fits "ROLL - Trade 2956 [GMF]"
                                         width: "max-content", // Allow menu to grow to fit content
-                                        maxWidth: "400px", // Prevent it from getting too wide
+                                        maxWidth: "350px", // Prevent it from getting too wide
                                         backgroundColor: theme.surface,
                                         border: `1px solid ${theme.border}`,
                                         borderRadius: "6px",
@@ -322,8 +322,9 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                         position: "fixed",
                         left: adjustedPosition.x,
                         top: adjustedPosition.y,
-                        minWidth: "200px",
+                        minWidth: "180px",
                         width: "max-content", // Allow menu to grow to fit content
+                        maxWidth: "300px", // Prevent it from getting too wide
                         backgroundColor: theme.surface,
                         border: `1px solid ${theme.border}`,
                         borderRadius: "6px",
