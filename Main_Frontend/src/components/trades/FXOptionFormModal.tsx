@@ -60,6 +60,22 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 	const [rawRow] = useState<Record<string, unknown> | null>(rawRowData);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
+	const normalizeOptionType = (val: any): string => {
+		if (!val) return "";
+		const s = String(val).trim();
+		if (s.toLowerCase() === "call") return "Call";
+		if (s.toLowerCase() === "put") return "Put";
+		return s;
+	};
+
+	const normalizeOptionStyle = (val: any): string => {
+		if (!val) return "";
+		const s = String(val).trim();
+		if (s.toLowerCase() === "european") return "European";
+		if (s.toLowerCase() === "american") return "American";
+		return s;
+	};
+
 	const [form, setForm] = useState<FXOptionFormData>(() => {
 		const raw = rawRowData;
 		return {
@@ -68,8 +84,8 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 			position: data?.position ?? (raw?.position as string) ?? "",
 			quantity: data?.quantity ?? (raw?.quantity as number) ?? null,
 			premium: data?.premium ?? (raw?.premium as number) ?? null,
-			option_type: data?.option_type ?? (raw?.option_type as string) ?? "",
-			option_style: data?.option_style ?? (raw?.option_style as string) ?? "",
+			option_type: normalizeOptionType(data?.option_type ?? raw?.option_type),
+			option_style: normalizeOptionStyle(data?.option_style ?? raw?.option_style),
 			strike: data?.strike ?? (raw?.strike as number) ?? null,
 			strike_currency: data?.strike_currency ?? (raw?.strike_currency as string) ?? "",
 			underlying_trade_currency: data?.underlying_trade_currency ?? (raw?.underlying_trade_currency as string) ?? "",
@@ -377,6 +393,7 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 										"trade_count",
 										"ticker",
 										"underlying",
+										"counter_party_code", // shown as "Counterparty" in main form
 										// Computed fields that should never be shown in forms
 										"itd_pnl",
 										"ytd_pnl",

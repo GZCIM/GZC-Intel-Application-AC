@@ -44,7 +44,7 @@
 .fx-forward-form-title,
 .fx-option-form-title {
 	margin: 0;
-	font-size: 16px;
+	font-size: 11px;
 	font-weight: 600;
 }
 
@@ -53,7 +53,7 @@
 	background: transparent;
 	color: var(--textSecondary, #aeb6c0);
 	border: none;
-	font-size: 20px;
+	font-size: 16px;
 	cursor: pointer;
 }
 .fx-forward-form-close:hover,
@@ -80,7 +80,7 @@
 	gap: 6px;
 }
 .fld > span {
-	font-size: 12px;
+	font-size: 9px;
 	color: var(--textSecondary, #aeb6c0);
 }
 .fld input,
@@ -90,8 +90,8 @@
 	color: var(--text, #e6e8eb);
 	border: 1px solid var(--border, #2a2f36);
 	border-radius: 6px;
-	padding: 8px 10px;
-	font-size: 13px;
+	padding: 6px 8px;
+	font-size: 9px;
 }
 .fld textarea {
 	min-height: 72px;
@@ -113,8 +113,8 @@
 .btn {
 	border: 1px solid transparent;
 	border-radius: 6px;
-	padding: 8px 12px;
-	font-size: 13px;
+	padding: 6px 10px;
+	font-size: 9px;
 	cursor: pointer;
 }
 .btn.primary {

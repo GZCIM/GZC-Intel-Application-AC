@@ -320,6 +320,7 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
                                         "trade_count",
                                         "ticker",
                                         "underlying",
+                                        "counter_party_code", // shown as "Counterparty" in main form
                                         // Common computed fields we never show in forms
                                         "itd_pnl",
                                         "ytd_pnl",
