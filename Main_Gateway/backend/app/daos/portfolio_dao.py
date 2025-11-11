@@ -247,6 +247,34 @@ class PortfolioDAO:
             rows = conn.execute(query, params).mappings().all()
             return [dict(r) for r in rows]
 
+    def get_fx_trade_by_id(self, trade_id: int):
+        """
+        Return a single FX forward trade by trade_id from public.gzc_fx_trade.
+        """
+        query = text("""
+            SELECT *
+            FROM public.gzc_fx_trade
+            WHERE trade_id = :trade_id
+        """)
+        params = {"trade_id": trade_id}
+        with self.engine.connect() as conn:
+            row = conn.execute(query, params).mappings().first()
+            return dict(row) if row else None
+
+    def get_fx_option_trade_by_id(self, trade_id: int):
+        """
+        Return a single FX option trade by trade_id from public.gzc_fx_option_trade.
+        """
+        query = text("""
+            SELECT *
+            FROM public.gzc_fx_option_trade
+            WHERE trade_id = :trade_id
+        """)
+        params = {"trade_id": trade_id}
+        with self.engine.connect() as conn:
+            row = conn.execute(query, params).mappings().first()
+            return dict(row) if row else None
+
     # Removed ref price extraction per request. Calculation engine will supply DTD/MTD/YTD; DB returns trade-side fields only.
 
     def get_trade_lineage(self, original_trade_id: int, fund_id: int | None = None):

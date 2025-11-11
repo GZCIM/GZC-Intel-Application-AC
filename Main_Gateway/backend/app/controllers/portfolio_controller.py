@@ -993,3 +993,63 @@ async def get_trade_lineage(
                 "type": e.__class__.__name__,
             },
         )
+
+
+@router.get("/fx-trade/{trade_id}", status_code=200)
+async def get_fx_trade_by_id(
+    trade_id: int,
+    request: Request,
+    current_user: dict = Depends(validate_token),
+):
+    """
+    Return a single FX forward trade by trade_id from public.gzc_fx_trade.
+    """
+    try:
+        dao = PortfolioDAO()
+        trade = dao.get_fx_trade_by_id(trade_id)
+        if not trade:
+            raise HTTPException(
+                status_code=404, detail=f"FX Forward trade {trade_id} not found"
+            )
+        return {"status": "success", "data": trade}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"[PortfolioController] Failed to fetch FX forward trade {trade_id}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": str(e),
+                "type": e.__class__.__name__,
+            },
+        )
+
+
+@router.get("/fx-option-trade/{trade_id}", status_code=200)
+async def get_fx_option_trade_by_id(
+    trade_id: int,
+    request: Request,
+    current_user: dict = Depends(validate_token),
+):
+    """
+    Return a single FX option trade by trade_id from public.gzc_fx_option_trade.
+    """
+    try:
+        dao = PortfolioDAO()
+        trade = dao.get_fx_option_trade_by_id(trade_id)
+        if not trade:
+            raise HTTPException(
+                status_code=404, detail=f"FX Option trade {trade_id} not found"
+            )
+        return {"status": "success", "data": trade}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"[PortfolioController] Failed to fetch FX option trade {trade_id}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": str(e),
+                "type": e.__class__.__name__,
+            },
+        )
