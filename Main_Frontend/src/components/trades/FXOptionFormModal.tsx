@@ -152,9 +152,15 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
     if (!isOpen || !portalEl) return null;
 
 	return ReactDOM.createPortal(
-		<div className="fx-option-form-overlay" role="dialog" aria-modal="true">
+		<div
+			className="fx-option-form-overlay"
+			role="dialog"
+			aria-modal="true"
+			onClick={onClose}
+		>
 			<div
 				className="fx-option-form-modal"
+				onClick={(e) => e.stopPropagation()}
 				style={{
 					// inject theme variables for CSS to consume
 					// eslint-disable-next-line @typescript-eslint/ban-ts-comment

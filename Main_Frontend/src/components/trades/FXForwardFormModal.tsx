@@ -141,9 +141,15 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
     if (!isOpen || !portalEl) return null;
 
 	return ReactDOM.createPortal(
-		<div className="fx-forward-form-overlay" role="dialog" aria-modal="true">
+		<div 
+			className="fx-forward-form-overlay" 
+			role="dialog" 
+			aria-modal="true"
+			onClick={onClose}
+		>
 			<div
 				className="fx-forward-form-modal"
+				onClick={(e) => e.stopPropagation()}
 				style={{
 					// inject theme variables for CSS to consume
 					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
