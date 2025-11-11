@@ -219,16 +219,7 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     }, [contextMenuRow]);
 
 
-    // Close context menu on any left click anywhere
-    useEffect(() => {
-        if (!contextMenu.isOpen) return;
-        const handleDocClick = (e: MouseEvent) => {
-            setContextMenu((prev) => ({ ...prev, isOpen: false }));
-            setContextMenuRow(null);
-        };
-        document.addEventListener("mousedown", handleDocClick, true);
-        return () => document.removeEventListener("mousedown", handleDocClick, true);
-    }, [contextMenu.isOpen]);
+    // Rely on ContextMenu's internal outside-click handling; no global mousedown here
 
     // Document-level handler: handles row clicks AND suppresses browser menu on empty grid space
     useEffect(() => {
