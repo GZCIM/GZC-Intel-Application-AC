@@ -53,7 +53,8 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 	onSubmit,
 	title,
 }) => {
-	const containerRef = useRef<HTMLDivElement | null>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
 	const [form, setForm] = useState<FXOptionFormData>(() => ({
 		trade_id: data?.trade_id ?? null,
 		fund_id: data?.fund_id ?? null,
@@ -80,20 +81,24 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 		return () => document.removeEventListener("keydown", onKey);
 	}, [isOpen, onClose]);
 
-	useEffect(() => {
-		if (!containerRef.current) {
-			const el = document.createElement("div");
-			el.className = "fx-option-form-portal-container";
-			document.body.appendChild(el);
-			containerRef.current = el;
-		}
-		return () => {
-			if (containerRef.current) {
-				document.body.removeChild(containerRef.current);
-				containerRef.current = null;
-			}
-		};
-	}, []);
+    useEffect(() => {
+        if (!containerRef.current) {
+            const el = document.createElement("div");
+            el.className = "fx-option-form-portal-container";
+            document.body.appendChild(el);
+            containerRef.current = el;
+            setPortalEl(el);
+        } else {
+            setPortalEl(containerRef.current);
+        }
+        return () => {
+            if (containerRef.current) {
+                document.body.removeChild(containerRef.current);
+                containerRef.current = null;
+                setPortalEl(null);
+            }
+        };
+    }, []);
 
 	const readonly = mode === "view";
 	const heading =
@@ -128,7 +133,7 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 		});
 	};
 
-	if (!isOpen || !containerRef.current) return null;
+    if (!isOpen || !portalEl) return null;
 
 	return ReactDOM.createPortal(
 		<div className="fx-option-form-overlay" role="dialog" aria-modal="true">
@@ -332,8 +337,8 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 					)}
 				</div>
 			</div>
-		</div>,
-		containerRef.current
+        </div>,
+        portalEl
 	);
 };
 

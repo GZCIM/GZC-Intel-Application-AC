@@ -49,7 +49,8 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
 	onSubmit,
 	title,
 }) => {
-	const containerRef = useRef<HTMLDivElement | null>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
 	const [form, setForm] = useState<FXForwardFormData>(() => ({
 		trade_id: data?.trade_id ?? null,
 		fund_id: data?.fund_id ?? null,
@@ -72,20 +73,24 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
 		return () => document.removeEventListener("keydown", onKey);
 	}, [isOpen, onClose]);
 
-	useEffect(() => {
-		if (!containerRef.current) {
-			const el = document.createElement("div");
-			el.className = "fx-forward-form-portal-container";
-			document.body.appendChild(el);
-			containerRef.current = el;
-		}
-		return () => {
-			if (containerRef.current) {
-				document.body.removeChild(containerRef.current);
-				containerRef.current = null;
-			}
-		};
-	}, []);
+    useEffect(() => {
+        if (!containerRef.current) {
+            const el = document.createElement("div");
+            el.className = "fx-forward-form-portal-container";
+            document.body.appendChild(el);
+            containerRef.current = el;
+            setPortalEl(el);
+        } else {
+            setPortalEl(containerRef.current);
+        }
+        return () => {
+            if (containerRef.current) {
+                document.body.removeChild(containerRef.current);
+                containerRef.current = null;
+                setPortalEl(null);
+            }
+        };
+    }, []);
 
 	const readonly = mode === "view";
 	const heading =
@@ -117,7 +122,7 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
 		});
 	};
 
-	if (!isOpen || !containerRef.current) return null;
+    if (!isOpen || !portalEl) return null;
 
 	return ReactDOM.createPortal(
 		<div className="fx-forward-form-overlay" role="dialog" aria-modal="true">
@@ -255,8 +260,8 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
 					)}
 				</div>
 			</div>
-		</div>,
-		containerRef.current
+        </div>,
+        portalEl
 	);
 };
 
