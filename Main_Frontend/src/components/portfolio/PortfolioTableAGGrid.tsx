@@ -22,6 +22,8 @@ import { useAuthContext } from "../../modules/ui-library";
 import { useTheme } from "../../contexts/ThemeContext";
 import { ContextMenu, ContextMenuItem } from "../ContextMenu";
 import axios from "axios";
+import FXForwardFormModal from "../trades/FXForwardFormModal";
+import FXOptionFormModal from "../trades/FXOptionFormModal";
 
 // Register AG Grid modules (community only)
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -163,6 +165,10 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
     const [isRetrying, setIsRetrying] = useState(false);
     const [, setTableConfig] = useState<TableConfig | null>(null);
     const [isEditing, setIsEditing] = useState(false);
+    // Trade view modals (View/Edit -> single opens directly)
+    const [viewForwardOpen, setViewForwardOpen] = useState(false);
+    const [viewOptionOpen, setViewOptionOpen] = useState(false);
+    const [viewTradeData, setViewTradeData] = useState<any>(null);
     const [localConfig, setLocalConfig] = useState<TableConfig | null>(null);
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     // Drag state for reordering column tags in edit mode (Columns tab)
@@ -3428,8 +3434,20 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                               return {
                                                   label: `Trade ${trade.trade_id}: ${qty}${fundLabel}`,
                                                   action: () => {
-                                                      setIsEditing((prev) => !prev);
-                                                      // You could also show trade details here if needed
+                                                      // Open VIEW modal for the specific trade from the group
+                                                      const isOption = String(contextMenuRow.trade_type || "").toLowerCase().includes("option");
+                                                      const baseData = {
+                                                          ...contextMenuRow,
+                                                          trade_id: trade.trade_id,
+                                                          quantity: trade.quantity,
+                                                          fund_id: trade.fund_id,
+                                                      };
+                                                      setViewTradeData(baseData);
+                                                      if (isOption) {
+                                                          setViewOptionOpen(true);
+                                                      } else {
+                                                          setViewForwardOpen(true);
+                                                      }
                                                   },
                                               };
                                           })
@@ -3437,7 +3455,14 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                 action:
                                     !contextMenuRow.trade_count || contextMenuRow.trade_count <= 1 || !contextMenuRow.grouped_trades
                                         ? () => {
-                                              setIsEditing((prev) => !prev);
+                                              // Single trade → open VIEW modal directly
+                                              const isOption = String(contextMenuRow.trade_type || "").toLowerCase().includes("option");
+                                              setViewTradeData(contextMenuRow);
+                                              if (isOption) {
+                                                  setViewOptionOpen(true);
+                                              } else {
+                                                  setViewForwardOpen(true);
+                                              }
                                           }
                                         : undefined,
                             },
@@ -3481,6 +3506,29 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                         }}
                     />
                 </>
+            )}
+            {/* View modals for trades */}
+            {viewForwardOpen && (
+                <FXForwardFormModal
+                    isOpen={viewForwardOpen}
+                    mode="view"
+                    data={viewTradeData as any}
+                    onClose={() => {
+                        setViewForwardOpen(false);
+                        setViewTradeData(null);
+                    }}
+                />
+            )}
+            {viewOptionOpen && (
+                <FXOptionFormModal
+                    isOpen={viewOptionOpen}
+                    mode="view"
+                    data={viewTradeData as any}
+                    onClose={() => {
+                        setViewOptionOpen(false);
+                        setViewTradeData(null);
+                    }}
+                />
             )}
         </div>
     );
