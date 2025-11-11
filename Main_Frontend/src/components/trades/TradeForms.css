@@ -22,8 +22,8 @@
 	color: var(--text, #e6e8eb);
 	border: 1px solid var(--border, #2a2f36);
 	border-radius: 8px;
-	width: 720px;
-	max-width: calc(100vw - 32px);
+	width: 95vw;
+	max-width: 1400px;
 	max-height: calc(100vh - 32px);
 	display: flex;
 	flex-direction: column;
@@ -70,7 +70,7 @@
 .fx-forward-form-grid,
 .fx-option-form-grid {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 12px;
 }
 
