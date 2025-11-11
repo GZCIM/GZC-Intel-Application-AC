@@ -2,6 +2,7 @@
 from . import fix_controller
 from . import historical_quotes_controller
 from . import portfolio_controller
+from . import cash_controller
 from . import transactions_controller
 from . import preferences_controller
 from . import user_memory_controller
@@ -12,6 +13,7 @@ __all__ = [
     'fix_controller',
     'historical_quotes_controller',
     'portfolio_controller',
+    'cash_controller',
     'transactions_controller',
     'preferences_controller',
     'user_memory_controller',
