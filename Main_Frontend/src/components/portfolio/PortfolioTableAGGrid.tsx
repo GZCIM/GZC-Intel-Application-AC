@@ -740,8 +740,8 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
             const fxPositions: PortfolioPosition[] = fxResponse.data.data.map(
                 (pos: Record<string, unknown>) => {
                     return {
-                        ...pos,
-                        trade_type: "FX Forward" as const,
+                    ...pos,
+                    trade_type: "FX Forward" as const,
                     };
                 }
             );
@@ -3460,54 +3460,15 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                             },
                             {
                                 label: "+/-",
-                                submenu:
-                                    contextMenuRow.trade_count && contextMenuRow.trade_count > 1 && contextMenuRow.grouped_trades
-                                        ? contextMenuRow.grouped_trades.map((trade) => {
-                                              const fundMap: Record<number, string> = { 1: "GMF", 6: "GCF" };
-                                              const qty = typeof trade.quantity === "number"
-                                                  ? trade.quantity.toLocaleString()
-                                                  : String(trade.quantity || "N/A");
-                                              const fundLabel = fundId === 0 ? ` [${fundMap[trade.fund_id] || `Fund ${trade.fund_id}`}]` : "";
-                                              return {
-                                                  label: `Trade ${trade.trade_id}: ${qty}${fundLabel}`,
-                                                  action: () => {
-                                                      alert(`Adjust quantity for trade ${trade.trade_id}${contextMenuRow.ticker ? ` (${contextMenuRow.ticker})` : ""}\nCurrent quantity: ${qty}`);
-                                                  },
-                                              };
-                                          })
-                                        : undefined,
-                                action:
-                                    !contextMenuRow.trade_count || contextMenuRow.trade_count <= 1 || !contextMenuRow.grouped_trades
-                                        ? () => {
-                                              alert(`Adjust quantity for trade ${contextMenuRow.trade_id ?? "N/A"}${contextMenuRow.ticker ? ` (${contextMenuRow.ticker})` : ""}\nCurrent quantity: ${contextMenuRow.quantity ?? "N/A"}`);
-                                          }
-                                        : undefined,
+                                action: () => {
+                                    alert(`Adjust quantity for trade ${contextMenuRow.trade_id ?? "N/A"}${contextMenuRow.ticker ? ` (${contextMenuRow.ticker})` : ""}\nCurrent quantity: ${contextMenuRow.quantity ?? "N/A"}`);
+                                },
                             },
                             {
                                 label: "Roll",
-                                submenu:
-                                    contextMenuRow.trade_count && contextMenuRow.trade_count > 1 && contextMenuRow.grouped_trades
-                                        ? contextMenuRow.grouped_trades.map((trade) => {
-                                              const fundMap: Record<number, string> = { 1: "GMF", 6: "GCF" };
-                                              const fundLabel = fundId === 0 ? ` [${fundMap[trade.fund_id] || `Fund ${trade.fund_id}`}]` : "";
-                                              const maturity = contextMenuRow.maturity_date ?? "N/A";
-                                              const qty = typeof trade.quantity === "number"
-                                                  ? trade.quantity.toLocaleString()
-                                                  : String(trade.quantity || "N/A");
-                                              return {
-                                                  label: `Trade ${trade.trade_id}: ${qty}${fundLabel}`,
-                                                  action: () => {
-                                                      alert(`Roll trade ${trade.trade_id}${contextMenuRow.ticker ? ` (${contextMenuRow.ticker})` : ""}\nCurrent maturity: ${maturity}`);
-                                                  },
-                                              };
-                                          })
-                                        : undefined,
-                                action:
-                                    !contextMenuRow.trade_count || contextMenuRow.trade_count <= 1 || !contextMenuRow.grouped_trades
-                                        ? () => {
-                                              alert(`Roll trade ${contextMenuRow.trade_id ?? "N/A"}${contextMenuRow.ticker ? ` (${contextMenuRow.ticker})` : ""}\nCurrent maturity: ${contextMenuRow.maturity_date ?? "N/A"}`);
-                                          }
-                                        : undefined,
+                                action: () => {
+                                    alert(`Roll trade ${contextMenuRow.trade_id ?? "N/A"}${contextMenuRow.ticker ? ` (${contextMenuRow.ticker})` : ""}\nCurrent maturity: ${contextMenuRow.maturity_date ?? "N/A"}`);
+                                },
                             },
                         ] as ContextMenuItem[]}
                         position={contextMenu.position}
