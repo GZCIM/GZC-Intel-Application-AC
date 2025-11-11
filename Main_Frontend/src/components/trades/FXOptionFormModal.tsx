@@ -128,12 +128,33 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 
     useEffect(() => {
         if (isOpen) {
-            console.info("[FXOptionFormModal] Opening with data:", form);
+            console.info("[FXOptionFormModal] Opening with data:", data);
+            // Update form state when modal opens with new data
+            const raw = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
+            if (raw || data) {
+                setForm((prev) => ({
+                    ...prev,
+                    trade_id: data?.trade_id ?? prev.trade_id,
+                    fund_id: data?.fund_id ?? prev.fund_id,
+                    position: data?.position ?? (raw?.position as string) ?? prev.position,
+                    quantity: data?.quantity ?? (raw?.quantity as number) ?? prev.quantity,
+                    premium: data?.premium ?? (raw?.premium as number) ?? prev.premium,
+                    option_type: normalizeOptionType(data?.option_type ?? raw?.option_type ?? prev.option_type),
+                    option_style: normalizeOptionStyle(data?.option_style ?? raw?.option_style ?? prev.option_style),
+                    strike: data?.strike ?? (raw?.strike as number) ?? prev.strike,
+                    strike_currency: data?.strike_currency ?? (raw?.strike_currency as string) ?? prev.strike_currency,
+                    underlying_trade_currency: data?.underlying_trade_currency ?? (raw?.underlying_trade_currency as string) ?? prev.underlying_trade_currency,
+                    underlying_settlement_currency: data?.underlying_settlement_currency ?? (raw?.underlying_settlement_currency as string) ?? prev.underlying_settlement_currency,
+                    maturity_date: data?.maturity_date ? toISODate(data?.maturity_date) : (raw?.maturity_date ? toISODate(raw.maturity_date as string) : prev.maturity_date),
+                    counterparty: (data as any)?.counter_party_code ?? (raw?.counter_party_code as string) ?? data?.counterparty ?? prev.counterparty,
+                    notes: data?.notes ?? (raw?.notes as string) ?? prev.notes,
+                }));
+            }
         } else {
             console.info("[FXOptionFormModal] Closed");
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen]);
+    }, [isOpen, data]);
 	const readonly = mode === "view";
 	const heading =
 		title ??
