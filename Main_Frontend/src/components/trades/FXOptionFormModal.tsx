@@ -365,7 +365,7 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 						<div className="fx-option-form-grid">
 							{Object.entries(rawRow)
 								.filter(([k]) => {
-									// Exclude any keys already rendered above (all form fields + details)
+									// Exclude keys already rendered above (all form fields + details)
 									const baseKeys = Object.keys(form);
 									const extraKnown = [
 										"trade_type",
@@ -373,9 +373,32 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 										"original_trade_id",
 										"grouped_trades",
 										"trade_count",
+										"ticker",
+										"underlying",
+										// Computed fields that should never be shown in forms
+										"itd_pnl",
+										"ytd_pnl",
+										"mtd_pnl",
+										"dtd_pnl",
+										"eod_price",
+										"eom_price",
+										"eoy_price",
+										"current_price",
+										"price", // computed, not raw trade field
 									];
 									const knownKeys = new Set<string>([...baseKeys, ...extraKnown]);
-									return !knownKeys.has(k);
+									if (knownKeys.has(k)) return false;
+									// Hide keys that look like computed PnL or derived prices
+									const kl = k.toLowerCase();
+									if (kl.endsWith("_pnl")) return false;
+									if (/(^|_)current_price$/.test(kl)) return false;
+									if (kl === "eod_price" || kl === "eom_price" || kl === "eoy_price") return false;
+									if (kl === "price") return false;
+									// Hide computed date buckets (today/period-related)
+									if (/^(eod|eom|eoy|dtd|mtd|ytd|itd)_(date|ts|timestamp)$/.test(kl)) return false;
+									if (kl === "selected_date" || kl === "as_of" || kl === "today") return false;
+									if (kl.startsWith("calc_")) return false;
+									return true;
 								})
 								.sort(([a], [b]) => a.localeCompare(b))
 								.map(([key, value]) => (
