@@ -310,19 +310,17 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
                         <div className="fx-forward-form-grid">
                             {Object.entries(rawRow)
                                 .filter(([k]) => {
-                                    const known = new Set([
-                                        "trade_id",
-                                        "fund_id",
-                                        "position",
-                                        "quantity",
-                                        "price",
-                                        "trade_currency",
-                                        "settlement_currency",
-                                        "maturity_date",
-                                        "counterparty",
-                                        "notes",
-                                    ]);
-                                    return !known.has(k);
+                                    // Exclude any keys already rendered above (all form fields + details)
+                                    const baseKeys = Object.keys(form);
+                                    const extraKnown = [
+                                        "trade_type",
+                                        "trade_date",
+                                        "original_trade_id",
+                                        "grouped_trades",
+                                        "trade_count",
+                                    ];
+                                    const knownKeys = new Set<string>([...baseKeys, ...extraKnown]);
+                                    return !knownKeys.has(k);
                                 })
                                 .sort(([a], [b]) => a.localeCompare(b))
                                 .map(([key, value]) => (
