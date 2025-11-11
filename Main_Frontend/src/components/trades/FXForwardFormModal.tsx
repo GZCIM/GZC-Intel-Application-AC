@@ -51,6 +51,10 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
 	title,
 }) => {
 	const { currentTheme: theme } = useTheme();
+	// Preserve any extra fields passed in via data to render transparently
+	const [rawRow] = useState<Record<string, unknown> | null>(
+		data && typeof data === "object" ? (data as Record<string, unknown>) : null
+	);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
 	const [form, setForm] = useState<FXForwardFormData>(() => ({
@@ -272,6 +276,36 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
 						</label>
 					</div>
 				</div>
+				{/* Additional fields: render any remaining DB columns */}
+				{rawRow && (
+					<div className="fx-forward-form-body">
+						<div className="fx-forward-form-grid">
+							{Object.entries(rawRow)
+								.filter(([k]) => {
+									const known = new Set([
+										"trade_id",
+										"fund_id",
+										"position",
+										"quantity",
+										"price",
+										"trade_currency",
+										"settlement_currency",
+										"maturity_date",
+										"counterparty",
+										"notes",
+									]);
+									return !known.has(k);
+								})
+								.sort(([a], [b]) => a.localeCompare(b))
+								.map(([key, value]) => (
+									<label className="fld" key={key}>
+										<span>{String(key)}</span>
+										<input disabled value={value == null ? "" : String(value)} />
+									</label>
+								))}
+						</div>
+					</div>
+				)}
 				<div className="fx-forward-form-footer">
 					<button className="btn secondary" onClick={onClose}>
 						Cancel
