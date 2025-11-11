@@ -70,7 +70,7 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
         maturity_date: data?.maturity_date
             ? toISODate(data?.maturity_date)
             : null,
-        counterparty: data?.counterparty ?? null,
+        counterparty: (data as any)?.counter_party_code ?? data?.counterparty ?? null,
         notes: data?.notes ?? null,
     }));
 

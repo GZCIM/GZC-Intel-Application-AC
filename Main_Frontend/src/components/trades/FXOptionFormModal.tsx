@@ -56,27 +56,29 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 }) => {
 	const { currentTheme: theme } = useTheme();
 	// Preserve any extra fields passed in via data to render transparently
-	const [rawRow] = useState<Record<string, unknown> | null>(
-		data && typeof data === "object" ? (data as Record<string, unknown>) : null
-	);
+	const rawRowData = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
+	const [rawRow] = useState<Record<string, unknown> | null>(rawRowData);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
-	const [form, setForm] = useState<FXOptionFormData>(() => ({
-		trade_id: data?.trade_id ?? null,
-		fund_id: data?.fund_id ?? null,
-		position: data?.position ?? "",
-		quantity: data?.quantity ?? null,
-		premium: data?.premium ?? null,
-		option_type: data?.option_type ?? "",
-		option_style: data?.option_style ?? "",
-		strike: data?.strike ?? null,
-		strike_currency: data?.strike_currency ?? "",
-		underlying_trade_currency: data?.underlying_trade_currency ?? "",
-		underlying_settlement_currency: data?.underlying_settlement_currency ?? "",
-		maturity_date: data?.maturity_date ? toISODate(data?.maturity_date) : null,
-		counterparty: data?.counterparty ?? null,
-		notes: data?.notes ?? null,
-	}));
+	const [form, setForm] = useState<FXOptionFormData>(() => {
+		const raw = rawRowData;
+		return {
+			trade_id: data?.trade_id ?? null,
+			fund_id: data?.fund_id ?? null,
+			position: data?.position ?? (raw?.position as string) ?? "",
+			quantity: data?.quantity ?? (raw?.quantity as number) ?? null,
+			premium: data?.premium ?? (raw?.premium as number) ?? null,
+			option_type: data?.option_type ?? (raw?.option_type as string) ?? "",
+			option_style: data?.option_style ?? (raw?.option_style as string) ?? "",
+			strike: data?.strike ?? (raw?.strike as number) ?? null,
+			strike_currency: data?.strike_currency ?? (raw?.strike_currency as string) ?? "",
+			underlying_trade_currency: data?.underlying_trade_currency ?? (raw?.underlying_trade_currency as string) ?? "",
+			underlying_settlement_currency: data?.underlying_settlement_currency ?? (raw?.underlying_settlement_currency as string) ?? "",
+			maturity_date: data?.maturity_date ? toISODate(data?.maturity_date) : (raw?.maturity_date ? toISODate(raw.maturity_date as string) : null),
+			counterparty: (data as any)?.counter_party_code ?? (raw?.counter_party_code as string) ?? data?.counterparty ?? null,
+			notes: data?.notes ?? (raw?.notes as string) ?? null,
+		};
+	});
 
 	useEffect(() => {
 		if (!isOpen) return;
