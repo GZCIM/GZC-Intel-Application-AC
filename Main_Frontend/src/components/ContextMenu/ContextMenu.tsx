@@ -133,10 +133,31 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
     }, [isOpen, position]);
 
     const handleItemClick = (item: ContextMenuItem) => {
-        if (item.disabled || item.submenu) return;
+        // Debug logging to trace clicks
+        try {
+            console.info("[ContextMenu] item click", {
+                label: item?.label,
+                hasSubmenu: !!item?.submenu?.length,
+                disabled: !!item?.disabled,
+                hasAction: typeof item?.action === "function",
+            });
+        } catch {}
+
+        // Do not trigger action for parent items that only open a submenu
+        if (item.submenu && item.submenu.length > 0) {
+            return;
+        }
+        if (item.disabled) {
+            return;
+        }
 
         if (item.action) {
-            item.action();
+            try {
+                item.action();
+                console.info("[ContextMenu] action invoked", { label: item.label });
+            } catch (e) {
+                console.error("[ContextMenu] action error", e);
+            }
         }
         onClose();
     };

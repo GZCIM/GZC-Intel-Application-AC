@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import "./TradeForms.css";
+import { useTheme } from "../../contexts/ThemeContext";
 
 export type FXForwardFormMode = "create" | "view" | "edit";
 
@@ -49,6 +50,7 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
 	onSubmit,
 	title,
 }) => {
+	const { currentTheme: theme } = useTheme();
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
 	const [form, setForm] = useState<FXForwardFormData>(() => ({
@@ -136,7 +138,22 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
 
 	return ReactDOM.createPortal(
 		<div className="fx-forward-form-overlay" role="dialog" aria-modal="true">
-			<div className="fx-forward-form-modal">
+			<div
+				className="fx-forward-form-modal"
+				style={{
+					// inject theme variables for CSS to consume
+					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+					// @ts-ignore
+					"--surface": theme?.surface,
+					"--surfaceAlt": theme?.surfaceAlt,
+					"--text": theme?.text,
+					"--textSecondary": theme?.textSecondary ?? "#aeb6c0",
+					"--border": theme?.border,
+					"--primary": theme?.primary ?? "#1f6feb",
+					"--onPrimary": "#ffffff",
+					"--primaryDisabled": "#274777",
+				} as React.CSSProperties}
+			>
 				<div className="fx-forward-form-header">
 					<h3 className="fx-forward-form-title">{heading}</h3>
 					<button

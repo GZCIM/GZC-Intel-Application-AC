@@ -16,9 +16,9 @@
 
 .fx-forward-form-modal,
 .fx-option-form-modal {
-	background: #111418;
-	color: #e6e8eb;
-	border: 1px solid #2a2f36;
+	background: var(--surface, #111418);
+	color: var(--text, #e6e8eb);
+	border: 1px solid var(--border, #2a2f36);
 	border-radius: 8px;
 	width: 720px;
 	max-width: calc(100vw - 32px);
@@ -34,7 +34,7 @@
 	align-items: center;
 	justify-content: space-between;
 	padding: 12px 16px;
-	border-bottom: 1px solid #2a2f36;
+	border-bottom: 1px solid var(--border, #2a2f36);
 }
 
 .fx-forward-form-title,
@@ -47,14 +47,14 @@
 .fx-forward-form-close,
 .fx-option-form-close {
 	background: transparent;
-	color: #aeb6c0;
+	color: var(--textSecondary, #aeb6c0);
 	border: none;
 	font-size: 20px;
 	cursor: pointer;
 }
 .fx-forward-form-close:hover,
 .fx-option-form-close:hover {
-	color: #ffffff;
+	color: var(--text, #ffffff);
 }
 
 .fx-forward-form-body,
@@ -77,14 +77,14 @@
 }
 .fld > span {
 	font-size: 12px;
-	color: #aeb6c0;
+	color: var(--textSecondary, #aeb6c0);
 }
 .fld input,
 .fld select,
 .fld textarea {
-	background: #0d1014;
-	color: #e6e8eb;
-	border: 1px solid #2a2f36;
+	background: var(--surfaceAlt, #0d1014);
+	color: var(--text, #e6e8eb);
+	border: 1px solid var(--border, #2a2f36);
 	border-radius: 6px;
 	padding: 8px 10px;
 	font-size: 13px;
@@ -103,7 +103,7 @@
 	justify-content: flex-end;
 	gap: 8px;
 	padding: 12px 16px;
-	border-top: 1px solid #2a2f36;
+	border-top: 1px solid var(--border, #2a2f36);
 }
 
 .btn {
@@ -114,20 +114,20 @@
 	cursor: pointer;
 }
 .btn.primary {
-	background: #1f6feb;
-	color: #ffffff;
+	background: var(--primary, #1f6feb);
+	color: var(--onPrimary, #ffffff);
 }
 .btn.primary:disabled {
-	background: #274777;
+	background: var(--primaryDisabled, #274777);
 	cursor: not-allowed;
 }
 .btn.secondary {
-	background: #232830;
-	color: #d7dbe2;
-	border-color: #2a2f36;
+	background: var(--surface, #232830);
+	color: var(--text, #d7dbe2);
+	border-color: var(--border, #2a2f36);
 }
 .btn.secondary:hover {
-	background: #2a2f36;
+	background: var(--surfaceAlt, #2a2f36);
 }
 
 
