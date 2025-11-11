@@ -91,15 +91,25 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
         } else {
             setPortalEl(containerRef.current);
         }
+        console.info("[FXOptionFormModal] Portal prepared");
         return () => {
             if (containerRef.current) {
                 document.body.removeChild(containerRef.current);
                 containerRef.current = null;
                 setPortalEl(null);
             }
+            console.info("[FXOptionFormModal] Portal cleaned up");
         };
     }, []);
 
+    useEffect(() => {
+        if (isOpen) {
+            console.info("[FXOptionFormModal] Opening with data:", form);
+        } else {
+            console.info("[FXOptionFormModal] Closed");
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen]);
 	const readonly = mode === "view";
 	const heading =
 		title ??

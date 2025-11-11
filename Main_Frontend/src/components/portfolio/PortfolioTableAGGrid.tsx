@@ -3442,6 +3442,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                                           quantity: trade.quantity,
                                                           fund_id: trade.fund_id,
                                                       };
+                                                      console.info("[ContextMenu][View/Edit] Grouped trade clicked", {
+                                                          tradeId: trade.trade_id,
+                                                          isOption,
+                                                          baseData,
+                                                      });
                                                       setViewTradeData(baseData);
                                                       if (isOption) {
                                                           setViewOptionOpen(true);
@@ -3457,6 +3462,11 @@ const PortfolioTableAGGrid: React.FC<PortfolioTableAGGridProps> = ({
                                         ? () => {
                                               // Single trade → open VIEW modal directly
                                               const isOption = String(contextMenuRow.trade_type || "").toLowerCase().includes("option");
+                                              console.info("[ContextMenu][View/Edit] Single trade clicked", {
+                                                  tradeId: contextMenuRow.trade_id,
+                                                  isOption,
+                                                  row: contextMenuRow,
+                                              });
                                               setViewTradeData(contextMenuRow);
                                               if (isOption) {
                                                   setViewOptionOpen(true);
