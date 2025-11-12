@@ -20,7 +20,7 @@ import logging
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, date, timedelta
 import paramiko
-from io import StringIO
+from io import BytesIO, StringIO
 import psycopg2
 from psycopg2.extras import execute_values
 from psycopg2 import sql
@@ -406,10 +406,18 @@ def process_ubs_margin_daily():
                             try:
                                 # Download file to memory
                                 logger.info(f"Downloading {remote_path}")
-                                file_obj = StringIO()
+                                file_obj = BytesIO()
                                 sftp.getfo(remote_path, file_obj)
-                                csv_content = file_obj.getvalue()
+                                # Get bytes content
+                                file_bytes = file_obj.getvalue()
                                 file_obj.close()
+
+                                # Decode bytes to string (try UTF-8 first, fallback to latin-1)
+                                try:
+                                    csv_content = file_bytes.decode('utf-8')
+                                except UnicodeDecodeError:
+                                    logger.warning(f"UTF-8 decode failed for {filename}, trying latin-1")
+                                    csv_content = file_bytes.decode('latin-1')
 
                                 # Load to database
                                 inserted = load_csv_to_database(conn, csv_content, filename, account, last_workday)

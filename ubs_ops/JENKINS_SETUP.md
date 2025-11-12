@@ -11,20 +11,132 @@ This document describes how to set up Jenkins to run the UBS margin data process
 - PostgreSQL connection string
 - Git for Windows (if not using Jenkins Git plugin)
 
+## Adding Credentials to Jenkins Credentials Store
+
+### Step-by-Step Guide
+
+1. **Navigate to Credentials**
+   - In Jenkins dashboard, click **"Manage Jenkins"**
+   - Click **"Manage Credentials"**
+   - Select the domain (usually **"(global)"**)
+
+2. **Add SFTP Password Credential**
+   - Click **"Add Credentials"** (or **"Add"** → **"Jenkins"**)
+   - **Kind**: Select **"Secret text"**
+   - **Secret**: Enter your SFTP password
+   - **ID**: `ubs-sftp-password` (or any unique identifier)
+   - **Description**: `UBS SFTP Password`
+   - Click **"OK"**
+
+3. **Add SFTP Username Credential** (Optional - can also use plain text)
+   - Click **"Add Credentials"**
+   - **Kind**: Select **"Secret text"**
+   - **Secret**: Enter your SFTP username
+   - **ID**: `ubs-sftp-username`
+   - **Description**: `UBS SFTP Username`
+   - Click **"OK"**
+
+4. **Add PostgreSQL Connection String**
+   - Click **"Add Credentials"**
+   - **Kind**: Select **"Secret text"**
+   - **Secret**: Enter full connection string
+     - Format: `postgresql://username:password@host:port/database?sslmode=require`
+     - Example: `postgresql://mikael:password@gzcdevserver.postgres.database.azure.com:5432/gzc_platform?sslmode=require`
+   - **ID**: `postgres-connection-string`
+   - **Description**: `PostgreSQL Connection String for UBS Processing`
+   - Click **"OK"**
+
+5. **Alternative: Username/Password Credential** (if you prefer separate fields)
+   - Click **"Add Credentials"**
+   - **Kind**: Select **"Username with password"**
+   - **Username**: Enter SFTP username
+   - **Password**: Enter SFTP password
+   - **ID**: `ubs-sftp-credentials`
+   - **Description**: `UBS SFTP Credentials`
+   - Click **"OK"**
+
+### Using Credentials in Jenkins Job
+
+#### Method 1: Inject Credentials as Environment Variables (Recommended)
+
+1. In your Jenkins job configuration, go to **"Build Environment"** section
+2. Check **"Use secret text(s) or file(s)"**
+3. Click **"Bindings"** → **"Add"** → **"Secret text"**
+4. For each credential:
+   - **Variable**: `UBS_SFTP_PASSWORD`
+   - **Credentials**: Select `ubs-sftp-password` from dropdown
+   - Click **"Add"** for each credential:
+     - `UBS_SFTP_USERNAME` → `ubs-sftp-username`
+     - `POSTGRES_CONNECTION_STRING` → `postgres-connection-string`
+
+#### Method 2: Using Credentials in Pipeline Script
+
+```groovy
+pipeline {
+    agent any
+
+    environment {
+        // Non-sensitive values can be set directly
+        UBS_SFTP_HOST = 'sftp.ubs.com'
+        UBS_SFTP_PORT = '22'
+        UBS_SFTP_REMOTE_DIR = '/from_UBS'
+    }
+
+    stages {
+        stage('Set Credentials') {
+            steps {
+                script {
+                    // Get credentials from Jenkins store
+                    withCredentials([
+                        string(credentialsId: 'ubs-sftp-password', variable: 'UBS_SFTP_PASSWORD'),
+                        string(credentialsId: 'ubs-sftp-username', variable: 'UBS_SFTP_USERNAME'),
+                        string(credentialsId: 'postgres-connection-string', variable: 'POSTGRES_CONNECTION_STRING')
+                    ]) {
+                        // Credentials are now available as environment variables
+                        bat 'python process_ubs_margin_daily.py'
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+#### Method 3: Using withCredentials Block (Pipeline)
+
+```groovy
+stage('Process UBS Files') {
+    steps {
+        withCredentials([
+            string(credentialsId: 'ubs-sftp-password', variable: 'UBS_SFTP_PASSWORD'),
+            string(credentialsId: 'ubs-sftp-username', variable: 'UBS_SFTP_USERNAME'),
+            string(credentialsId: 'postgres-connection-string', variable: 'POSTGRES_CONNECTION_STRING')
+        ]) {
+            bat '''
+                python process_ubs_margin_daily.py
+            '''
+        }
+    }
+}
+```
+
 ## Jenkins Environment Variables
 
-Set the following environment variables in Jenkins (Manage Jenkins → Configure System → Global properties → Environment variables):
+### Non-Sensitive Variables (Set in Job Configuration)
 
-### SFTP Configuration
-- `UBS_SFTP_HOST` - SFTP server hostname
-- `UBS_SFTP_PORT` - SFTP server port (default: 22)
-- `UBS_SFTP_USERNAME` - SFTP username
-- `UBS_SFTP_PASSWORD` - SFTP password (use Jenkins credentials store for security)
+Set these directly in Jenkins job configuration → **"Build Environment"** → **"Environment variables"**:
+
+- `UBS_SFTP_HOST` - SFTP server hostname (e.g., `sftp.ubs.com`)
+- `UBS_SFTP_PORT` - SFTP server port (default: `22`)
 - `UBS_SFTP_REMOTE_DIR` - Remote directory path (default: `/from_UBS`)
 
-### Database Configuration
-- `POSTGRES_CONNECTION_STRING` - PostgreSQL connection string
-  - Format: `postgresql://username:password@host:port/database?sslmode=require`
+### Sensitive Variables (Use Credentials Store)
+
+These should be injected from Jenkins Credentials Store:
+
+- `UBS_SFTP_USERNAME` - SFTP username (from credentials)
+- `UBS_SFTP_PASSWORD` - SFTP password (from credentials)
+- `POSTGRES_CONNECTION_STRING` - Database connection string (from credentials)
 
 ### Optional
 - None - All logging goes to `ubs.ubs_file_processing_log` table
@@ -41,19 +153,30 @@ Set the following environment variables in Jenkins (Manage Jenkins → Configure
    - Branch: `*/main` (or your branch)
 
 3. **Build Environment**
-   - Check "Use secret text(s) or file(s)"
-   - Add bindings for sensitive credentials:
-     - `UBS_SFTP_PASSWORD` → Bind to credential
-     - `POSTGRES_CONNECTION_STRING` → Bind to credential
+   - Check **"Use secret text(s) or file(s)"**
+   - Click **"Bindings"** → **"Add"** → **"Secret text"**
+   - Add three bindings:
+     - **Variable**: `UBS_SFTP_USERNAME`, **Credentials**: Select `ubs-sftp-username`
+     - **Variable**: `UBS_SFTP_PASSWORD`, **Credentials**: Select `ubs-sftp-password`
+     - **Variable**: `POSTGRES_CONNECTION_STRING`, **Credentials**: Select `postgres-connection-string`
+   - **OR** set non-sensitive variables:
+     - Click **"Add"** under **"Environment variables"**:
+       - `UBS_SFTP_HOST` = `sftp.ubs.com` (your SFTP host)
+       - `UBS_SFTP_PORT` = `22`
+       - `UBS_SFTP_REMOTE_DIR` = `/from_UBS`
 
 4. **Build Steps**
    - Add "Execute Windows batch command" step (for Windows Server):
    ```batch
    @echo off
+   REM Change to ubs_ops directory
+   cd ubs_ops
+
    REM Install dependencies
    pip install -r requirements_ubs_processing.txt
 
    REM Run processing script
+   REM Credentials are automatically available as environment variables
    python process_ubs_margin_daily.py
 
    REM Check exit code
@@ -87,12 +210,10 @@ pipeline {
     agent any
 
     environment {
-        UBS_SFTP_HOST = credentials('ubs-sftp-host')
+        // Non-sensitive values
+        UBS_SFTP_HOST = 'sftp.ubs.com'  // Replace with actual host
         UBS_SFTP_PORT = '22'
-        UBS_SFTP_USERNAME = credentials('ubs-sftp-username')
-        UBS_SFTP_PASSWORD = credentials('ubs-sftp-password')
         UBS_SFTP_REMOTE_DIR = '/from_UBS'
-        POSTGRES_CONNECTION_STRING = credentials('postgres-connection-string')
     }
 
     triggers {
@@ -108,20 +229,29 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                bat 'pip install -r requirements_ubs_processing.txt'
+                bat 'pip install -r ubs_ops\\requirements_ubs_processing.txt'
             }
         }
 
         stage('Process UBS Files') {
             steps {
-                bat 'python process_ubs_margin_daily.py'
+                // Inject credentials as environment variables
+                withCredentials([
+                    string(credentialsId: 'ubs-sftp-username', variable: 'UBS_SFTP_USERNAME'),
+                    string(credentialsId: 'ubs-sftp-password', variable: 'UBS_SFTP_PASSWORD'),
+                    string(credentialsId: 'postgres-connection-string', variable: 'POSTGRES_CONNECTION_STRING')
+                ]) {
+                    dir('ubs_ops') {
+                        bat 'python process_ubs_margin_daily.py'
+                    }
+                }
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'ubs_margin_processing.log', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'ubs_ops/ubs_margin_processing.log', allowEmptyArchive: true
         }
         failure {
             emailext (
