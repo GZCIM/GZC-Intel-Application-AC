@@ -9,7 +9,6 @@ Workflow:
 4. Download file if needed
 5. Parse and load to ubs_margin_data
 6. Calculate and load to ubs_margin_summary_daily
-7. Log to chron.job_run_details
 """
 
 import os

@@ -200,7 +200,7 @@ These should be injected from Jenkins Credentials Store:
 
 5. **Build Triggers**
    - Select "Build periodically"
-   - Schedule: `0 2 * * 1-5` (2 AM, Monday-Friday)
+   - Schedule: `0 11 * * 1-5` (11 AM, Monday-Friday)
    - Note: Jenkins cron format works on Windows too
 
 ### Option 2: Pipeline Script
@@ -217,7 +217,7 @@ pipeline {
     }
 
     triggers {
-        cron('0 2 * * 1-5')  // 2 AM, Monday-Friday
+        cron('0 11 * * 1-5')  // 11 AM, Monday-Friday
     }
 
     stages {
@@ -457,9 +457,9 @@ ORDER BY cob_date DESC, account;
 
 ## Schedule Recommendations
 
-- **Recommended Time**: 2-3 AM (after UBS files are generated)
+- **Recommended Time**: 11 AM (after UBS files are generated)
 - **Frequency**: Daily (Monday-Friday)
-- **Cron Expression**: `0 2 * * 1-5` (2 AM, weekdays only)
+- **Cron Expression**: `0 11 * * 1-5` (11 AM, weekdays only)
 - **Windows Note**: Jenkins cron format works on Windows, but ensure Jenkins service is running 24/7
 
 ## Windows-Specific Considerations
