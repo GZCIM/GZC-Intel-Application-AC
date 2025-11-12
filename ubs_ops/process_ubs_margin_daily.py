@@ -325,7 +325,13 @@ def process_ubs_margin_daily():
     return_message = []
 
     try:
+        logger.info("=" * 80)
+        logger.info("Starting UBS Margin Data Daily Processing")
+        logger.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info("=" * 80)
+
         # Get SFTP credentials from Jenkins environment variables
+        logger.info("Reading environment variables...")
         sftp_host = os.getenv("UBS_SFTP_HOST")
         sftp_port = int(os.getenv("UBS_SFTP_PORT", "22"))
         sftp_username = os.getenv("UBS_SFTP_USERNAME")
@@ -335,25 +341,49 @@ def process_ubs_margin_daily():
         # Get database connection string
         db_connection_string = os.getenv("POSTGRES_CONNECTION_STRING")
 
+        # Log configuration (without sensitive data)
+        logger.info(f"SFTP Host: {sftp_host}")
+        logger.info(f"SFTP Port: {sftp_port}")
+        logger.info(f"SFTP Username: {sftp_username}")
+        logger.info(f"SFTP Remote Directory: {sftp_remote_dir}")
+        logger.info(
+            f"Database connection configured: {'Yes' if db_connection_string else 'No'}"
+        )
+
         if not all([sftp_host, sftp_username, sftp_password, db_connection_string]):
-            raise ValueError(
-                "Missing required environment variables: UBS_SFTP_HOST, UBS_SFTP_USERNAME, UBS_SFTP_PASSWORD, POSTGRES_CONNECTION_STRING"
-            )
+            missing = []
+            if not sftp_host:
+                missing.append("UBS_SFTP_HOST")
+            if not sftp_username:
+                missing.append("UBS_SFTP_USERNAME")
+            if not sftp_password:
+                missing.append("UBS_SFTP_PASSWORD")
+            if not db_connection_string:
+                missing.append("POSTGRES_CONNECTION_STRING")
+            error_msg = f"Missing required environment variables: {', '.join(missing)}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
         # Get last workday
         last_workday = get_last_workday()
-        logger.info(f"Processing files for last workday: {last_workday}")
+        logger.info(f"Last workday calculated: {last_workday}")
 
         # Connect to database
+        logger.info("Connecting to PostgreSQL database...")
         conn = psycopg2.connect(db_connection_string)
         conn.autocommit = False
+        logger.info("Database connection established successfully")
 
         try:
             # Generate filename pattern
             date_str = last_workday.strftime("%Y%m%d")
             pattern = f"{date_str}.MFXCMDRCSV"
+            logger.info(f"Generated filename pattern: {pattern}")
 
-            # First, check if records already exist in database for this date
+            # Check existing records for informational purposes (but don't skip processing)
+            logger.info(
+                f"Checking database for existing records for date: {last_workday}"
+            )
             with conn.cursor() as cur:
                 cur.execute(
                     """
@@ -371,162 +401,273 @@ def process_ubs_margin_daily():
                 logger.info(
                     f"Found {len(existing_records)} existing file(s) in database for {last_workday}"
                 )
+                total_existing_records = sum(count for _, _, count in existing_records)
+                logger.info(
+                    f"Total existing records in database: {total_existing_records}"
+                )
                 for filename, account, count in existing_records:
                     message = f"Records already exist: {filename} (account: {account}, records: {count})"
                     return_message.append(message)
-                    logger.info(message)
-                status = "skipped"
-            else:
-                # No records in database, check SFTP for new files
-                # Connect to SFTP
-                sftp, transport = connect_sftp(
-                    sftp_host, sftp_port, sftp_username, sftp_password
+                    logger.info(f"  - {message}")
+                logger.info(
+                    "Note: Will still check SFTP for any unprocessed files for this date"
                 )
+            else:
+                logger.info("No existing records found in database for this date")
 
-                try:
-                    # Find matching files in remote directory
-                    files = find_files_in_directory(sftp, sftp_remote_dir, pattern)
+            # Always connect to SFTP to check for files (even if some records exist)
+            # This allows processing of files that haven't been processed yet
+            logger.info(f"Connecting to SFTP server: {sftp_host}:{sftp_port}")
+            sftp, transport = connect_sftp(
+                sftp_host, sftp_port, sftp_username, sftp_password
+            )
+            logger.info(
+                f"SFTP connection established successfully to {sftp_host}:{sftp_port}"
+            )
 
-                    if not files:
-                        message = f"No files found matching pattern {pattern} in {sftp_remote_dir} and no existing records in database for {last_workday}"
+            try:
+                # Find matching files in remote directory
+                logger.info(f"Searching for files in SFTP directory: {sftp_remote_dir}")
+                logger.info(f"Looking for files matching pattern: {pattern}")
+                files = find_files_in_directory(sftp, sftp_remote_dir, pattern)
+
+                if not files:
+                    logger.warning(
+                        f"No files found matching pattern {pattern} in {sftp_remote_dir}"
+                    )
+                    # List all files in directory for debugging
+                    try:
+                        all_files = sftp.listdir(sftp_remote_dir)
+                        csv_files = [f for f in all_files if f.endswith(".CSV")]
+                        logger.info(
+                            f"Total files in {sftp_remote_dir}: {len(all_files)}"
+                        )
+                        logger.info(f"CSV files in directory: {len(csv_files)}")
+                        if csv_files:
+                            logger.info(f"Sample CSV files found: {csv_files[:5]}")
+                    except Exception as e:
+                        logger.warning(f"Could not list directory contents: {e}")
+
+                    if existing_records:
+                        message = f"No new files found matching pattern {pattern} in {sftp_remote_dir}. Existing records in database will remain."
                         logger.info(message)
                         return_message.append(message)
                         status = "skipped"
                     else:
-                        logger.info(f"Found {len(files)} file(s) to process")
+                        message = f"No files found matching pattern {pattern} in {sftp_remote_dir} and no existing records in database for {last_workday}"
+                        logger.info(message)
+                        return_message.append(message)
+                        status = "skipped"
+                else:
+                    logger.info(f"Found {len(files)} file(s) matching pattern: {files}")
+                    return_message.append(f"Files to process: {', '.join(files)}")
 
-                        total_inserted = 0
-                        files_processed = 0
-                        files_failed = 0
-                        for filename in files:
-                            logger.info(f"Processing file: {filename}")
+                    total_inserted = 0
+                    files_processed = 0
+                    files_failed = 0
+                    files_skipped = 0
 
-                            # Extract account from filename (e.g., I0004255 from 20251110.MFXCMDRCSV.I0004255.CSV)
-                            parts = filename.split(".")
-                            if len(parts) >= 3:
-                                account = parts[2]
-                            else:
-                                logger.warning(
-                                    f"Could not extract account from filename: {filename}"
-                                )
-                                continue
+                    for idx, filename in enumerate(files, 1):
+                        logger.info("-" * 80)
+                        logger.info(f"Processing file {idx}/{len(files)}: {filename}")
+                        file_start_time = datetime.now()
 
-                            # Check if file exists on SFTP
-                            remote_path = f"{sftp_remote_dir}/{filename}"
-                            if not check_file_exists(sftp, remote_path):
-                                message = f"File {remote_path} does not exist on SFTP - skipping"
-                                logger.info(message)
-                                return_message.append(message)
-                                continue
-
-                            # Check if file was already successfully processed
-                            already_processed, record_count = (
-                                check_file_already_processed(conn, filename)
-                            )
-                            if already_processed:
-                                message = f"File {filename} already processed successfully ({record_count} records) - skipping"
-                                logger.info(message)
-                                return_message.append(message)
-                                continue
-
-                            # Double-check: records might have been inserted by another process
-                            if check_records_exist(
-                                conn, account, last_workday, filename
-                            ):
-                                message = f"Records already exist for {account} on {last_workday} from {filename} - skipping"
-                                logger.info(message)
-                                return_message.append(message)
-                                continue
-
-                            # Get file size before downloading
-                            file_size = sftp.stat(remote_path).st_size
-
-                            # Log processing start
-                            log_file_processing_start(
-                                conn, filename, account, last_workday, file_size
-                            )
-
-                            try:
-                                # Download file to memory (COPY only - files remain on SFTP server, not moved or deleted)
-                                logger.info(f"Downloading {remote_path}")
-                                file_obj = BytesIO()
-                                sftp.getfo(remote_path, file_obj)
-                                # Get bytes content
-                                file_bytes = file_obj.getvalue()
-                                file_obj.close()
-
-                                # Decode bytes to string (try UTF-8 first, fallback to latin-1)
-                                try:
-                                    csv_content = file_bytes.decode("utf-8")
-                                except UnicodeDecodeError:
-                                    logger.warning(
-                                        f"UTF-8 decode failed for {filename}, trying latin-1"
-                                    )
-                                    csv_content = file_bytes.decode("latin-1")
-
-                                # Load to database
-                                inserted = load_csv_to_database(
-                                    conn, csv_content, filename, account, last_workday
-                                )
-                                total_inserted += inserted
-
-                                # Log successful completion
-                                log_file_processing_complete(
-                                    conn, filename, inserted, success=True
-                                )
-
-                                return_message.append(
-                                    f"Processed {filename}: {inserted} records inserted"
-                                )
-                                files_processed += 1
-                            except Exception as file_error:
-                                # Log failure but continue processing other files
-                                error_msg = str(file_error)
-                                log_file_processing_complete(
-                                    conn,
-                                    filename,
-                                    0,
-                                    success=False,
-                                    error_msg=error_msg,
-                                )
-                                logger.error(
-                                    f"Failed to process {filename}: {error_msg}"
-                                )
-                                return_message.append(
-                                    f"ERROR processing {filename}: {error_msg}"
-                                )
-                                files_failed += 1
-                                # Continue to next file instead of raising
-                                continue
-
-                        conn.commit()
-                        return_message.append(
-                            f"Total records inserted: {total_inserted}"
-                        )
-                        return_message.append(
-                            f"Files processed: {files_processed}, Files failed: {files_failed}"
-                        )
-                        logger.info(
-                            f"Processing complete: {total_inserted} total records inserted, {files_processed} files processed, {files_failed} files failed"
-                        )
-
-                        # Set status based on results
-                        if files_failed > 0:
-                            if files_processed > 0:
-                                status = "partial_success"
-                            else:
-                                status = "failed"
-                        elif files_processed > 0:
-                            status = "success"
+                        # Extract account from filename (e.g., I0004255 from 20251110.MFXCMDRCSV.I0004255.CSV)
+                        parts = filename.split(".")
+                        if len(parts) >= 3:
+                            account = parts[2]
+                            logger.info(f"Extracted account: {account} from filename")
                         else:
-                            status = "skipped"
+                            logger.warning(
+                                f"Could not extract account from filename: {filename} (parts: {parts})"
+                            )
+                            files_skipped += 1
+                            continue
 
-                finally:
-                    sftp.close()
-                    transport.close()
+                        # Check if file exists on SFTP
+                        remote_path = f"{sftp_remote_dir}/{filename}"
+                        logger.info(f"Checking if file exists on SFTP: {remote_path}")
+                        if not check_file_exists(sftp, remote_path):
+                            message = (
+                                f"File {remote_path} does not exist on SFTP - skipping"
+                            )
+                            logger.warning(message)
+                            return_message.append(message)
+                            files_skipped += 1
+                            continue
+                        logger.info(f"File confirmed to exist on SFTP server")
+
+                        # Check if file was already successfully processed
+                        logger.info(
+                            f"Checking if file was already processed: {filename}"
+                        )
+                        already_processed, record_count = check_file_already_processed(
+                            conn, filename
+                        )
+                        if already_processed:
+                            message = f"File {filename} already processed successfully ({record_count} records) - skipping"
+                            logger.info(message)
+                            return_message.append(message)
+                            files_skipped += 1
+                            continue
+
+                        # Double-check: records might have been inserted by another process
+                        logger.info(
+                            f"Double-checking database for existing records: account={account}, date={last_workday}, filename={filename}"
+                        )
+                        if check_records_exist(conn, account, last_workday, filename):
+                            message = f"Records already exist for {account} on {last_workday} from {filename} - skipping"
+                            logger.info(message)
+                            return_message.append(message)
+                            files_skipped += 1
+                            continue
+
+                        # Get file size before downloading
+                        logger.info(f"Getting file metadata from SFTP...")
+                        file_size = sftp.stat(remote_path).st_size
+                        logger.info(
+                            f"File size: {file_size:,} bytes ({file_size / 1024:.2f} KB)"
+                        )
+
+                        # Log processing start
+                        logger.info(f"Logging file processing start to database...")
+                        log_file_processing_start(
+                            conn, filename, account, last_workday, file_size
+                        )
+
+                        try:
+                            # Download file to memory (COPY only - files remain on SFTP server, not moved or deleted)
+                            download_start = datetime.now()
+                            logger.info(f"Downloading file from SFTP: {remote_path}")
+                            file_obj = BytesIO()
+                            sftp.getfo(remote_path, file_obj)
+                            # Get bytes content
+                            file_bytes = file_obj.getvalue()
+                            file_obj.close()
+                            download_time = (
+                                datetime.now() - download_start
+                            ).total_seconds()
+                            logger.info(
+                                f"Download completed in {download_time:.2f} seconds ({len(file_bytes):,} bytes)"
+                            )
+
+                            # Decode bytes to string (try UTF-8 first, fallback to latin-1)
+                            decode_start = datetime.now()
+                            try:
+                                csv_content = file_bytes.decode("utf-8")
+                                logger.info("File decoded as UTF-8")
+                            except UnicodeDecodeError:
+                                logger.warning(
+                                    f"UTF-8 decode failed for {filename}, trying latin-1"
+                                )
+                                csv_content = file_bytes.decode("latin-1")
+                                logger.info("File decoded as latin-1")
+                            decode_time = (
+                                datetime.now() - decode_start
+                            ).total_seconds()
+                            logger.info(
+                                f"Decoding completed in {decode_time:.2f} seconds"
+                            )
+
+                            # Count lines in CSV
+                            line_count = csv_content.count("\n")
+                            logger.info(
+                                f"CSV file contains approximately {line_count} lines"
+                            )
+
+                            # Load to database
+                            db_start = datetime.now()
+                            logger.info(f"Loading CSV data into database...")
+                            inserted = load_csv_to_database(
+                                conn, csv_content, filename, account, last_workday
+                            )
+                            db_time = (datetime.now() - db_start).total_seconds()
+                            logger.info(
+                                f"Database insertion completed in {db_time:.2f} seconds"
+                            )
+                            total_inserted += inserted
+
+                            # Log successful completion
+                            log_file_processing_complete(
+                                conn, filename, inserted, success=True
+                            )
+
+                            file_time = (
+                                datetime.now() - file_start_time
+                            ).total_seconds()
+                            message = f"✓ Processed {filename}: {inserted} records inserted in {file_time:.2f} seconds"
+                            return_message.append(message)
+                            logger.info(message)
+                            files_processed += 1
+                        except Exception as file_error:
+                            # Log failure but continue processing other files
+                            error_msg = str(file_error)
+                            log_file_processing_complete(
+                                conn,
+                                filename,
+                                0,
+                                success=False,
+                                error_msg=error_msg,
+                            )
+                            logger.error(f"Failed to process {filename}: {error_msg}")
+                            return_message.append(
+                                f"ERROR processing {filename}: {error_msg}"
+                            )
+                            files_failed += 1
+                            # Continue to next file instead of raising
+                            continue
+
+                    conn.commit()
+                    logger.info("Database transaction committed successfully")
+
+                    processing_time = (datetime.now() - start_time).total_seconds()
+                    return_message.append("=" * 80)
+                    return_message.append("PROCESSING SUMMARY")
+                    return_message.append("=" * 80)
+                    return_message.append(f"Total files found: {len(files)}")
+                    return_message.append(
+                        f"Files processed successfully: {files_processed}"
+                    )
+                    return_message.append(f"Files skipped: {files_skipped}")
+                    return_message.append(f"Files failed: {files_failed}")
+                    return_message.append(f"Total records inserted: {total_inserted:,}")
+                    return_message.append(
+                        f"Total processing time: {processing_time:.2f} seconds"
+                    )
+                    return_message.append("=" * 80)
+
+                    logger.info("=" * 80)
+                    logger.info("PROCESSING SUMMARY")
+                    logger.info("=" * 80)
+                    logger.info(f"Total files found: {len(files)}")
+                    logger.info(f"Files processed successfully: {files_processed}")
+                    logger.info(f"Files skipped: {files_skipped}")
+                    logger.info(f"Files failed: {files_failed}")
+                    logger.info(f"Total records inserted: {total_inserted:,}")
+                    logger.info(f"Total processing time: {processing_time:.2f} seconds")
+                    logger.info("=" * 80)
+
+                    # Set status based on results
+                    if files_failed > 0:
+                        if files_processed > 0:
+                            status = "partial_success"
+                        else:
+                            status = "failed"
+                    elif files_processed > 0:
+                        status = "success"
+                    else:
+                        status = "skipped"
+
+            finally:
+                logger.info("Closing SFTP connection...")
+                sftp.close()
+                transport.close()
+                logger.info("SFTP connection closed")
 
         finally:
+            logger.info("Closing database connection...")
             conn.close()
+            logger.info("Database connection closed")
 
     except Exception as e:
         status = "failed"
@@ -537,8 +678,16 @@ def process_ubs_margin_daily():
 
     finally:
         end_time = datetime.now()
+        total_time = (end_time - start_time).total_seconds()
         return_message_str = "\n".join(return_message)
+        logger.info("=" * 80)
         logger.info(f"Job completed with status: {status}")
+        logger.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info(f"End time: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info(
+            f"Total execution time: {total_time:.2f} seconds ({total_time / 60:.2f} minutes)"
+        )
+        logger.info("=" * 80)
 
     return status, return_message_str
 
