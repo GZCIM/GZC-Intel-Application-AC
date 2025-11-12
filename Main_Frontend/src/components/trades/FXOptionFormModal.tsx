@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import "./TradeForms.css";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuthContext } from "../../modules/ui-library";
+import axios from "axios";
 
 export type FXOptionFormMode = "create" | "view" | "edit";
 
@@ -55,6 +57,7 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 	title,
 }) => {
 	const { currentTheme: theme } = useTheme();
+	const { getToken } = useAuthContext();
 	// Preserve any extra fields passed in via data to render transparently
 	const rawRowData = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
 	const [rawRow] = useState<Record<string, unknown> | null>(rawRowData);
