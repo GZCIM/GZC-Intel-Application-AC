@@ -65,18 +65,18 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
     const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
 	const normalizeOptionType = (val: any): string => {
 		if (!val) return "";
-		const s = String(val).trim();
-		if (s.toLowerCase() === "call") return "Call";
-		if (s.toLowerCase() === "put") return "Put";
-		return s;
+		const s = String(val).trim().toLowerCase();
+		if (s === "call" || s === "c") return "Call";
+		if (s === "put" || s === "p") return "Put";
+		return ""; // Return empty if not recognized
 	};
 
 	const normalizeOptionStyle = (val: any): string => {
 		if (!val) return "";
-		const s = String(val).trim();
-		if (s.toLowerCase() === "european") return "European";
-		if (s.toLowerCase() === "american") return "American";
-		return s;
+		const s = String(val).trim().toLowerCase();
+		if (s === "european" || s === "e") return "European";
+		if (s === "american" || s === "a") return "American";
+		return ""; // Return empty if not recognized
 	};
 
 	const [form, setForm] = useState<FXOptionFormData>(() => {
@@ -145,8 +145,16 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
                 all_raw_keys: raw ? Object.keys(raw) : [],
             });
             if (raw || data) {
-                const normalizedOptionType = normalizeOptionType(data?.option_type ?? raw?.option_type);
-                const normalizedOptionStyle = normalizeOptionStyle(data?.option_style ?? raw?.option_style);
+                const rawOptionType = data?.option_type ?? raw?.option_type;
+                const rawOptionStyle = data?.option_style ?? raw?.option_style;
+                console.info("[FXOptionFormModal] Raw values from data prop:", {
+                    rawOptionType,
+                    rawOptionStyle,
+                    allDataKeys: data ? Object.keys(data) : [],
+                    allRawKeys: raw ? Object.keys(raw) : [],
+                });
+                const normalizedOptionType = normalizeOptionType(rawOptionType);
+                const normalizedOptionStyle = normalizeOptionStyle(rawOptionStyle);
                 console.info("[FXOptionFormModal] Normalized values:", {
                     normalizedOptionType,
                     normalizedOptionStyle,
@@ -159,8 +167,8 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
                         position: data?.position ?? (raw?.position as string) ?? prev.position,
                         quantity: data?.quantity ?? (raw?.quantity as number) ?? prev.quantity,
                         premium: data?.premium ?? (raw?.premium as number) ?? prev.premium,
-                        option_type: normalizedOptionType !== "" ? normalizedOptionType : (prev.option_type ?? ""),
-                        option_style: normalizedOptionStyle !== "" ? normalizedOptionStyle : (prev.option_style ?? ""),
+                        option_type: normalizedOptionType || prev.option_type || "",
+                        option_style: normalizedOptionStyle || prev.option_style || "",
                         strike: data?.strike ?? (raw?.strike as number) ?? prev.strike,
                         strike_currency: data?.strike_currency ?? (raw?.strike_currency as string) ?? prev.strike_currency,
                         underlying_trade_currency: data?.underlying_trade_currency ?? (raw?.underlying_trade_currency as string) ?? prev.underlying_trade_currency,
@@ -203,7 +211,11 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
                 });
                 const row = resp.data?.data || resp.data;
                 console.info("[FXOptionFormModal] Hydrated data from backend:", row);
+                console.info("[FXOptionFormModal] Raw option_type:", row?.option_type, "Raw option_style:", row?.option_style);
                 if (row) {
+                    const normalizedType = normalizeOptionType(row.option_type);
+                    const normalizedStyle = normalizeOptionStyle(row.option_style);
+                    console.info("[FXOptionFormModal] Normalized option_type:", normalizedType, "Normalized option_style:", normalizedStyle);
                     setForm((f) => ({
                         ...f,
                         trade_id: row.trade_id ?? f.trade_id,
@@ -214,8 +226,8 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
                         position: row.position ?? f.position,
                         quantity: row.quantity ?? f.quantity,
                         premium: row.premium ?? f.premium,
-                        option_type: normalizeOptionType(row.option_type ?? f.option_type),
-                        option_style: normalizeOptionStyle(row.option_style ?? f.option_style),
+                        option_type: normalizedType || f.option_type || "",
+                        option_style: normalizedStyle || f.option_style || "",
                         strike: row.strike ?? f.strike,
                         strike_currency: row.strike_currency ?? f.strike_currency,
                         underlying_trade_currency: row.underlying_trade_currency ?? f.underlying_trade_currency,
