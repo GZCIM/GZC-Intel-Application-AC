@@ -78,7 +78,7 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 
 	const [form, setForm] = useState<FXOptionFormData>(() => {
 		const raw = rawRowData;
-		return {
+		const initialForm = {
 			trade_id: data?.trade_id ?? null,
 			fund_id: data?.fund_id ?? null,
 			position: data?.position ?? (raw?.position as string) ?? "",
@@ -94,6 +94,8 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 			counterparty: (data as any)?.counter_party_code ?? (raw?.counter_party_code as string) ?? data?.counterparty ?? null,
 			notes: data?.notes ?? (raw?.notes as string) ?? null,
 		};
+		console.info("[FXOptionFormModal] Initial form state:", initialForm, { data, raw });
+		return initialForm;
 	});
 
 	useEffect(() => {
@@ -173,6 +175,62 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, data]);
+
+    // Hydrate missing fields from backend by trade_id
+    useEffect(() => {
+        const hydrate = async () => {
+            if (!isOpen) return;
+            const id = form.trade_id;
+            const needsHydration =
+                !form.option_type ||
+                !form.option_style ||
+                form.premium == null ||
+                !form.strike ||
+                !form.strike_currency ||
+                !form.underlying_trade_currency ||
+                !form.underlying_settlement_currency ||
+                !form.maturity_date ||
+                (form.position ?? "") === "";
+            if (!id || !needsHydration) return;
+            try {
+                console.info("[FXOptionFormModal] Hydrating missing fields for trade_id:", id);
+                const token = await getToken();
+                const resp = await axios.get(`/api/portfolio/fx-option-trade/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const row = resp.data?.data || resp.data;
+                console.info("[FXOptionFormModal] Hydrated data from backend:", row);
+                if (row) {
+                    setForm((f) => ({
+                        ...f,
+                        trade_id: row.trade_id ?? f.trade_id,
+                        fund_id: row.fund_id ?? f.fund_id,
+                        original_trade_id: row.original_trade_id ?? f.original_trade_id,
+                        trade_type: "FX Option",
+                        trade_date: row.trade_date ?? f.trade_date,
+                        position: row.position ?? f.position,
+                        quantity: row.quantity ?? f.quantity,
+                        premium: row.premium ?? f.premium,
+                        option_type: normalizeOptionType(row.option_type ?? f.option_type),
+                        option_style: normalizeOptionStyle(row.option_style ?? f.option_style),
+                        strike: row.strike ?? f.strike,
+                        strike_currency: row.strike_currency ?? f.strike_currency,
+                        underlying_trade_currency: row.underlying_trade_currency ?? f.underlying_trade_currency,
+                        underlying_settlement_currency: row.underlying_settlement_currency ?? f.underlying_settlement_currency,
+                        maturity_date: row.maturity_date
+                            ? toISODate(row.maturity_date)
+                            : f.maturity_date,
+                        counterparty: row.counterparty ?? row.counter_party_code ?? f.counterparty,
+                        notes: row.notes ?? f.notes,
+                    }));
+                }
+            } catch (e) {
+                console.warn("[FXOptionFormModal] hydrate failed", e);
+            }
+        };
+        hydrate();
+    }, [isOpen, form.trade_id, getToken, form.option_type, form.option_style, form.premium, form.strike, form.strike_currency, form.underlying_trade_currency, form.underlying_settlement_currency, form.maturity_date, form.position]);
+
 	const readonly = mode === "view";
 	const heading =
 		title ??
