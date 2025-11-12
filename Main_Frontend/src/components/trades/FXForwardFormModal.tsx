@@ -59,20 +59,23 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
     );
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
-    const [form, setForm] = useState<FXForwardFormData>(() => ({
-        trade_id: data?.trade_id ?? null,
-        fund_id: data?.fund_id ?? null,
-        position: data?.position ?? "",
-        quantity: data?.quantity ?? null,
-        price: data?.price ?? null,
-        trade_currency: data?.trade_currency ?? "",
-        settlement_currency: data?.settlement_currency ?? "",
-        maturity_date: data?.maturity_date
-            ? toISODate(data?.maturity_date)
-            : null,
-        counterparty: (data as any)?.counter_party_code ?? data?.counterparty ?? null,
-        notes: data?.notes ?? null,
-    }));
+    const [form, setForm] = useState<FXForwardFormData>(() => {
+        const raw = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
+        return {
+            trade_id: data?.trade_id ?? null,
+            fund_id: data?.fund_id ?? null,
+            position: data?.position ?? "",
+            quantity: data?.quantity ?? null,
+            price: data?.price ?? (raw?.trade_price as number) ?? null,
+            trade_currency: data?.trade_currency ?? "",
+            settlement_currency: data?.settlement_currency ?? "",
+            maturity_date: data?.maturity_date
+                ? toISODate(data?.maturity_date)
+                : null,
+            counterparty: (data as any)?.counter_party_code ?? data?.counterparty ?? null,
+            notes: data?.notes ?? null,
+        };
+    });
 
     useEffect(() => {
         if (!isOpen) return;
@@ -106,12 +109,29 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
 
     useEffect(() => {
         if (isOpen) {
-            console.info("[FXForwardFormModal] Opening with data:", form);
+            console.info("[FXForwardFormModal] Opening with data:", data);
+            // Update form state when modal opens with new data
+            const raw = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
+            if (raw || data) {
+                setForm((prev) => ({
+                    ...prev,
+                    trade_id: data?.trade_id ?? prev.trade_id,
+                    fund_id: data?.fund_id ?? prev.fund_id,
+                    position: data?.position ?? (raw?.position as string) ?? prev.position,
+                    quantity: data?.quantity ?? (raw?.quantity as number) ?? prev.quantity,
+                    price: data?.price ?? (raw?.trade_price as number) ?? prev.price,
+                    trade_currency: data?.trade_currency ?? (raw?.trade_currency as string) ?? prev.trade_currency,
+                    settlement_currency: data?.settlement_currency ?? (raw?.settlement_currency as string) ?? prev.settlement_currency,
+                    maturity_date: data?.maturity_date ? toISODate(data?.maturity_date) : (raw?.maturity_date ? toISODate(raw.maturity_date as string) : prev.maturity_date),
+                    counterparty: (data as any)?.counter_party_code ?? (raw?.counter_party_code as string) ?? data?.counterparty ?? prev.counterparty,
+                    notes: data?.notes ?? (raw?.notes as string) ?? prev.notes,
+                }));
+            }
         } else {
             console.info("[FXForwardFormModal] Closed");
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen]);
+    }, [isOpen, data]);
     const readonly = mode === "view";
     const heading =
         title ??
@@ -321,6 +341,7 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
                                         "ticker",
                                         "underlying",
                                         "counter_party_code", // shown as "Counterparty" in main form
+                                        "trade_price", // shown as "Price" in main form
                                         // Common computed fields we never show in forms
                                         "itd_pnl",
                                         "ytd_pnl",

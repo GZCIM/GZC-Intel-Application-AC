@@ -506,6 +506,7 @@ export const FXOptionFormModal: React.FC<FXOptionFormModalProps> = ({
 										"ticker",
 										"underlying",
 										"counter_party_code", // shown as "Counterparty" in main form
+										"trade_price", // shown as "Premium" in main form
 										// Computed fields that should never be shown in forms
 										"itd_pnl",
 										"ytd_pnl",
