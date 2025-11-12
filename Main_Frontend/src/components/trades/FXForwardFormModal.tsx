@@ -11,6 +11,7 @@ export interface FXForwardFormData {
     position?: "Buy" | "Sell" | "" | null;
     quantity?: number | null;
     price?: number | null;
+    trade_price?: number | null;
     trade_currency?: string | null;
     settlement_currency?: string | null;
     maturity_date?: string | null; // ISO date
@@ -61,12 +62,14 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
     const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
     const [form, setForm] = useState<FXForwardFormData>(() => {
         const raw = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
+        const tradePrice = (raw?.trade_price as number | undefined) ?? (data as any)?.trade_price ?? (data?.price as number | undefined) ?? (raw?.price as number | undefined) ?? null;
         return {
             trade_id: data?.trade_id ?? null,
             fund_id: data?.fund_id ?? null,
             position: data?.position ?? "",
             quantity: data?.quantity ?? null,
-            price: data?.price ?? (raw?.trade_price as number) ?? null,
+            price: tradePrice,
+            trade_price: tradePrice,
             trade_currency: data?.trade_currency ?? "",
             settlement_currency: data?.settlement_currency ?? "",
             maturity_date: data?.maturity_date
@@ -113,13 +116,15 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
             // Update form state when modal opens with new data
             const raw = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
             if (raw || data) {
+                const tradePrice = (raw?.trade_price as number | undefined) ?? (data as any)?.trade_price ?? (data?.price as number | undefined) ?? (raw?.price as number | undefined) ?? null;
                 setForm((prev) => ({
                     ...prev,
                     trade_id: data?.trade_id ?? prev.trade_id,
                     fund_id: data?.fund_id ?? prev.fund_id,
                     position: data?.position ?? (raw?.position as string) ?? prev.position,
                     quantity: data?.quantity ?? (raw?.quantity as number) ?? prev.quantity,
-                    price: data?.price ?? (raw?.trade_price as number) ?? prev.price,
+                    price: tradePrice,
+                    trade_price: tradePrice,
                     trade_currency: data?.trade_currency ?? (raw?.trade_currency as string) ?? prev.trade_currency,
                     settlement_currency: data?.settlement_currency ?? (raw?.settlement_currency as string) ?? prev.settlement_currency,
                     maturity_date: data?.maturity_date ? toISODate(data?.maturity_date) : (raw?.maturity_date ? toISODate(raw.maturity_date as string) : prev.maturity_date),
@@ -154,10 +159,12 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
 
     const handleSubmit = () => {
         if (!onSubmit || !canSubmit) return;
+        const tradePrice = clampNumber(form.price ?? form.trade_price);
         onSubmit({
             ...form,
             quantity: clampNumber(form.quantity),
-            price: clampNumber(form.price),
+            price: tradePrice,
+            trade_price: tradePrice,
             maturity_date: toISODate(form.maturity_date),
         });
     };
@@ -235,16 +242,21 @@ export const FXForwardFormModal: React.FC<FXForwardFormModalProps> = ({
                             />
                         </label>
                         <label className="fld">
-                            <span>Price</span>
+                            <span>Trade Price</span>
                             <input
                                 type="number"
                                 inputMode="decimal"
                                 disabled={readonly}
-                                value={form.price ?? ""}
+                                value={
+                                    form.price ??
+                                    form.trade_price ??
+                                    ""
+                                }
                                 onChange={(e) =>
                                     setForm((f) => ({
                                         ...f,
                                         price: clampNumber(e.target.value),
+                                        trade_price: clampNumber(e.target.value),
                                     }))
                                 }
                             />
