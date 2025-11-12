@@ -28,11 +28,11 @@ from psycopg2 import sql
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler('ubs_margin_processing.log'),
-        logging.StreamHandler(sys.stdout)
-    ]
+        logging.FileHandler("ubs_margin_processing.log"),
+        logging.StreamHandler(sys.stdout),
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -55,13 +55,16 @@ def get_last_workday():
 def check_records_exist(conn, account, cob_date, filename):
     """Check if records for this account/date/filename already exist"""
     with conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT COUNT(*)
             FROM ubs.ubs_margin_data
             WHERE account = %s
               AND cob_date = %s
               AND source_filename = %s
-        """, (account, cob_date, filename))
+        """,
+            (account, cob_date, filename),
+        )
         count = cur.fetchone()[0]
         return count > 0
 
@@ -69,23 +72,26 @@ def check_records_exist(conn, account, cob_date, filename):
 def check_file_already_processed(conn, filename):
     """Check if file was already successfully processed"""
     with conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT processing_status, record_count
             FROM ubs.ubs_file_processing_log
             WHERE filename = %s
-        """, (filename,))
+        """,
+            (filename,),
+        )
         result = cur.fetchone()
-        if result and result[0] == 'completed':
+        if result and result[0] == "completed":
             return True, result[1]
         return False, 0
 
 
 def parse_number(value):
     """Parse a string number, handling empty strings and spaces"""
-    if not value or value.strip() == '':
+    if not value or value.strip() == "":
         return None
     try:
-        cleaned = str(value).strip().replace(',', '')
+        cleaned = str(value).strip().replace(",", "")
         return Decimal(cleaned)
     except (ValueError, InvalidOperation):
         return None
@@ -93,10 +99,10 @@ def parse_number(value):
 
 def parse_date(date_str):
     """Parse date string in MM/DD/YYYY format"""
-    if not date_str or date_str.strip() == '':
+    if not date_str or date_str.strip() == "":
         return None
     try:
-        return datetime.strptime(date_str.strip(), '%m/%d/%Y').date()
+        return datetime.strptime(date_str.strip(), "%m/%d/%Y").date()
     except ValueError:
         return None
 
@@ -104,17 +110,17 @@ def parse_date(date_str):
 def calculate_record_hash(row, filename):
     """Calculate hash for duplicate detection"""
     key_fields = [
-        row.get('Account', ''),
-        row.get('COB_Date', ''),
-        row.get('Margin_Type', ''),
-        row.get('Product', ''),
-        row.get('Reporting_Group', ''),
-        row.get('Security_Description', ''),
-        row.get('ISIN_Ticket_Code', ''),
-        row.get('Quantity', ''),
-        filename
+        row.get("Account", ""),
+        row.get("COB_Date", ""),
+        row.get("Margin_Type", ""),
+        row.get("Product", ""),
+        row.get("Reporting_Group", ""),
+        row.get("Security_Description", ""),
+        row.get("ISIN_Ticket_Code", ""),
+        row.get("Quantity", ""),
+        filename,
     ]
-    hash_string = '|'.join(str(f) for f in key_fields)
+    hash_string = "|".join(str(f) for f in key_fields)
     return hashlib.sha256(hash_string.encode()).hexdigest()
 
 
@@ -157,7 +163,7 @@ def download_file(sftp, remote_path, local_path):
 def generate_filename_pattern(cob_date):
     """Generate filename pattern for UBS files"""
     # Format: YYYYMMDD.MFXCMDRCSV.I0004255.CSV
-    date_str = cob_date.strftime('%Y%m%d')
+    date_str = cob_date.strftime("%Y%m%d")
     return f"{date_str}.MFXCMDRCSV.*.CSV"
 
 
@@ -165,7 +171,9 @@ def find_files_in_directory(sftp, remote_dir, pattern):
     """Find files matching pattern in remote directory"""
     try:
         files = sftp.listdir(remote_dir)
-        matching_files = [f for f in files if pattern.replace('*', '') in f and f.endswith('.CSV')]
+        matching_files = [
+            f for f in files if pattern.replace("*", "") in f and f.endswith(".CSV")
+        ]
         return matching_files
     except Exception as e:
         logger.error(f"Error listing directory: {e}")
@@ -181,43 +189,43 @@ def load_csv_to_database(conn, csv_content, filename, account, cob_date):
 
     for row in reader:
         if account is None:
-            account = row.get('Account', '').strip()
-            cob_date_str = row.get('COB_Date', '').strip()
+            account = row.get("Account", "").strip()
+            cob_date_str = row.get("COB_Date", "").strip()
             cob_date = parse_date(cob_date_str)
 
         record_hash = calculate_record_hash(row, filename)
 
         record = {
-            'source_filename': filename,
-            'account': row.get('Account', '').strip(),
-            'cob_date': parse_date(row.get('COB_Date', '')),
-            'roll_ccy': row.get('Roll_Ccy', '').strip() or None,
-            'margin_type': row.get('Margin_Type', '').strip() or None,
-            'product': row.get('Product', '').strip() or None,
-            'reporting_group': row.get('Reporting_Group', '').strip() or None,
-            'security_description': row.get('Security_Description', '').strip() or None,
-            'sec_type': row.get('Sec_Type', '').strip() or None,
-            'isin_ticket_code': row.get('ISIN_Ticket_Code', '').strip() or None,
-            'strategy': row.get('Strategy', '').strip() or None,
-            'rating_cat_scenario': row.get('Rating_Cat_Scenario', '').strip() or None,
-            'cnv_ratio': row.get('Cnv_Ratio', '').strip() or None,
-            'contract_multiplier': row.get('Contract_Multiplier', '').strip() or None,
-            'duration': row.get('Duration', '').strip() or None,
-            'trade_date': row.get('Trade_Date', '').strip() or None,
-            'pos_dv01_roll': parse_number(row.get('Pos_DV01_Roll', '')),
-            'delta': row.get('Delta', '').strip() or None,
-            'ccy': row.get('CCY', '').strip() or None,
-            'ccy_price': parse_number(row.get('CCY_Price', '')),
-            'fx_rate': parse_number(row.get('FX-Rate', '')),
-            'quantity': parse_number(row.get('Quantity', '')),
-            'mv_rollup': parse_number(row.get('MV_Rollup', '')),
-            'margin_rollup': parse_number(row.get('Margin_Rollup', '')),
-            'req_percent': parse_number(row.get('Req_Percent', '')),
-            'ric_code': row.get('RIC_Code', '').strip() or None,
-            'account_name': row.get('Account_Name', '').strip() or None,
-            'run_id': row.get('Run_ID', '').strip() or None,
-            'file_processed_date': date.today(),
-            'record_hash': record_hash
+            "source_filename": filename,
+            "account": row.get("Account", "").strip(),
+            "cob_date": parse_date(row.get("COB_Date", "")),
+            "roll_ccy": row.get("Roll_Ccy", "").strip() or None,
+            "margin_type": row.get("Margin_Type", "").strip() or None,
+            "product": row.get("Product", "").strip() or None,
+            "reporting_group": row.get("Reporting_Group", "").strip() or None,
+            "security_description": row.get("Security_Description", "").strip() or None,
+            "sec_type": row.get("Sec_Type", "").strip() or None,
+            "isin_ticket_code": row.get("ISIN_Ticket_Code", "").strip() or None,
+            "strategy": row.get("Strategy", "").strip() or None,
+            "rating_cat_scenario": row.get("Rating_Cat_Scenario", "").strip() or None,
+            "cnv_ratio": row.get("Cnv_Ratio", "").strip() or None,
+            "contract_multiplier": row.get("Contract_Multiplier", "").strip() or None,
+            "duration": row.get("Duration", "").strip() or None,
+            "trade_date": row.get("Trade_Date", "").strip() or None,
+            "pos_dv01_roll": parse_number(row.get("Pos_DV01_Roll", "")),
+            "delta": row.get("Delta", "").strip() or None,
+            "ccy": row.get("CCY", "").strip() or None,
+            "ccy_price": parse_number(row.get("CCY_Price", "")),
+            "fx_rate": parse_number(row.get("FX-Rate", "")),
+            "quantity": parse_number(row.get("Quantity", "")),
+            "mv_rollup": parse_number(row.get("MV_Rollup", "")),
+            "margin_rollup": parse_number(row.get("Margin_Rollup", "")),
+            "req_percent": parse_number(row.get("Req_Percent", "")),
+            "ric_code": row.get("RIC_Code", "").strip() or None,
+            "account_name": row.get("Account_Name", "").strip() or None,
+            "run_id": row.get("Run_ID", "").strip() or None,
+            "file_processed_date": date.today(),
+            "record_hash": record_hash,
         }
         records.append(record)
 
@@ -234,22 +242,25 @@ def load_csv_to_database(conn, csv_content, filename, account, cob_date):
         VALUES %s
         ON CONFLICT (record_hash)
         DO NOTHING
-    """).format(
-        sql.SQL(', ').join(map(sql.Identifier, columns))
-    )
+    """).format(sql.SQL(", ").join(map(sql.Identifier, columns)))
 
     with conn.cursor() as cur:
         execute_values(cur, insert_query, values, page_size=1000)
         inserted_count = cur.rowcount
 
-    logger.info(f"Inserted {inserted_count} new records (skipped {len(records) - inserted_count} duplicates)")
+    logger.info(
+        f"Inserted {inserted_count} new records (skipped {len(records) - inserted_count} duplicates)"
+    )
 
     # Calculate and store daily summary
     if account and cob_date:
         with conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT ubs.calculate_daily_margin_summary(%s, %s, %s)
-            """, (account, cob_date, filename))
+            """,
+                (account, cob_date, filename),
+            )
         logger.info("Daily summary calculated and stored")
 
     return inserted_count
@@ -259,7 +270,8 @@ def log_file_processing_start(conn, filename, account, cob_date, file_size):
     """Log file processing start to ubs_file_processing_log"""
     try:
         with conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO ubs.ubs_file_processing_log
                 (filename, account, cob_date, file_size_bytes, processing_status, started_at)
                 VALUES (%s, %s, %s, %s, 'processing', CURRENT_TIMESTAMP)
@@ -271,7 +283,9 @@ def log_file_processing_start(conn, filename, account, cob_date, file_size):
                     account = EXCLUDED.account,
                     cob_date = EXCLUDED.cob_date,
                     file_size_bytes = EXCLUDED.file_size_bytes
-            """, (filename, account, cob_date, file_size))
+            """,
+                (filename, account, cob_date, file_size),
+            )
         conn.commit()
         logger.info(f"Logged file processing start: {filename}")
     except Exception as e:
@@ -279,19 +293,24 @@ def log_file_processing_start(conn, filename, account, cob_date, file_size):
         conn.rollback()
 
 
-def log_file_processing_complete(conn, filename, record_count, success=True, error_msg=None):
+def log_file_processing_complete(
+    conn, filename, record_count, success=True, error_msg=None
+):
     """Log file processing completion to ubs_file_processing_log"""
     try:
-        status = 'completed' if success else 'failed'
+        status = "completed" if success else "failed"
         with conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 UPDATE ubs.ubs_file_processing_log
                 SET processing_status = %s,
                     record_count = %s,
                     completed_at = CURRENT_TIMESTAMP,
                     error_message = %s
                 WHERE filename = %s
-            """, (status, record_count, error_msg, filename))
+            """,
+                (status, record_count, error_msg, filename),
+            )
         conn.commit()
         logger.info(f"Logged file processing completion: {filename}, status={status}")
     except Exception as e:
@@ -302,22 +321,24 @@ def log_file_processing_complete(conn, filename, record_count, success=True, err
 def process_ubs_margin_daily():
     """Main processing function"""
     start_time = datetime.now()
-    status = 'success'
+    status = "success"
     return_message = []
 
     try:
         # Get SFTP credentials from Jenkins environment variables
-        sftp_host = os.getenv('UBS_SFTP_HOST')
-        sftp_port = int(os.getenv('UBS_SFTP_PORT', '22'))
-        sftp_username = os.getenv('UBS_SFTP_USERNAME')
-        sftp_password = os.getenv('UBS_SFTP_PASSWORD')
-        sftp_remote_dir = os.getenv('UBS_SFTP_REMOTE_DIR', '/from_UBS')
+        sftp_host = os.getenv("UBS_SFTP_HOST")
+        sftp_port = int(os.getenv("UBS_SFTP_PORT", "22"))
+        sftp_username = os.getenv("UBS_SFTP_USERNAME")
+        sftp_password = os.getenv("UBS_SFTP_PASSWORD")
+        sftp_remote_dir = os.getenv("UBS_SFTP_REMOTE_DIR", "/from_UBS")
 
         # Get database connection string
-        db_connection_string = os.getenv('POSTGRES_CONNECTION_STRING')
+        db_connection_string = os.getenv("POSTGRES_CONNECTION_STRING")
 
         if not all([sftp_host, sftp_username, sftp_password, db_connection_string]):
-            raise ValueError("Missing required environment variables: UBS_SFTP_HOST, UBS_SFTP_USERNAME, UBS_SFTP_PASSWORD, POSTGRES_CONNECTION_STRING")
+            raise ValueError(
+                "Missing required environment variables: UBS_SFTP_HOST, UBS_SFTP_USERNAME, UBS_SFTP_PASSWORD, POSTGRES_CONNECTION_STRING"
+            )
 
         # Get last workday
         last_workday = get_last_workday()
@@ -329,127 +350,186 @@ def process_ubs_margin_daily():
 
         try:
             # Generate filename pattern
-            date_str = last_workday.strftime('%Y%m%d')
+            date_str = last_workday.strftime("%Y%m%d")
             pattern = f"{date_str}.MFXCMDRCSV"
 
-            # Connect to SFTP
-            sftp, transport = connect_sftp(sftp_host, sftp_port, sftp_username, sftp_password)
+            # First, check if records already exist in database for this date
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT DISTINCT source_filename, account, COUNT(*) as record_count
+                    FROM ubs.ubs_margin_data
+                    WHERE cob_date = %s
+                    GROUP BY source_filename, account
+                    ORDER BY source_filename
+                """,
+                    (last_workday,),
+                )
+                existing_records = cur.fetchall()
 
-            try:
-                # Find matching files in remote directory
-                files = find_files_in_directory(sftp, sftp_remote_dir, pattern)
-
-                if not files:
-                    message = f"No files found matching pattern {pattern} in {sftp_remote_dir}"
-                    logger.info(message)
+            if existing_records:
+                logger.info(
+                    f"Found {len(existing_records)} existing file(s) in database for {last_workday}"
+                )
+                for filename, account, count in existing_records:
+                    message = f"Records already exist: {filename} (account: {account}, records: {count})"
                     return_message.append(message)
-                    status = 'skipped'
-                else:
-                    logger.info(f"Found {len(files)} file(s) to process")
+                    logger.info(message)
+                status = "skipped"
+            else:
+                # No records in database, check SFTP for new files
+                # Connect to SFTP
+                sftp, transport = connect_sftp(
+                    sftp_host, sftp_port, sftp_username, sftp_password
+                )
 
-                    total_inserted = 0
-                    files_processed = 0
-                    files_failed = 0
-                    for filename in files:
-                        logger.info(f"Processing file: {filename}")
+                try:
+                    # Find matching files in remote directory
+                    files = find_files_in_directory(sftp, sftp_remote_dir, pattern)
 
-                        # Extract account from filename (e.g., I0004255 from 20251110.MFXCMDRCSV.I0004255.CSV)
-                        parts = filename.split('.')
-                        if len(parts) >= 3:
-                            account = parts[2]
-                        else:
-                            logger.warning(f"Could not extract account from filename: {filename}")
-                            continue
-
-                        # Check if file exists on SFTP
-                        remote_path = f"{sftp_remote_dir}/{filename}"
-                        if not check_file_exists(sftp, remote_path):
-                            message = f"File {remote_path} does not exist on SFTP - skipping"
-                            logger.info(message)
-                            return_message.append(message)
-                            continue
-
-                        # Check if file was already successfully processed
-                        already_processed, record_count = check_file_already_processed(conn, filename)
-                        if already_processed:
-                            message = f"File {filename} already processed successfully ({record_count} records) - skipping"
-                            logger.info(message)
-                            return_message.append(message)
-                            continue
-
-                        # Double-check: records might have been inserted by another process
-                        if check_records_exist(conn, account, last_workday, filename):
-                            message = f"Records already exist for {account} on {last_workday} from {filename} - skipping"
-                            logger.info(message)
-                            return_message.append(message)
-                            continue
-
-                        # Get file size before downloading
-                        file_size = sftp.stat(remote_path).st_size
-
-                        # Log processing start
-                        log_file_processing_start(conn, filename, account, last_workday, file_size)
-
-                        try:
-                            # Download file to memory
-                            logger.info(f"Downloading {remote_path}")
-                            file_obj = BytesIO()
-                            sftp.getfo(remote_path, file_obj)
-                            # Get bytes content
-                            file_bytes = file_obj.getvalue()
-                            file_obj.close()
-
-                            # Decode bytes to string (try UTF-8 first, fallback to latin-1)
-                            try:
-                                csv_content = file_bytes.decode('utf-8')
-                            except UnicodeDecodeError:
-                                logger.warning(f"UTF-8 decode failed for {filename}, trying latin-1")
-                                csv_content = file_bytes.decode('latin-1')
-
-                            # Load to database
-                            inserted = load_csv_to_database(conn, csv_content, filename, account, last_workday)
-                            total_inserted += inserted
-
-                            # Log successful completion
-                            log_file_processing_complete(conn, filename, inserted, success=True)
-
-                            return_message.append(f"Processed {filename}: {inserted} records inserted")
-                            files_processed += 1
-                        except Exception as file_error:
-                            # Log failure but continue processing other files
-                            error_msg = str(file_error)
-                            log_file_processing_complete(conn, filename, 0, success=False, error_msg=error_msg)
-                            logger.error(f"Failed to process {filename}: {error_msg}")
-                            return_message.append(f"ERROR processing {filename}: {error_msg}")
-                            files_failed += 1
-                            # Continue to next file instead of raising
-                            continue
-
-                    conn.commit()
-                    return_message.append(f"Total records inserted: {total_inserted}")
-                    return_message.append(f"Files processed: {files_processed}, Files failed: {files_failed}")
-                    logger.info(f"Processing complete: {total_inserted} total records inserted, {files_processed} files processed, {files_failed} files failed")
-
-                    # Set status based on results
-                    if files_failed > 0:
-                        if files_processed > 0:
-                            status = 'partial_success'
-                        else:
-                            status = 'failed'
-                    elif files_processed > 0:
-                        status = 'success'
+                    if not files:
+                        message = f"No files found matching pattern {pattern} in {sftp_remote_dir} and no existing records in database for {last_workday}"
+                        logger.info(message)
+                        return_message.append(message)
+                        status = "skipped"
                     else:
-                        status = 'skipped'
+                        logger.info(f"Found {len(files)} file(s) to process")
 
-            finally:
-                sftp.close()
-                transport.close()
+                        total_inserted = 0
+                        files_processed = 0
+                        files_failed = 0
+                        for filename in files:
+                            logger.info(f"Processing file: {filename}")
+
+                            # Extract account from filename (e.g., I0004255 from 20251110.MFXCMDRCSV.I0004255.CSV)
+                            parts = filename.split(".")
+                            if len(parts) >= 3:
+                                account = parts[2]
+                            else:
+                                logger.warning(
+                                    f"Could not extract account from filename: {filename}"
+                                )
+                                continue
+
+                            # Check if file exists on SFTP
+                            remote_path = f"{sftp_remote_dir}/{filename}"
+                            if not check_file_exists(sftp, remote_path):
+                                message = f"File {remote_path} does not exist on SFTP - skipping"
+                                logger.info(message)
+                                return_message.append(message)
+                                continue
+
+                            # Check if file was already successfully processed
+                            already_processed, record_count = (
+                                check_file_already_processed(conn, filename)
+                            )
+                            if already_processed:
+                                message = f"File {filename} already processed successfully ({record_count} records) - skipping"
+                                logger.info(message)
+                                return_message.append(message)
+                                continue
+
+                            # Double-check: records might have been inserted by another process
+                            if check_records_exist(
+                                conn, account, last_workday, filename
+                            ):
+                                message = f"Records already exist for {account} on {last_workday} from {filename} - skipping"
+                                logger.info(message)
+                                return_message.append(message)
+                                continue
+
+                            # Get file size before downloading
+                            file_size = sftp.stat(remote_path).st_size
+
+                            # Log processing start
+                            log_file_processing_start(
+                                conn, filename, account, last_workday, file_size
+                            )
+
+                            try:
+                                # Download file to memory (COPY only - files remain on SFTP server, not moved or deleted)
+                                logger.info(f"Downloading {remote_path}")
+                                file_obj = BytesIO()
+                                sftp.getfo(remote_path, file_obj)
+                                # Get bytes content
+                                file_bytes = file_obj.getvalue()
+                                file_obj.close()
+
+                                # Decode bytes to string (try UTF-8 first, fallback to latin-1)
+                                try:
+                                    csv_content = file_bytes.decode("utf-8")
+                                except UnicodeDecodeError:
+                                    logger.warning(
+                                        f"UTF-8 decode failed for {filename}, trying latin-1"
+                                    )
+                                    csv_content = file_bytes.decode("latin-1")
+
+                                # Load to database
+                                inserted = load_csv_to_database(
+                                    conn, csv_content, filename, account, last_workday
+                                )
+                                total_inserted += inserted
+
+                                # Log successful completion
+                                log_file_processing_complete(
+                                    conn, filename, inserted, success=True
+                                )
+
+                                return_message.append(
+                                    f"Processed {filename}: {inserted} records inserted"
+                                )
+                                files_processed += 1
+                            except Exception as file_error:
+                                # Log failure but continue processing other files
+                                error_msg = str(file_error)
+                                log_file_processing_complete(
+                                    conn,
+                                    filename,
+                                    0,
+                                    success=False,
+                                    error_msg=error_msg,
+                                )
+                                logger.error(
+                                    f"Failed to process {filename}: {error_msg}"
+                                )
+                                return_message.append(
+                                    f"ERROR processing {filename}: {error_msg}"
+                                )
+                                files_failed += 1
+                                # Continue to next file instead of raising
+                                continue
+
+                        conn.commit()
+                        return_message.append(
+                            f"Total records inserted: {total_inserted}"
+                        )
+                        return_message.append(
+                            f"Files processed: {files_processed}, Files failed: {files_failed}"
+                        )
+                        logger.info(
+                            f"Processing complete: {total_inserted} total records inserted, {files_processed} files processed, {files_failed} files failed"
+                        )
+
+                        # Set status based on results
+                        if files_failed > 0:
+                            if files_processed > 0:
+                                status = "partial_success"
+                            else:
+                                status = "failed"
+                        elif files_processed > 0:
+                            status = "success"
+                        else:
+                            status = "skipped"
+
+                finally:
+                    sftp.close()
+                    transport.close()
 
         finally:
             conn.close()
 
     except Exception as e:
-        status = 'failed'
+        status = "failed"
         error_msg = str(e)
         logger.error(f"Processing failed: {error_msg}")
         return_message.append(f"ERROR: {error_msg}")
@@ -457,7 +537,7 @@ def process_ubs_margin_daily():
 
     finally:
         end_time = datetime.now()
-        return_message_str = '\n'.join(return_message)
+        return_message_str = "\n".join(return_message)
         logger.info(f"Job completed with status: {status}")
 
     return status, return_message_str
@@ -471,12 +551,11 @@ def main():
         print(f"Message: {message}")
         # Exit with 0 (success) if any files were processed successfully, or if skipped
         # Exit with 1 (failure) only if all files failed or there was a fatal error
-        sys.exit(0 if status in ['success', 'partial_success', 'skipped'] else 1)
+        sys.exit(0 if status in ["success", "partial_success", "skipped"] else 1)
     except Exception as e:
         logger.error(f"Fatal error: {e}")
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-
