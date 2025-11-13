@@ -685,7 +685,7 @@ def process_ubs_margin_daily(process_date=None):
                             file_time = (
                                 datetime.now() - file_start_time
                             ).total_seconds()
-                            message = f"✓ Processed {filename}: {inserted} records inserted in {file_time:.2f} seconds"
+                            message = f"Processed {filename}: {inserted} records inserted in {file_time:.2f} seconds"
                             return_message.append(message)
                             logger.info(message)
                             files_processed += 1
