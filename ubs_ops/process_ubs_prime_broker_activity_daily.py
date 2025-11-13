@@ -124,12 +124,34 @@ def classify_row(row: Dict) -> str:
     return "empty"
 
 
+def normalize_settle_ccy(value: Optional[str], row_type: str) -> Optional[str]:
+    """Normalize settle currency values, handling subtotal rows."""
+    if not value:
+        return None
+
+    trimmed = value.strip()
+    if not trimmed:
+        return None
+
+    if row_type == "subtotal_currency" and trimmed.lower().startswith("subtotal:"):
+        _, _, suffix = trimmed.partition(":")
+        normalized = suffix.strip()
+        if normalized:
+            return normalized[:10]
+        return None
+
+    # Truncate to fit within varchar(10) while preserving actual codes
+    return trimmed[:10]
+
+
 def calculate_record_hash(row: Dict, row_type: str, file_date: date) -> str:
     """Calculate hash for duplicate detection"""
     def safe_str(value):
         if value is None:
             return ""
         return str(value)
+
+    normalized_ccy = normalize_settle_ccy(row.get("Settle CCY"), row_type)
 
     # For transactions, use key fields that uniquely identify the transaction
     if row_type == "transaction":
@@ -139,7 +161,7 @@ def calculate_record_hash(row: Dict, row_type: str, file_date: date) -> str:
             safe_str(row.get("UBS Ref")),
             safe_str(row.get("Trans Type")),
             safe_str(row.get("Net Amount")),
-            safe_str(row.get("Settle CCY")),
+            safe_str(normalized_ccy),
         ]
     # For balance rows, use account, currency, balance date, and balance type
     elif row_type in ("opening_balance", "closing_balance"):
@@ -147,7 +169,7 @@ def calculate_record_hash(row: Dict, row_type: str, file_date: date) -> str:
         balance_date = extract_balance_date(security_desc)
         key_fields = [
             safe_str(row.get("Account ID")),
-            safe_str(row.get("Settle CCY")),
+            safe_str(normalized_ccy),
             safe_str(balance_date) if balance_date else "",
             row_type,
         ]
@@ -201,13 +223,15 @@ def parse_prime_broker_activity_csv(
             balance_amount = parse_decimal(row.get("Net Amount"))
             balance_type = "closing"
 
+        settle_ccy = normalize_settle_ccy(row.get("Settle CCY"), row_type)
+
         record = {
             "source_filename": source_filename,
             "file_date": file_date,
             "row_type": row_type,
             "account_name": (row.get("Account Name") or "").strip() or None,
             "account_id": (row.get("Account ID") or "").strip() or None,
-            "settle_ccy": (row.get("Settle CCY") or "").strip() or None,
+            "settle_ccy": settle_ccy,
             "entry_date": entry_date,
             "trade_date": trade_date,
             "settle_date": settle_date,
