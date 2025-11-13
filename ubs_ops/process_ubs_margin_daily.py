@@ -11,18 +11,20 @@ Workflow:
 6. Calculate and load to ubs_margin_summary_daily
 """
 
-import os
-import sys
+import argparse
 import csv
 import hashlib
 import logging
-from decimal import Decimal, InvalidOperation
+import os
+import sys
 from datetime import datetime, date, timedelta
-import paramiko
+from decimal import Decimal, InvalidOperation
 from io import BytesIO, StringIO
+
+import paramiko
 import psycopg2
-from psycopg2.extras import execute_values
 from psycopg2 import sql
+from psycopg2.extras import execute_values
 
 # Configure logging
 logging.basicConfig(
@@ -36,11 +38,33 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def get_last_workday():
-    """Get the last workday (Monday-Friday, excluding weekends)"""
-    today = date.today()
+def get_last_workday(reference_date=None):
+    """Get the last workday (Monday-Friday, excluding weekends)
+
+    Args:
+        reference_date: Optional date to use as reference (defaults to today)
+                        Can be a date object or string in YYYY-MM-DD format
+
+    Returns:
+        date: The last workday before the reference date
+    """
+    if reference_date is None:
+        reference_date = date.today()
+    elif isinstance(reference_date, str):
+        # Parse string date in YYYY-MM-DD format
+        try:
+            reference_date = datetime.strptime(reference_date, "%Y-%m-%d").date()
+        except ValueError as exc:
+            raise ValueError(
+                f"Invalid date format: {reference_date}. Expected YYYY-MM-DD"
+            ) from exc
+    elif isinstance(reference_date, date):
+        pass
+    else:
+        raise ValueError(f"Invalid date type: {type(reference_date)}")
+
     # Go back 1 day
-    last_day = today - timedelta(days=1)
+    last_day = reference_date - timedelta(days=1)
 
     # If it's Monday, go back to Friday
     if last_day.weekday() == 6:  # Sunday
@@ -317,8 +341,14 @@ def log_file_processing_complete(
         conn.rollback()
 
 
-def process_ubs_margin_daily():
-    """Main processing function"""
+def process_ubs_margin_daily(process_date=None):
+    """Main processing function
+
+    Args:
+        process_date: Optional date to process (YYYY-MM-DD format or date object).
+                     If None, uses today's date to calculate last workday.
+                     If provided, calculates last workday relative to that date.
+    """
     start_time = datetime.now()
     status = "success"
     return_message = []
@@ -363,9 +393,35 @@ def process_ubs_margin_daily():
             logger.error(error_msg)
             raise ValueError(error_msg)
 
-        # Get last workday
-        last_workday = get_last_workday()
-        logger.info(f"Last workday calculated: {last_workday}")
+        # Get last workday (using provided date or today)
+        if process_date:
+            logger.info(
+                f"Processing date input (from function parameter): {process_date}"
+            )
+        else:
+            logger.info(
+                "Processing date not explicitly provided as function parameter; checking environment..."
+            )
+
+        current_process_date = os.getenv("PROCESS_DATE")
+        if current_process_date:
+            logger.info(f"Environment PROCESS_DATE value: {current_process_date}")
+            # If process_date was not provided as parameter, use environment variable
+            if not process_date:
+                process_date = current_process_date
+                logger.info(f"Using PROCESS_DATE from environment: {process_date}")
+        else:
+            logger.info("PROCESS_DATE environment variable not set")
+
+        # If still no date, use today
+        if not process_date:
+            process_date = date.today().strftime("%Y-%m-%d")
+            logger.info(f"No date provided, defaulting to today: {process_date}")
+
+        last_workday = get_last_workday(process_date)
+        logger.info(
+            f"Last workday calculated (based on process date {process_date}): {last_workday}"
+        )
 
         # Connect to database
         logger.info("Connecting to PostgreSQL database...")
@@ -693,8 +749,57 @@ def process_ubs_margin_daily():
 
 def main():
     """Main entry point"""
+    parser = argparse.ArgumentParser(
+        description="Process UBS margin data files from SFTP and load to database",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Use default (today's date to calculate last workday)
+  python process_ubs_margin_daily.py
+
+  # Process for a specific date (calculates last workday relative to that date)
+  python process_ubs_margin_daily.py --date 2025-11-12
+
+  # Process for a specific date (alternative format)
+  python process_ubs_margin_daily.py -d 2025-11-12
+        """,
+    )
+    parser.add_argument(
+        "--date",
+        "-d",
+        type=str,
+        default=None,
+        help="Date to process (YYYY-MM-DD format). Defaults to today's date. "
+        "The script will calculate the last workday relative to this date.",
+    )
+
+    args = parser.parse_args()
+
+    # Determine processing date (command-line arg > environment variable > today)
+    cli_process_date = args.date.strip() if args.date else None
+    env_process_date_raw = os.getenv("PROCESS_DATE")
+    env_process_date = env_process_date_raw.strip() if env_process_date_raw else None
+
+    if cli_process_date:
+        process_date_input = cli_process_date
+        os.environ["PROCESS_DATE"] = process_date_input
+        logger.info(f"Using process date from command line: {process_date_input}")
+    elif env_process_date:
+        process_date_input = env_process_date
+        logger.info(
+            f"Using process date from environment variable PROCESS_DATE: "
+            f"{process_date_input}"
+        )
+    else:
+        process_date_input = date.today().strftime("%Y-%m-%d")
+        os.environ["PROCESS_DATE"] = process_date_input
+        logger.info(
+            "PROCESS_DATE not provided via command line or environment. "
+            f"Defaulting to today's date: {process_date_input}"
+        )
+
     try:
-        status, message = process_ubs_margin_daily()
+        status, message = process_ubs_margin_daily(process_date=process_date_input)
         print(f"Status: {status}")
         print(f"Message: {message}")
         # Exit with 0 (success) if any files were processed successfully, or if skipped
