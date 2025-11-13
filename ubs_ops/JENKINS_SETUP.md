@@ -45,8 +45,8 @@ Automated daily processing of UBS margin data files from SFTP to PostgreSQL data
 - Add **Date Parameter**:
   - **Name**: `PROCESS_DATE`
   - **Date Format**: `yyyy-MM-dd`
-  - **Default Value**: `LocalDate.now().minusDays(1)`
-  - **Description**: `Date to process (defaults to last workday)`
+  - **Default Value**: `LocalDate.now()`
+  - **Description**: `Reference date (script processes the last workday before this date)`
 
 **Build Steps**:
 ```batch
@@ -66,7 +66,7 @@ pipeline {
     agent any
 
     parameters {
-        date(name: 'PROCESS_DATE', defaultValue: 'now-1d', description: 'Date to process (defaults to last workday)')
+        date(name: 'PROCESS_DATE', defaultValue: 'now', description: 'Reference date (script processes last workday before this)')
     }
 
     environment {
@@ -117,20 +117,20 @@ pipeline {
 ## PROCESS_DATE Parameter
 
 **How it works**:
-- **Date Parameter** named `PROCESS_DATE` automatically becomes an environment variable
-- Recommended default: `LocalDate.now().minusDays(1)` (last workday)
-- Manual builds show a calendar picker to select a different COB date
-- If `PROCESS_DATE` is not supplied, the script calculates the last workday automatically
-- Script reads `PROCESS_DATE` from environment variable
+- `PROCESS_DATE` is a Date Parameter exposed to the build and passed as an environment variable
+- The script **does not** process that date directly; it calculates the **last workday prior to the supplied date**
+- Recommended default: `LocalDate.now()` or `LocalDate.now().plusDays(1)` depending on when Jenkins runs, so the resulting COB date is yesterday
+- Manual builds let you pick the reference date via calendar picker
+- If `PROCESS_DATE` is empty, the script uses today's date as the reference
 
 **Priority** (if multiple sources):
 1. Command-line argument (`--date`)
 2. Environment variable (`PROCESS_DATE`)
-3. Default (last workday computed by script)
+3. Default reference date (today); script always converts reference date → last workday
 
 ## Workflow
 
-1. Determines COB date to process (`PROCESS_DATE` if supplied, otherwise last workday)
+1. Calculates COB date as the last workday before the reference `PROCESS_DATE`
 2. Checks database for existing records
 3. Connects to SFTP and lists files matching `YYYYMMDD.MFXCMDRCSV.*.CSV`
 4. For each file:

@@ -418,16 +418,27 @@ def process_ubs_margin_daily(process_date=None):
         )
         logger.info(f"Local download directory: {local_download_dir}")
 
-        # Determine COB date to process
-        cob_date = parse_process_date(process_date)
-        if cob_date:
-            logger.info(f"COB date provided: {cob_date}")
+        # Determine reference date and corresponding COB date (last workday)
+        reference_date = parse_process_date(process_date)
+        if reference_date:
+            logger.info(
+                "Reference date provided (PROCESS_DATE): %s. "
+                "Calculating last workday relative to this date.",
+                reference_date,
+            )
         else:
-            cob_date = get_last_workday()
-            logger.info(f"No COB date provided; defaulting to last workday: {cob_date}")
+            reference_date = date.today()
+            logger.info(
+                "No reference date provided; using today's date (%s) to calculate last workday.",
+                reference_date,
+            )
 
-        last_workday = cob_date
-        logger.info(f"COB date that will be processed: {last_workday}")
+        last_workday = get_last_workday(reference_date)
+        logger.info(
+            "Last workday calculated from reference date %s: %s",
+            reference_date,
+            last_workday,
+        )
 
         # Connect to database
         logger.info("Connecting to PostgreSQL database...")
@@ -815,12 +826,13 @@ Examples:
             f"{process_date_input}"
         )
     else:
-        default_cob_date = get_last_workday()
-        process_date_input = default_cob_date.strftime("%Y-%m-%d")
+        # No explicit reference date provided; use today to derive previous workday
+        reference_for_default = date.today().strftime("%Y-%m-%d")
+        process_date_input = reference_for_default
         os.environ["PROCESS_DATE"] = process_date_input
         logger.info(
             "PROCESS_DATE not provided via command line or environment. "
-            f"Defaulting to last workday: {process_date_input}"
+            f"Defaulting reference date to today: {process_date_input}"
         )
 
     try:
