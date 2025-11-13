@@ -429,15 +429,15 @@ def process_ubs_margin_daily(process_date=None):
         else:
             reference_date = date.today()
             logger.info(
-                "No reference date provided; using today's date (%s) to calculate last workday.",
+                "No reference date provided; using today's date (%s) as reference.",
                 reference_date,
             )
 
-        last_workday = get_last_workday(reference_date)
+        cob_date = get_last_workday(reference_date)
         logger.info(
             "Last workday calculated from reference date %s: %s",
             reference_date,
-            last_workday,
+            cob_date,
         )
 
         # Connect to database
@@ -448,13 +448,13 @@ def process_ubs_margin_daily(process_date=None):
 
         try:
             # Generate filename pattern
-            date_str = last_workday.strftime("%Y%m%d")
+            date_str = cob_date.strftime("%Y%m%d")
             pattern = f"{date_str}.MFXCMDRCSV"
             logger.info(f"Generated filename pattern: {pattern}")
 
             # Check existing records for informational purposes (but don't skip processing)
             logger.info(
-                f"Checking database for existing records for date: {last_workday}"
+                f"Checking database for existing records for date: {cob_date}"
             )
             with conn.cursor() as cur:
                 cur.execute(
@@ -465,13 +465,13 @@ def process_ubs_margin_daily(process_date=None):
                     GROUP BY source_filename, account
                     ORDER BY source_filename
                 """,
-                    (last_workday,),
+                    (cob_date,),
                 )
                 existing_records = cur.fetchall()
 
             if existing_records:
                 logger.info(
-                    f"Found {len(existing_records)} existing file(s) in database for {last_workday}"
+                    f"Found {len(existing_records)} existing file(s) in database for {cob_date}"
                 )
                 total_existing_records = sum(count for _, _, count in existing_records)
                 logger.info(
@@ -526,7 +526,7 @@ def process_ubs_margin_daily(process_date=None):
                         return_message.append(message)
                         status = "skipped"
                     else:
-                        message = f"No files found matching pattern {pattern} in {sftp_remote_dir} and no existing records in database for {last_workday}"
+                        message = f"No files found matching pattern {pattern} in {sftp_remote_dir} and no existing records in database for {cob_date}"
                         logger.info(message)
                         return_message.append(message)
                         status = "skipped"
@@ -585,10 +585,10 @@ def process_ubs_margin_daily(process_date=None):
 
                         # Double-check: records might have been inserted by another process
                         logger.info(
-                            f"Double-checking database for existing records: account={account}, date={last_workday}, filename={filename}"
+                            f"Double-checking database for existing records: account={account}, date={cob_date}, filename={filename}"
                         )
-                        if check_records_exist(conn, account, last_workday, filename):
-                            message = f"Records already exist for {account} on {last_workday} from {filename} - skipping"
+                        if check_records_exist(conn, account, cob_date, filename):
+                            message = f"Records already exist for {account} on {cob_date} from {filename} - skipping"
                             logger.info(message)
                             return_message.append(message)
                             files_skipped += 1
@@ -604,7 +604,7 @@ def process_ubs_margin_daily(process_date=None):
                         # Log processing start
                         logger.info(f"Logging file processing start to database...")
                         log_file_processing_start(
-                            conn, filename, account, last_workday, file_size
+                            conn, filename, account, cob_date, file_size
                         )
 
                         try:
@@ -669,7 +669,7 @@ def process_ubs_margin_daily(process_date=None):
                             db_start = datetime.now()
                             logger.info(f"Loading CSV data into database...")
                             inserted = load_csv_to_database(
-                                conn, csv_content, filename, account, last_workday
+                                conn, csv_content, filename, account, cob_date
                             )
                             db_time = (datetime.now() - db_start).total_seconds()
                             logger.info(
