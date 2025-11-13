@@ -26,16 +26,30 @@ import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import execute_values
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("ubs_margin_processing.log"),
-        logging.StreamHandler(sys.stdout),
-    ],
-)
 logger = logging.getLogger(__name__)
+
+
+def configure_logging():
+    """Configure logging handlers if they haven't been configured yet."""
+    if any(
+        isinstance(handler, logging.FileHandler)
+        and getattr(handler, "baseFilename", "").endswith("ubs_margin_processing.log")
+        for handler in logging.getLogger().handlers
+    ):
+        # Already configured
+        return
+
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+
+    file_handler = logging.FileHandler("ubs_margin_processing.log")
+    file_handler.setFormatter(formatter)
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(stream_handler)
 
 DEFAULT_LOCAL_DOWNLOAD_DIR = r"C:\tmpubs"
 
@@ -309,15 +323,25 @@ def load_csv_to_database(conn, csv_content, filename, account, cob_date):
     return inserted_count
 
 
-def log_file_processing_start(conn, filename, account, cob_date, file_size):
+def log_file_processing_start(
+    conn,
+    filename,
+    account,
+    cob_date,
+    file_size,
+    file_category=None,
+    file_hash=None,
+    file_sequence=None,
+    local_path=None,
+):
     """Log file processing start to ubs_file_processing_log"""
     try:
         with conn.cursor() as cur:
             cur.execute(
                 """
                 INSERT INTO ubs.ubs_file_processing_log
-                (filename, account, cob_date, file_size_bytes, processing_status, started_at)
-                VALUES (%s, %s, %s, %s, 'processing', CURRENT_TIMESTAMP)
+                (filename, account, cob_date, file_size_bytes, file_category, file_hash, file_sequence, local_path, processing_status, started_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'processing', CURRENT_TIMESTAMP)
                 ON CONFLICT (filename)
                 DO UPDATE SET
                     processing_status = 'processing',
@@ -325,9 +349,22 @@ def log_file_processing_start(conn, filename, account, cob_date, file_size):
                     error_message = NULL,
                     account = EXCLUDED.account,
                     cob_date = EXCLUDED.cob_date,
-                    file_size_bytes = EXCLUDED.file_size_bytes
+                    file_size_bytes = EXCLUDED.file_size_bytes,
+                    file_category = COALESCE(EXCLUDED.file_category, ubs_file_processing_log.file_category),
+                    file_hash = COALESCE(EXCLUDED.file_hash, ubs_file_processing_log.file_hash),
+                    file_sequence = COALESCE(EXCLUDED.file_sequence, ubs_file_processing_log.file_sequence),
+                    local_path = COALESCE(EXCLUDED.local_path, ubs_file_processing_log.local_path)
             """,
-                (filename, account, cob_date, file_size),
+                (
+                    filename,
+                    account,
+                    cob_date,
+                    file_size,
+                    file_category,
+                    file_hash,
+                    file_sequence,
+                    local_path,
+                ),
             )
         conn.commit()
         logger.info(f"Logged file processing start: {filename}")
@@ -337,11 +374,17 @@ def log_file_processing_start(conn, filename, account, cob_date, file_size):
 
 
 def log_file_processing_complete(
-    conn, filename, record_count, success=True, error_msg=None
+    conn,
+    filename,
+    record_count,
+    status="completed",
+    error_msg=None,
+    file_hash=None,
+    file_sequence=None,
+    local_path=None,
 ):
     """Log file processing completion to ubs_file_processing_log"""
     try:
-        status = "completed" if success else "failed"
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -349,10 +392,21 @@ def log_file_processing_complete(
                 SET processing_status = %s,
                     record_count = %s,
                     completed_at = CURRENT_TIMESTAMP,
-                    error_message = %s
+                    error_message = %s,
+                    file_hash = COALESCE(%s, file_hash),
+                    file_sequence = COALESCE(%s, file_sequence),
+                    local_path = COALESCE(%s, local_path)
                 WHERE filename = %s
             """,
-                (status, record_count, error_msg, filename),
+                (
+                    status,
+                    record_count,
+                    error_msg,
+                    file_hash,
+                    file_sequence,
+                    local_path,
+                    filename,
+                ),
             )
         conn.commit()
         logger.info(f"Logged file processing completion: {filename}, status={status}")
@@ -604,7 +658,12 @@ def process_ubs_margin_daily(process_date=None):
                         # Log processing start
                         logger.info(f"Logging file processing start to database...")
                         log_file_processing_start(
-                            conn, filename, account, cob_date, file_size
+                            conn,
+                            filename,
+                            account,
+                            cob_date,
+                            file_size,
+                            file_category="margin",
                         )
 
                         try:
@@ -679,7 +738,10 @@ def process_ubs_margin_daily(process_date=None):
 
                             # Log successful completion
                             log_file_processing_complete(
-                                conn, filename, inserted, success=True
+                                conn,
+                                filename,
+                                inserted,
+                                status="completed",
                             )
 
                             file_time = (
@@ -696,7 +758,7 @@ def process_ubs_margin_daily(process_date=None):
                                 conn,
                                 filename,
                                 0,
-                                success=False,
+                                status="failed",
                                 error_msg=error_msg,
                             )
                             logger.error(f"Failed to process {filename}: {error_msg}")
@@ -848,4 +910,5 @@ Examples:
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()

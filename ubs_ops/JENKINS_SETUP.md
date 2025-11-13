@@ -3,6 +3,8 @@
 ## Overview
 Automated daily processing of UBS margin data files from SFTP to PostgreSQL database.
 
+> Looking for the cash balance pipeline? See `JENKINS_SETUP_CASH_BALANCE.md`.
+
 ## Prerequisites
 - Jenkins on Windows Server
 - Python 3.8+ in PATH
