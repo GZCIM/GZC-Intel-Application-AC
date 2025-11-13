@@ -37,6 +37,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+DEFAULT_LOCAL_DOWNLOAD_DIR = r"C:\tmpubs"
+
 
 def get_last_workday(reference_date=None):
     """Get the last workday (Monday-Friday, excluding weekends)
@@ -411,6 +413,11 @@ def process_ubs_margin_daily(process_date=None):
             logger.error(error_msg)
             raise ValueError(error_msg)
 
+        local_download_dir = os.getenv(
+            "UBS_LOCAL_DOWNLOAD_DIR", DEFAULT_LOCAL_DOWNLOAD_DIR
+        )
+        logger.info(f"Local download directory: {local_download_dir}")
+
         # Determine COB date to process
         cob_date = parse_process_date(process_date)
         if cob_date:
@@ -598,6 +605,24 @@ def process_ubs_margin_daily(process_date=None):
                             # Get bytes content
                             file_bytes = file_obj.getvalue()
                             file_obj.close()
+
+                            # Save a copy locally
+                            try:
+                                os.makedirs(local_download_dir, exist_ok=True)
+                                local_file_path = os.path.join(
+                                    local_download_dir, filename
+                                )
+                                with open(local_file_path, "wb") as local_file:
+                                    local_file.write(file_bytes)
+                                logger.info(
+                                    "Saved local copy to %s", local_file_path
+                                )
+                            except Exception as save_error:
+                                logger.warning(
+                                    "Could not save local copy of %s: %s",
+                                    filename,
+                                    save_error,
+                                )
                             download_time = (
                                 datetime.now() - download_start
                             ).total_seconds()

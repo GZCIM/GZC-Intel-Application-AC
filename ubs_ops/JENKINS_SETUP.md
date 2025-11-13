@@ -38,6 +38,7 @@ Automated daily processing of UBS margin data files from SFTP to PostgreSQL data
   - `UBS_SFTP_HOST` = `sftp.ubs.com`
   - `UBS_SFTP_PORT` = `22`
   - `UBS_SFTP_REMOTE_DIR` = `/from_UBS`
+  - *(Optional)* `UBS_LOCAL_DOWNLOAD_DIR` = `C:\tmpubs` (directory where copies of downloaded files are stored)
 
 **Build Parameters**:
 - Check **"This project is parameterized"**
@@ -134,7 +135,7 @@ pipeline {
 3. Connects to SFTP and lists files matching `YYYYMMDD.MFXCMDRCSV.*.CSV`
 4. For each file:
    - Checks if already processed
-   - Downloads from SFTP (memory only, doesn't delete server files)
+   - Downloads from SFTP (saves a copy to `UBS_LOCAL_DOWNLOAD_DIR`, defaults to `C:\tmpubs`)
    - Parses CSV and loads to `ubs.ubs_margin_data`
    - Calculates summary and loads to `ubs.ubs_margin_summary_daily`
    - Logs to `ubs.ubs_file_processing_log`
