@@ -65,12 +65,12 @@ def parse_decimal(value) -> Optional[Decimal]:
     text = str(value).strip()
     if not text:
         return None
-    
+
     # Handle negative values in parentheses: (123.45) = -123.45
     negative = text.startswith("(") and text.endswith(")")
     if negative:
         text = text[1:-1]
-    
+
     cleaned = text.replace(",", "")
     try:
         dec = Decimal(cleaned)
@@ -83,7 +83,7 @@ def extract_balance_date(security_description: str) -> Optional[date]:
     """Extract date from 'Opening TD Balance - DD MMM YYYY' or 'Closing TD Balance - DD MMM YYYY'"""
     if not security_description:
         return None
-    
+
     desc = security_description.strip()
     if "Opening TD Balance -" in desc or "Closing TD Balance -" in desc:
         try:
@@ -100,27 +100,27 @@ def classify_row(row: Dict) -> str:
     account_name = (row.get("Account Name") or "").strip()
     security_desc = (row.get("Security Description") or "").strip()
     trans_type = (row.get("Trans Type") or "").strip()
-    
+
     # Check if it's a balance row
     if "Opening TD Balance" in security_desc:
         return "opening_balance"
     if "Closing TD Balance" in security_desc:
         return "closing_balance"
-    
+
     # Check if it's a subtotal row
     if account_name.startswith("SubTotal:"):
         return "subtotal_account"
     if (row.get("Settle CCY") or "").strip().startswith("SubTotal:"):
         return "subtotal_currency"
-    
+
     # Check if it's empty
     if not any((row.get(key) or "").strip() for key in row):
         return "empty"
-    
+
     # Check if it's a transaction
     if trans_type or (row.get("UBS Ref") or "").strip():
         return "transaction"
-    
+
     return "empty"
 
 
@@ -130,7 +130,7 @@ def calculate_record_hash(row: Dict, row_type: str, file_date: date) -> str:
         if value is None:
             return ""
         return str(value)
-    
+
     # For transactions, use key fields that uniquely identify the transaction
     if row_type == "transaction":
         key_fields = [
@@ -163,7 +163,7 @@ def calculate_record_hash(row: Dict, row_type: str, file_date: date) -> str:
         key_fields = [safe_str(row.get(key, "")) for key in sorted(row.keys())]
         key_fields.append(row_type)
         key_fields.append(safe_str(file_date))
-    
+
     hash_input = "|".join(key_fields)
     return hashlib.sha256(hash_input.encode()).hexdigest()
 
@@ -175,23 +175,23 @@ def parse_prime_broker_activity_csv(
     text = file_bytes.decode("utf-8-sig")
     reader = csv.DictReader(text.splitlines())
     records = []
-    
+
     for line_number, row in enumerate(reader, start=1):
         row_type = classify_row(row)
         if row_type == "empty":
             continue
-        
+
         # Extract dates
         entry_date = parse_date_mmddyyyy(row.get("Entry Date"))
         trade_date = parse_date_mmddyyyy(row.get("Trade Date"))
         settle_date = parse_date_mmddyyyy(row.get("Settle Date"))
-        
+
         # Extract balance information if applicable
         balance_date = None
         balance_amount = None
         balance_type = None
         security_desc = (row.get("Security Description") or "").strip()
-        
+
         if row_type == "opening_balance":
             balance_date = extract_balance_date(security_desc)
             balance_amount = parse_decimal(row.get("Net Amount"))
@@ -200,7 +200,7 @@ def parse_prime_broker_activity_csv(
             balance_date = extract_balance_date(security_desc)
             balance_amount = parse_decimal(row.get("Net Amount"))
             balance_type = "closing"
-        
+
         record = {
             "source_filename": source_filename,
             "file_date": file_date,
@@ -227,10 +227,10 @@ def parse_prime_broker_activity_csv(
             "balance_type": balance_type,
             "line_number": line_number,
         }
-        
+
         record["record_hash"] = calculate_record_hash(row, row_type, file_date)
         records.append(record)
-    
+
     return records
 
 
@@ -238,10 +238,10 @@ def insert_prime_broker_activity_records(conn, records: List[Dict]) -> int:
     """Insert records into database, skipping duplicates"""
     if not records:
         return 0
-    
+
     columns = list(records[0].keys())
     values = [tuple(record[col] for col in columns) for record in records]
-    
+
     insert_query = sql.SQL(
         """
         INSERT INTO ubs.ubs_prime_broker_activity ({})
@@ -250,11 +250,11 @@ def insert_prime_broker_activity_records(conn, records: List[Dict]) -> int:
         DO NOTHING
     """
     ).format(sql.SQL(", ").join(map(sql.Identifier, columns)))
-    
+
     with conn.cursor() as cur:
         execute_values(cur, insert_query, values, page_size=1000)
         inserted_count = cur.rowcount
-    
+
     return inserted_count
 
 
@@ -268,13 +268,13 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
     start_time = datetime.now()
     status = "success"
     return_messages: List[str] = []
-    
+
     try:
         logger.info("=" * 80)
         logger.info("Starting UBS Prime Broker Activity Daily Processing")
         logger.info(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
         logger.info("=" * 80)
-        
+
         logger.info("Reading environment variables...")
         sftp_host = os.getenv("UBS_SFTP_HOST")
         sftp_port = int(os.getenv("UBS_SFTP_PORT", "22"))
@@ -283,7 +283,7 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
         sftp_remote_dir = os.getenv("UBS_SFTP_REMOTE_DIR", "/from_UBS")
         db_connection_string = os.getenv("POSTGRES_CONNECTION_STRING")
         local_download_dir = os.getenv("UBS_LOCAL_DOWNLOAD_DIR", DEFAULT_LOCAL_DOWNLOAD_DIR)
-        
+
         if not all([sftp_host, sftp_username, sftp_password, db_connection_string]):
             missing = []
             if not sftp_host:
@@ -295,13 +295,13 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
             if not db_connection_string:
                 missing.append("POSTGRES_CONNECTION_STRING")
             raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
-        
+
         logger.info(f"SFTP Host: {sftp_host}")
         logger.info(f"SFTP Port: {sftp_port}")
         logger.info(f"SFTP Username: {sftp_username}")
         logger.info(f"SFTP Remote Directory: {sftp_remote_dir}")
         logger.info(f"Local download directory: {local_download_dir}")
-        
+
         # Calculate COB date (last workday)
         reference_date = parse_process_date(process_date)
         if reference_date:
@@ -315,17 +315,17 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
                 "No reference date provided; using today's date (%s) as reference.",
                 reference_date,
             )
-        
+
         cob_date = get_last_workday(reference_date)
         logger.info("Last workday calculated from reference date %s: %s", reference_date, cob_date)
-        
+
         # Connect to database
         conn = psycopg2.connect(db_connection_string)
         conn.autocommit = False
-        
+
         # Connect to SFTP
         sftp, transport = connect_sftp(sftp_host, sftp_port, sftp_username, sftp_password)
-        
+
         try:
             logger.info("Searching for Prime Broker Activity Statement files on SFTP...")
             target_prefix = cob_date.strftime("%Y%m%d") + ".PrimeBrokerActivityStatement."
@@ -335,7 +335,7 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
                 if filename.startswith(target_prefix) and filename.upper().endswith(".CSV")
             ]
             files.sort()
-            
+
             if not files:
                 message = (
                     f"No Prime Broker Activity Statement files found matching prefix {target_prefix} in {sftp_remote_dir}"
@@ -344,27 +344,27 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
                 return_messages.append(message)
                 status = "skipped"
                 return status, "\n".join(return_messages)
-            
+
             logger.info(f"Found {len(files)} file(s) to process")
-            
+
             os.makedirs(local_download_dir, exist_ok=True)
-            
+
             files_processed = 0
             files_failed = 0
             total_inserted = 0
-            
+
             for filename in files:
                 logger.info("-" * 80)
                 logger.info("Processing file: %s", filename)
                 remote_path = f"{sftp_remote_dir}/{filename}"
-                
+
                 if not check_file_exists(sftp, remote_path):
                     message = f"File {remote_path} not found on SFTP - skipping"
                     logger.warning(message)
                     return_messages.append(message)
                     files_failed += 1
                     continue
-                
+
                 # Extract file date from filename (YYYYMMDD)
                 try:
                     file_date_str = filename[:8]  # First 8 characters: YYYYMMDD
@@ -373,26 +373,26 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
                     logger.error("Cannot extract date from filename: %s", filename)
                     files_failed += 1
                     continue
-                
+
                 file_size = sftp.stat(remote_path).st_size
                 logger.info("File size: %s bytes", f"{file_size:,}")
                 logger.info("File date (from filename): %s", file_date)
-                
+
                 # Download file
                 file_obj = BytesIO()
                 sftp.getfo(remote_path, file_obj)
                 file_bytes = file_obj.getvalue()
                 file_obj.close()
-                
+
                 file_hash = calculate_file_hash(file_bytes)
                 logger.info("Calculated file hash: %s", file_hash)
-                
+
                 # Save local copy
                 local_path = os.path.join(local_download_dir, filename)
                 with open(local_path, "wb") as local_file:
                     local_file.write(file_bytes)
                 logger.info("Saved local copy to %s", local_path)
-                
+
                 # Log processing start
                 log_file_processing_start(
                     conn,
@@ -405,25 +405,25 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
                     file_sequence=None,
                     local_path=local_path,
                 )
-                
+
                 try:
                     # Parse CSV
                     records = parse_prime_broker_activity_csv(file_bytes, file_date, filename)
                     logger.info("Parsed %d records from CSV", len(records))
-                    
+
                     # Count by row type
                     row_type_counts = {}
                     for record in records:
                         rt = record.get("row_type", "unknown")
                         row_type_counts[rt] = row_type_counts.get(rt, 0) + 1
                     logger.info("Row type breakdown: %s", row_type_counts)
-                    
+
                     # Insert records
                     inserted = insert_prime_broker_activity_records(conn, records)
                     conn.commit()
                     logger.info("Inserted %d new records (skipped %d duplicates)", inserted, len(records) - inserted)
                     total_inserted += inserted
-                    
+
                     # Log completion
                     log_file_processing_complete(
                         conn,
@@ -435,7 +435,7 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
                         local_path=local_path,
                     )
                     files_processed += 1
-                    
+
                 except Exception as file_error:
                     conn.rollback()
                     error_msg = str(file_error)
@@ -453,7 +453,7 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
                     return_messages.append(f"ERROR processing {filename}: {error_msg}")
                     files_failed += 1
                     continue
-            
+
             # Summary
             summary_lines = [
                 "=" * 80,
@@ -469,26 +469,26 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
             for line in summary_lines:
                 logger.info(line)
             return_messages.extend(summary_lines)
-            
+
             if files_failed and not files_processed:
                 status = "failed"
             elif files_failed:
                 status = "partial_success"
             else:
                 status = "success"
-        
+
         finally:
             logger.info("Closing SFTP connection...")
             sftp.close()
             transport.close()
             logger.info("SFTP connection closed")
-    
+
     except Exception as exc:
         status = "failed"
         error_message = f"Fatal error: {exc}"
         logger.error(error_message)
         return_messages.append(error_message)
-    
+
     finally:
         try:
             if 'conn' in locals() and conn:
@@ -496,7 +496,7 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
                 logger.info("Database connection closed")
         except Exception as close_err:
             logger.warning("Error closing database connection: %s", close_err)
-        
+
         end_time = datetime.now()
         total_time = (end_time - start_time).total_seconds()
         logger.info("=" * 80)
@@ -505,7 +505,7 @@ def process_ubs_prime_broker_activity_daily(process_date=None):
         logger.info("End time: %s", end_time.strftime("%Y-%m-%d %H:%M:%S"))
         logger.info("Total execution time: %.2f seconds (%.2f minutes)", total_time, total_time / 60)
         logger.info("=" * 80)
-    
+
     return status, "\n".join(return_messages)
 
 
@@ -521,18 +521,18 @@ def main():
         help="Reference date (YYYY-MM-DD). Script will process last workday prior to this date.",
     )
     args = parser.parse_args()
-    
+
     process_date_input = args.date.strip() if args.date else None
-    
+
     if process_date_input:
         logger.info("Using reference date from command line: %s", process_date_input)
     else:
         logger.info("Reference date not provided on command line; relying on environment variables or default.")
-    
+
     status, message = process_ubs_prime_broker_activity_daily(process_date=process_date_input)
     print(f"Status: {status}")
     print(f"Message: {message}")
-    
+
     if status == "failed":
         sys.exit(1)
     sys.exit(0)

@@ -78,7 +78,7 @@ Automate ingestion of daily `PrimeBrokerActivityStatement` CSV files from the UB
   ORDER BY trade_date DESC;
 
   -- Daily transaction summary by account
-  SELECT 
+  SELECT
     trade_date,
     account_id,
     account_name,
@@ -93,7 +93,7 @@ Automate ingestion of daily `PrimeBrokerActivityStatement` CSV files from the UB
   ORDER BY trade_date DESC, account_id, trans_type;
 
   -- Opening/closing balances by account and currency
-  SELECT 
+  SELECT
     balance_date,
     account_id,
     account_name,

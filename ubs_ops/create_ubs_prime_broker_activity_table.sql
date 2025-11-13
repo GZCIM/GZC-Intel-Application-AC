@@ -8,17 +8,17 @@ CREATE TABLE IF NOT EXISTS ubs.ubs_prime_broker_activity (
     source_filename VARCHAR(255) NOT NULL,
     file_date DATE NOT NULL,  -- Date from filename (YYYYMMDD)
     row_type VARCHAR(20) NOT NULL,  -- 'transaction', 'opening_balance', 'closing_balance', 'subtotal_currency', 'subtotal_account', 'empty'
-    
+
     -- Account and Currency
     account_name VARCHAR(255),
     account_id VARCHAR(50),
     settle_ccy VARCHAR(10),
-    
+
     -- Transaction Dates (actual transaction dates, not file date)
     entry_date DATE,
     trade_date DATE,
     settle_date DATE,
-    
+
     -- Transaction Details
     trans_type VARCHAR(50),  -- Withdraw, Deposit, Interest, Buy, Sell
     cancel VARCHAR(10),
@@ -27,23 +27,23 @@ CREATE TABLE IF NOT EXISTS ubs.ubs_prime_broker_activity (
     ubs_ref VARCHAR(100),
     client_ref VARCHAR(100),
     exec_broker VARCHAR(100),
-    
+
     -- Transaction Amounts
     quantity NUMERIC(20, 8),
     price NUMERIC(20, 8),
     comm NUMERIC(20, 4),
     net_amount NUMERIC(20, 4),
-    
+
     -- Balance Information (for opening/closing balance rows)
     balance_date DATE,  -- Extracted from "Opening TD Balance - DD MMM YYYY"
     balance_amount NUMERIC(20, 4),
     balance_type VARCHAR(20),  -- 'opening' or 'closing'
-    
+
     -- Metadata
     line_number INTEGER,
     record_hash VARCHAR(64) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     CONSTRAINT uq_prime_broker_activity_record UNIQUE (record_hash)
 );
 
