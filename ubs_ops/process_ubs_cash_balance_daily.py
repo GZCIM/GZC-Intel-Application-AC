@@ -152,7 +152,7 @@ def parse_cash_balance_csv(
         # Extract account information
         account_name_raw = (row.get("Account Name") or "").strip() or None
         account_id_raw = (row.get("Account ID") or "").strip() or None
-        
+
         # For detail rows, carry forward account info if missing
         if row_type == "detail":
             # When account info is present, update tracking (handles new account groups)
@@ -164,7 +164,7 @@ def parse_cash_balance_csv(
             elif last_account_name:
                 # Carry forward from previous account
                 account_name_raw = last_account_name
-            
+
             if account_id_raw:
                 # New account info detected - update tracking
                 last_account_id = account_id_raw
@@ -172,7 +172,7 @@ def parse_cash_balance_csv(
             elif last_account_id:
                 # Carry forward from previous account
                 account_id_raw = last_account_id
-            
+
             # fund_account for detail rows is the account_id
             fund_account = account_id_raw if account_id_raw else last_fund_account
         else:
