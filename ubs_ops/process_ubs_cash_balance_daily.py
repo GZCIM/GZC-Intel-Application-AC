@@ -138,20 +138,52 @@ def parse_cash_balance_csv(
     text = file_bytes.decode("utf-8-sig")
     reader = csv.DictReader(text.splitlines())
     records = []
+    
+    # Track last seen account information for carry-forward
+    last_account_name = None
+    last_account_id = None
+    last_fund_account = None
 
     for line_number, row in enumerate(reader, start=1):
         row_type = classify_row(row)
         if row_type == "empty":
             continue
 
+        # Extract account information
+        account_name_raw = (row.get("Account Name") or "").strip() or None
+        account_id_raw = (row.get("Account ID") or "").strip() or None
+        
+        # For detail rows, carry forward account info if missing
+        if row_type == "detail":
+            if account_name_raw:
+                last_account_name = account_name_raw
+            elif last_account_name:
+                account_name_raw = last_account_name
+            
+            if account_id_raw:
+                last_account_id = account_id_raw
+                last_fund_account = account_id_raw  # fund_account is typically the account_id for detail rows
+            elif last_account_id:
+                account_id_raw = last_account_id
+                # Use last_fund_account which was set from previous account_id
+            
+            # fund_account for detail rows is the account_id
+            fund_account = account_id_raw if account_id_raw else last_fund_account
+        else:
+            # For subtotal/grand_total rows, extract fund_account from the subtotal text
+            fund_account = extract_fund_account(row, row_type)
+            # Update last_fund_account for potential use in subsequent detail rows
+            if fund_account:
+                last_fund_account = fund_account
+
         record = {
             "cob_date": cob_date,
             "source_filename": source_filename,
             "file_sequence": file_sequence,
             "row_type": row_type,
-            "fund_account": extract_fund_account(row, row_type),
-            "account_name_raw": (row.get("Account Name") or "").strip() or None,
-            "account_id_raw": (row.get("Account ID") or "").strip() or None,
+            "fund_account": fund_account,
+            "account_name_raw": account_name_raw,
+            "account_id_raw": account_id_raw,
             "ccy": (row.get("CCY") or "").strip() or None,
             "td_cash_balance": parse_decimal(row.get("TD Cash Balance")),
             "sd_cash_balance": parse_decimal(row.get("SD Cash Balance")),
