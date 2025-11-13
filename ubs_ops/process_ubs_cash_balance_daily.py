@@ -138,7 +138,7 @@ def parse_cash_balance_csv(
     text = file_bytes.decode("utf-8-sig")
     reader = csv.DictReader(text.splitlines())
     records = []
-    
+
     # Track last seen account information for carry-forward
     last_account_name = None
     last_account_id = None
@@ -155,17 +155,23 @@ def parse_cash_balance_csv(
         
         # For detail rows, carry forward account info if missing
         if row_type == "detail":
+            # When account info is present, update tracking (handles new account groups)
+            # When account info is missing, carry forward from previous detail row
+            # This correctly handles transitions like row 19 (subtotal) -> row 20 (new account)
             if account_name_raw:
+                # New account info detected - update tracking
                 last_account_name = account_name_raw
             elif last_account_name:
+                # Carry forward from previous account
                 account_name_raw = last_account_name
             
             if account_id_raw:
+                # New account info detected - update tracking
                 last_account_id = account_id_raw
                 last_fund_account = account_id_raw  # fund_account is typically the account_id for detail rows
             elif last_account_id:
+                # Carry forward from previous account
                 account_id_raw = last_account_id
-                # Use last_fund_account which was set from previous account_id
             
             # fund_account for detail rows is the account_id
             fund_account = account_id_raw if account_id_raw else last_fund_account
