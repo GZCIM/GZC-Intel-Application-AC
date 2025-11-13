@@ -51,7 +51,6 @@ def get_last_workday(reference_date=None):
     if reference_date is None:
         reference_date = date.today()
     elif isinstance(reference_date, str):
-        # Parse string date in YYYY-MM-DD format
         try:
             reference_date = datetime.strptime(reference_date, "%Y-%m-%d").date()
         except ValueError as exc:
@@ -73,6 +72,25 @@ def get_last_workday(reference_date=None):
         last_day = last_day - timedelta(days=1)
 
     return last_day
+
+
+def parse_process_date(value):
+    """Normalize the process date input to a date object."""
+    if value is None:
+        return None
+
+    if isinstance(value, date):
+        return value
+
+    if isinstance(value, str):
+        try:
+            return datetime.strptime(value.strip(), "%Y-%m-%d").date()
+        except ValueError as exc:
+            raise ValueError(
+                f"Invalid process date format: {value}. Expected YYYY-MM-DD"
+            ) from exc
+
+    raise ValueError(f"Unsupported process date type: {type(value)}")
 
 
 def check_records_exist(conn, account, cob_date, filename):
@@ -393,35 +411,16 @@ def process_ubs_margin_daily(process_date=None):
             logger.error(error_msg)
             raise ValueError(error_msg)
 
-        # Get last workday (using provided date or today)
-        if process_date:
-            logger.info(
-                f"Processing date input (from function parameter): {process_date}"
-            )
+        # Determine COB date to process
+        cob_date = parse_process_date(process_date)
+        if cob_date:
+            logger.info(f"COB date provided: {cob_date}")
         else:
-            logger.info(
-                "Processing date not explicitly provided as function parameter; checking environment..."
-            )
+            cob_date = get_last_workday()
+            logger.info(f"No COB date provided; defaulting to last workday: {cob_date}")
 
-        current_process_date = os.getenv("PROCESS_DATE")
-        if current_process_date:
-            logger.info(f"Environment PROCESS_DATE value: {current_process_date}")
-            # If process_date was not provided as parameter, use environment variable
-            if not process_date:
-                process_date = current_process_date
-                logger.info(f"Using PROCESS_DATE from environment: {process_date}")
-        else:
-            logger.info("PROCESS_DATE environment variable not set")
-
-        # If still no date, use today
-        if not process_date:
-            process_date = date.today().strftime("%Y-%m-%d")
-            logger.info(f"No date provided, defaulting to today: {process_date}")
-
-        last_workday = get_last_workday(process_date)
-        logger.info(
-            f"Last workday calculated (based on process date {process_date}): {last_workday}"
-        )
+        last_workday = cob_date
+        logger.info(f"COB date that will be processed: {last_workday}")
 
         # Connect to database
         logger.info("Connecting to PostgreSQL database...")
@@ -791,11 +790,12 @@ Examples:
             f"{process_date_input}"
         )
     else:
-        process_date_input = date.today().strftime("%Y-%m-%d")
+        default_cob_date = get_last_workday()
+        process_date_input = default_cob_date.strftime("%Y-%m-%d")
         os.environ["PROCESS_DATE"] = process_date_input
         logger.info(
             "PROCESS_DATE not provided via command line or environment. "
-            f"Defaulting to today's date: {process_date_input}"
+            f"Defaulting to last workday: {process_date_input}"
         )
 
     try:

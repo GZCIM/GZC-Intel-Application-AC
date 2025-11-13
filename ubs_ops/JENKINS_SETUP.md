@@ -44,8 +44,8 @@ Automated daily processing of UBS margin data files from SFTP to PostgreSQL data
 - Add **Date Parameter**:
   - **Name**: `PROCESS_DATE`
   - **Date Format**: `yyyy-MM-dd`
-  - **Default Value**: `LocalDate.now()`
-  - **Description**: `Date to process (defaults to today)`
+  - **Default Value**: `LocalDate.now().minusDays(1)`
+  - **Description**: `Date to process (defaults to last workday)`
 
 **Build Steps**:
 ```batch
@@ -65,7 +65,7 @@ pipeline {
     agent any
 
     parameters {
-        date(name: 'PROCESS_DATE', defaultValue: 'now', description: 'Date to process (defaults to today)')
+        date(name: 'PROCESS_DATE', defaultValue: 'now-1d', description: 'Date to process (defaults to last workday)')
     }
 
     environment {
@@ -117,18 +117,19 @@ pipeline {
 
 **How it works**:
 - **Date Parameter** named `PROCESS_DATE` automatically becomes an environment variable
-- Default value `LocalDate.now()` uses today's date for scheduled builds
-- Manual builds show a calendar picker to select a different date
+- Recommended default: `LocalDate.now().minusDays(1)` (last workday)
+- Manual builds show a calendar picker to select a different COB date
+- If `PROCESS_DATE` is not supplied, the script calculates the last workday automatically
 - Script reads `PROCESS_DATE` from environment variable
 
 **Priority** (if multiple sources):
 1. Command-line argument (`--date`)
 2. Environment variable (`PROCESS_DATE`)
-3. Default (today's date)
+3. Default (last workday computed by script)
 
 ## Workflow
 
-1. Calculates last workday from `PROCESS_DATE` (or today)
+1. Determines COB date to process (`PROCESS_DATE` if supplied, otherwise last workday)
 2. Checks database for existing records
 3. Connects to SFTP and lists files matching `YYYYMMDD.MFXCMDRCSV.*.CSV`
 4. For each file:
