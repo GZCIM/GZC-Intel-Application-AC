@@ -112,7 +112,7 @@ def calculate_row_hash(record: dict) -> str:
         if value is None:
             return ""
         return str(value)
-    
+
     key_fields = [
         record["cob_date"].isoformat(),
         safe_str(record.get("file_sequence")),
