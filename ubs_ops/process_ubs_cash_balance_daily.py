@@ -106,20 +106,27 @@ def extract_fund_account(row: dict, row_type: str) -> Optional[str]:
 
 
 def calculate_row_hash(record: dict) -> str:
+    """Calculate hash for duplicate detection, handling None values"""
+    def safe_str(value):
+        """Convert value to string, handling None"""
+        if value is None:
+            return ""
+        return str(value)
+    
     key_fields = [
         record["cob_date"].isoformat(),
-        str(record["file_sequence"]),
-        str(record["line_number"]),
-        record.get("row_type", ""),
-        record.get("fund_account", ""),
-        record.get("account_name_raw", ""),
-        record.get("account_id_raw", ""),
-        record.get("ccy", ""),
-        str(record.get("td_cash_balance")),
-        str(record.get("sd_cash_balance")),
-        str(record.get("fx_rate")),
-        str(record.get("td_cash_balance_base")),
-        str(record.get("sd_cash_balance_base")),
+        safe_str(record.get("file_sequence")),
+        safe_str(record.get("line_number")),
+        safe_str(record.get("row_type")),
+        safe_str(record.get("fund_account")),
+        safe_str(record.get("account_name_raw")),
+        safe_str(record.get("account_id_raw")),
+        safe_str(record.get("ccy")),
+        safe_str(record.get("td_cash_balance")),
+        safe_str(record.get("sd_cash_balance")),
+        safe_str(record.get("fx_rate")),
+        safe_str(record.get("td_cash_balance_base")),
+        safe_str(record.get("sd_cash_balance_base")),
     ]
     hash_input = "|".join(key_fields)
     return hashlib.sha256(hash_input.encode()).hexdigest()
