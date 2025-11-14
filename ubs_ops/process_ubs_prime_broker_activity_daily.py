@@ -48,12 +48,12 @@ def configure_logging():
     root_logger.addHandler(stream_handler)
 
 
-def parse_date_mmddyyyy(date_str: str) -> Optional[date]:
-    """Parse date string in MM/DD/YYYY format"""
+def parse_date_ddmmyyyy(date_str: str) -> Optional[date]:
+    """Parse date string in DD/MM/YYYY format (UBS Prime Broker Activity format)"""
     if not date_str or not date_str.strip():
         return None
     try:
-        return datetime.strptime(date_str.strip(), "%m/%d/%Y").date()
+        return datetime.strptime(date_str.strip(), "%d/%m/%Y").date()
     except ValueError:
         return None
 
@@ -144,47 +144,48 @@ def normalize_settle_ccy(value: Optional[str], row_type: str) -> Optional[str]:
     return trimmed[:10]
 
 
-def calculate_record_hash(row: Dict, row_type: str, file_date: date) -> str:
-    """Calculate hash for duplicate detection"""
+def calculate_record_hash(record: Dict, row_type: str) -> str:
+    """Calculate hash for duplicate detection using parsed record values
+
+    Note: This allows refilling missed days - same transaction from different files
+    will have the same hash and only be inserted once.
+    """
     def safe_str(value):
         if value is None:
             return ""
         return str(value)
 
-    normalized_ccy = normalize_settle_ccy(row.get("Settle CCY"), row_type)
-
     # For transactions, use key fields that uniquely identify the transaction
+    # Note: We don't include file_date to allow refilling from later files
     if row_type == "transaction":
         key_fields = [
-            safe_str(row.get("Account ID")),
-            safe_str(row.get("Trade Date")),
-            safe_str(row.get("UBS Ref")),
-            safe_str(row.get("Trans Type")),
-            safe_str(row.get("Net Amount")),
-            safe_str(normalized_ccy),
+            safe_str(record.get("account_id")),
+            safe_str(record.get("trade_date")),  # Use parsed date
+            safe_str(record.get("ubs_ref")),
+            safe_str(record.get("trans_type")),
+            safe_str(record.get("net_amount")),
+            safe_str(record.get("settle_ccy")),
         ]
-    # For balance rows, use account, currency, balance date, and balance type
+    # For balance rows, use account_name (or account_id if available), currency, balance date, and balance type
+    # Note: account_id may be NULL for first balance row, so we use account_name to ensure uniqueness
     elif row_type in ("opening_balance", "closing_balance"):
-        security_desc = (row.get("Security Description") or "").strip()
-        balance_date = extract_balance_date(security_desc)
         key_fields = [
-            safe_str(row.get("Account ID")),
-            safe_str(normalized_ccy),
-            safe_str(balance_date) if balance_date else "",
+            safe_str(record.get("account_name") or record.get("account_id")),
+            safe_str(record.get("settle_ccy")),
+            safe_str(record.get("balance_date")),  # Use parsed balance_date
             row_type,
         ]
-    # For subtotals, use account/currency and row type
+    # For subtotals, use account/currency, row type, and file_date (subtotals are file-specific)
     elif row_type in ("subtotal_account", "subtotal_currency"):
         key_fields = [
-            safe_str(row.get("Account Name") or row.get("Settle CCY")),
+            safe_str(record.get("account_name") or record.get("settle_ccy")),
             row_type,
-            safe_str(file_date),
+            safe_str(record.get("file_date")),
         ]
     else:
         # For other rows, use all fields
-        key_fields = [safe_str(row.get(key, "")) for key in sorted(row.keys())]
+        key_fields = [safe_str(record.get(key, "")) for key in sorted(record.keys()) if key != "record_hash"]
         key_fields.append(row_type)
-        key_fields.append(safe_str(file_date))
 
     hash_input = "|".join(key_fields)
     return hashlib.sha256(hash_input.encode()).hexdigest()
@@ -193,66 +194,132 @@ def calculate_record_hash(row: Dict, row_type: str, file_date: date) -> str:
 def parse_prime_broker_activity_csv(
     file_bytes: bytes, file_date: date, source_filename: str
 ) -> List[Dict]:
-    """Parse Prime Broker Activity Statement CSV"""
+    """Parse Prime Broker Activity Statement CSV
+
+    Note: This processes ALL transactions from the file, allowing refilling of missed days.
+    The file accumulates monthly history, so later files contain all previous transactions.
+
+    line_number matches the actual CSV file row number (row 1 = header, row 2 = first data row).
+    """
     text = file_bytes.decode("utf-8-sig")
-    reader = csv.DictReader(text.splitlines())
+    lines = text.splitlines()
+
+    if not lines:
+        return []
+
+    # First line is the header
+    header = lines[0]
+    fieldnames = next(csv.reader([header]))
+
     records = []
 
-    for line_number, row in enumerate(reader, start=1):
-        row_type = classify_row(row)
+    # Track last seen account information for carry-forward (similar to cash balance)
+    last_account_name = None
+    last_account_id = None
+    last_settle_ccy = None
+
+    # Process each line starting from row 2 (index 1)
+    for csv_row_number, line in enumerate(lines[1:], start=2):
+        # Skip completely empty lines
+        if not line.strip():
+            continue
+
+        # Parse this line as CSV
+        try:
+            row_values = next(csv.reader([line]))
+            # Handle case where line has fewer fields than header
+            if len(row_values) < len(fieldnames):
+                row_values.extend([''] * (len(fieldnames) - len(row_values)))
+            row_dict = dict(zip(fieldnames, row_values))
+        except Exception as e:
+            logger.warning("Error parsing CSV row %d: %s", csv_row_number, e)
+            continue
+
+        row_type = classify_row(row_dict)
         if row_type == "empty":
             continue
 
-        # Extract dates
-        entry_date = parse_date_mmddyyyy(row.get("Entry Date"))
-        trade_date = parse_date_mmddyyyy(row.get("Trade Date"))
-        settle_date = parse_date_mmddyyyy(row.get("Settle Date"))
+        # Extract account information with carry-forward logic
+        account_name_raw = (row_dict.get("Account Name") or "").strip() or None
+        account_id_raw = (row_dict.get("Account ID") or "").strip() or None
+        settle_ccy_raw = (row_dict.get("Settle CCY") or "").strip() or None
+
+        # For transaction and balance rows, carry forward account info if missing
+        if row_type in ("transaction", "opening_balance", "closing_balance"):
+            # When account_name changes, reset account_id carry-forward (new account group)
+            if account_name_raw and account_name_raw != last_account_name:
+                # New account group detected - reset account_id carry-forward
+                last_account_name = account_name_raw
+                last_account_id = None  # Reset account_id for new account group
+            elif account_name_raw:
+                # Same account group, update tracking
+                last_account_name = account_name_raw
+            elif last_account_name:
+                # Account name missing, carry forward from previous row
+                account_name_raw = last_account_name
+
+            if account_id_raw:
+                last_account_id = account_id_raw
+            elif last_account_id and account_name_raw == last_account_name:
+                # Only carry forward account_id if we're still in the same account group
+                account_id_raw = last_account_id
+
+            if settle_ccy_raw:
+                last_settle_ccy = settle_ccy_raw
+            elif last_settle_ccy:
+                settle_ccy_raw = last_settle_ccy
+
+        # Extract dates (CSV uses DD/MM/YYYY format)
+        entry_date = parse_date_ddmmyyyy(row_dict.get("Entry Date"))
+        trade_date = parse_date_ddmmyyyy(row_dict.get("Trade Date"))
+        settle_date = parse_date_ddmmyyyy(row_dict.get("Settle Date"))
 
         # Extract balance information if applicable
         balance_date = None
         balance_amount = None
         balance_type = None
-        security_desc = (row.get("Security Description") or "").strip()
+        security_desc = (row_dict.get("Security Description") or "").strip()
 
         if row_type == "opening_balance":
             balance_date = extract_balance_date(security_desc)
-            balance_amount = parse_decimal(row.get("Net Amount"))
+            balance_amount = parse_decimal(row_dict.get("Net Amount"))
             balance_type = "opening"
         elif row_type == "closing_balance":
             balance_date = extract_balance_date(security_desc)
-            balance_amount = parse_decimal(row.get("Net Amount"))
+            balance_amount = parse_decimal(row_dict.get("Net Amount"))
             balance_type = "closing"
 
-        settle_ccy = normalize_settle_ccy(row.get("Settle CCY"), row_type)
+        settle_ccy = normalize_settle_ccy(settle_ccy_raw, row_type)
 
         record = {
             "source_filename": source_filename,
             "file_date": file_date,
             "row_type": row_type,
-            "account_name": (row.get("Account Name") or "").strip() or None,
-            "account_id": (row.get("Account ID") or "").strip() or None,
+            "account_name": account_name_raw,
+            "account_id": account_id_raw,
             "settle_ccy": settle_ccy,
             "entry_date": entry_date,
             "trade_date": trade_date,
             "settle_date": settle_date,
-            "trans_type": (row.get("Trans Type") or "").strip() or None,
-            "cancel": (row.get("Cancel") or "").strip() or None,
-            "isin": (row.get("ISIN") or "").strip() or None,
+            "trans_type": (row_dict.get("Trans Type") or "").strip() or None,
+            "cancel": (row_dict.get("Cancel") or "").strip() or None,
+            "isin": (row_dict.get("ISIN") or "").strip() or None,
             "security_description": security_desc or None,
-            "ubs_ref": (row.get("UBS Ref") or "").strip() or None,
-            "client_ref": (row.get("Client Ref") or "").strip() or None,
-            "exec_broker": (row.get("Exec Broker") or "").strip() or None,
-            "quantity": parse_decimal(row.get("Quantity")),
-            "price": parse_decimal(row.get("Price")),
-            "comm": parse_decimal(row.get("Comm")),
-            "net_amount": parse_decimal(row.get("Net Amount")),
+            "ubs_ref": (row_dict.get("UBS Ref") or "").strip() or None,
+            "client_ref": (row_dict.get("Client Ref") or "").strip() or None,
+            "exec_broker": (row_dict.get("Exec Broker") or "").strip() or None,
+            "quantity": parse_decimal(row_dict.get("Quantity")),
+            "price": parse_decimal(row_dict.get("Price")),
+            "comm": parse_decimal(row_dict.get("Comm")),
+            "net_amount": parse_decimal(row_dict.get("Net Amount")),
             "balance_date": balance_date,
             "balance_amount": balance_amount,
             "balance_type": balance_type,
-            "line_number": line_number,
+            "line_number": csv_row_number,  # Use actual CSV file row number
         }
 
-        record["record_hash"] = calculate_record_hash(row, row_type, file_date)
+        # Calculate hash after all fields are set (using parsed values)
+        record["record_hash"] = calculate_record_hash(record, row_type)
         records.append(record)
 
     return records
