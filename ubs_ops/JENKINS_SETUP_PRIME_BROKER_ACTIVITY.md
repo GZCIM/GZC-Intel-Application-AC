@@ -106,3 +106,52 @@ Automate ingestion of daily `PrimeBrokerActivityStatement` CSV files from the UB
   ORDER BY balance_date DESC, account_id, settle_ccy, balance_type;
   ```
 
+## Local File Processing
+
+For testing, manual processing, or reprocessing files, use the standalone `process_local_prime_broker_file.py` script.
+
+### Usage
+
+**Required Arguments:**
+1. `file_path` - Full path to the CSV file (positional argument)
+2. `--connection-string` - PostgreSQL connection string (required)
+
+**Basic Command:**
+```bash
+python process_local_prime_broker_file.py "C:\tmp\20251113.PrimeBrokerActivityStatement.GRPGZCAP.818292019.CSV" --connection-string "postgresql://user:pass@host:5432/db?sslmode=require"
+```
+
+**Windows PowerShell Example:**
+```powershell
+cd ubs_ops
+python process_local_prime_broker_file.py `
+  "C:\tmp\20251113.PrimeBrokerActivityStatement.GRPGZCAP.818292019.CSV" `
+  --connection-string "postgresql://mikael:Ii89rra137+*@gzcdevserver.postgres.database.azure.com:5432/gzc_platform?sslmode=require"
+```
+
+**Windows CMD Example:**
+```cmd
+cd ubs_ops
+python process_local_prime_broker_file.py "C:\tmp\20251113.PrimeBrokerActivityStatement.GRPGZCAP.818292019.CSV" --connection-string "postgresql://user:pass@host:5432/db?sslmode=require"
+```
+
+### How It Works
+
+- **Date Extraction**: Automatically extracts date from filename (format: `YYYYMMDD.*.CSV`)
+- **Filename Extraction**: Uses filename from file path for database storage
+- **CSV Parsing**: Parses and classifies rows (transactions, balances, subtotals)
+- **Duplicate Detection**: Uses `record_hash` to prevent duplicate inserts
+- **Database Insertion**: Inserts into `ubs.ubs_prime_broker_activity` table
+- **Logging**: Logs to `ubs.ubs_file_processing_log` and `ubs_prime_broker_activity_local_processing.log`
+
+### Differences from Jenkins/SFTP Processing
+
+| Feature | Local Processing | Jenkins/SFTP Processing |
+|---------|------------------|------------------------|
+| File Source | Local filesystem | UBS SFTP server |
+| Date Parameter | Extracted from filename | Uses `PROCESS_DATE` env var |
+| Connection | Command-line argument | Environment variables |
+| Scheduling | Manual execution | Automated (cron) |
+| File Discovery | User provides path | Searches SFTP directory |
+| Use Case | Testing, reprocessing | Production automation |
+

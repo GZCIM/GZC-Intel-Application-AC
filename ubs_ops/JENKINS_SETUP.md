@@ -210,6 +210,57 @@ REM Or specify date
 python process_ubs_margin_daily.py --date 2025-11-12
 ```
 
+## Local File Processing
+
+For testing, manual processing, or reprocessing files, use the standalone `process_local_margin_file.py` script.
+
+### Usage
+
+**Required Arguments:**
+1. `file_path` - Full path to the CSV file (positional argument)
+2. `--connection-string` - PostgreSQL connection string (required)
+
+**Basic Command:**
+```bash
+python process_local_margin_file.py "C:\tmp\20251113.MFXCMDRCSV.I0004255.CSV" --connection-string "postgresql://user:pass@host:5432/db?sslmode=require"
+```
+
+**Windows PowerShell Example:**
+```powershell
+cd ubs_ops
+python process_local_margin_file.py `
+  "C:\tmp\20251113.MFXCMDRCSV.I0004255.CSV" `
+  --connection-string "postgresql://mikael:Ii89rra137+*@gzcdevserver.postgres.database.azure.com:5432/gzc_platform?sslmode=require"
+```
+
+**Windows CMD Example:**
+```cmd
+cd ubs_ops
+python process_local_margin_file.py "C:\tmp\20251113.MFXCMDRCSV.I0004255.CSV" --connection-string "postgresql://user:pass@host:5432/db?sslmode=require"
+```
+
+### How It Works
+
+- **Date Extraction**: Automatically extracts date from filename (format: `YYYYMMDD.MFXCMDRCSV.*.CSV`)
+- **COB Date Calculation**: Calculates the last workday from the file date (margin files are for the previous workday)
+- **Account Extraction**: Extracts account number from filename (e.g., `I0004255` from `20251113.MFXCMDRCSV.I0004255.CSV`)
+- **Filename Extraction**: Uses filename from file path for database storage
+- **CSV Parsing**: Parses CSV and loads into `ubs.ubs_margin_data` table
+- **Summary Calculation**: Automatically calculates and stores daily margin summary
+- **Duplicate Detection**: Uses `record_hash` to prevent duplicate inserts
+- **Logging**: Logs to `ubs.ubs_file_processing_log` and `ubs_margin_local_processing.log`
+
+### Differences from Jenkins/SFTP Processing
+
+| Feature | Local Processing | Jenkins/SFTP Processing |
+|---------|------------------|------------------------|
+| File Source | Local filesystem | UBS SFTP server |
+| Date Parameter | Extracted from filename | Uses `PROCESS_DATE` env var |
+| Connection | Command-line argument | Environment variables |
+| Scheduling | Manual execution | Automated (cron) |
+| File Discovery | User provides path | Searches SFTP directory |
+| Use Case | Testing, reprocessing | Production automation |
+
 ## Security Notes
 
 - Never hardcode credentials in scripts

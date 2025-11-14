@@ -431,31 +431,35 @@ def get_db_connection(connection_string: str = None):
 
 
 def process_local_file(
-    file_path: str, file_date: date = None, connection_string: str = None
+    file_path: str,
+    connection_string: str,
 ):
     """Process a local Prime Broker Activity Statement file
 
     Args:
-        file_path: Path to the CSV file to process
-        file_date: Date of the file (extracted from filename if not provided)
-        connection_string: PostgreSQL connection string (optional, will use environment variables if not provided)
+        file_path: Path to the CSV file to process (full path including filename, required)
+        connection_string: PostgreSQL connection string (required)
     """
+    if not file_path:
+        raise ValueError("file_path is required")
+
+    if not connection_string:
+        raise ValueError("connection_string is required")
 
     file_path = Path(file_path)
     if not file_path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
 
-    # Extract file date from filename if not provided
-    if file_date is None:
-        filename = file_path.name
-        # Format: YYYYMMDD.PrimeBrokerActivityStatement.*.CSV
-        if len(filename) >= 8:
-            try:
-                file_date = datetime.strptime(filename[:8], "%Y%m%d").date()
-            except ValueError:
-                file_date = date.today()
-        else:
+    # Extract file date from filename
+    filename_for_date = file_path.name
+    # Format: YYYYMMDD.PrimeBrokerActivityStatement.*.CSV
+    if len(filename_for_date) >= 8:
+        try:
+            file_date = datetime.strptime(filename_for_date[:8], "%Y%m%d").date()
+        except ValueError:
             file_date = date.today()
+    else:
+        file_date = date.today()
 
     logger.info(f"Processing local file: {file_path}")
     logger.info(f"File date: {file_date}")
@@ -472,8 +476,9 @@ def process_local_file(
     conn.autocommit = False
 
     try:
+        # Use filename from file_path
         source_filename = file_path.name
-        local_path = str(file_path)
+        local_path = str(file_path.resolve())
 
         # Calculate file hash
         file_hash = hashlib.sha256(file_bytes).hexdigest()
@@ -567,52 +572,27 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Using connection string from command line:
-  python process_local_prime_broker_file.py file.csv --connection-string "postgresql://user:pass@host:5432/db?sslmode=require"
-
-  # Using environment variables:
-  export POSTGRES_CONNECTION_STRING="postgresql://user:pass@host:5432/db?sslmode=require"
-  python process_local_prime_broker_file.py file.csv
-
-  # Or using individual environment variables:
-  export POSTGRES_PLATFORM_HOST=host
-  export POSTGRES_PLATFORM_PORT=5432
-  export POSTGRES_PLATFORM_DB=db
-  export POSTGRES_PLATFORM_USER=user
-  export POSTGRES_PLATFORM_PASSWORD=pass
-  python process_local_prime_broker_file.py file.csv
+  # Basic usage (date and filename extracted from file_path):
+  python process_local_prime_broker_file.py "C:\\tmp\\20251113.PrimeBrokerActivityStatement.GRPGZCAP.818292019.CSV" --connection-string "postgresql://user:pass@host:5432/db?sslmode=require"
         """,
     )
 
     parser.add_argument(
-        "file_path", help="Path to the Prime Broker Activity Statement CSV file"
-    )
-
-    parser.add_argument(
-        "--file-date",
-        type=str,
-        help="File date in YYYY-MM-DD format (extracted from filename if not provided)",
+        "file_path",
+        help="Path to the Prime Broker Activity Statement CSV file (required; full path including filename)",
     )
 
     parser.add_argument(
         "--connection-string",
         type=str,
-        help="PostgreSQL connection string (e.g., postgresql://user:pass@host:5432/db?sslmode=require)",
+        required=True,
+        help="PostgreSQL connection string (required; e.g., postgresql://user:pass@host:5432/db?sslmode=require)",
     )
 
     args = parser.parse_args()
 
-    file_date = None
-    if args.file_date:
-        try:
-            file_date = datetime.strptime(args.file_date, "%Y-%m-%d").date()
-        except ValueError:
-            logger.warning(
-                f"Invalid date format: {args.file_date}. Using date from filename."
-            )
-
     try:
-        process_local_file(args.file_path, file_date, args.connection_string)
+        process_local_file(args.file_path, args.connection_string)
         print("SUCCESS: File processed successfully")
         sys.exit(0)
     except Exception as e:

@@ -124,3 +124,53 @@ pipeline {
   GROUP BY cob_date, file_sequence, row_type, fund_account, ccy
   ORDER BY cob_date DESC, file_sequence, row_type;
   ```
+
+## Local File Processing
+
+For testing, manual processing, or reprocessing files, use the standalone `process_local_cash_balance_file.py` script.
+
+### Usage
+
+**Required Arguments:**
+1. `file_path` - Full path to the CSV file (positional argument)
+2. `--connection-string` - PostgreSQL connection string (required)
+
+**Basic Command:**
+```bash
+python process_local_cash_balance_file.py "C:\tmp\20251113.CashBalances.GRPGZCAP.818292019.CSV" --connection-string "postgresql://user:pass@host:5432/db?sslmode=require"
+```
+
+**Windows PowerShell Example:**
+```powershell
+cd ubs_ops
+python process_local_cash_balance_file.py `
+  "C:\tmp\20251113.CashBalances.GRPGZCAP.818292019.CSV" `
+  --connection-string "postgresql://mikael:Ii89rra137+*@gzcdevserver.postgres.database.azure.com:5432/gzc_platform?sslmode=require"
+```
+
+**Windows CMD Example:**
+```cmd
+cd ubs_ops
+python process_local_cash_balance_file.py "C:\tmp\20251113.CashBalances.GRPGZCAP.818292019.CSV" --connection-string "postgresql://user:pass@host:5432/db?sslmode=require"
+```
+
+### How It Works
+
+- **Date Extraction**: Automatically extracts date from filename (format: `YYYYMMDD.CashBalances.*.CSV`)
+- **Filename Extraction**: Uses filename from file path for database storage
+- **File Sequence**: Automatically determines file sequence number based on existing files for the same date
+- **CSV Parsing**: Parses and classifies rows (detail, subtotal, grand_total)
+- **Duplicate Detection**: Uses `record_hash` to prevent duplicate inserts
+- **Database Insertion**: Inserts into `ubs.ubs_cash_balance_data` table
+- **Logging**: Logs to `ubs.ubs_file_processing_log` and `ubs_cash_balance_local_processing.log`
+
+### Differences from Jenkins/SFTP Processing
+
+| Feature | Local Processing | Jenkins/SFTP Processing |
+|---------|------------------|------------------------|
+| File Source | Local filesystem | UBS SFTP server |
+| Date Parameter | Extracted from filename | Uses `PROCESS_DATE` env var |
+| Connection | Command-line argument | Environment variables |
+| Scheduling | Manual execution | Automated (cron) |
+| File Discovery | User provides path | Searches SFTP directory |
+| Use Case | Testing, reprocessing | Production automation |
