@@ -252,4 +252,3 @@ Examples:
         print(f"ERROR: {e}")
         logger.exception("Processing failed")
         sys.exit(1)
-
