@@ -136,7 +136,8 @@ def parse_cash_balance_csv(
     file_bytes: bytes, cob_date: date, file_sequence: int, source_filename: str
 ) -> List[Dict]:
     text = file_bytes.decode("utf-8-sig")
-    reader = csv.DictReader(text.splitlines())
+    lines = text.splitlines()
+    reader = csv.DictReader(lines)
     records = []
 
     # Track last seen account information for carry-forward
@@ -144,7 +145,10 @@ def parse_cash_balance_csv(
     last_account_id = None
     last_fund_account = None
 
-    for line_number, row in enumerate(reader, start=1):
+    # line_number should match CSV row number (row 1 = header, row 2 = first data row)
+    # enumerate(reader) starts at 0, so we add 2 to account for header (row 1) and 0-based index
+    for reader_index, row in enumerate(reader):
+        line_number = reader_index + 2  # CSV row number (row 1 is header, row 2 is first data)
         row_type = classify_row(row)
         if row_type == "empty":
             continue
